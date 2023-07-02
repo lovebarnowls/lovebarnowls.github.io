@@ -1,95 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Score Report</title>
-    <script>
-        // Function to update the scores on the page
-        function updateScores(scores) {
-            // Sort scores in descending order based on score value
-            scores.sort((a, b) => b.score - a.score);
+  <title>Score Report</title>
+  <script>
+    function updateScores() {
+      fetch('scores.json')
+        .then(response => response.json())
+        .then(scores => {
+          // Sort the scores by descending order
+          scores.sort((a, b) => b.score - a.score);
 
-            // Select the scores container element
-            var scoresContainer = document.getElementById('scores-container');
+          // Display the top 5 scores
+          var tableBody = document.getElementById('scores-body');
+          tableBody.innerHTML = '';
 
-            // Clear the existing content
-            scoresContainer.innerHTML = '';
+          for (var i = 0; i < 5 && i < scores.length; i++) {
+            var row = document.createElement('tr');
+            var teamCell = document.createElement('td');
+            var scoreCell = document.createElement('td');
 
-            // Loop through the top 5 scores and create HTML elements to display them
-            for (var i = 0; i < Math.min(5, scores.length); i++) {
-                var score = scores[i];
-                var listItem = document.createElement('li');
-                listItem.textContent = 'Team ID: ' + score.team_id + ', Score: ' + score.score;
-                scoresContainer.appendChild(listItem);
-            }
-        }
+            teamCell.textContent = scores[i].team_id;
+            scoreCell.textContent = scores[i].score;
 
-        // Function to automatically update scores every 2 minutes
-        function autoUpdateScores() {
-            // Retrieve the scores data
-            var scoresData = [
-                {
-                    "team_id": "Team1",
-                    "score": 100
-                },
-                {
-                    "team_id": "Team2",
-                    "score": 95
-                },
-                {
-                    "team_id": "Team3",
-                    "score": 88
-                },
-                {
-                    "team_id": "Team4",
-                    "score": 92
-                },
-                {
-                    "team_id": "Team5",
-                    "score": 85
-                }
-            ];
+            row.appendChild(teamCell);
+            row.appendChild(scoreCell);
+            tableBody.appendChild(row);
+          }
+        });
 
-            // Update the scores on the page
-            updateScores(scoresData);
+      // Refresh the scores every 2 minutes
+      setTimeout(updateScores, 120000);
+    }
 
-            // Set interval to update scores every 30 seconds (30000 milliseconds)
-            setInterval(function() {
-                // Retrieve the scores data
-                var scoresData = [
-                    {
-                        "team_id": "Team1",
-                        "score": 100
-                    },
-                    {
-                        "team_id": "Team2",
-                        "score": 95
-                    },
-                    {
-                        "team_id": "Team3",
-                        "score": 88
-                    },
-                    {
-                        "team_id": "Team4",
-                        "score": 92
-                    },
-                    {
-                        "team_id": "Team5",
-                        "score": 85
-                    }
-                ];
-
-                // Update the scores on the page
-                updateScores(scoresData);
-            }, 30000);
-        }
-
-        // Call the autoUpdateScores function when the page loads
-        window.onload = autoUpdateScores;
-    </script>
+    document.addEventListener('DOMContentLoaded', updateScores);
+  </script>
 </head>
 <body>
-    <h1>Top 5 Scores</h1>
-    <ul id="scores-container"></ul>
+  <table>
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody id="scores-body"></tbody>
+  </table>
 </body>
 </html>
-
