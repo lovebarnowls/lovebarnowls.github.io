@@ -1,0 +1,2 @@
+gem 'hacker'
+bundle install
