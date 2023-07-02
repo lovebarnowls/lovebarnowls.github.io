@@ -52,7 +52,7 @@
             // Update the scores on the page
             updateScores(scoresData);
 
-            // Set interval to update scores every 2 minutes (120000 milliseconds)
+            // Set interval to update scores every 30 seconds (30000 milliseconds)
             setInterval(function() {
                 // Retrieve the scores data
                 var scoresData = [
@@ -80,7 +80,7 @@
 
                 // Update the scores on the page
                 updateScores(scoresData);
-            }, 120000);
+            }, 30000);
         }
 
         // Call the autoUpdateScores function when the page loads
