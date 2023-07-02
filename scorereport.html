@@ -1,1 +1,95 @@
-scorereport.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Score Report</title>
+    <script>
+        // Function to update the scores on the page
+        function updateScores(scores) {
+            // Sort scores in descending order based on score value
+            scores.sort((a, b) => b.score - a.score);
+
+            // Select the scores container element
+            var scoresContainer = document.getElementById('scores-container');
+
+            // Clear the existing content
+            scoresContainer.innerHTML = '';
+
+            // Loop through the top 5 scores and create HTML elements to display them
+            for (var i = 0; i < Math.min(5, scores.length); i++) {
+                var score = scores[i];
+                var listItem = document.createElement('li');
+                listItem.textContent = 'Team ID: ' + score.team_id + ', Score: ' + score.score;
+                scoresContainer.appendChild(listItem);
+            }
+        }
+
+        // Function to automatically update scores every 2 minutes
+        function autoUpdateScores() {
+            // Retrieve the scores data
+            var scoresData = [
+                {
+                    "team_id": "Team1",
+                    "score": 100
+                },
+                {
+                    "team_id": "Team2",
+                    "score": 95
+                },
+                {
+                    "team_id": "Team3",
+                    "score": 88
+                },
+                {
+                    "team_id": "Team4",
+                    "score": 92
+                },
+                {
+                    "team_id": "Team5",
+                    "score": 85
+                }
+            ];
+
+            // Update the scores on the page
+            updateScores(scoresData);
+
+            // Set interval to update scores every 2 minutes (120000 milliseconds)
+            setInterval(function() {
+                // Retrieve the scores data
+                var scoresData = [
+                    {
+                        "team_id": "Team1",
+                        "score": 100
+                    },
+                    {
+                        "team_id": "Team2",
+                        "score": 95
+                    },
+                    {
+                        "team_id": "Team3",
+                        "score": 88
+                    },
+                    {
+                        "team_id": "Team4",
+                        "score": 92
+                    },
+                    {
+                        "team_id": "Team5",
+                        "score": 85
+                    }
+                ];
+
+                // Update the scores on the page
+                updateScores(scoresData);
+            }, 120000);
+        }
+
+        // Call the autoUpdateScores function when the page loads
+        window.onload = autoUpdateScores;
+    </script>
+</head>
+<body>
+    <h1>Top 5 Scores</h1>
+    <ul id="scores-container"></ul>
+</body>
+</html>
+
