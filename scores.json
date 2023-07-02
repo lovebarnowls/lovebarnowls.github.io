@@ -1,0 +1,22 @@
+[
+  {
+    "team_id": "Team A",
+    "score": 95
+  },
+  {
+    "team_id": "Team B",
+    "score": 88
+  },
+  {
+    "team_id": "Team C",
+    "score": 92
+  },
+  {
+    "team_id": "Team D",
+    "score": 80
+  },
+  {
+    "team_id": "Team E",
+    "score": 90
+  }
+]
