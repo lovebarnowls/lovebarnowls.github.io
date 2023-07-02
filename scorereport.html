@@ -3,36 +3,33 @@
 <head>
   <title>Score Report</title>
   <script>
-    function updateScores() {
-      fetch('scores.json')
-        .then(response => response.json())
-        .then(scores => {
-          // Sort the scores by descending order
-          scores.sort((a, b) => b.score - a.score);
-
-          // Display the top 5 scores
-          var tableBody = document.getElementById('scores-body');
-          tableBody.innerHTML = '';
-
-          for (var i = 0; i < 5 && i < scores.length; i++) {
-            var row = document.createElement('tr');
-            var teamCell = document.createElement('td');
-            var scoreCell = document.createElement('td');
-
-            teamCell.textContent = scores[i].team_id;
-            scoreCell.textContent = scores[i].score;
-
-            row.appendChild(teamCell);
-            row.appendChild(scoreCell);
-            tableBody.appendChild(row);
-          }
-        });
-
-      // Refresh the scores every 2 minutes
-      setTimeout(updateScores, 30000);
+    function fetchScores(ipAddresses) {
+      ipAddresses.forEach(ipAddress => {
+        fetch('http://' + ipAddress + '/scores')  // Replace '/scores' with the actual endpoint on the Linux machine
+          .then(response => response.json())
+          .then(scores => {
+            // Process the scores and update the scoreboard
+            // ...
+          })
+          .catch(error => {
+            console.log('Error fetching scores from ' + ipAddress + ': ' + error);
+          });
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', updateScores);
+    function fetchScoresFromUserInput() {
+      var ipAddresses = prompt('Enter the IP addresses (comma-separated) of the Linux machines:');
+      if (!ipAddresses) {
+        return;
+      }
+
+      ipAddresses = ipAddresses.split(',').map(ip => ip.trim());
+
+      fetchScores(ipAddresses);
+    }
+
+    // Call the function to fetch scores from user input when the page loads
+    document.addEventListener('DOMContentLoaded', fetchScoresFromUserInput);
   </script>
 </head>
 <body>
