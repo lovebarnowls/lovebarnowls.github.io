@@ -28,7 +28,7 @@ function init() {
 init(); 
 
 const loader = new THREE.GLTFLoader();
-loader.load('https://lovebarnowls.github.io/AR/Mosque.glb', (gltf) => {
+loader.load('https://lovebarnowls.github.io/AR/WebXR/Mosque.glb', (gltf) => {
     let model = gltf.scene; 
     scene.add(model); 
     model.position.set(0, 0, -2); // Adjust position as needed
