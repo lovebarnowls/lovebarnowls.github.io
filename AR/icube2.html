@@ -1,24 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>View Cube in AR</title>
-    <style>
-        .ar-button {
-            display: inline-block;
-            padding: 12px 24px;
-            background-color: #007AFF;
-            color: white;
-            text-decoration: none;
-            font-size: 18px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-        }
-    </style>
+  <title>View Cube in AR</title>
+  <style>
+    .ar-button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #007AFF; /* Blue button */
+      color: white;
+      text-decoration: none;
+      font-size: 18px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      text-align: center; /* Center the image within the button */
+    }
+
+    .ar-button img {
+      max-width: 100%; /* Make the image scale responsively */
+      vertical-align: middle; /* Align image in the middle of the button */
+    }
+  </style>
 </head>
 <body>
-    <button onclick="window.location.href='https://lovebarnowls.github.io/AR/Cube.usdz'" class="ar-button">
-        Click Here to See the Cube!
-    </button>
+  <h2>Scan the QR code or tap the button below to view the Cube in AR.</h2> 
+  <a rel="ar" href="https://lovebarnowls.github.io/AR/Cube.usdz" class="ar-button">
+    <img src="cube_preview.jpg" alt="Cube Preview">
+  </a>
 </body>
 </html>
