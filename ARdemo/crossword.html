@@ -65,43 +65,40 @@
     </div>
 
     <script>
-    const crosswordData = {
-        grid: [
-            ['l', 'o', 'n', 'd', 'o', 'n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-            [' ', ' ', ' ', ' ', ' ', 'o', ' ', ' ', ' ', ' ', 'p', 'i', 's', 'a'],
-            [' ', ' ', 't', 'u', 'r', 'k', 'e', 'y', ' ', ' ', ' ', ' ', ' ', ' '],
-            [' ', ' ', ' ', ' ', ' ', 'y', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-            ['n', 'o', 't', 'r', 'e', '-', 'd', 'a', 'm', 'e', ' ', ' ', ' ', ' '],
-            [' ', ' ', 'a', ' ', ' ', 'o', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-            ['u', 'l', 'j', '-', ' ', ' ', ' ', 'a', ' ', ' ', ' ', ' ', ' ', ' '],
-            ['l', ' ', '-', ' ', ' ', ' ', 'm', 'e', 'r', 'l', 'i', 'o', 'n', ' '],
-            ['u', ' ', ' ', ' ', ' ', ' ', ' ', '-', ' ', ' ', ' ', ' ', ' ', ' '],
-            ['t', 'i', 'r', 'a', 'n', 'a', ' ', ' ', ' ', 'e', 'a', 's', 't', 'e'],
-            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'a', ' ', ' ', ' ', 'r'],
-            ['m', 'a', 'l', 'a', 'y', 's', 'i', 'a', ' ', 's', ' ', ' ', ' ', ' '],
-            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 't', ' ', ' ', ' ', ' '],
-            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'e', ' ', ' ', ' ', ' ']
-        ],
-        across: [
-            { number: 1, clue: "Capital of England" },
-            { number: 2, clue: "Country bordering Greece and Bulgaria" },
-            { number: 3, clue: "Country bordering Syria and Iraq" },
-            { number: 4, clue: "Famous cathedral in Paris (hyphenated)" },
-            { number: 6, clue: "Capital city of Uzbekistan" },
-            { number: 8, clue: "National symbol of Singapore" },
-            { number: 9, clue: "Capital of Albania" },
-            { number: 10, clue: "Holiday celebrated on Sunday" },
-            { number: 11, clue: "Southeast Asian country with Kuala Lumpur as capital" }
-        ],
-        down: [
-            { number: 1, clue: "City known as 'The Big Apple' (abbr)" },
-            { number: 2, clue: "Country with the Leaning Tower of Pisa" },
-            { number: 5, clue: "Capital of India" },
-            { number: 6, clue: "Ancient Incan city in Peru" },
-            { number: 7, clue: "Capital of Vietnam" },
-            { number: 10, clue: "Direction opposite to West" }
-        ]
-    };
+  const crosswordData = {
+    grid: [
+        ['l', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'p', 'i', 's', 'a'],
+        ['o', ' ', ' ', ' ', ' ', ' ', 't', 'u', 'r', 'k', 'e', 'y', ' ', ' '],
+        ['n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['d', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['o', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['n', 'o', 't', 'r', 'e', '-', 'd', 'a', 'm', 'e', ' ', ' ', ' ', ' '],
+        [' ', ' ', 'a', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['p', 'y', 'j', ' ', ' ', ' ', ' ', 'a', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['y', ' ', '-', ' ', 'm', 'e', 'r', 'l', 'i', 'o', 'n', ' ', ' ', ' '],
+        ['r', ' ', 'm', ' ', ' ', ' ', ' ', '-', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['a', ' ', 'a', ' ', ' ', ' ', ' ', 'a', 'e', 'a', 's', 't', 'e', 'r'],
+        ['m', ' ', 'h', ' ', 'u', ' ', ' ', 'q', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['i', ' ', 'a', ' ', 'l', ' ', ' ', 's', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['d', ' ', 'l', ' ', 'u', ' ', ' ', 'a', ' ', ' ', ' ', ' ', ' ', ' ']
+    ],
+    across: [
+        { number: 2, clue: "PISA" },
+        { number: 3, clue: "TURKEY" },
+        { number: 4, clue: "NOTRE-DAME" },
+        { number: 8, clue: "MERLION" },
+        { number: 9, clue: "TIRANA" },
+        { number: 10, clue: "EASTER" },
+        { number: 11, clue: "MALAYSIA" }
+    ],
+    down: [
+        { number: 1, clue: "LONDON" },
+        { number: 2, clue: "PYRAMID" },
+        { number: 5, clue: "TAJ-MAHAL" },
+        { number: 6, clue: "ULURU" },
+        { number: 7, clue: "AL-AQSA" }
+    ]
+};
 
     function createCrossword() {
         const container = document.getElementById('crossword-container');
