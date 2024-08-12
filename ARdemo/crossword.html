@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Crossword Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        #crossword-container {
+            display: grid;
+            grid-template-columns: repeat(14, 30px);
+            gap: 1px;
+            background-color: black;
+            padding: 1px;
+            margin-right: 20px;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            position: relative;
+        }
+        .cell-number {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            font-size: 10px;
+        }
+        .black-cell {
+            background-color: black;
+        }
+        #clues {
+            max-width: 300px;
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+        input:focus {
+            outline: 2px solid blue;
+        }
+    </style>
+</head>
+<body>
+    <div id="crossword-container"></div>
+    <div id="clues">
+        <h3>Across</h3>
+        <div id="across-clues"></div>
+        <h3>Down</h3>
+        <div id="down-clues"></div>
+    </div>
+
+    <script>
+    const crosswordData = {
+        grid: [
+            ['l', 'o', 'n', 'd', 'o', 'n', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', 'o', ' ', ' ', ' ', ' ', 'p', 'i', 's', 'a'],
+            [' ', ' ', 't', 'u', 'r', 'k', 'e', 'y', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', 'y', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['n', 'o', 't', 'r', 'e', '-', 'd', 'a', 'm', 'e', ' ', ' ', ' ', ' '],
+            [' ', ' ', 'a', ' ', ' ', 'o', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['u', 'l', 'j', '-', ' ', ' ', ' ', 'a', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['l', ' ', '-', ' ', ' ', ' ', 'm', 'e', 'r', 'l', 'i', 'o', 'n', ' '],
+            ['u', ' ', ' ', ' ', ' ', ' ', ' ', '-', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['t', 'i', 'r', 'a', 'n', 'a', ' ', ' ', ' ', 'e', 'a', 's', 't', 'e'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'a', ' ', ' ', ' ', 'r'],
+            ['m', 'a', 'l', 'a', 'y', 's', 'i', 'a', ' ', 's', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 't', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'e', ' ', ' ', ' ', ' ']
+        ],
+        across: [
+            { number: 1, clue: "Capital of England" },
+            { number: 2, clue: "Country bordering Greece and Bulgaria" },
+            { number: 3, clue: "Country bordering Syria and Iraq" },
+            { number: 4, clue: "Famous cathedral in Paris (hyphenated)" },
+            { number: 6, clue: "Capital city of Uzbekistan" },
+            { number: 8, clue: "National symbol of Singapore" },
+            { number: 9, clue: "Capital of Albania" },
+            { number: 10, clue: "Holiday celebrated on Sunday" },
+            { number: 11, clue: "Southeast Asian country with Kuala Lumpur as capital" }
+        ],
+        down: [
+            { number: 1, clue: "City known as 'The Big Apple' (abbr)" },
+            { number: 2, clue: "Country with the Leaning Tower of Pisa" },
+            { number: 5, clue: "Capital of India" },
+            { number: 6, clue: "Ancient Incan city in Peru" },
+            { number: 7, clue: "Capital of Vietnam" },
+            { number: 10, clue: "Direction opposite to West" }
+        ]
+    };
+
+    function createCrossword() {
+        const container = document.getElementById('crossword-container');
+        const acrossClues = document.getElementById('across-clues');
+        const downClues = document.getElementById('down-clues');
+
+        crosswordData.grid.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+                const cellElement = document.createElement('div');
+                cellElement.className = 'cell';
+                if (cell === ' ') {
+                    cellElement.classList.add('black-cell');
+                } else {
+                    const input = document.createElement('input');
+                    input.maxLength = 1;
+                    input.dataset.row = rowIndex;
+                    input.dataset.col = colIndex;
+                    cellElement.appendChild(input);
+                }
+
+                // Add cell numbers
+                const cellNumber = getCellNumber(rowIndex, colIndex);
+                if (cellNumber) {
+                    const numberSpan = document.createElement('span');
+                    numberSpan.className = 'cell-number';
+                    numberSpan.textContent = cellNumber;
+                    cellElement.appendChild(numberSpan);
+                }
+
+                container.appendChild(cellElement);
+            });
+        });
+
+        // Add clues
+        crosswordData.across.forEach(clue => {
+            acrossClues.innerHTML += `<p>${clue.number}. ${clue.clue}</p>`;
+        });
+        crosswordData.down.forEach(clue => {
+            downClues.innerHTML += `<p>${clue.number}. ${clue.clue}</p>`;
+        });
+
+        // Add event listeners
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', handleInput);
+            input.addEventListener('keydown', handleKeyDown);
+        });
+    }
+
+    function getCellNumber(row, col) {
+        const isStartOfWord = (r, c) => {
+            return (crosswordData.grid[r][c] !== ' ') && 
+                   ((c === 0 || crosswordData.grid[r][c-1] === ' ') || 
+                    (r === 0 || crosswordData.grid[r-1][c] === ' '));
+        };
+
+        if (isStartOfWord(row, col)) {
+            let number = 1;
+            for (let r = 0; r < crosswordData.grid.length; r++) {
+                for (let c = 0; c < crosswordData.grid[r].length; c++) {
+                    if (r === row && c === col) {
+                        return number;
+                    }
+                    if (isStartOfWord(r, c)) {
+                        number++;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    function handleInput(event) {
+        const input = event.target;
+        input.value = input.value.toUpperCase();
+        if (input.value) {
+            const nextInput = findNextInput(input);
+            if (nextInput) nextInput.focus();
+        }
+    }
+
+    function handleKeyDown(event) {
+        if (event.key === 'Backspace' && !event.target.value) {
+            const prevInput = findPrevInput(event.target);
+            if (prevInput) {
+                prevInput.focus();
+                prevInput.value = '';
+            }
+            event.preventDefault();
+        }
+    }
+
+    function findNextInput(currentInput) {
+        const inputs = Array.from(document.querySelectorAll('input'));
+        const currentIndex = inputs.indexOf(currentInput);
+        return inputs[currentIndex + 1] || null;
+    }
+
+    function findPrevInput(currentInput) {
+        const inputs = Array.from(document.querySelectorAll('input'));
+        const currentIndex = inputs.indexOf(currentInput);
+        return inputs[currentIndex - 1] || null;
+    }
+
+    createCrossword();
+    </script>
+</body>
+</html>
