@@ -14,7 +14,6 @@
         }
         #crossword-container {
             display: grid;
-            grid-template-columns: repeat(14, 30px);
             gap: 1px;
             background-color: black;
             padding: 1px;
@@ -88,7 +87,7 @@
 
     <script>
     const crosswordData = {
-          grid: [
+         grid: [
             [' ', ' ', ' ', 'l', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
             [' ', ' ', ' ', 'o', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'p', 'i', 's', 'a'],
             [' ', ' ', ' ', 'n', ' ', ' ', 't', 'u', 'r', 'k', 'e', 'y', ' ', ' ', ' '],
@@ -106,20 +105,20 @@
             [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'a', ' ', ' ', ' ', ' ', ' ', ' ']
         ],
         across: [
-            { number: 2, clue: "PISA" },
-            { number: 3, clue: "TURKEY" },
-            { number: 4, clue: "NOTRE-DAME" },
-            { number: 8, clue: "MERLION" },
-            { number: 9, clue: "TIRANA" },
-            { number: 10, clue: "EASTER" },
-            { number: 11, clue: "MALAYSIA" }
+            { number: 2, clue: "Leaning tower city" },
+            { number: 3, clue: "Country famous for its kebabs" },
+            { number: 4, clue: "Famous Parisian cathedral" },
+            { number: 8, clue: "Singapore's iconic statue" },
+            { number: 9, clue: "Capital city of Albania" },
+            { number: 10, clue: "Spring holiday with egg hunts" },
+            { number: 11, clue: "Southeast Asian country with Kuala Lumpur as its capital" }
         ],
         down: [
-            { number: 1, clue: "LONDON" },
-            { number: 2, clue: "PYRAMID" },
-            { number: 5, clue: "TAJ-MAHAL" },
-            { number: 6, clue: "ULURU" },
-            { number: 7, clue: "AL-AQSA" }
+            { number: 1, clue: "City with Big Ben and Tower Bridge" },
+            { number: 2, clue: "Ancient Egyptian structure" },
+            { number: 5, clue: "Famous mausoleum in Agra, India" },
+            { number: 6, clue: "Large red rock in Australia's Outback" },
+            { number: 7, clue: "Mosque in Jerusalem's Old City" }
         ]
     };
 
@@ -127,6 +126,9 @@
         const container = document.getElementById('crossword-container');
         const acrossClues = document.getElementById('across-clues');
         const downClues = document.getElementById('down-clues');
+
+        // Update grid template columns
+        container.style.gridTemplateColumns = `repeat(${crosswordData.grid[0].length}, 30px)`;
 
         crosswordData.grid.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
@@ -228,7 +230,7 @@
         inputs.forEach((input) => {
             const row = parseInt(input.dataset.row);
             const col = parseInt(input.dataset.col);
-            if (input.value.toLowerCase() !== crosswordData.grid[row][col]) {
+            if (input.value.toLowerCase() !== crosswordData.grid[row][col].toLowerCase()) {
                 allCorrect = false;
                 input.style.backgroundColor = 'pink';
             } else {
