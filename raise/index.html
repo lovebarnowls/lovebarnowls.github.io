@@ -4,54 +4,217 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RAISE Project Viewer</title>
+    <script src="https://unpkg.com/scratch-vm@1.5.76/dist/web/scratch-vm.min.js"></script>
+    <script src="https://unpkg.com/scratch-render@0.1.0/dist/web/scratch-render.min.js"></script>
+    <script src="https://unpkg.com/scratch-storage@2.0.0/dist/web/scratch-storage.min.js"></script>
+    <script src="https://unpkg.com/scratch-svg-renderer@0.2.0/dist/web/scratch-svg-renderer.min.js"></script>
+    <script src="https://unpkg.com/scratch-audio@0.1.0-prerelease.20211130205640/dist/web/scratch-audio.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             font-family: Arial, sans-serif;
-            text-align: center;
-            background-colour: #f0f0f0;
+            background-color: #f0f0f0;
         }
-        .container {
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        #project-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #canvas-container {
+            width: 100%;
             max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-colour: white;
-            border-radius: 8px;
+            max-height: 600px;
+            position: relative;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .button {
-            display: inline-block;
-            padding: 12px 24px;
-            background-colour: #4CAF50;
-            colour: white;
-            text-decoration: none;
+        #controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
             border-radius: 4px;
-            font-weight: bold;
-            margin-top: 20px;
+            cursor: pointer;
         }
-        .button:hover {
-            background-colour: #45a049;
+        button:hover {
+            background-color: #45a049;
         }
-        .project-info {
+        #error-message {
+            color: red;
+            text-align: center;
             margin-top: 20px;
-            text-align: left;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>RAISE Playground Project</h1>
-        <p>This project was created using MIT's RAISE Playground with Teachable Machine extension.</p>
-        
-        <div class="project-info">
-            <h2>About This Project</h2>
-            <p>This project uses the Teachable Machine extension which requires the full RAISE Playground environment to run properly.</p>
+    <div id="loading">Loading project...</div>
+    
+    <div id="project-container" style="display: none;">
+        <div id="canvas-container">
+            <canvas id="scratch-stage"></canvas>
         </div>
-        
-        <a href="https://playground.raise.mit.edu/?project=https://lovebarnowls.github.io/raise/keys.sb3" class="button" target="_blank">Open in RAISE Playground</a>
-        
-        <p style="margin-top: 30px; font-size: 14px;">Note: This will open the project in read-only mode in the RAISE Playground environment.</p>
+        <div id="controls">
+            <button id="start-btn">Start</button>
+            <button id="stop-btn">Stop</button>
+        </div>
     </div>
+    
+    <div id="error-message"></div>
+    
+    <script>
+        // Initialize variables
+        let vm, renderer, canvas, projectData;
+        const projectURL = 'keys.sb3';
+        
+        // Helper function to show errors
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+        
+        // Load the .sb3 file
+        async function loadProject() {
+            try {
+                // Fetch the .sb3 file
+                const response = await fetch(projectURL);
+                if (!response.ok) {
+                    throw new Error(`Failed to load project: ${response.statusText}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                
+                // Extract project data using JSZip
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                const projectJsonFile = zip.file('project.json');
+                
+                if (!projectJsonFile) {
+                    throw new Error('Invalid project file: project.json not found');
+                }
+                
+                const projectJsonText = await projectJsonFile.async('text');
+                projectData = JSON.parse(projectJsonText);
+                
+                // Initialize Scratch VM and renderer
+                setupScratchVM();
+                
+            } catch (error) {
+                showError(`Error loading project: ${error.message}`);
+                console.error('Project loading error:', error);
+            }
+        }
+        
+        // Set up the Scratch VM and renderer
+        function setupScratchVM() {
+            try {
+                // Initialize the VM
+                vm = new window.ScratchVM();
+                vm.setCompatibilityMode(false);
+                vm.setTurboMode(false);
+                vm.setRuntimeOptions({
+                    fencing: true,
+                    miscLimits: true,
+                    maxClones: 300
+                });
+                
+                // Set up storage
+                const storage = new window.ScratchStorage();
+                vm.attachStorage(storage);
+                
+                // Set up audio
+                const audioEngine = new window.ScratchAudio();
+                vm.attachAudioEngine(audioEngine);
+                
+                // Set up renderer
+                canvas = document.getElementById('scratch-stage');
+                renderer = new window.ScratchRender(canvas);
+                vm.attachRenderer(renderer);
+                
+                // Initialize project
+                vm.on('MONITORS_UPDATE', () => {});
+                vm.runtime.extensionManager.refreshBlocks();
+                
+                // Load project data
+                vm.deserializeProject(projectData)
+                    .then(() => {
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('project-container').style.display = 'flex';
+                        
+                        // Set up event listeners for controls
+                        document.getElementById('start-btn').addEventListener('click', () => {
+                            vm.greenFlag();
+                        });
+                        
+                        document.getElementById('stop-btn').addEventListener('click', () => {
+                            vm.stopAll();
+                        });
+                        
+                        // Resize to fit container
+                        resizeCanvas();
+                        window.addEventListener('resize', resizeCanvas);
+                    })
+                    .catch(error => {
+                        showError(`Error loading project data: ${error.message}`);
+                        console.error('Project initialization error:', error);
+                    });
+                
+            } catch (error) {
+                showError(`Error initializing player: ${error.message}`);
+                console.error('Player setup error:', error);
+            }
+        }
+        
+        // Resize canvas to fit container while maintaining aspect ratio
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const containerWidth = container.clientWidth;
+            const aspectRatio = 4/3; // Standard Scratch aspect ratio
+            
+            canvas.style.width = `${containerWidth}px`;
+            canvas.style.height = `${containerWidth / aspectRatio}px`;
+        }
+        
+        // Add teachable machine extension stub (simplified version)
+        function addTeachableMachineExtension() {
+            // This is a simplified stub - in production you would need the actual extension code
+            vm.extensionManager.registerExtensionService({
+                getInfo: function() {
+                    return {
+                        id: 'teachableMachine',
+                        name: 'Teachable Machine',
+                        blocks: [] // Would contain actual block definitions
+                    };
+                }
+            });
+        }
+        
+        // Start loading when page is ready
+        window.addEventListener('load', loadProject);
+    </script>
 </body>
 </html>
