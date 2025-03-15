@@ -11,21 +11,26 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
+            min-height: 100vh;
+            background-color: #f0f0f0;
         }
-        iframe {
-            border: none;
+        .player-container {
+            width: 100%;
+            max-width: 960px;
         }
     </style>
 </head>
 <body>
-    
-    <iframe src="https://scratch.mit.edu/projects/PROJECT_ID/embed" 
-            width="485" 
-            height="402" 
-            allowtransparency="true" 
-            frameborder="0">
-    </iframe>
+    <div class="player-container">
+        <iframe 
+            src="https://turbowarp.org/embed.html?project_url=https://lovebarnowls.github.io/raise/keys.sb3"
+            width="100%" 
+            height="600" 
+            allowfullscreen
+            allow="autoplay"
+            frameborder="0"
+            scrolling="no">
+        </iframe>
+    </div>
 </body>
 </html>
