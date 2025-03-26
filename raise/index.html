@@ -5,34 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bottles and Keys Detector</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    .project-container { width: 100%; height: 100vh; display: flex; flex-direction: column; }
-    .header { background-color: #4a6cd4; color: white; padding: 15px; text-align: center; }
-    .player-container { flex: 1; display: flex; justify-content: center; align-items: center; }
-    #player { width: 100%; height: 100%; border: none; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; text-align: center; }
+    h1 { color: #333; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 25px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      margin: 20px 0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .instructions {
+      background-color: #f8f9fa;
+      border-left: 4px solid #4CAF50;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
-  <div class="project-container">
-    <div class="header">
-      <h1>Bottles and Keys Detector</h1>
+  <div class="container">
+    <h1>Bottles and Keys Detector</h1>
+    <p>This project uses MIT's teachable machine to detect bottles and keys using your camera.</p>
+    
+    <a class="button" href="https://playground.raise.mit.edu/create/" target="_blank">Open in RAISE Playground</a>
+    
+    <div class="instructions">
+      <h3>Instructions:</h3>
+      <ol>
+        <li>Click the button above to open RAISE Playground</li>
+        <li>Click "File" > "Load from your computer"</li>
+        <li>Select the Bottles Keys v2 Final.sb3 file (download below if needed) </li>
+        <li>Click the green flag to start the project</li>
+        <li>Allow camera access when prompted</li>
+      </ol>
     </div>
-    <div class="player-container">
-      <iframe 
-        id="player"
-        src="https://turbowarp.org/editor?extension=https://playground.raise.mit.edu/scratch-extensions/teachableMachine.js" 
-        allowfullscreen
-        allow="camera"
-      ></iframe>
+    
+    <p>
+      <a href="Bottles Keys v2 Final.sb3" download>Download the .sb3 file</a>
+    </p>
+    
+    <div class="instructions">
+      <h3>About This Project:</h3>
+      <p>This project demonstrates machine learning by using a trained model to distinguish between bottles and keys. The model was created using Google's Teachable Machine and integrated into Scratch using the RAISE Playground environment.</p>
+      <p>The project uses a camera to capture images and then processes them through the machine learning model to identify whether the object is a bottle or keys.</p>
     </div>
   </div>
-  
-  <script>
-    // Wait for iframe to load
-    document.getElementById('player') .onload = function() {
-      // Add instructions for users
-      alert("1. Click 'File' > 'Load from your computer'\n2. Select the Bottles Keys v2 Final.sb3 file\n3. Click the green flag to start");
-    };
-  </script>
 </body>
 </html>
