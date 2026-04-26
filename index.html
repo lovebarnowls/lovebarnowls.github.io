@@ -12,10 +12,10 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1e1e1e; }
         .header { height: 55px; background: #252526; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #333; }
-        .logo { font-weight: bold; color: #4EC9B0; }
+        .logo { font-weight: bold; color: #4EC9B0; letter-spacing: 1px; }
         .controls { display: flex; gap: 15px; align-items: center; }
         
-        .toggle-container { font-size: 13px; display: flex; align-items: center; gap: 5px; color: #d4d4d4; cursor: pointer; }
+        .toggle-container { font-size: 13px; display: flex; align-items: center; gap: 8px; color: #d4d4d4; cursor: pointer; user-select: none; }
         button { border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
         .btn-run { background-color: #28a745; color: white; }
         .btn-run:hover { background-color: #218838; }
@@ -35,7 +35,7 @@
 <body>
 
 <div class="header">
-    <div class="logo">Tomorrow Robotics IDE</div>
+    <div class="logo">Yang's Python Turtle IDE</div>
     <div class="controls">
         <label class="toggle-container">
             <input type="checkbox" id="skip-anim"> ⚡ Instant Draw
@@ -52,15 +52,15 @@
 import turtle
 
 t = turtle.Turtle()
-t.color("blue")
+t.speed(0)
 t.width(2)
 
-# Try a complicated spiral to test "Instant Draw"
+# This complex pattern tests the 'Instant Draw' toggle
 for i in range(100):
     t.forward(i * 2)
     t.left(91)
 
-print("Finished!")
+print("Program complete.")
 </textarea>
     </div>
 
@@ -86,11 +86,17 @@ print("Finished!")
     }
 
     function runPython() {
-        var program = document.getElementById("code-input").value;
+        var userCode = document.getElementById("code-input").value;
         var skipAnim = document.getElementById("skip-anim").checked;
         
         document.getElementById("console-output").innerHTML = ""; 
         document.getElementById("my-canvas").innerHTML = "";
+
+        // If Instant Draw is checked, we inject speed overrides at the top of the user's code
+        var finalCode = userCode;
+        if (skipAnim) {
+            finalCode = "import turtle\nturtle.speed(0)\nturtle.tracer(0, 0)\n" + userCode + "\nturtle.update()";
+        }
 
         var wrapper = document.getElementById("canvas-wrapper");
         
@@ -100,20 +106,19 @@ print("Finished!")
             __future__: Sk.python3 
         });
 
-        // The 'animate' property controls if the turtle moves frame-by-frame
         Sk.TurtleGraphics = { 
             target: 'my-canvas', 
             width: wrapper.offsetWidth, 
             height: wrapper.offsetHeight,
-            animate: !skipAnim // If checked, animate is false
+            animate: !skipAnim 
         };
 
         var myPromise = Sk.misceval.asyncToPromise(function() {
-            return Sk.importMainWithBody("<stdin>", false, program, true);
+            return Sk.importMainWithBody("<stdin>", false, finalCode, true);
         });
 
         myPromise.then(function() { 
-            console.log('Success'); 
+            console.log('Execution finished.'); 
         }, function(err) {
             outf("<span style='color:#ff5555'>" + err.toString() + "</span>");
         });
@@ -139,7 +144,7 @@ print("Finished!")
             finalCanvas.height = firstCanvas.height;
             const ctx = finalCanvas.getContext("2d");
 
-            // Flatten layers
+            // Flatten background and all drawing layers
             canvases.forEach(c => ctx.drawImage(c, 0, 0));
 
             const image = finalCanvas.toDataURL("image/png");
@@ -150,7 +155,7 @@ print("Finished!")
             a.click();
             document.body.removeChild(a);
         } else {
-            alert("Run the code first!");
+            alert("No drawing found to save.");
         }
     }
 
