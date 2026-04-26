@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tomorrow Robotics IDE</title>
+    <title>Yang's Python Turtle IDE</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
@@ -13,8 +13,9 @@
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1e1e1e; }
         .header { height: 55px; background: #252526; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #333; }
         .logo { font-weight: bold; color: #4EC9B0; }
-        .controls { display: flex; gap: 10px; }
+        .controls { display: flex; gap: 15px; align-items: center; }
         
+        .toggle-container { font-size: 13px; display: flex; align-items: center; gap: 5px; color: #d4d4d4; cursor: pointer; }
         button { border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
         .btn-run { background-color: #28a745; color: white; }
         .btn-run:hover { background-color: #218838; }
@@ -36,6 +37,9 @@
 <div class="header">
     <div class="logo">Tomorrow Robotics IDE</div>
     <div class="controls">
+        <label class="toggle-container">
+            <input type="checkbox" id="skip-anim"> ⚡ Instant Draw
+        </label>
         <button class="btn-run" onclick="runPython()">▶ RUN PROGRAM</button>
         <button class="btn-download" onclick="downloadScript()">💾 SAVE .PY</button>
         <button class="btn-download" onclick="downloadCanvas()">🖼 SAVE .PNG</button>
@@ -47,21 +51,16 @@
 <textarea id="code-input" spellcheck="false">
 import turtle
 
-# This now works perfectly
-s = turtle.Screen()
-s.bgcolor("navy")
-
 t = turtle.Turtle()
-t.color("yellow")
-t.speed(0)
+t.color("blue")
 t.width(2)
 
-for i in range(8):
-    t.forward(100)
-    t.backward(100)
-    t.right(45)
+# Try a complicated spiral to test "Instant Draw"
+for i in range(100):
+    t.forward(i * 2)
+    t.left(91)
 
-print("Drawing Ready for export!")
+print("Finished!")
 </textarea>
     </div>
 
@@ -69,7 +68,7 @@ print("Drawing Ready for export!")
         <div id="canvas-wrapper">
             <div id="my-canvas"></div>
         </div>
-        <pre id="console-output">Ready to code...</pre>
+        <pre id="console-output">Ready...</pre>
     </div>
 </div>
 
@@ -88,6 +87,8 @@ print("Drawing Ready for export!")
 
     function runPython() {
         var program = document.getElementById("code-input").value;
+        var skipAnim = document.getElementById("skip-anim").checked;
+        
         document.getElementById("console-output").innerHTML = ""; 
         document.getElementById("my-canvas").innerHTML = "";
 
@@ -99,11 +100,12 @@ print("Drawing Ready for export!")
             __future__: Sk.python3 
         });
 
-        // RE-INITIALIZE TURTLE SCREEN
+        // The 'animate' property controls if the turtle moves frame-by-frame
         Sk.TurtleGraphics = { 
             target: 'my-canvas', 
             width: wrapper.offsetWidth, 
-            height: wrapper.offsetHeight
+            height: wrapper.offsetHeight,
+            animate: !skipAnim // If checked, animate is false
         };
 
         var myPromise = Sk.misceval.asyncToPromise(function() {
@@ -117,43 +119,38 @@ print("Drawing Ready for export!")
         });
     }
 
-    // UPDATED FILENAMES
     function downloadScript() {
         const code = document.getElementById("code-input").value;
         const blob = new Blob([code], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "my_turtle_program.py"; // Fixed filename
+        a.download = "my_turtle_program.py";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     }
 
     function downloadCanvas() {
-        // Find all canvases created by Skulpt
         const canvases = document.querySelectorAll("#my-canvas canvas");
         if (canvases.length > 0) {
-            // We create a composite so we don't get a blank image
             const finalCanvas = document.createElement("canvas");
             const firstCanvas = canvases[0];
             finalCanvas.width = firstCanvas.width;
             finalCanvas.height = firstCanvas.height;
             const ctx = finalCanvas.getContext("2d");
 
-            // Draw each layer (Skulpt uses layers for BG, Drawing, and Turtle)
-            canvases.forEach(c => {
-                ctx.drawImage(c, 0, 0);
-            });
+            // Flatten layers
+            canvases.forEach(c => ctx.drawImage(c, 0, 0));
 
             const image = finalCanvas.toDataURL("image/png");
             const a = document.createElement("a");
             a.href = image;
-            a.download = "my_turtle_art.png"; // Fixed filename
+            a.download = "my_turtle_art.png";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         } else {
-            alert("Please run your code first!");
+            alert("Run the code first!");
         }
     }
 
