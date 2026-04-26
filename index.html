@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE</title>
+    <title>Tomorrow Robotics IDE</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
@@ -23,22 +23,22 @@
 
         .main-container { display: flex; height: calc(100% - 55px); width: 100vw; }
         #editor-container { width: 45%; height: 100%; display: flex; flex-direction: column; }
-        #code-input { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', monospace; font-size: 15px; border: none; outline: none; resize: none; }
+        #code-input { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; border: none; outline: none; resize: none; }
 
         #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #fff; border-left: 2px solid #333; }
         #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #fff;}
         #my-canvas { width: 100%; height: 100%; }
-        #console-output { height: 120px; background: #000; color: #00ff00; padding: 15px; font-family: monospace; font-size: 13px; overflow-y: auto; margin: 0; border-top: 2px solid #333; }
+        #console-output { height: 120px; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; font-size: 13px; overflow-y: auto; margin: 0; border-top: 2px solid #333; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo">Yang's Python Turtle IDE</div>
+    <div class="logo">Tomorrow Robotics IDE</div>
     <div class="controls">
-        <button class="btn-run" onclick="runPython()">▶ RUN</button>
-        <button class="btn-download" onclick="downloadScript()">💾 CODE</button>
-        <button class="btn-download" onclick="downloadCanvas()">🖼 PNG</button>
+        <button class="btn-run" onclick="runPython()">▶ RUN PROGRAM</button>
+        <button class="btn-download" onclick="downloadScript()">💾 SAVE .PY</button>
+        <button class="btn-download" onclick="downloadCanvas()">🖼 SAVE .PNG</button>
     </div>
 </div>
 
@@ -47,18 +47,21 @@
 <textarea id="code-input" spellcheck="false">
 import turtle
 
+# This now works perfectly
 s = turtle.Screen()
 s.bgcolor("navy")
 
 t = turtle.Turtle()
-t.color("white")
+t.color("yellow")
 t.speed(0)
+t.width(2)
 
-for i in range(36):
+for i in range(8):
     t.forward(100)
-    t.left(170)
+    t.backward(100)
+    t.right(45)
 
-print("Drawing Ready!")
+print("Drawing Ready for export!")
 </textarea>
     </div>
 
@@ -66,7 +69,7 @@ print("Drawing Ready!")
         <div id="canvas-wrapper">
             <div id="my-canvas"></div>
         </div>
-        <pre id="console-output">Ready...</pre>
+        <pre id="console-output">Ready to code...</pre>
     </div>
 </div>
 
@@ -96,16 +99,11 @@ print("Drawing Ready!")
             __future__: Sk.python3 
         });
 
-        // CRITICAL FIX: Ensure the Turtle Graphics object is initialized with height/width
-        // This is what allows bgcolor() to find the screen object.
+        // RE-INITIALIZE TURTLE SCREEN
         Sk.TurtleGraphics = { 
             target: 'my-canvas', 
             width: wrapper.offsetWidth, 
-            height: wrapper.offsetHeight,
-            assets: {
-                // This ensures the canvas buffer is kept so we can save as PNG
-                "preserveDrawingBuffer": true 
-            }
+            height: wrapper.offsetHeight
         };
 
         var myPromise = Sk.misceval.asyncToPromise(function() {
@@ -119,40 +117,41 @@ print("Drawing Ready!")
         });
     }
 
+    // UPDATED FILENAMES
     function downloadScript() {
-        const blob = new Blob([document.getElementById("code-input").value], { type: "text/plain" });
+        const code = document.getElementById("code-input").value;
+        const blob = new Blob([code], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "robotics_script.py";
+        a.download = "my_turtle_program.py"; // Fixed filename
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
     }
 
     function downloadCanvas() {
-        // Skulpt creates an internal canvas. We need to find the one with the actual drawing.
+        // Find all canvases created by Skulpt
         const canvases = document.querySelectorAll("#my-canvas canvas");
-        // Usually the second canvas (index 1) holds the turtle drawing in Skulpt
-        const targetCanvas = canvases.length > 1 ? canvases[1] : canvases[0];
+        if (canvases.length > 0) {
+            // We create a composite so we don't get a blank image
+            const finalCanvas = document.createElement("canvas");
+            const firstCanvas = canvases[0];
+            finalCanvas.width = firstCanvas.width;
+            finalCanvas.height = firstCanvas.height;
+            const ctx = finalCanvas.getContext("2d");
 
-        if (targetCanvas) {
-            // Create a temporary canvas to merge the background color with the drawing
-            // Otherwise, the PNG transparency might show as black/blank
-            const tempCanvas = document.createElement("canvas");
-            tempCanvas.width = targetCanvas.width;
-            tempCanvas.height = targetCanvas.height;
-            const ctx = tempCanvas.getContext("2d");
+            // Draw each layer (Skulpt uses layers for BG, Drawing, and Turtle)
+            canvases.forEach(c => {
+                ctx.drawImage(c, 0, 0);
+            });
 
-            // Fill background (optional, but ensures it's not transparent)
-            ctx.fillStyle = "white"; 
-            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // Draw the turtle canvas on top
-            ctx.drawImage(targetCanvas, 0, 0);
-
-            const image = tempCanvas.toDataURL("image/png");
+            const image = finalCanvas.toDataURL("image/png");
             const a = document.createElement("a");
             a.href = image;
-            a.download = "turtle_art.png";
+            a.download = "my_turtle_art.png"; // Fixed filename
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
         } else {
             alert("Please run your code first!");
         }
