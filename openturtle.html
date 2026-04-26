@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yang's Python Turtle IDE</title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js" type="text/javascript"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1e1e1e; }
+        .header { height: 55px; background: #252526; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #333; }
+        .logo { font-weight: bold; color: #4EC9B0; letter-spacing: 1px; }
+        .controls { display: flex; gap: 15px; align-items: center; }
+        
+        .toggle-container { font-size: 13px; display: flex; align-items: center; gap: 8px; color: #d4d4d4; cursor: pointer; user-select: none; }
+        button { border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .btn-run { background-color: #28a745; color: white; }
+        .btn-run:hover { background-color: #218838; }
+        .btn-download { background-color: #3e3e3e; color: white; border: 1px solid #555; }
+        .btn-download:hover { background-color: #505050; }
+
+        .main-container { display: flex; height: calc(100% - 55px); width: 100vw; }
+        #editor-container { width: 45%; height: 100%; display: flex; flex-direction: column; }
+        #code-input { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; border: none; outline: none; resize: none; }
+
+        #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #fff; border-left: 2px solid #333; }
+        #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #fff;}
+        #my-canvas { width: 100%; height: 100%; }
+        #console-output { height: 120px; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; font-size: 13px; overflow-y: auto; margin: 0; border-top: 2px solid #333; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Yang's Python Turtle IDE</div>
+    <div class="controls">
+        <label class="toggle-container">
+            <input type="checkbox" id="skip-anim"> ⚡ Instant Draw
+        </label>
+        <button class="btn-run" onclick="runPython()">▶ RUN PROGRAM</button>
+        <button class="btn-download" onclick="downloadScript()">💾 SAVE .PY</button>
+        <button class="btn-download" onclick="downloadCanvas()">🖼 SAVE .PNG</button>
+    </div>
+</div>
+
+<div class="main-container">
+    <div id="editor-container">
+<textarea id="code-input" spellcheck="false">
+import turtle
+
+t = turtle.Turtle()
+t.speed(0)
+t.width(2)
+
+# This complex pattern tests the 'Instant Draw' toggle
+for i in range(100):
+    t.forward(i * 2)
+    t.left(91)
+
+print("Program complete.")
+</textarea>
+    </div>
+
+    <div id="output-container">
+        <div id="canvas-wrapper">
+            <div id="my-canvas"></div>
+        </div>
+        <pre id="console-output">Ready...</pre>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function outf(text) {
+        var mypre = document.getElementById("console-output");
+        mypre.innerHTML += text;
+        mypre.scrollTop = mypre.scrollHeight;
+    }
+
+    function builtinRead(x) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+            throw "File not found: '" + x + "'";
+        return Sk.builtinFiles["files"][x];
+    }
+
+    function runPython() {
+        var userCode = document.getElementById("code-input").value;
+        var skipAnim = document.getElementById("skip-anim").checked;
+        
+        document.getElementById("console-output").innerHTML = ""; 
+        document.getElementById("my-canvas").innerHTML = "";
+
+        // If Instant Draw is checked, we inject speed overrides at the top of the user's code
+        var finalCode = userCode;
+        if (skipAnim) {
+            finalCode = "import turtle\nturtle.speed(0)\nturtle.tracer(0, 0)\n" + userCode + "\nturtle.update()";
+        }
+
+        var wrapper = document.getElementById("canvas-wrapper");
+        
+        Sk.configure({ 
+            output: outf, 
+            read: builtinRead, 
+            __future__: Sk.python3 
+        });
+
+        Sk.TurtleGraphics = { 
+            target: 'my-canvas', 
+            width: wrapper.offsetWidth, 
+            height: wrapper.offsetHeight,
+            animate: !skipAnim 
+        };
+
+        var myPromise = Sk.misceval.asyncToPromise(function() {
+            return Sk.importMainWithBody("<stdin>", false, finalCode, true);
+        });
+
+        myPromise.then(function() { 
+            console.log('Execution finished.'); 
+        }, function(err) {
+            outf("<span style='color:#ff5555'>" + err.toString() + "</span>");
+        });
+    }
+
+    function downloadScript() {
+        const code = document.getElementById("code-input").value;
+        const blob = new Blob([code], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "my_turtle_program.py";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function downloadCanvas() {
+        const canvases = document.querySelectorAll("#my-canvas canvas");
+        if (canvases.length > 0) {
+            const finalCanvas = document.createElement("canvas");
+            const firstCanvas = canvases[0];
+            finalCanvas.width = firstCanvas.width;
+            finalCanvas.height = firstCanvas.height;
+            const ctx = finalCanvas.getContext("2d");
+
+            // Flatten background and all drawing layers
+            canvases.forEach(c => ctx.drawImage(c, 0, 0));
+
+            const image = finalCanvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = image;
+            a.download = "my_turtle_art.png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert("No drawing found to save.");
+        }
+    }
+
+    window.onload = runPython;
+</script>
+
+</body>
+</html>
