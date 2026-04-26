@@ -3,132 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tomorrow Robotics IDE - Turtle Sandbox</title>
+    <title>Tomorrow Robotics IDE</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js" type="text/javascript"></script>
 
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            background-color: #1e1e1e;
-        }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1e1e1e; }
+        .header { height: 55px; background: #252526; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #333; }
+        .logo { font-weight: bold; color: #4EC9B0; }
+        .controls { display: flex; gap: 10px; }
+        
+        button { border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .btn-run { background-color: #28a745; color: white; }
+        .btn-run:hover { background-color: #218838; }
+        .btn-download { background-color: #007acc; color: white; }
+        .btn-download:hover { background-color: #005f99; }
 
-        /* Header / Toolbar */
-        .header {
-            height: 55px;
-            background: #252526;
-            color: white;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            justify-content: space-between;
-            border-bottom: 1px solid #333;
-        }
+        .main-container { display: flex; height: calc(100% - 55px); width: 100vw; }
+        #editor-container { width: 45%; height: 100%; display: flex; flex-direction: column; }
+        #code-input { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', monospace; font-size: 15px; border: none; outline: none; resize: none; }
 
-        .logo {
-            font-weight: bold;
-            color: #4EC9B0;
-            font-size: 1.2rem;
-        }
-
-        .btn-run {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .btn-run:hover {
-            background-color: #218838;
-            transform: scale(1.05);
-        }
-
-        /* Main Workspace */
-        .main-container {
-            display: flex;
-            height: calc(100% - 55px);
-            width: 100vw;
-        }
-
-        /* Editor Section */
-        #editor-container {
-            width: 45%;
-            height: 100%;
-            background: #1e1e1e;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #code-input {
-            flex-grow: 1;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 15px;
-            line-height: 1.5;
-            border: none;
-            outline: none;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        /* Output Section */
-        #output-container {
-            width: 55%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background-color: #f0f0f0;
-            border-left: 2px solid #333;
-        }
-
-        #canvas-wrapper {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #fff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* The actual Turtle Canvas */
-        #my-canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Console styling */
-        #console-output {
-            height: 180px;
-            background: #000;
-            color: #00ff00;
-            padding: 15px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-            overflow-y: auto;
-            border-top: 2px solid #333;
-            margin: 0;
-        }
+        #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #fff; border-left: 2px solid #333; }
+        #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+        #my-canvas { width: 100%; height: 100%; }
+        #console-output { height: 150px; background: #000; color: #00ff00; padding: 15px; font-family: monospace; font-size: 13px; overflow-y: auto; margin: 0; border-top: 2px solid #333; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="logo">Tomorrow Robotics IDE</div>
-    <button class="btn-run" onclick="runPython()">▶ RUN CODE</button>
+    <div class="controls">
+        <button class="btn-run" onclick="runPython()">▶ RUN</button>
+        <button class="btn-download" onclick="downloadScript()">💾 SAVE PY</button>
+        <button class="btn-download" onclick="downloadCanvas()">🖼 SAVE PNG</button>
+    </div>
 </div>
 
 <div class="main-container">
@@ -136,22 +47,18 @@
 <textarea id="code-input" spellcheck="false">
 import turtle
 
-# Setup screen
 screen = turtle.Screen()
 screen.bgcolor("black")
 
 t = turtle.Turtle()
 t.speed(0)
-t.color("cyan")
+t.color("yellow")
 
-# Draw a spiral
-for i in range(36):
-    for _ in range(4):
-        t.forward(100)
-        t.left(90)
-    t.left(10)
+for i in range(12):
+    t.circle(50)
+    t.left(30)
 
-print("Animation finished!")
+print("Drawing Ready!")
 </textarea>
     </div>
 
@@ -159,15 +66,14 @@ print("Animation finished!")
         <div id="canvas-wrapper">
             <div id="my-canvas"></div>
         </div>
-        <pre id="console-output">Ready to code...</pre>
+        <pre id="console-output">Ready...</pre>
     </div>
 </div>
 
 <script type="text/javascript">
-    // Directs Python print() statements to our console area
     function outf(text) {
         var mypre = document.getElementById("console-output");
-        mypre.innerHTML = mypre.innerHTML + text;
+        mypre.innerHTML += text;
         mypre.scrollTop = mypre.scrollHeight;
     }
 
@@ -179,45 +85,48 @@ print("Animation finished!")
 
     function runPython() {
         var program = document.getElementById("code-input").value;
-        var output = document.getElementById("console-output");
-        output.innerHTML = ""; 
-        
-        // Clear previous canvas
+        document.getElementById("console-output").innerHTML = ""; 
         document.getElementById("my-canvas").innerHTML = "";
 
-        // Get current container size for the turtle screen
         var wrapper = document.getElementById("canvas-wrapper");
-        var w = wrapper.offsetWidth;
-        var h = wrapper.offsetHeight;
-
-        Sk.pre = "console-output";
         
-        // Configure Skulpt
-        Sk.configure({
-            output: outf,
-            read: builtinRead,
-            __future__: Sk.python3
-        });
-
-        // FIXED: Configuration for Turtle to enable bgcolor and screen sizing
-        Sk.TurtleGraphics = {
-            target: 'my-canvas',
-            width: w,
-            height: h
-        };
+        Sk.configure({ output: outf, read: builtinRead, __future__: Sk.python3 });
+        Sk.TurtleGraphics = { target: 'my-canvas', width: wrapper.offsetWidth, height: wrapper.offsetHeight };
 
         var myPromise = Sk.misceval.asyncToPromise(function() {
             return Sk.importMainWithBody("<stdin>", false, program, true);
         });
 
-        myPromise.then(function(mod) {
-            console.log('Execution successful');
-        }, function(err) {
+        myPromise.then(function() { console.log('Success'); }, function(err) {
             outf("<span style='color:#ff5555'>" + err.toString() + "</span>");
         });
     }
 
-    // Auto-run when the page loads
+    // DOWNLOAD FUNCTIONS
+    function downloadScript() {
+        const code = document.getElementById("code-input").value;
+        const blob = new Blob([code], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "robotics_script.py";
+        a.click();
+    }
+
+    function downloadCanvas() {
+        // Find the canvas generated by Skulpt
+        const canvas = document.querySelector("#my-canvas canvas");
+        if (canvas) {
+            const image = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = image;
+            a.download = "my_turtle_art.png";
+            a.click();
+        } else {
+            alert("Run the code first to generate an image!");
+        }
+    }
+
     window.onload = runPython;
 </script>
 
