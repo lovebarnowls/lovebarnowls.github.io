@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FunWorld SQL Audit PoC</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: #e0e0e0; display: flex; height: 100vh; margin: 0; }
+        #left-pane { width: 40%; padding: 20px; border-right: 2px solid #333; background: #1a1a1a; overflow-y: auto; }
+        #right-pane { width: 60%; padding: 40px; background: #fff; color: #333; display: flex; flex-direction: column; align-items: center; }
+        .code-box { background: #000; color: #00ff00; padding: 15px; font-family: monospace; border-radius: 5px; margin-bottom: 20px; }
+        input { padding: 10px; width: 250px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="left-pane">
+    <h2>MISSION: DATABASE BYPASS</h2>
+    <p>The login form on the right builds a query like this:</p>
+    <div class="code-box">
+        SELECT * FROM guests WHERE username = '[INPUT]';
+    </div>
+    <p><strong>Goal:</strong> Instead of a username, enter a logic-breaker that makes the <code>WHERE</code> clause always true.</p>
+    <p><strong>Hint:</strong> Try entering: <code>' OR 1=1 --</code></p>
+    <hr>
+    <div id="mission-status">Status: Waiting for Audit...</div>
+</div>
+
+<div id="right-pane">
+    <img src="https://img.icons8.com/color/96/000000/castle.png" alt="FunWorld Logo">
+    <h1>Viking Voyage Registry</h1>
+    <div id="login-area">
+        <input type="text" id="username-input" placeholder="Enter Guest Username">
+        <br>
+        <button onclick="attemptLogin()">VIEW GUEST RECORDS</button>
+    </div>
+
+    <div id="results-area" class="hidden">
+        <h3>ACCESS GRANTED: GUEST LIST</h3>
+        <table id="guest-table">
+            <thead><tr><th>ID</th><th>Guest Name</th><th>Room</th></tr></thead>
+            <tbody id="guest-body"></tbody>
+        </table>
+        <p style="color: green; font-weight: bold; margin-top: 20px;">
+            MISSION COMPLETE! TOKEN: FW-Y9-SQL-INJECT
+        </p>
+    </div>
+</div>
+
+<script>
+    let db;
+
+    // 1. Initialize the SQL.js database
+    async function initDatabase() {
+        const config = { locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` };
+        const SQL = await initSqlJs(config);
+        db = new SQL.Database();
+
+        // 2. Create a simulated guest table
+        db.run("CREATE TABLE guests (id int, name text, room text);");
+        db.run("INSERT INTO guests VALUES (1, 'John Doe', '101'), (2, 'Jane Smith', '202'), (3, 'Secret Agent', '999');");
+    }
+
+    // 3. The Vulnerable "Login" Function
+    function attemptLogin() {
+        const userInput = document.getElementById('username-input').value;
+        const guestBody = document.getElementById('guest-body');
+        guestBody.innerHTML = '';
+
+        try {
+            // VULNERABILITY: Directly injecting string into the query
+            const query = `SELECT * FROM guests WHERE name = '${userInput}';`;
+            console.log("Executing Query:", query);
+            
+            const results = db.exec(query);
+
+            if (results.length > 0) {
+                document.getElementById('login-area').classList.add('hidden');
+                document.getElementById('results-area').classList.remove('hidden');
+                document.getElementById('mission-status').innerHTML = "Status: <span style='color: #00ff00;'>Audit Successful</span>";
+
+                // Populate the table
+                results[0].values.forEach(row => {
+                    const tr = document.createElement('tr');
+                    row.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    guestBody.appendChild(tr);
+                });
+            } else {
+                alert("No Guest Found with that name.");
+            }
+        } catch (e) {
+            alert("SQL Error: " + e.message);
+        }
+    }
+
+    initDatabase();
+</script>
+
+</body>
+</html>
