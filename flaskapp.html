@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FunWorld Flask Security Lab</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Courier New', Courier, monospace; display: flex; height: 100vh; background: #0d0d0d; color: #00ff00; }
+        #sidebar { width: 300px; padding: 20px; border-right: 1px solid #333; font-size: 14px; background: #1a1a1a; overflow-y: auto; }
+        #editor-container { flex-grow: 1; display: flex; flex-direction: column; }
+        #editor { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-size: 16px; border: none; resize: none; outline: none; }
+        #preview { height: 35%; background: #fff; color: #333; border-top: 5px solid #00ff00; padding: 20px; overflow-y: auto; }
+        .btn { background: #00ff00; color: #000; padding: 10px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .loading { color: yellow; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>FUNWORLD ARCHITECT</h2>
+    <hr>
+    <p><strong>MISSION:</strong> Locker IDOR</p>
+    <p>The system is leaking data. If a user changes the 'locker_id' in the URL, they can see other people's stuff!</p>
+    <p><strong>GOAL:</strong> Edit the Python code so that if a <code>locker_id</code> doesn't belong to the <code>current_user</code>, it returns an error.</p>
+    <div id="status">Status: <span class="loading">Loading Python Engine...</span></div>
+    <button class="btn" onclick="runPython()">DEPLOY CODE</button>
+</div>
+
+<div id="editor-container">
+<textarea id="editor" spellcheck="false">
+# --- FUNWORLD FLASK BACKEND ---
+# Current Authorized User: 101
+
+def get_locker_data(locker_id):
+    # Simulated Database
+    lockers = {
+        101: "Your Golden Ticket is here!",
+        102: "Agent Secret Password: 'OWL'",
+        103: "VIP Fast Pass #9921"
+    }
+    
+    current_user = 101
+    
+    # VULNERABILITY: This function returns data for ANY locker_id!
+    # TASK: Add an 'if' statement to check if locker_id == current_user
+    
+    if locker_id in lockers:
+        return f"Locker {locker_id} Content: {lockers[locker_id]}"
+    else:
+        return "Locker not found."
+
+# Simulating the Route call for locker 102 (The Leak)
+print(get_locker_data(102))
+</textarea>
+
+<div id="preview">
+    <strong>OUTPUT TERMINAL:</strong>
+    <pre id="output">Waiting for deployment...</pre>
+</div>
+</div>
+
+<script>
+    let pyodide;
+    async function setup() {
+        pyodide = await loadPyodide();
+        document.getElementById('status').innerHTML = "Status: <span style='color: #00ff00;'>Ready</span>";
+    }
+    setup();
+
+    async function runPython() {
+        const code = document.getElementById('editor').value;
+        document.getElementById('output').innerHTML = "Processing...";
+        try {
+            // Capture python print() output
+            pyodide.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+            `);
+            await pyodide.runPythonAsync(code);
+            const stdout = pyodide.runPython("sys.stdout.getvalue()");
+            
+            let result = stdout;
+            if (stdout.includes("Locker 102 Content: Agent Secret Password: 'OWL'")) {
+                result += "\n\n[!] WARNING: DATA LEAK DETECTED. Access to Locker 102 should be blocked.";
+            } else if (stdout.includes("Locker not found") || stdout.includes("Access Denied")) {
+                result += "\n\n[+] MISSION COMPLETE: ACCESS CONTROL VERIFIED. TOKEN: FW-Y10-IDOR-SAFE";
+            }
+            
+            document.getElementById('output').innerHTML = result;
+        } catch (err) {
+            document.getElementById('output').innerHTML = `<span style="color: red;">PYTHON ERROR: ${err}</span>`;
+        }
+    }
+</script>
+
+</body>
+</html>
