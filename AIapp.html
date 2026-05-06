@@ -12,55 +12,102 @@
         #editor-col { flex: 3; border-right: 1px solid #333; }
         #data-col { flex: 2; background: #181818; }
         
-        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 20px; border: none; font-size: 14px; outline: none; line-height: 1.6; }
-        .label { background: #2d2d2d; padding: 8px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; }
+        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 15px; border: none; font-size: 14px; outline: none; line-height: 1.5; resize: none; }
+        .label { background: #2d2d2d; padding: 8px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; }
         
-        #output { flex: 0.5; background: #000; color: #00ff00; padding: 15px; font-family: monospace; overflow-y: auto; border-top: 2px solid #333; font-size: 13px; }
-        button { background: #ce3c3c; color: white; border: none; padding: 10px 25px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        #output { flex: 0.4; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; overflow-y: auto; border-top: 2px solid #333; font-size: 13px; white-space: pre-wrap; }
+        
+        .controls { padding: 10px; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; align-items: center; }
+        input[type="text"] { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 300px; font-family: monospace; }
+        button { background: #ce3c3c; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: background 0.2s; }
         button:hover { background: #ff4d4d; }
+        button.secondary { background: #444; }
+        button.secondary:hover { background: #555; }
+        
+        .warning { color: #ffcc00; font-size: 12px; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | Shared Class System</div>
-    <button onclick="runAudit()">▶ EXECUTE SYSTEM AUDIT</button>
+    <div><strong>SECURITY SENTINEL</strong> | v1.0.4 [Classroom Build]</div>
+    <div style="font-size: 12px; color: #888;">Pyodide Engine Active</div>
 </header>
+
+<div class="controls">
+    <label for="api-key" style="font-size: 12px; color: #aaa;">HF API KEY:</label>
+    <!-- Students paste their key here. You can pre-fill this via JS if you want. -->
+    <input type="text" id="api-key" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx" value=""> 
+    <button onclick="runAudit()">▶ EXECUTE AUDIT</button>
+    <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
+    <span class="warning">⚠️ DO NOT SHARE YOUR KEY</span>
+</div>
 
 <div class="main">
     <div class="column" id="editor-col">
         <div class="label">main.py (System Logic)</div>
         <textarea id="code-editor">
 import requests
+import json
 
-# --- CLASS INFRASTRUCTURE (DO NOT MODIFY) ---
-API_KEY = "hf_YOUR_REAL_KEY_HERE"
-MODEL_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-1.5B-Instruct"
-# --------------------------------------------
+# --- CONFIGURATION ---
+# We get the key from the input box above, not hardcoded here!
+API_KEY = get_api_key() 
+MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+# ---------------------
+
+def get_api_key():
+    # This function bridges JS and Python
+    import js
+    return js.document.getElementById('api-key').value
 
 def audit_item(text):
     headers = {"Authorization": f"Bearer {API_KEY}"}
-    payload = {"inputs": f"Audit this for security: {text}"}
+    # Simple prompt for security audit
+    prompt = f"Is '{text}' a secure password? Answer only with 'SECURE' or 'INSECURE' and a brief reason."
+    payload = {"inputs": prompt}
     
-    response = requests.post(MODEL_URL, headers=headers, json=payload)
-    return response.json()
+    try:
+        response = requests.post(MODEL_URL, headers=headers, json=payload, timeout=10)
+        
+        # Check for HTTP errors
+        if response.status_code == 401:
+            return "ERROR: 401 Unauthorized. Check your API Key."
+        if response.status_code == 503:
+            return "ERROR: 503 Service Unavailable. Model is loading. Try again."
+            
+        response.raise_for_status()
+        return response.json()[0]['generated_text']
+        
+    except Exception as e:
+        return f"CONNECTION ERROR: {str(e)}"
 
 def main():
-    # Read the local virtual file
-    with open('target_data.txt', 'r') as f:
-        data = [line.strip() for line in f if line.strip()]
+    if not API_KEY or API_KEY == "":
+        print("❌ CRITICAL ERROR: No API Key provided in the top bar.")
+        return
 
-    print(f"--- Sentinel System Online ---")
+    print(f"🛡️  Security Sentinel Starting...")
+    print(f"🔑 Using Key: {API_KEY[:5]}...{API_KEY[-5:]}")
+    print("-" * 30)
     
-    for item in data[:3]: # Limit to 3 for testing
-        print(f"Auditing: {item}...")
+    # Read the local virtual file
+    try:
+        with open('target_data.txt', 'r') as f:
+            data = [line.strip() for line in f if line.strip()]
+    except:
+        print("❌ Error reading target_data.txt")
+        return
+
+    for item in data:
+        print(f"📝 Auditing: {item}")
         result = audit_item(item)
-        print(f"Result: {result}\n")
+        print(f"   ↳ AI Response: {result}\n")
 
 if __name__ == "__main__":
     main()
 </textarea>
-        <div id="output">System initialized. Awaiting student command...</div>
+        <div id="output">System initialized. Enter API Key and press Execute...</div>
     </div>
 
     <div class="column" id="data-col">
@@ -69,6 +116,8 @@ if __name__ == "__main__":
 Password123!
 admin_user_2026
 qwerty
+Tr0ub4dor&3
+correcthorsebatterystaple
         </textarea>
     </div>
 </div>
@@ -77,36 +126,60 @@ qwerty
     let pyodide;
 
     async function init() {
-        pyodide = await loadPyodide();
-        await pyodide.loadPackage(["requests", "pyodide-http"]);
-        document.getElementById('output').innerHTML = "Engine Ready. Shared Key Loaded.";
+        const output = document.getElementById('output');
+        output.innerHTML = "⏳ Loading Python Engine (Pyodide)...<br>This may take 10-15 seconds on first load.";
+        
+        try {
+            pyodide = await loadPyodide();
+            output.innerHTML += "<br>⏳ Installing 'requests' package...";
+            await pyodide.loadPackage(["requests", "pyodide-http"]);
+            output.innerHTML = "✅ Engine Ready. <br>⚠️ <span style='color:#ffcc00'>Enter your HF API Key above to begin.</span>";
+        } catch (err) {
+            output.innerHTML = `❌ Failed to load engine: ${err}`;
+        }
     }
 
     async function runAudit() {
         const output = document.getElementById('output');
-        output.innerHTML = "System Booting...<br>";
+        const apiKey = document.getElementById('api-key').value;
+        
+        if (!apiKey) {
+            output.innerHTML = "❌ ERROR: Please enter your Hugging Face API Key in the top bar.";
+            return;
+        }
+
+        output.innerHTML = "🔄 System Booting...<br>";
         
         const code = document.getElementById('code-editor').value;
         const data = document.getElementById('data-input').value;
         
         try {
-            // Write the virtual file for the Python script to read
+            // Write the virtual file
             pyodide.FS.writeFile('target_data.txt', data);
             
-            // Allow the requests library to work in the browser
+            // Patch requests to work in browser
             await pyodide.runPythonAsync(`
 import pyodide_http
 pyodide_http.patch_all()
             `);
             
+            // Capture stdout
             pyodide.setStdout({
-                batched: (msg) => { output.innerHTML += msg + "<br>"; }
+                batched: (msg) => { 
+                    output.innerHTML += msg + "<br>"; 
+                    output.scrollTop = output.scrollHeight; // Auto-scroll
+                }
             });
             
             await pyodide.runPythonAsync(code);
+            
         } catch (err) {
-            output.innerHTML += `<span style="color:#ff4d4d">SYSTEM ERROR: ${err}</span>`;
+            output.innerHTML += `<br><span style="color:#ff4d4d">💀 SYSTEM CRASH: ${err}</span>`;
         }
+    }
+
+    function clearOutput() {
+        document.getElementById('output').innerHTML = "Log cleared.";
     }
 
     init();
