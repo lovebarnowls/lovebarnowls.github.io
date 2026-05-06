@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Term 4: Security Sentinel IDE</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #1f1f1f; padding: 15px 25px; border-bottom: 2px solid #ce3c3c; display: flex; justify-content: space-between; align-items: center; }
+        .main { display: flex; flex: 1; overflow: hidden; }
+        .column { display: flex; flex-direction: column; height: 100%; }
+        #editor-col { flex: 3; border-right: 1px solid #333; }
+        #data-col { flex: 2; background: #181818; }
+        
+        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 20px; border: none; font-size: 14px; outline: none; line-height: 1.6; }
+        .label { background: #2d2d2d; padding: 8px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; }
+        
+        #output { flex: 0.5; background: #000; color: #00ff00; padding: 15px; font-family: monospace; overflow-y: auto; border-top: 2px solid #333; font-size: 13px; }
+        button { background: #ce3c3c; color: white; border: none; padding: 10px 25px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div><strong>SECURITY SENTINEL</strong> | Shared Class System</div>
+    <button onclick="runAudit()">▶ EXECUTE SYSTEM AUDIT</button>
+</header>
+
+<div class="main">
+    <div class="column" id="editor-col">
+        <div class="label">main.py (System Logic)</div>
+        <textarea id="code-editor">
+import requests
+
+# --- CLASS INFRASTRUCTURE (DO NOT MODIFY) ---
+API_KEY = "hf_YOUR_REAL_KEY_HERE"
+MODEL_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-1.5B-Instruct"
+# --------------------------------------------
+
+def audit_item(text):
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    payload = {"inputs": f"Audit this for security: {text}"}
+    
+    response = requests.post(MODEL_URL, headers=headers, json=payload)
+    return response.json()
+
+def main():
+    # Read the local virtual file
+    with open('target_data.txt', 'r') as f:
+        data = [line.strip() for line in f if line.strip()]
+
+    print(f"--- Sentinel System Online ---")
+    
+    for item in data[:3]: # Limit to 3 for testing
+        print(f"Auditing: {item}...")
+        result = audit_item(item)
+        print(f"Result: {result}\n")
+
+if __name__ == "__main__":
+    main()
+</textarea>
+        <div id="output">System initialized. Awaiting student command...</div>
+    </div>
+
+    <div class="column" id="data-col">
+        <div class="label">target_data.txt (Local Data Source)</div>
+        <textarea id="data-input">
+Password123!
+admin_user_2026
+qwerty
+        </textarea>
+    </div>
+</div>
+
+<script>
+    let pyodide;
+
+    async function init() {
+        pyodide = await loadPyodide();
+        await pyodide.loadPackage(["requests", "pyodide-http"]);
+        document.getElementById('output').innerHTML = "Engine Ready. Shared Key Loaded.";
+    }
+
+    async function runAudit() {
+        const output = document.getElementById('output');
+        output.innerHTML = "System Booting...<br>";
+        
+        const code = document.getElementById('code-editor').value;
+        const data = document.getElementById('data-input').value;
+        
+        try {
+            // Write the virtual file for the Python script to read
+            pyodide.FS.writeFile('target_data.txt', data);
+            
+            // Allow the requests library to work in the browser
+            await pyodide.runPythonAsync(`
+import pyodide_http
+pyodide_http.patch_all()
+            `);
+            
+            pyodide.setStdout({
+                batched: (msg) => { output.innerHTML += msg + "<br>"; }
+            });
+            
+            await pyodide.runPythonAsync(code);
+        } catch (err) {
+            output.innerHTML += `<span style="color:#ff4d4d">SYSTEM ERROR: ${err}</span>`;
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
