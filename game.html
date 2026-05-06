@@ -279,4 +279,25 @@ asyncio.ensure_future(main())
             document.getElementById('stop-btn').disabled = false;
             await pyodide.runPythonAsync(code);
         } catch (err) {
-           
+            consoleDiv.innerText = "❌ Error: " + err;
+            isRunning = false;
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('stop-btn').disabled = true;
+        }
+    }
+
+    function stopGame() {
+        document.getElementById('console').innerText = "Stopped.";
+        document.getElementById('run-btn').disabled = false;
+        document.getElementById('stop-btn').disabled = true;
+        isRunning = false;
+        const ctx = document.getElementById('canvas').getContext('2d');
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 400, 300);
+    }
+
+    init();
+</script>
+
+</body>
+</html>
