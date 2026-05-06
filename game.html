@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Game IDE v5.0</title>
-    <!-- We load the script dynamically now, so we can reload it -->
+    <title>Sentinel Game IDE v4.0</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
         body { background: #1e1e1e; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; height: 50px; }
@@ -42,7 +42,6 @@
         }
         .log-info { color: #0f0; }
         .log-error { color: #ff4d4d; }
-        .log-warn { color: #ffcc00; }
 
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .progress-bar { width: 300px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 20px; }
@@ -53,13 +52,13 @@
 <body>
 
 <div id="loading-screen">
-    <h2 style="color:#ce3c3c;">🎮 Sentinel Engine v5.0</h2>
+    <h2 style="color:#ce3c3c;">🎮 Sentinel Engine v4.0</h2>
     <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
     <div id="loading-text">Initializing Python...</div>
 </div>
 
 <header>
-    <h1>Sentinel Game IDE <span style="font-size:12px; color:#666;">v5.0 (Nuclear Reload)</span></h1>
+    <h1>Sentinel Game IDE <span style="font-size:12px; color:#666;">v4.0 (True Reload)</span></h1>
     <div id="status" style="font-size: 12px; color: #888;">Ready</div>
 </header>
 
@@ -138,7 +137,7 @@ asyncio.ensure_future(main())
     <div class="game-pane">
         <canvas id="canvas" width="400" height="300" tabindex="1"></canvas>
         <div class="controls">
-            <button id="run-btn" onclick="runGame()">▶ Run (Full Reload)</button>
+            <button id="run-btn" onclick="runGame()">▶ Run</button>
             <button id="stop-btn" class="stop" onclick="stopGame()" disabled>⏹ Stop</button>
             <input type="file" id="img-upload" accept="image/*" onchange="handleImageUpload(this)">
         </div>
@@ -151,75 +150,48 @@ asyncio.ensure_future(main())
 </div>
 
 <script>
-    let pyodide = null;
-    let isRunning = false;
+    let pyodide;
     
     function addToConsole(msg, type='info') {
         const consoleDiv = document.getElementById('console-output');
         const span = document.createElement('div');
         span.textContent = msg;
-        span.className = type === 'error' ? 'log-error' : (type === 'warn' ? 'log-warn' : 'log-info');
+        span.className = type === 'error' ? 'log-error' : 'log-info';
         consoleDiv.appendChild(span);
         consoleDiv.scrollTop = consoleDiv.scrollHeight;
     }
 
-    // Dynamically load Pyodide script
-    function loadPyodideScript() {
-        return new Promise((resolve, reject) => {
-            if (document.getElementById('pyodide-script')) {
-                resolve();
-                return;
-            }
-            const script = document.createElement('script');
-            script.id = 'pyodide-script';
-            script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js";
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    }
-
-    async function initPyodide() {
+    async function init() {
         const progress = document.getElementById('progress');
         const text = document.getElementById('loading-text');
         
         try {
-            // Ensure script is loaded
-            await loadPyodideScript();
-            
-            progress.style.width = "10%";
-            text.innerText = "Loading Core...";
-            
-            // Initialize
             pyodide = await loadPyodide({
                 indexURL : "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
             });
-            
-            progress.style.width = "50%";
+            progress.style.width = "30%";
             text.innerText = "Downloading pygame-ce...";
             
             await pyodide.loadPackage("pygame-ce");
-            
             progress.style.width = "100%";
             
-            // Link Canvas
             pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
             
-            // Setup Console
             pyodide.setStdout({ batched: (msg) => addToConsole(msg) });
             pyodide.setStderr({ batched: (msg) => addToConsole(msg, 'error') });
             
-            return true;
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                addToConsole("✅ Engine Ready. Click Run.");
+            }, 500);
             
         } catch (err) {
             text.innerText = "Error: " + err.message;
             addToConsole("❌ Failed to load: " + err, 'error');
-            return false;
         }
     }
 
     async function handleImageUpload(input) {
-        if (!pyodide) return;
         if (input.files && input.files[0]) {
             const file = input.files[0];
             const reader = new FileReader();
@@ -234,19 +206,17 @@ asyncio.ensure_future(main())
     }
 
     async function stopGame() {
-        if (!pyodide) return;
-        
         // 1. Set Global Flag to False
         try {
             await pyodide.runPythonAsync("game_running = False");
-        } catch (e) { /* Ignore */ }
+        } catch (e) { /* Ignore if var doesn't exist yet */ }
 
         // 2. Clear Canvas
         const ctx = document.getElementById('canvas').getContext('2d');
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, 400, 300);
 
-        // 3. Release Focus
+        // 3. CRITICAL: Release Focus from Canvas back to Body
         document.getElementById('canvas').blur();
         document.body.focus();
 
@@ -254,67 +224,41 @@ asyncio.ensure_future(main())
         addToConsole("⏹ Stopped.");
         document.getElementById('run-btn').disabled = false;
         document.getElementById('stop-btn').disabled = true;
-        isRunning = false;
     }
 
     async function runGame() {
-        if (isRunning) {
-            alert("Please stop the current game first.");
-            return;
-        }
-
-        // 1. Show Loading Screen
-        document.getElementById('loading-screen').style.display = 'flex';
-        document.getElementById('progress').style.width = "0%";
-        document.getElementById('loading-text').innerText = "Destroying Old Engine...";
+        // 1. Stop any existing game
+        await stopGame();
         
         // 2. Clear Console
         document.getElementById('console-output').innerHTML = ""; 
+        addToConsole("🚀 Booting...");
         
-        // 3. NUKE: Remove old Pyodide instance from memory
-        pyodide = null;
-        
-        // 4. Re-initialize Pyodide from scratch
-        const success = await initPyodide();
-        
-        document.getElementById('loading-screen').style.display = 'none';
-        
-        if (!success) {
-            addToConsole("❌ Failed to restart engine.", 'error');
-            return;
-        }
-        
-        addToConsole("🚀 Engine Rebuilt. Running code...");
-        document.getElementById('canvas').focus();
-        
+        // 3. NUCLEAR OPTION: Delete old main function to force reload
+        try {
+            await pyodide.runPythonAsync(`
+if 'main' in globals():
+    del globals()['main']
+game_running = True
+            `);
+        } catch(e) {}
+
         const code = document.getElementById('code-editor').value;
         
         document.getElementById('run-btn').disabled = true;
         document.getElementById('stop-btn').disabled = false;
-        isRunning = true;
 
         try {
-            // 5. Run the code
+            // 4. Run the new code
             await pyodide.runPythonAsync(code);
         } catch (err) {
             addToConsole("❌ Error: " + err, 'error');
-        } finally {
-            // If the game ends naturally, re-enable buttons
-            if (isRunning) {
-                document.getElementById('run-btn').disabled = false;
-                document.getElementById('stop-btn').disabled = true;
-                isRunning = false;
-            }
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('stop-btn').disabled = true;
         }
     }
 
-    // Initial Load
-    window.onload = async () => {
-        document.getElementById('loading-screen').style.display = 'flex';
-        await initPyodide();
-        document.getElementById('loading-screen').style.display = 'none';
-        addToConsole("✅ Engine Ready. Click Run.");
-    };
+    init();
 </script>
 
 </body>
