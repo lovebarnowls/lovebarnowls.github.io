@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sen Game IDE</title>
+    <title>Sens Game IDE</title>
     <!-- OFFICIAL STABLE PYODIDE -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
@@ -133,7 +133,7 @@
 </div>
 
 <header>
-    <h1>🎮 Game IDE</h1>
+    <h1>🎮 GRRR Game IDE</h1>
     <div id="status" style="font-size: 12px; color: #888;">Ready</div>
 </header>
 
@@ -218,38 +218,36 @@ asyncio.ensure_future(main())
     let pyodide;
     let isRunning = false;
 
-    async function init() {
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const loadingText = document.getElementById('loading-text');
-        const consoleDiv = document.getElementById('console');
+   async function init() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    
+    try {
+        pyodide = await loadPyodide();
+        loadingText.innerText = "Attempting to load Pygame engine...";
         
+        // Try the common alias first. If this fails, try "pygame_ce"
         try {
-            // 1. Load Pyodide
-            pyodide = await loadPyodide();
-            loadingText.innerText = "Downloading pygame (approx 10MB)...";
-            
-            // 2. Load pygame
             await pyodide.loadPackage("pygame");
-            
-            // 3. Link Canvas
-            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
-            
-            // 4. Setup Console
-            pyodide.setStdout({ batched: (msg) => {
-                consoleDiv.innerText = msg;
-            }});
-            
-            // Hide loading screen
-            loadingOverlay.style.display = 'none';
-            document.getElementById('run-btn').disabled = false;
-            consoleDiv.innerText = "✅ Engine Ready. Click Run.";
-            
-        } catch (err) {
-            loadingText.innerText = "Error Loading Engine";
-            consoleDiv.innerText = "❌ Failed: " + err;
-            console.error(err);
+        } catch {
+            await pyodide.loadPackage("pygame_ce");
         }
+        
+        pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+        
+        pyodide.setStdout({ batched: (msg) => {
+            document.getElementById('console').innerText = msg;
+        }});
+        
+        loadingOverlay.style.display = 'none';
+        document.getElementById('run-btn').disabled = false;
+        document.getElementById('console').innerText = "✅ Engine Ready.";
+        
+    } catch (err) {
+        loadingText.innerText = "Error Loading Engine";
+        document.getElementById('console').innerText = "❌ Critical Failure: " + err;
     }
+}
 
     async function handleImageUpload(input) {
         if (input.files && input.files[0]) {
