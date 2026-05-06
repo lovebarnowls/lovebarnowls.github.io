@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Sentinel Game IDE</title>
-    <!-- Using Stable Pyodide 0.23.4 -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <!-- USE PYODIDE 0.26.2 -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
         body { background: #1e1e1e; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; height: 50px; }
@@ -67,8 +67,9 @@ async def main():
         player_img = pygame.image.load('player.png')
         player_img = pygame.transform.scale(player_img, (50, 50))
         use_image = True
-    except:
-        pass
+        print("✅ Image loaded!")
+    except Exception as e:
+        print(f"⚠️ No image: {e}")
 
     x, y = 175, 125
     running = True
@@ -119,15 +120,16 @@ asyncio.ensure_future(main())
         const text = document.getElementById('loading-text');
         
         try {
-            // 1. Load Pyodide
+            // 1. Load Pyodide 0.26.2
             pyodide = await loadPyodide({
-                indexURL : "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
+                indexURL : "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
             });
             progress.style.width = "30%";
-            text.innerText = "Downloading Pygame (approx 15MB)...";
+            text.innerText = "Downloading pygame-ce...";
             
-            // 2. Load Pygame
-            await pyodide.loadPackage("pygame");
+            // 2. Load pygame-ce (Community Edition)
+            // This is the key fix. Use 'pygame-ce' not 'pygame'
+            await pyodide.loadPackage("pygame-ce");
             progress.style.width = "100%";
             
             // 3. Setup Canvas
@@ -142,7 +144,8 @@ asyncio.ensure_future(main())
             
         } catch (err) {
             text.innerText = "Error: " + err.message;
-            document.getElementById('console').innerText = "❌ Failed to load. Check internet.";
+            document.getElementById('console').innerText = "❌ Failed to load. Check internet/firewall.";
+            console.error(err);
         }
     }
 
