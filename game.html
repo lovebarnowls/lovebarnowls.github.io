@@ -47,21 +47,32 @@
         <textarea id="code-editor" spellcheck="false">
 import pygame
 import asyncio
+from js import document
+
+# Global flag to allow JS to stop the game
+game_running = True
 
 async def main():
-    pygame.init()
+    global game_running
+    
+    # Only init if not already initialized
+    if not pygame.get_init():
+        pygame.init()
+        
     screen = pygame.display.set_mode((400, 300))
     pygame.display.set_caption("My Game")
     
     x, y = 200, 150
-    running = True
+    game_running = True  # Reset flag on start
     print("Game Started! Use Arrow Keys.")
 
-    while running:
+    while game_running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: running = False
+            if event.type == pygame.QUIT: 
+                game_running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE: running = False
+                if event.key == pygame.K_ESCAPE: 
+                    game_running = False
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]: x -= 5
@@ -75,9 +86,9 @@ async def main():
         
         await asyncio.sleep(0)
 
-    pygame.quit()
     print("Game Ended.")
 
+# Start the game
 asyncio.ensure_future(main())
 </textarea>
     </div>
@@ -139,27 +150,17 @@ asyncio.ensure_future(main())
     }
 
     async function stopGame() {
-        // 1. Tell Python to quit pygame
+        // 1. Set the Python flag to false to break the loop
         try {
-            await pyodide.runPythonAsync(`
-import pygame
-if pygame.get_init():
-    pygame.quit()
-            `);
-        } catch (e) { console.log("Cleanup error", e); }
+            await pyodide.runPythonAsync("game_running = False");
+        } catch (e) { console.log("Flag set error", e); }
 
-        // 2. Cancel any running async tasks
-        if (currentTask) {
-            currentTask.cancel();
-            currentTask = null;
-        }
-
-        // 3. Clear Canvas
+        // 2. Clear Canvas visually immediately
         const ctx = document.getElementById('canvas').getContext('2d');
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, 400, 300);
 
-        // 4. Reset UI
+        // 3. Reset UI
         document.getElementById('console').innerText = "⏹ Stopped. Ready to Run.";
         document.getElementById('run-btn').disabled = false;
         document.getElementById('stop-btn').disabled = true;
@@ -181,23 +182,12 @@ if pygame.get_init():
 
         try {
             // Run the user's code
-            // We wrap it in a task so we can cancel it later if needed
-            currentTask = pyodide.runPythonAsync(code);
-            await currentTask;
+            await pyodide.runPythonAsync(code);
             
         } catch (err) {
-            if (err.name === 'CancelledError') {
-                consoleDiv.innerText = "⏹ Stopped by user.";
-            } else {
-                consoleDiv.innerText = "❌ Error: " + err;
-            }
-        } finally {
-            // Only re-enable run button if we aren't already stopped
-            if (!document.getElementById('stop-btn').disabled) {
-                 // Game finished naturally
-                 document.getElementById('run-btn').disabled = false;
-                 document.getElementById('stop-btn').disabled = true;
-            }
+            consoleDiv.innerText = "❌ Error: " + err;
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('stop-btn').disabled = true;
         }
     }
 
