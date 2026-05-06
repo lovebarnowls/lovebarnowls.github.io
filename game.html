@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Game IDE v3.1 (Fixed)</title>
+    <title>Sentinel Game IDE (Trinket Lite)</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
         body { background: #1e1e1e; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -52,7 +52,7 @@
 <body>
 
 <div id="loading-screen">
-    <h2 style="color:#ce3c3c;">🎮 Sentinel Engine v3.1</h2>
+    <h2 style="color:#ce3c3c;">🎮 Sentinel Engine</h2>
     <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
     <div id="loading-text">Initializing Python...</div>
 </div>
@@ -69,22 +69,23 @@
 import pygame
 import asyncio
 
-# GLOBAL FLAG (Must be outside main() for JS to access it)
+# Global Flag
 game_running = True
 
 async def main():
     global game_running
     
+    # Reset Pygame if needed
     if not pygame.get_init():
         pygame.init()
         
     screen = pygame.display.set_mode((400, 300))
     pygame.display.set_caption("Click & Move")
     
-    # Square Settings
+    # Settings
     x, y = 175, 125
     size = 50
-    speed = 5  # Try changing this to 2!
+    speed = 5  # Change this to 2 to test!
     color = (0, 255, 0) 
     
     print("🎮 Game Started!")
@@ -99,7 +100,7 @@ async def main():
                 if event.key == pygame.K_ESCAPE: 
                     game_running = False
             
-            # MOUSE INTERACTION
+            # Mouse Interaction
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
                 if (x <= mouse_x <= x + size and 
@@ -109,18 +110,18 @@ async def main():
                 else:
                     print("❌ Missed!")
 
-        # MOVEMENT
+        # Movement
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]: x -= speed
         if keys[pygame.K_RIGHT]: x += speed
         if keys[pygame.K_UP]: y -= speed
         if keys[pygame.K_DOWN]: y += speed
 
-        # BOUNDARIES
+        # Boundaries
         x = max(0, min(400 - size, x))
         y = max(0, min(300 - size, y))
 
-        # DRAW
+        # Draw
         screen.fill((30, 30, 30))
         pygame.draw.rect(screen, color, (x, y, size, size))
         pygame.display.flip()
@@ -129,6 +130,7 @@ async def main():
 
     print("Game Ended.")
 
+# Start the game
 asyncio.ensure_future(main())
 </textarea>
     </div>
@@ -205,10 +207,10 @@ asyncio.ensure_future(main())
     }
 
     async function stopGame() {
-        // 1. Set the GLOBAL flag to false
+        // 1. Set Global Flag to False
         try {
             await pyodide.runPythonAsync("game_running = False");
-        } catch (e) { console.log("Stop error", e); }
+        } catch (e) { /* Ignore if var doesn't exist yet */ }
 
         // 2. Clear Canvas
         const ctx = document.getElementById('canvas').getContext('2d');
@@ -222,20 +224,31 @@ asyncio.ensure_future(main())
     }
 
     async function runGame() {
-        // Always stop previous instance first
+        // 1. Stop any existing game
         await stopGame();
         
-        // Clear console for fresh run
+        // 2. Clear Console
         document.getElementById('console-output').innerHTML = ""; 
         addToConsole("🚀 Booting...");
         document.getElementById('canvas').focus();
         
+        // 3. Reset Global Variables in Python Memory
+        // This ensures old values (like speed=2) don't persist if they changed them back to 5
+        try {
+            await pyodide.runPythonAsync(`
+game_running = True
+if 'main' in globals():
+    del main
+            `);
+        } catch(e) {}
+
         const code = document.getElementById('code-editor').value;
         
         document.getElementById('run-btn').disabled = true;
         document.getElementById('stop-btn').disabled = false;
 
         try {
+            // 4. Run the new code
             await pyodide.runPythonAsync(code);
         } catch (err) {
             addToConsole("❌ Error: " + err, 'error');
