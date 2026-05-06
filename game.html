@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Game IDE</title>
-    <!-- Updated to Pyodide 0.26.2 for better pygame support -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <title>Sentinel Game IDE</title>
+    <!-- OFFICIAL STABLE PYODIDE -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { 
             background: #1e1e1e; 
@@ -16,8 +16,6 @@
             height: 100vh; 
             overflow: hidden;
         }
-        
-        /* Header */
         header { 
             background: #252526; 
             padding: 10px 20px; 
@@ -29,10 +27,8 @@
         }
         h1 { margin: 0; font-size: 18px; color: #ce3c3c; }
         
-        /* Main Layout */
-        .container { display: flex; flex: 1; height: calc(100vh - 90px); }
+        .container { display: flex; flex: 1; height: calc(100vh -90px); }
         
-        /* Left Column: Code Editor */
         .editor-pane { 
             flex: 1; 
             display: flex; 
@@ -52,7 +48,7 @@
             flex: 1; 
             background: #1e1e1e; 
             color: #d4d4d4; 
-            font-family: 'Consolas', 'Courier New', monospace; 
+            font-family: 'Consolas', monospace; 
             padding: 15px; 
             border: none; 
             font-size: 14px; 
@@ -61,7 +57,6 @@
             outline: none;
         }
         
-        /* Right Column: Game & Controls */
         .game-pane { 
             flex: 1; 
             display: flex; 
@@ -76,11 +71,8 @@
             border: 2px solid #444; 
             background: #000; 
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            /* Ensure canvas doesn't stretch weirdly */
-            max-width: 100%; 
         }
 
-        /* Controls Area */
         .controls { 
             margin-top: 20px; 
             display: flex; 
@@ -103,12 +95,8 @@
         button:hover { background: #ff4d4d; }
         button:disabled { background: #555; cursor: not-allowed; }
         
-        input[type="file"] { 
-            color: #aaa; 
-            font-size: 12px; 
-        }
+        input[type="file"] { color: #aaa; font-size: 12px; }
 
-        /* Console Output */
         .console { 
             height: 40px; 
             background: #000; 
@@ -119,17 +107,37 @@
             border-top: 1px solid #333;
             overflow-y: auto;
         }
+        
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 999;
+        }
+        .spinner {
+            border: 4px solid #333; border-top: 4px solid #ce3c3c;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+<!-- Loading Screen -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <p id="loading-text" style="color:white; margin-top:20px;">Initializing Python Engine...</p>
+</div>
+
 <header>
-    <h1>🎮 My Game IDE</h1>
-    <div id="status" style="font-size: 12px; color: #888;">Loading Engine...</div>
+    <h1>🎮 Sentinel Game IDE</h1>
+    <div id="status" style="font-size: 12px; color: #888;">Ready</div>
 </header>
 
 <div class="container">
-    <!-- LEFT: Code Editor -->
     <div class="editor-pane">
         <div class="pane-header">main.py</div>
         <textarea id="code-editor" spellcheck="false">
@@ -144,7 +152,6 @@ async def main():
     
     # Try to load an image if it exists, otherwise use a rectangle
     try:
-        # Look for 'player.png' in the virtual file system
         player_img = pygame.image.load('player.png')
         player_img = pygame.transform.scale(player_img, (50, 50))
         use_image = True
@@ -158,7 +165,6 @@ async def main():
     print("Game Started! Use Arrow Keys to move.")
 
     while running:
-        # 1. Events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -166,19 +172,16 @@ async def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
 
-        # 2. Input Handling
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]: x -= 5
         if keys[pygame.K_RIGHT]: x += 5
         if keys[pygame.K_UP]: y -= 5
         if keys[pygame.K_DOWN]: y += 5
 
-        # Keep player on screen
         x = max(0, min(350, x))
         y = max(0, min(250, y))
 
-        # 3. Draw
-        screen.fill((30, 30, 30)) # Dark grey background
+        screen.fill((30, 30, 30))
         
         if use_image:
             screen.blit(player_img, (x, y))
@@ -186,8 +189,6 @@ async def main():
             pygame.draw.rect(screen, (0, 255, 0), (x, y, 50, 50))
             
         pygame.display.flip()
-        
-        # CRITICAL: Yield to browser
         await asyncio.sleep(0)
         
     print("Game Over.")
@@ -196,7 +197,6 @@ asyncio.ensure_future(main())
 </textarea>
     </div>
 
-    <!-- RIGHT: Game Canvas & Controls -->
     <div class="game-pane">
         <canvas id="canvas" width="400" height="300" tabindex="1"></canvas>
         
@@ -204,9 +204,8 @@ asyncio.ensure_future(main())
             <button id="run-btn" onclick="runGame()" disabled>▶ Run</button>
             <button id="stop-btn" onclick="stopGame()" disabled style="background:#444;">⏹ Stop</button>
             
-            <!-- Image Upload -->
             <div style="border-left: 1px solid #555; padding-left: 10px; margin-left: 10px;">
-                <label style="font-size: 12px; color: #aaa; display:block; margin-bottom:5px;">Upload Player Sprite:</label>
+                <label style="font-size: 12px; color: #aaa; display:block; margin-bottom:5px;">Upload Sprite:</label>
                 <input type="file" id="img-upload" accept="image/*" onchange="handleImageUpload(this)">
             </div>
         </div>
@@ -219,64 +218,58 @@ asyncio.ensure_future(main())
     let pyodide;
     let isRunning = false;
 
-    // 1. Initialize Pyodide
     async function init() {
-        const status = document.getElementById('status');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
         const consoleDiv = document.getElementById('console');
         
         try {
+            // 1. Load Pyodide
             pyodide = await loadPyodide();
-            status.innerText = "Loading pygame...";
+            loadingText.innerText = "Downloading pygame (approx 10MB)...";
             
-            // Load pygame package
+            // 2. Load pygame
             await pyodide.loadPackage("pygame");
             
-            // Link canvas
+            // 3. Link Canvas
             pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
             
-            // Setup stdout capture
+            // 4. Setup Console
             pyodide.setStdout({ batched: (msg) => {
                 consoleDiv.innerText = msg;
             }});
             
-            status.innerText = "✅ Ready";
+            // Hide loading screen
+            loadingOverlay.style.display = 'none';
             document.getElementById('run-btn').disabled = false;
-            consoleDiv.innerText = "Engine Ready. Upload an image or click Run.";
+            consoleDiv.innerText = "✅ Engine Ready. Click Run.";
+            
         } catch (err) {
-            status.innerText = "❌ Error";
-            consoleDiv.innerText = "Failed to load: " + err;
+            loadingText.innerText = "Error Loading Engine";
+            consoleDiv.innerText = "❌ Failed: " + err;
             console.error(err);
         }
     }
 
-    // 2. Handle Image Upload
     async function handleImageUpload(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
             const reader = new FileReader();
-            
             reader.onload = function(e) {
                 const arrayBuffer = e.target.result;
                 const uint8Array = new Uint8Array(arrayBuffer);
-                
-                // Write the file to Pyodide's virtual file system as 'player.png'
-                // We assume PNG for simplicity, but pygame handles most formats
                 pyodide.FS.writeFile('player.png', uint8Array);
-                
-                document.getElementById('console').innerText = `✅ Uploaded ${file.name} as 'player.png'`;
+                document.getElementById('console').innerText = `✅ Uploaded ${file.name}`;
             };
-            
             reader.readAsArrayBuffer(file);
         }
     }
 
-    // 3. Run Game
     async function runGame() {
         if (isRunning) return;
-        
         const consoleDiv = document.getElementById('console');
-        consoleDiv.innerText = "Starting game...";
-        document.getElementById('canvas').focus(); // Focus for keyboard input
+        consoleDiv.innerText = "Starting...";
+        document.getElementById('canvas').focus();
         
         const code = document.getElementById('code-editor').value;
         
@@ -284,36 +277,6 @@ asyncio.ensure_future(main())
             isRunning = true;
             document.getElementById('run-btn').disabled = true;
             document.getElementById('stop-btn').disabled = false;
-            
-            // Run the user's code
             await pyodide.runPythonAsync(code);
-            
         } catch (err) {
-            consoleDiv.innerText = "❌ Error: " + err;
-            isRunning = false;
-            document.getElementById('run-btn').disabled = false;
-            document.getElementById('stop-btn').disabled = true;
-        }
-    }
-
-    // 4. Stop Game (Simple Reload of Logic)
-    function stopGame() {
-        // In Pyodide, stopping an async loop is hard. 
-        // We just reset the UI state here.
-        document.getElementById('console').innerText = "Stopped. Click Run to restart.";
-        document.getElementById('run-btn').disabled = false;
-        document.getElementById('stop-btn').disabled = true;
-        isRunning = false;
-        
-        // Clear canvas
-        const ctx = document.getElementById('canvas').getContext('2d');
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, 400, 300);
-    }
-
-    // Start initialization
-    init();
-</script>
-
-</body>
-</html>
+           
