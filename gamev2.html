@@ -10,7 +10,7 @@
         header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
         h1 { margin: 0; font-size: 18px; color: #ce3c3c; }
 
-        /* NEW LAYOUT GRID */
+        /* LAYOUT GRID */
         .container { 
             display: grid; 
             grid-template-columns: 1fr 1fr; /* Split screen 50/50 horizontally */
@@ -32,6 +32,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            min-height: 0; /* Critical for nested flex scrolling */
         }
 
         /* Top Right: Game */
@@ -45,6 +46,7 @@
             padding: 10px;
             border-bottom: 1px solid #333;
             position: relative;
+            min-height: 0;
         }
 
         /* Bottom Right: Console */
@@ -53,7 +55,8 @@
             display: flex; 
             flex-direction: column; 
             background: #111; 
-            min-height: 0; /* Important for scrolling */
+            min-height: 0; /* Critical for scrolling */
+            overflow: hidden;
         }
 
         .pane-header { background: #2d2d2d; padding: 5px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; flex-shrink: 0; }
@@ -68,7 +71,7 @@
             cursor: crosshair; 
             display: block; 
             max-width: 100%;
-            max-height: 90%; /* Ensure it fits in the pane */
+            max-height: 100%; /* Fit within pane */
             object-fit: contain;
         }
 
@@ -101,7 +104,7 @@
             text-align: center;
             width: 100%;
         }
-        .file-item { color: #4daafc; }
+        .file-item { color: #4daafc; margin-right: 5px; }
 
         button { background: #ce3c3c; color: white; border: none; padding: 8px 18px; cursor: pointer; border-radius: 3px; font-weight: bold; font-size: 13px; }
         button:hover:not(:disabled) { background: #ff4d4d; }
@@ -124,6 +127,23 @@
         .progress-bar  { width: 300px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
         .progress-fill { height: 100%; background: #ce3c3c; width: 0%; transition: width 0.3s; }
         #loading-text  { color: #aaa; font-size: 13px; }
+
+        /* RESPONSIVE DESIGN: Stack columns on smaller screens */
+        @media (max-width: 1000px) {
+            .container {
+                grid-template-columns: 1fr; /* Single column */
+                grid-template-rows: 1fr 1fr; /* Split height 50/50 */
+                overflow-y: auto; /* Allow page scroll if needed */
+            }
+            .editor-pane {
+                border-right: none;
+                border-bottom: 1px solid #333;
+                height: 50vh; /* Force half height */
+            }
+            .right-column {
+                height: 50vh; /* Force half height */
+            }
+        }
     </style>
 </head>
 <body>
@@ -150,15 +170,17 @@ import asyncio
 import os
 
 # ============================================================
-#  STUDENT ZONE: FILE UPLOADS & ASSETS
+#  STUDENT ZONE: SETTINGS
 # ============================================================
-# 1. Use the "Upload Assets" button on the right to add images.
-# 2. The files will be saved with their original names.
-# 3. Reference them in your code like this:
-#
-#    my_image = pygame.image.load("my_picture.png")
-#
-# 4. If you upload "player.png", load it using "player.png".
+
+# 1. Upload an image using the button on the right.
+# 2. Check the Console (bottom right) to see the exact filename.
+# 3. Type that name below inside the quotes (and remove the comment)!
+# IMAGE_FILENAME = "Test1.png" 
+
+SPEED = 5
+SIZE  = 50
+
 # ============================================================
 
 game_running = True
@@ -170,24 +192,29 @@ async def main():
     pygame.init()
     # Set screen size (matches the canvas below)
     screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Yang's Game")
+    pygame.display.set_caption("Yang's Game IDE")
 
     # Load an image if it exists, otherwise use a rectangle
     player_img = None
-    if os.path.exists("player.png"):
+    
+    # Check if the file the student typed actually exists
+    if os.path.exists(IMAGE_FILENAME):
         try:
-            player_img = pygame.image.load("player.png").convert_alpha()
-            player_img = pygame.transform.scale(player_img, (50, 50))
-            print("Loaded player.png successfully!")
-        except:
-            print("Error loading image, using fallback square.")
+            player_img = pygame.image.load(IMAGE_FILENAME).convert_alpha()
+            player_img = pygame.transform.scale(player_img, (SIZE, SIZE))
+            print(f"Success! Loaded '{IMAGE_FILENAME}'")
+        except Exception as e:
+            print(f"Error loading '{IMAGE_FILENAME}': {e}")
+            print("Using fallback square.")
+    else:
+        print(f"Could not find '{IMAGE_FILENAME}'. Did you upload it?")
+        print("Using fallback square.")
 
     x, y = 375, 275
     color = (0, 200, 80)
-    speed = 5
 
     print("Game started! Use Arrow Keys to move.")
-    print("Click the window to focus controls.")
+    print("Click the game window to focus controls.")
 
     while game_running:
         for event in pygame.event.get():
@@ -198,14 +225,14 @@ async def main():
                     game_running = False
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:  x -= speed
-        if keys[pygame.K_RIGHT]: x += speed
-        if keys[pygame.K_UP]:    y -= speed
-        if keys[pygame.K_DOWN]:  y += speed
+        if keys[pygame.K_LEFT]:  x -= SPEED
+        if keys[pygame.K_RIGHT]: x += SPEED
+        if keys[pygame.K_UP]:    y -= SPEED
+        if keys[pygame.K_DOWN]:  y += SPEED
 
         # Keep player on screen
-        x = max(0, min(800 - 50, x))
-        y = max(0, min(600 - 50, y))
+        x = max(0, min(800 - SIZE, x))
+        y = max(0, min(600 - SIZE, y))
 
         # Draw
         screen.fill((30, 30, 30))
@@ -213,7 +240,7 @@ async def main():
         if player_img:
             screen.blit(player_img, (x, y))
         else:
-            pygame.draw.rect(screen, color, (x, y, 50, 50))
+            pygame.draw.rect(screen, color, (x, y, SIZE, SIZE))
 
         pygame.display.flip()
         await asyncio.sleep(0)
@@ -323,6 +350,9 @@ await main()
         if (!pyodide || !input.files) return;
         
         const files = Array.from(input.files);
+        if(files.length === 0) return;
+
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
         
         for (const file of files) {
             const reader = new FileReader();
@@ -332,18 +362,25 @@ await main()
                 reader.onload = function(e) {
                     const data = new Uint8Array(e.target.result);
                     // Write to Pyodide filesystem
-                    pyodide.FS.writeFile(file.name, data);
-                    
-                    if (!uploadedFiles.includes(file.name)) {
-                        uploadedFiles.push(file.name);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) {
+                            uploadedFiles.push(file.name);
+                        }
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
                     }
+                    resolve();
+                };
+                reader.onerror = () => {
+                    log(`Error reading ${file.name}`, 'log-error');
                     resolve();
                 };
                 reader.readAsArrayBuffer(file);
             });
         }
         
-        log(`Uploaded ${files.length} file(s).`, 'log-sys');
         updateFileList();
         
         // Reset input so same file can be selected again if needed
