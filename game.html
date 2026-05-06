@@ -18,6 +18,8 @@
         button { background: #ce3c3c; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 3px; font-weight: bold; }
         button:hover { background: #ff4d4d; }
         button:disabled { background: #555; cursor: not-allowed; }
+        button.stop { background: #444; }
+        button.stop:hover { background: #666; }
         input[type="file"] { color: #aaa; font-size: 12px; }
         .console { height: 40px; background: #000; color: #0f0; font-family: monospace; padding: 5px 15px; font-size: 12px; border-top: 1px solid #333; overflow-y: auto; }
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -45,71 +47,37 @@
         <textarea id="code-editor" spellcheck="false">
 import pygame
 import asyncio
-import sys
 
 async def main():
-    try:
-        pygame.init()
-        # Create the display surface
-        screen = pygame.display.set_mode((400, 300))
-        pygame.display.set_caption("My Game")
+    pygame.init()
+    screen = pygame.display.set_mode((400, 300))
+    pygame.display.set_caption("My Game")
+    
+    x, y = 200, 150
+    running = True
+    print("Game Started! Use Arrow Keys.")
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE: running = False
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]: x -= 5
+        if keys[pygame.K_RIGHT]: x += 5
+        if keys[pygame.K_UP]: y -= 5
+        if keys[pygame.K_DOWN]: y += 5
+
+        screen.fill((30, 30, 30))
+        pygame.draw.rect(screen, (0, 255, 0), (x, y, 50, 50))
+        pygame.display.flip()
         
-        # Load Image
-        use_image = False
-        try:
-            player_img = pygame.image.load('player.png')
-            player_img = pygame.transform.scale(player_img, (50, 50))
-            use_image = True
-            print("✅ Image loaded!")
-        except Exception as e:
-            print(f"⚠️ Using default square: {e}")
+        await asyncio.sleep(0)
 
-        x, y = 175, 125
-        clock = pygame.time.Clock()
-        running = True
-        
-        print("🎮 Game Loop Started! Click the game window to use keys.")
+    pygame.quit()
+    print("Game Ended.")
 
-        while running:
-            # 1. Handle Events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-
-            # 2. Input
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]: x -= 5
-            if keys[pygame.K_RIGHT]: x += 5
-            if keys[pygame.K_UP]: y -= 5
-            if keys[pygame.K_DOWN]: y += 5
-
-            # Bounds
-            x = max(0, min(350, x))
-            y = max(0, min(250, y))
-
-            # 3. Draw
-            screen.fill((30, 30, 30))
-            if use_image:
-                screen.blit(player_img, (x, y))
-            else:
-                pygame.draw.rect(screen, (0, 255, 0), (x, y, 50, 50))
-            
-            pygame.display.flip()
-            
-            # CRITICAL: Yield to browser
-            await asyncio.sleep(0)
-            
-        print("Game Ended.")
-        
-    except Exception as e:
-        print(f"❌ CRITICAL ERROR: {e}")
-        import traceback
-        traceback.print_exc()
-
-# Start the game
 asyncio.ensure_future(main())
 </textarea>
     </div>
@@ -117,7 +85,8 @@ asyncio.ensure_future(main())
     <div class="game-pane">
         <canvas id="canvas" width="400" height="300" tabindex="1"></canvas>
         <div class="controls">
-            <button id="run-btn" onclick="runGame()" disabled>▶ Run</button>
+            <button id="run-btn" onclick="runGame()">▶ Run</button>
+            <button id="stop-btn" class="stop" onclick="stopGame()" disabled>⏹ Stop / Reset</button>
             <input type="file" id="img-upload" accept="image/*" onchange="handleImageUpload(this)">
         </div>
     </div>
@@ -126,7 +95,7 @@ asyncio.ensure_future(main())
 
 <script>
     let pyodide;
-    let isRunning = false;
+    let currentTask = null;
 
     async function init() {
         const progress = document.getElementById('progress');
@@ -146,8 +115,7 @@ asyncio.ensure_future(main())
             
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('run-btn').disabled = false;
-                document.getElementById('console').innerText = "✅ Engine Ready. Click Run.";
+                document.getElementById('console').innerText = "✅ Engine Ready.";
             }, 500);
             
         } catch (err) {
@@ -164,37 +132,72 @@ asyncio.ensure_future(main())
                 const arrayBuffer = e.target.result;
                 const uint8Array = new Uint8Array(arrayBuffer);
                 pyodide.FS.writeFile('player.png', uint8Array);
-                document.getElementById('console').innerText = "✅ Image Uploaded. Click Run to see it.";
+                document.getElementById('console').innerText = "✅ Image Uploaded.";
             };
             reader.readAsArrayBuffer(file);
         }
     }
 
-    async function runGame() {
-        if (isRunning) {
-            alert("Game is already running. Refresh to restart.");
-            return;
+    async function stopGame() {
+        // 1. Tell Python to quit pygame
+        try {
+            await pyodide.runPythonAsync(`
+import pygame
+if pygame.get_init():
+    pygame.quit()
+            `);
+        } catch (e) { console.log("Cleanup error", e); }
+
+        // 2. Cancel any running async tasks
+        if (currentTask) {
+            currentTask.cancel();
+            currentTask = null;
         }
+
+        // 3. Clear Canvas
+        const ctx = document.getElementById('canvas').getContext('2d');
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 400, 300);
+
+        // 4. Reset UI
+        document.getElementById('console').innerText = "⏹ Stopped. Ready to Run.";
+        document.getElementById('run-btn').disabled = false;
+        document.getElementById('stop-btn').disabled = true;
+    }
+
+    async function runGame() {
+        // First, ensure we are stopped
+        await stopGame();
         
         const consoleDiv = document.getElementById('console');
         consoleDiv.innerText = "Booting...";
-        
-        // IMPORTANT: Focus the canvas so keys work
         document.getElementById('canvas').focus();
         
         const code = document.getElementById('code-editor').value;
         
+        // Update UI
+        document.getElementById('run-btn').disabled = true;
+        document.getElementById('stop-btn').disabled = false;
+
         try {
-            isRunning = true;
-            document.getElementById('run-btn').disabled = true;
-            
-            // Run the code
-            await pyodide.runPythonAsync(code);
+            // Run the user's code
+            // We wrap it in a task so we can cancel it later if needed
+            currentTask = pyodide.runPythonAsync(code);
+            await currentTask;
             
         } catch (err) {
-            consoleDiv.innerText = "❌ Error: " + err;
-            isRunning = false;
-            document.getElementById('run-btn').disabled = false;
+            if (err.name === 'CancelledError') {
+                consoleDiv.innerText = "⏹ Stopped by user.";
+            } else {
+                consoleDiv.innerText = "❌ Error: " + err;
+            }
+        } finally {
+            // Only re-enable run button if we aren't already stopped
+            if (!document.getElementById('stop-btn').disabled) {
+                 // Game finished naturally
+                 document.getElementById('run-btn').disabled = false;
+                 document.getElementById('stop-btn').disabled = true;
+            }
         }
     }
 
