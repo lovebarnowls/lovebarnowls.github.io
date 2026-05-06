@@ -2,26 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Game IDE</title>
+    <title>Sentinel Game IDE v3.0</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
         body { background: #1e1e1e; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; height: 50px; }
         h1 { margin: 0; font-size: 18px; color: #ce3c3c; }
+        
+        /* 3-Column Layout: Code | Game | Console */
         .container { display: flex; flex: 1; height: calc(100vh - 90px); }
-        .editor-pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #333; background: #1e1e1e; }
-        .pane-header { background: #2d2d2d; padding: 5px 15px; font-size: 12px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; }
+        
+        .editor-pane { flex: 2; display: flex; flex-direction: column; border-right: 1px solid #333; background: #1e1e1e; }
+        .game-pane { flex: 2; display: flex; flex-direction: column; background: #252526; align-items: center; justify-content: flex-start; padding-top: 20px; border-right: 1px solid #333; }
+        .console-pane { flex: 1; display: flex; flex-direction: column; background: #111; min-width: 250px; }
+        
+        .pane-header { background: #2d2d2d; padding: 5px 15px; font-size: 12px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; }
+        
         textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 15px; border: none; font-size: 14px; line-height: 1.5; resize: none; outline: none; }
-        .game-pane { flex: 1; display: flex; flex-direction: column; background: #252526; align-items: center; justify-content: flex-start; padding-top: 20px; }
-        canvas { border: 2px solid #444; background: #000; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-        .controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; background: #333; padding: 10px; border-radius: 5px; }
+        
+        canvas { border: 2px solid #444; background: #000; box-shadow: 0 0 15px rgba(0,0,0,0.5); cursor: crosshair; }
+        
+        .controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; background: #333; padding: 10px; border-radius: 5px; width: 90%; justify-content: center; }
         button { background: #ce3c3c; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 3px; font-weight: bold; }
         button:hover { background: #ff4d4d; }
         button:disabled { background: #555; cursor: not-allowed; }
         button.stop { background: #444; }
         button.stop:hover { background: #666; }
         input[type="file"] { color: #aaa; font-size: 12px; }
-        .console { height: 40px; background: #000; color: #0f0; font-family: monospace; padding: 5px 15px; font-size: 12px; border-top: 1px solid #333; overflow-y: auto; }
+        
+        /* Dedicated Console Output */
+        #console-output { 
+            flex: 1; 
+            background: #000; 
+            color: #0f0; 
+            font-family: 'Consolas', monospace; 
+            padding: 10px; 
+            font-size: 13px; 
+            overflow-y: auto; 
+            white-space: pre-wrap; 
+            border-top: 1px solid #333;
+        }
+        .log-info { color: #0f0; }
+        .log-error { color: #ff4d4d; }
+        .log-warn { color: #ffcc00; }
+
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .progress-bar { width: 300px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 20px; }
         .progress-fill { height: 100%; background: #ce3c3c; width: 0%; transition: width 0.3s; }
@@ -31,7 +55,7 @@
 <body>
 
 <div id="loading-screen">
-    <h2 style="color:#ce3c3c;">🎮 Sentinel Engine</h2>
+    <h2 style="color:#ce3c3c;">🎮 Sentinel Engine v3.0</h2>
     <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
     <div id="loading-text">Initializing Python...</div>
 </div>
@@ -42,29 +66,34 @@
 </header>
 
 <div class="container">
+    <!-- LEFT: Code -->
     <div class="editor-pane">
         <div class="pane-header">main.py</div>
         <textarea id="code-editor" spellcheck="false">
 import pygame
 import asyncio
-from js import document
 
-# Global flag to allow JS to stop the game
+# Global flag for stopping
 game_running = True
 
 async def main():
     global game_running
     
-    # Only init if not already initialized
     if not pygame.get_init():
         pygame.init()
         
     screen = pygame.display.set_mode((400, 300))
-    pygame.display.set_caption("My Game")
+    pygame.display.set_caption("Click & Move")
     
-    x, y = 200, 150
-    game_running = True  # Reset flag on start
-    print("Game Started! Use Arrow Keys.")
+    # Square Settings
+    x, y = 175, 125
+    size = 50
+    speed = 5
+    color = (0, 255, 0) # Green
+    
+    print("🎮 Game Started!")
+    print("Use Arrow Keys to move.")
+    print("Click the square to change its color!")
 
     while game_running:
         for event in pygame.event.get():
@@ -73,40 +102,76 @@ async def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE: 
                     game_running = False
+            
+            # MOUSE INTERACTION
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = event.pos
+                # Check if click is inside square
+                if (x <= mouse_x <= x + size and 
+                    y <= mouse_y <= y + size):
+                    print("✅ Clicked! Changing color...")
+                    color = (255, 0, 0) # Red
+                else:
+                    print("❌ Missed!")
 
+        # KEYBOARD MOVEMENT
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]: x -= 5
-        if keys[pygame.K_RIGHT]: x += 5
-        if keys[pygame.K_UP]: y -= 5
-        if keys[pygame.K_DOWN]: y += 5
+        if keys[pygame.K_LEFT]: x -= speed
+        if keys[pygame.K_RIGHT]: x += speed
+        if keys[pygame.K_UP]: y -= speed
+        if keys[pygame.K_DOWN]: y += speed
 
+        # BOUNDARY CHECK (Keep square on screen)
+        # max(0, x) ensures x never goes below 0
+        # min(400-size, x) ensures x never goes off right edge
+        x = max(0, min(400 - size, x))
+        y = max(0, min(300 - size, y))
+
+        # DRAWING
         screen.fill((30, 30, 30))
-        pygame.draw.rect(screen, (0, 255, 0), (x, y, 50, 50))
+        pygame.draw.rect(screen, color, (x, y, size, size))
         pygame.display.flip()
         
         await asyncio.sleep(0)
 
     print("Game Ended.")
 
-# Start the game
 asyncio.ensure_future(main())
 </textarea>
     </div>
 
+    <!-- MIDDLE: Game -->
     <div class="game-pane">
         <canvas id="canvas" width="400" height="300" tabindex="1"></canvas>
         <div class="controls">
             <button id="run-btn" onclick="runGame()">▶ Run</button>
-            <button id="stop-btn" class="stop" onclick="stopGame()" disabled>⏹ Stop / Reset</button>
+            <button id="stop-btn" class="stop" onclick="stopGame()" disabled>⏹ Stop</button>
             <input type="file" id="img-upload" accept="image/*" onchange="handleImageUpload(this)">
         </div>
     </div>
+
+    <!-- RIGHT: Console -->
+    <div class="console-pane">
+        <div class="pane-header">System Output</div>
+        <div id="console-output">Waiting for engine...</div>
+    </div>
 </div>
-<div class="console" id="console">Waiting for engine...</div>
 
 <script>
     let pyodide;
-    let currentTask = null;
+    
+    // Custom stdout handler to write to our HTML div
+    function addToConsole(msg, type='info') {
+        const consoleDiv = document.getElementById('console-output');
+        const span = document.createElement('div');
+        span.textContent = msg;
+        if(type === 'error') span.className = 'log-error';
+        else if(type === 'warn') span.className = 'log-warn';
+        else span.className = 'log-info';
+        
+        consoleDiv.appendChild(span);
+        consoleDiv.scrollTop = consoleDiv.scrollHeight; // Auto-scroll
+    }
 
     async function init() {
         const progress = document.getElementById('progress');
@@ -124,14 +189,18 @@ asyncio.ensure_future(main())
             
             pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
             
+            // Setup Python to print to our HTML console
+            pyodide.setStdout({ batched: (msg) => addToConsole(msg) });
+            pyodide.setStderr({ batched: (msg) => addToConsole(msg, 'error') });
+            
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('console').innerText = "✅ Engine Ready.";
+                addToConsole("✅ Engine Ready. Click Run.");
             }, 500);
             
         } catch (err) {
             text.innerText = "Error: " + err.message;
-            document.getElementById('console').innerText = "❌ Failed to load.";
+            addToConsole("❌ Failed to load: " + err, 'error');
         }
     }
 
@@ -143,49 +212,41 @@ asyncio.ensure_future(main())
                 const arrayBuffer = e.target.result;
                 const uint8Array = new Uint8Array(arrayBuffer);
                 pyodide.FS.writeFile('player.png', uint8Array);
-                document.getElementById('console').innerText = "✅ Image Uploaded.";
+                addToConsole("✅ Image Uploaded.");
             };
             reader.readAsArrayBuffer(file);
         }
     }
 
     async function stopGame() {
-        // 1. Set the Python flag to false to break the loop
         try {
             await pyodide.runPythonAsync("game_running = False");
-        } catch (e) { console.log("Flag set error", e); }
+        } catch (e) { console.log("Stop error", e); }
 
-        // 2. Clear Canvas visually immediately
         const ctx = document.getElementById('canvas').getContext('2d');
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, 400, 300);
 
-        // 3. Reset UI
-        document.getElementById('console').innerText = "⏹ Stopped. Ready to Run.";
+        addToConsole("⏹ Stopped.");
         document.getElementById('run-btn').disabled = false;
         document.getElementById('stop-btn').disabled = true;
     }
 
     async function runGame() {
-        // First, ensure we are stopped
         await stopGame();
-        
-        const consoleDiv = document.getElementById('console');
-        consoleDiv.innerText = "Booting...";
+        document.getElementById('console-output').innerHTML = ""; // Clear console
+        addToConsole("🚀 Booting...");
         document.getElementById('canvas').focus();
         
         const code = document.getElementById('code-editor').value;
         
-        // Update UI
         document.getElementById('run-btn').disabled = true;
         document.getElementById('stop-btn').disabled = false;
 
         try {
-            // Run the user's code
             await pyodide.runPythonAsync(code);
-            
         } catch (err) {
-            consoleDiv.innerText = "❌ Error: " + err;
+            addToConsole("❌ Error: " + err, 'error');
             document.getElementById('run-btn').disabled = false;
             document.getElementById('stop-btn').disabled = true;
         }
