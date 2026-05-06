@@ -1,120 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Sentinel Game Engine Proof of Concept</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1e1e1e; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #333; padding: 10px; border-bottom: 2px solid #007acc; text-align: center; }
-        .main { display: flex; flex: 1; overflow: hidden; }
-        #editor-container { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #444; }
-        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: monospace; padding: 15px; border: none; font-size: 14px; outline: none; }
-        #game-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
-        canvas { border: 1px solid #444; background: #000; max-width: 100%; }
-        #controls { padding: 10px; background: #2d2d2d; display: flex; gap: 10px; }
-        button { background: #0e639c; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
-        #status { font-size: 12px; color: #aaa; margin-top: 5px; }
+        #canvas { border: 2px solid #555; background: #000; width: 400px; height: 300px; }
+        body { background: #222; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
     </style>
 </head>
 <body>
+    <h2>Sentinel Game Engine POC</h2>
+    <canvas id="canvas" width="400" height="300"></canvas>
+    <button id="run-btn" onclick="runGame()" disabled>Loading Engine...</button>
 
-<header><strong>Sentinel IDE</strong> | Game Modding POC</header>
+    <script>
+        let pyodide;
 
-<div class="main">
-    <div id="editor-container">
-        <textarea id="code-editor">
+        async function init() {
+            pyodide = await loadPyodide();
+            // Load pygame-ce (the browser-optimized version)
+            await pyodide.loadPackage("pygame-ce");
+            
+            // Link the canvas
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('run-btn').innerText = "▶ Run Game";
+        }
+
+        async function runGame() {
+            const code = `
 import pygame
 import asyncio
-
-# --- MOD ZONE ---
-SQUARE_COLOR = (255, 0, 0) # Change RGB values!
-SPEED = 5                   # Change the speed!
-MESSAGE = "Ouch!"           # Change the click message!
-# ----------------
 
 async def main():
     pygame.init()
     screen = pygame.display.set_mode((400, 300))
-    clock = pygame.time.Clock()
     
     x = 0
-    y = 130
-    size = 40
-    
     running = True
     while running:
-        # 1. Event Handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                # Simple collision check
-                if x < mouse_pos[0] < x + size and y < mouse_pos[1] < y + size:
-                    print(MESSAGE)
 
-        # 2. Update Logic
-        x += SPEED
-        if x > 400: x = -size # Wrap around
-
-        # 3. Drawing
-        screen.fill((0, 0, 0)) # Background
-        pygame.draw.rect(screen, SQUARE_COLOR, (x, y, size, size))
+        x = (x + 5) % 400
         
+        screen.fill((0, 0, 0))
+        pygame.draw.rect(screen, (255, 0, 0), (x, 130, 40, 40))
         pygame.display.flip()
         
-        # This is CRITICAL for browser-based Pygame
-        await asyncio.sleep(0) 
-        clock.tick(60)
+        # This gives control back to the browser to render
+        await asyncio.sleep(0)
 
+# This starts the async loop
 asyncio.ensure_future(main())
-        </textarea>
-        <div id="controls">
-            <button onclick="runGame()">▶ Restart Game</button>
-            <span id="status">Loading Python...</span>
-        </div>
-    </div>
-    
-    <div id="game-container">
-        <!-- Pygame will render into this canvas -->
-        <canvas id="canvas"></canvas>
-        <div id="game-console" style="color: #0f0; font-family: monospace; margin-top: 10px; height: 50px; overflow-y: auto; width: 90%;"></div>
-    </div>
-</div>
-
-<script>
-    let pyodide;
-
-    async function setup() {
-        pyodide = await loadPyodide();
-        await pyodide.loadPackage("pygame-ce");
-        document.getElementById('status').innerText = "Engine Ready";
-        // Set up canvas for Pyodide
-        pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
-        
-        // Redirect Python print() to our game-console
-        pyodide.setStdout({
-            batched: (msg) => {
-                const con = document.getElementById('game-console');
-                con.innerHTML = `> ${msg}<br>` + con.innerHTML;
-            }
-        });
-    }
-
-    async function runGame() {
-        const code = document.getElementById('code-editor').value;
-        try {
-            // We stop the current loop by just re-running the script
-            // In a real version, you'd manage the tasks more strictly
+`;
             await pyodide.runPythonAsync(code);
-        } catch (err) {
-            console.error(err);
         }
-    }
 
-    setup();
-</script>
-
+        init();
+    </script>
 </body>
 </html>
