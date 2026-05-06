@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Yang's Game IDE - Coin Collector</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        body { background: #1e1e1e; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
+        h1 { margin: 0; font-size: 18px; color: #ce3c3c; }
+
+        /* LAYOUT GRID */
+        .container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* Split screen 50/50 horizontally */
+            grid-template-rows: 1fr;
+            flex: 1; 
+            overflow: hidden; 
+        }
+
+        /* Left Side: Editor */
+        .editor-pane  { 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 1px solid #333; 
+            min-width: 0; 
+        }
+
+        /* Right Side Wrapper */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0; /* Critical for nested flex scrolling */
+        }
+
+        /* Top Right: Game */
+        .game-pane    { 
+            flex: 2; /* Takes up 2/3 of the vertical space on the right */
+            display: flex; 
+            flex-direction: column; 
+            background: #252526; 
+            align-items: center; 
+            justify-content: center; /* Center canvas vertically */
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            position: relative;
+            min-height: 0;
+        }
+
+        /* Bottom Right: Console */
+        .console-pane { 
+            flex: 1; /* Takes up 1/3 of the vertical space on the right */
+            display: flex; 
+            flex-direction: column; 
+            background: #111; 
+            min-height: 0; /* Critical for scrolling */
+            overflow: hidden;
+        }
+
+        .pane-header { background: #2d2d2d; padding: 5px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; flex-shrink: 0; }
+
+        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 15px; border: none; font-size: 13px; line-height: 1.6; resize: none; outline: none; tab-size: 4; }
+
+        /* Canvas styling */
+        canvas { 
+            border: 2px solid #444; 
+            background: #000; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.5); 
+            cursor: crosshair; 
+            display: block; 
+            max-width: 100%;
+            max-height: 100%; /* Fit within pane */
+            object-fit: contain;
+        }
+
+        .controls { 
+            margin-top: 10px; 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* File Upload Styling */
+        .file-upload-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px dashed #444;
+        }
+        .file-list {
+            font-size: 11px;
+            color: #888;
+            max-height: 40px;
+            overflow-y: auto;
+            text-align: center;
+            width: 100%;
+        }
+        .file-item { color: #4daafc; margin-right: 5px; }
+
+        button { background: #ce3c3c; color: white; border: none; padding: 8px 18px; cursor: pointer; border-radius: 3px; font-weight: bold; font-size: 13px; }
+        button:hover:not(:disabled) { background: #ff4d4d; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        button.stop { background: #444; }
+        button.stop:hover:not(:disabled) { background: #666; }
+        
+        /* Custom File Input Button */
+        input[type="file"] { display: none; }
+        .custom-file-btn {
+            background: #333; color: #ccc; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; border: 1px solid #555;
+        }
+        .custom-file-btn:hover { background: #444; color: white; }
+
+        #console-output { flex: 1; background: #000; color: #0f0; font-family: 'Consolas', monospace; padding: 10px; font-size: 12px; overflow-y: auto; white-space: pre-wrap; }
+        .log-error { color: #ff4d4d; }
+        .log-sys   { color: #888; }
+
+        #loading-screen { position: fixed; inset: 0; background: #1e1e1e; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; }
+        .progress-bar  { width: 300px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #ce3c3c; width: 0%; transition: width 0.3s; }
+        #loading-text  { color: #aaa; font-size: 13px; }
+
+        /* RESPONSIVE DESIGN: Stack columns on smaller screens */
+        @media (max-width: 1000px) {
+            .container {
+                grid-template-columns: 1fr; /* Single column */
+                grid-template-rows: 1fr 1fr; /* Split height 50/50 */
+                overflow-y: auto; /* Allow page scroll if needed */
+            }
+            .editor-pane {
+                border-right: none;
+                border-bottom: 1px solid #333;
+                height: 50vh; /* Force half height */
+            }
+            .right-column {
+                height: 50vh; /* Force half height */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 Yang's Game IDE</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <h1>Yang's Game IDE: Coin Collector</h1>
+    <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT COLUMN: CODE -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — edit here</div>
+        <textarea id="code-editor" spellcheck="false">
+import pygame
+import asyncio
+import os
+import random
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+
+# Upload images to replace the shapes!
+PLAYER_FILE = "player.png"   # Green Square default
+COIN_FILE   = "coin.png"     # Blue Square default
+
+WIN_SCORE = 10       # Game ends when you collect this many
+SPEED     = 5
+PLAYER_SIZE = 40
+COIN_SIZE   = 20
+
+# ============================================================
+
+game_running = True
+score = 0
+
+def spawn_coin():
+    """Pick a random spot for the coin"""
+    x = random.randint(0, 800 - COIN_SIZE)
+    y = random.randint(0, 600 - COIN_SIZE)
+    return x, y
+
+async def main():
+    global game_running, score
+    game_running = True
+    score = 0
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Collect the Coins!")
+
+    # --- LOAD ASSETS ---
+    
+    # Player
+    player_img = None
+    if os.path.exists(PLAYER_FILE):
+        try:
+            player_img = pygame.image.load(PLAYER_FILE).convert_alpha()
+            player_img = pygame.transform.scale(player_img, (PLAYER_SIZE, PLAYER_SIZE))
+        except: pass
+
+    # Coin
+    coin_img = None
+    if os.path.exists(COIN_FILE):
+        try:
+            coin_img = pygame.image.load(COIN_FILE).convert_alpha()
+            coin_img = pygame.transform.scale(coin_img, (COIN_SIZE, COIN_SIZE))
+        except: pass
+
+    # Positions
+    px, py = 380, 280
+    cx, cy = spawn_coin()
+
+    # Font for Score
+    font = pygame.font.SysFont(None, 36)
+
+    print("Use Arrow Keys to move.")
+    print(f"Collect {WIN_SCORE} coins to win!")
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    game_running = False
+
+        # Movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:  px -= SPEED
+        if keys[pygame.K_RIGHT]: px += SPEED
+        if keys[pygame.K_UP]:    py -= SPEED
+        if keys[pygame.K_DOWN]:  py += SPEED
+
+        # Keep player on screen
+        px = max(0, min(800 - PLAYER_SIZE, px))
+        py = max(0, min(600 - PLAYER_SIZE, py))
+
+        # Collision Detection (Player touches Coin)
+        player_rect = pygame.Rect(px, py, PLAYER_SIZE, PLAYER_SIZE)
+        coin_rect   = pygame.Rect(cx, cy, COIN_SIZE, COIN_SIZE)
+
+        if player_rect.colliderect(coin_rect):
+            score += 1
+            print(f"Collected! Score: {score}")
+            
+            if score >= WIN_SCORE:
+                print("YOU WIN! Game Over.")
+                game_running = False
+            else:
+                cx, cy = spawn_coin() # Move coin to new spot
+
+        # --- DRAWING ---
+        screen.fill((30, 30, 30)) # Dark Grey Background
+
+        # Draw Coin
+        if coin_img:
+            screen.blit(coin_img, (cx, cy))
+        else:
+            pygame.draw.rect(screen, (50, 50, 255), (cx, cy, COIN_SIZE, COIN_SIZE)) # Blue
+
+        # Draw Player
+        if player_img:
+            screen.blit(player_img, (px, py))
+        else:
+            pygame.draw.rect(screen, (50, 255, 50), (px, py, PLAYER_SIZE, PLAYER_SIZE)) # Green
+
+        # Draw Score Text
+        score_text = font.render(f"Score: {score} / {WIN_SCORE}", True, (255, 255, 255))
+        screen.blit(score_text, (600, 20)) # Top Right
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()
+        </textarea>
+    </div>
+
+    <!-- RIGHT COLUMN WRAPPER -->
+    <div class="right-column">
+        
+        <!-- TOP RIGHT: GAME SCREEN -->
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            
+            <!-- Increased Canvas Size -->
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run Game</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <!-- 'multiple' attribute allows selecting many files at once -->
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM RIGHT: CONSOLE -->
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let pyodide = null;
+    let isRunning = false;
+    let uploadedFiles = []; // Track uploaded files
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        if (uploadedFiles.length === 0) {
+            listDiv.innerHTML = "No files uploaded";
+        } else {
+            listDiv.innerHTML = uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+        }
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    // Handle Multiple File Uploads
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        
+        const files = Array.from(input.files);
+        if(files.length === 0) return;
+
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        
+        for (const file of files) {
+            const reader = new FileReader();
+            
+            // We need to wrap FileReader in a promise to await it inside the loop
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    // Write to Pyodide filesystem
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) {
+                            uploadedFiles.push(file.name);
+                        }
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => {
+                    log(`Error reading ${file.name}`, 'log-error');
+                    resolve();
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        updateFileList();
+        
+        // Reset input so same file can be selected again if needed
+        input.value = ''; 
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        try {
+            await pyodide.runPythonAsync("game_running = False");
+        } catch(e) {}
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        if (!pyodide) return;
+
+        // If something is running, stop it and wait for the loop to exit
+        if (isRunning) {
+            await stopGame();
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+
+        document.getElementById('canvas').focus();
+
+        const code = document.getElementById('code-editor').value;
+
+        try {
+            await pyodide.runPythonAsync(code);
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
