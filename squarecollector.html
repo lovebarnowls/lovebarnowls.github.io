@@ -178,10 +178,15 @@ import random
 PLAYER_FILE = "player.png"   # Green Square default
 COIN_FILE   = "coin.png"     # Blue Square default
 
-WIN_SCORE = 10       # Game ends when you collect this many
+WIN_SCORE = 10       # Game ends when you collect this many. 
 SPEED     = 5
 PLAYER_SIZE = 40
 COIN_SIZE   = 20
+
+# Custom Messages (Change these to say whatever you want!)
+MSG_START = "Use Arrow Keys to move."
+MSG_WIN   = "YOU WIN! Great job!"
+MSG_COLLECT = "Collected! Score: "
 
 # ============================================================
 
@@ -230,7 +235,7 @@ async def main():
     # Font for Score
     font = pygame.font.SysFont(None, 36)
 
-    print("Use Arrow Keys to move.")
+    print(MSG_START)
     print(f"Collect {WIN_SCORE} coins to win!")
 
     while game_running:
@@ -258,10 +263,10 @@ async def main():
 
         if player_rect.colliderect(coin_rect):
             score += 1
-            print(f"Collected! Score: {score}")
+            print(f"{MSG_COLLECT} {score}")
             
             if score >= WIN_SCORE:
-                print("YOU WIN! Game Over.")
+                print(MSG_WIN)
                 game_running = False
             else:
                 cx, cy = spawn_coin() # Move coin to new spot
