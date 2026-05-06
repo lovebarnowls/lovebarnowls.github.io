@@ -2,9 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sens Game IDE</title>
-    <!-- OFFICIAL STABLE PYODIDE -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <title>Sentinel Game IDE - PyScript</title>
+    
+    <!-- 1. Load PyScript -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <!-- 2. Configure Packages -->
+    <py-config>
+        packages = ["pygame-ce"]
+    </py-config>
+
     <style>
         body { 
             background: #1e1e1e; 
@@ -27,8 +35,9 @@
         }
         h1 { margin: 0; font-size: 18px; color: #ce3c3c; }
         
-        .container { display: flex; flex: 1; height: calc(100vh -90px); }
+        .container { display: flex; flex: 1; height: calc(100vh - 90px); }
         
+        /* Left: Code Editor */
         .editor-pane { 
             flex: 1; 
             display: flex; 
@@ -57,6 +66,7 @@
             outline: none;
         }
         
+        /* Right: Game & Controls */
         .game-pane { 
             flex: 1; 
             display: flex; 
@@ -93,7 +103,6 @@
             font-weight: bold; 
         }
         button:hover { background: #ff4d4d; }
-        button:disabled { background: #555; cursor: not-allowed; }
         
         input[type="file"] { color: #aaa; font-size: 12px; }
 
@@ -107,59 +116,53 @@
             border-top: 1px solid #333;
             overflow-y: auto;
         }
-        
-        /* Loading Overlay */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 999;
-        }
-        .spinner {
-            border: 4px solid #333; border-top: 4px solid #ce3c3c;
-            border-radius: 50%; width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<!-- Loading Screen -->
-<div id="loading-overlay">
-    <div class="spinner"></div>
-    <p id="loading-text" style="color:white; margin-top:20px;">Initializing Python Engine...</p>
-</div>
-
 <header>
-    <h1>🎮 GRRR Game IDE</h1>
-    <div id="status" style="font-size: 12px; color: #888;">Ready</div>
+    <h1>🎮 Sentinel Game IDE (PyScript)</h1>
+    <div id="status" style="font-size: 12px; color: #888;">Loading...</div>
 </header>
 
 <div class="container">
+    <!-- LEFT: Code Editor -->
     <div class="editor-pane">
         <div class="pane-header">main.py</div>
         <textarea id="code-editor" spellcheck="false">
 import pygame
 import asyncio
-import sys
+import base64
+import io
+from pyscript import document
 
 async def main():
     pygame.init()
     screen = pygame.display.set_mode((400, 300))
     pygame.display.set_caption("My Game")
     
-    # Try to load an image if it exists, otherwise use a rectangle
-    try:
-        player_img = pygame.image.load('player.png')
-        player_img = pygame.transform.scale(player_img, (50, 50))
-        use_image = True
-    except:
-        use_image = False
+    # 1. Get Image from HTML Input
+    file_input = document.querySelector("#img-upload")
+    use_image = False
+    player_img = None
+    
+    if file_input.files.length > 0:
+        try:
+            file = file_input.files[0]
+            array_buffer = await file.arrayBuffer()
+            bytes_data = bytes(array_buffer)
+            
+            # Load into Pygame
+            surf = pygame.image.load(io.BytesIO(bytes_data))
+            player_img = pygame.transform.scale(surf, (50, 50))
+            use_image = True
+            print("✅ Image loaded from upload!")
+        except Exception as e:
+            print(f"❌ Image Error: {e}")
+    else:
+        print("⚠️ No image uploaded. Using default square.")
 
     x, y = 175, 125
-    clock = pygame.time.Clock()
     running = True
     
     print("Game Started! Use Arrow Keys to move.")
@@ -178,12 +181,13 @@ async def main():
         if keys[pygame.K_UP]: y -= 5
         if keys[pygame.K_DOWN]: y += 5
 
+        # Bounds checking
         x = max(0, min(350, x))
         y = max(0, min(250, y))
 
         screen.fill((30, 30, 30))
         
-        if use_image:
+        if use_image and player_img:
             screen.blit(player_img, (x, y))
         else:
             pygame.draw.rect(screen, (0, 255, 0), (x, y, 50, 50))
@@ -193,20 +197,21 @@ async def main():
         
     print("Game Over.")
 
+# Start the game
 asyncio.ensure_future(main())
 </textarea>
     </div>
 
+    <!-- RIGHT: Game Canvas & Controls -->
     <div class="game-pane">
         <canvas id="canvas" width="400" height="300" tabindex="1"></canvas>
         
         <div class="controls">
-            <button id="run-btn" onclick="runGame()" disabled>▶ Run</button>
-            <button id="stop-btn" onclick="stopGame()" disabled style="background:#444;">⏹ Stop</button>
+            <button id="run-btn" py-click="run_code">▶ Run Game</button>
             
             <div style="border-left: 1px solid #555; padding-left: 10px; margin-left: 10px;">
                 <label style="font-size: 12px; color: #aaa; display:block; margin-bottom:5px;">Upload Sprite:</label>
-                <input type="file" id="img-upload" accept="image/*" onchange="handleImageUpload(this)">
+                <input type="file" id="img-upload" accept="image/*">
             </div>
         </div>
     </div>
@@ -214,88 +219,35 @@ asyncio.ensure_future(main())
 
 <div class="console" id="console">System initializing...</div>
 
-<script>
-    let pyodide;
-    let isRunning = false;
+<!-- PYTHON LOGIC FOR UI -->
+<py-script>
+import sys
+from pyscript import document
 
-   async function init() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loadingText = document.getElementById('loading-text');
+def run_code(event):
+    """
+    This function takes the code from the textarea and executes it.
+    """
+    console_div = document.querySelector("#console")
+    console_div.innerText = "Starting game..."
     
-    try {
-        pyodide = await loadPyodide();
-        loadingText.innerText = "Attempting to load Pygame engine...";
-        
-        // Try the common alias first. If this fails, try "pygame_ce"
-        try {
-            await pyodide.loadPackage("pygame");
-        } catch {
-            await pyodide.loadPackage("pygame_ce");
-        }
-        
-        pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
-        
-        pyodide.setStdout({ batched: (msg) => {
-            document.getElementById('console').innerText = msg;
-        }});
-        
-        loadingOverlay.style.display = 'none';
-        document.getElementById('run-btn').disabled = false;
-        document.getElementById('console').innerText = "✅ Engine Ready.";
-        
-    } catch (err) {
-        loadingText.innerText = "Error Loading Engine";
-        document.getElementById('console').innerText = "❌ Critical Failure: " + err;
-    }
-}
+    # Get code from editor
+    code = document.querySelector("#code-editor").value
+    
+    # Focus canvas for keyboard input
+    document.querySelector("#canvas").focus()
+    
+    try:
+        # Execute the user's code
+        exec(code)
+    except Exception as e:
+        console_div.innerText = f"❌ Error: {e}"
+        print(f"Error: {e}")
 
-    async function handleImageUpload(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const arrayBuffer = e.target.result;
-                const uint8Array = new Uint8Array(arrayBuffer);
-                pyodide.FS.writeFile('player.png', uint8Array);
-                document.getElementById('console').innerText = `✅ Uploaded ${file.name}`;
-            };
-            reader.readAsArrayBuffer(file);
-        }
-    }
-
-    async function runGame() {
-        if (isRunning) return;
-        const consoleDiv = document.getElementById('console');
-        consoleDiv.innerText = "Starting...";
-        document.getElementById('canvas').focus();
-        
-        const code = document.getElementById('code-editor').value;
-        
-        try {
-            isRunning = true;
-            document.getElementById('run-btn').disabled = true;
-            document.getElementById('stop-btn').disabled = false;
-            await pyodide.runPythonAsync(code);
-        } catch (err) {
-            consoleDiv.innerText = "❌ Error: " + err;
-            isRunning = false;
-            document.getElementById('run-btn').disabled = false;
-            document.getElementById('stop-btn').disabled = true;
-        }
-    }
-
-    function stopGame() {
-        document.getElementById('console').innerText = "Stopped.";
-        document.getElementById('run-btn').disabled = false;
-        document.getElementById('stop-btn').disabled = true;
-        isRunning = false;
-        const ctx = document.getElementById('canvas').getContext('2d');
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, 400, 300);
-    }
-
-    init();
-</script>
+# Update status when loaded
+document.querySelector("#status").innerText = "✅ Ready"
+document.querySelector("#console").innerText = "Engine Ready. Upload an image and click Run."
+</py-script>
 
 </body>
 </html>
