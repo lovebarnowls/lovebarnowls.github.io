@@ -1,63 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>Sentinel Game Engine POC</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
-        #canvas { border: 2px solid #555; background: #000; width: 400px; height: 300px; }
-        body { background: #222; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        body { 
+            background: #222; 
+            color: #eee; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0;
+            padding: 20px;
+        }
+        h2 { margin-bottom: 10px; color: #ce3c3c; }
+        .container { position: relative; }
+        canvas { 
+            border: 2px solid #555; 
+            background: #000; 
+            width: 400px; 
+            height: 300px; 
+            display: block;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .controls { margin-top: 15px; display: flex; gap: 10px; }
+        button { 
+            background: #ce3c3c; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            font-size: 14px;
+        }
+        button:disabled { background: #555; cursor: not-allowed; }
+        button:hover:not(:disabled) { background: #ff4d4d; }
+        #status { margin-top: 10px; font-size: 12px; color: #888; height: 20px; }
+        #error-log { 
+            color: #ff6b6b; 
+            font-family: monospace; 
+            font-size: 12px; 
+            margin-top: 10px; 
+            white-space: pre-wrap; 
+            max-width: 400px;
+        }
     </style>
 </head>
 <body>
-    <h2>Sentinel Game Engine POC</h2>
-    <canvas id="canvas" width="400" height="300"></canvas>
-    <button id="run-btn" onclick="runGame()" disabled>Loading Engine...</button>
+
+    <h2>🎮 Sentinel Game Engine</h2>
+    
+    <div class="container">
+        <canvas id="canvas" width="400" height="300" tabindex="1"></canvas>
+    </div>
+
+    <div class="controls">
+        <button id="run-btn" onclick="runGame()" disabled>Loading Engine...</button>
+        <button id="stop-btn" onclick="stopGame()" disabled style="background:#444;">⏹ Stop</button>
+    </div>
+
+    <div id="status">Initializing Pyodide...</div>
+    <div id="error-log"></div>
 
     <script>
         let pyodide;
+        let isRunning = false;
 
         async function init() {
-            pyodide = await loadPyodide();
-            // Load pygame-ce (the browser-optimized version)
-            await pyodide.loadPackage("pygame-ce");
+            const status = document.getElementById('status');
+            try {
+                pyodide = await loadPyodide();
+                status.innerText = "Loading pygame-ce (this may take a moment)...";
+                
+                // Load pygame-ce
+                await pyodide.loadPackage("pygame-ce");
+                
+                // Link the canvas
+                pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+                
+                status.innerText = "✅ Engine Ready. Click 'Run Game' to start.";
+                document.getElementById('run-btn').disabled = false;
+                document.getElementById('run-btn').innerText = "▶ Run Game";
+            } catch (err) {
+                status.innerText = "❌ Failed to load engine.";
+                document.getElementById('error-log').innerText = err;
+            }
+        }
+
+        async function stopGame() {
+            // In a real scenario, we'd signal the asyncio loop to stop.
+            // For this POC, we'll just reload the page or reset the canvas context.
+            // A better way is to set a global flag in Python, but let's keep it simple.
+            document.getElementById('status').innerText = "⏹ Game Stopped. Refresh to reset completely.";
+            document.getElementById('run-btn').disabled = true;
+            document.getElementById('stop-btn').disabled = true;
             
-            // Link the canvas
-            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
-            
-            document.getElementById('run-btn').disabled = false;
-            document.getElementById('run-btn').innerText = "▶ Run Game";
+            // Clear canvas
+            const ctx = document.getElementById('canvas').getContext('2d');
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, 400, 300);
         }
 
         async function runGame() {
+            if (isRunning) {
+                alert("Game is already running! Please refresh to restart.");
+                return;
+            }
+            
+            const status = document.getElementById('status');
+            const errorLog = document.getElementById('error-log');
+            errorLog.innerText = ""; // Clear previous errors
+            status.innerText = "🚀 Starting Game Loop...";
+            
+            // Focus the canvas so it can receive keyboard events
+            document.getElementById('canvas').focus();
+
             const code = `
 import pygame
 import asyncio
+import sys
+
+# Global flag to allow stopping
+game_running = True
 
 async def main():
-    pygame.init()
-    screen = pygame.display.set_mode((400, 300))
+    global game_running
     
-    x = 0
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        x = (x + 5) % 400
+    try:
+        pygame.init()
+        screen = pygame.display.set_mode((400, 300))
+        clock = pygame.time.Clock()
         
-        screen.fill((0, 0, 0))
-        pygame.draw.rect(screen, (255, 0, 0), (x, 130, 40, 40))
-        pygame.display.flip()
+        x = 0
+        running = True
         
-        # This gives control back to the browser to render
-        await asyncio.sleep(0)
+        while running and game_running:
+            # 1. Handle Events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
 
-# This starts the async loop
+            # 2. Update Logic
+            x = (x + 5) % 400
+            
+            # 3. Draw
+            screen.fill((0, 0, 0))
+            pygame.draw.rect(screen, (255, 0, 0), (x, 130, 40, 40))
+            pygame.display.flip()
+            
+            # 4. Yield control to browser (CRITICAL for Pyodide)
+            await asyncio.sleep(0)
+            
+        print("Game Loop Ended.")
+        
+    except Exception as e:
+        print(f"Python Error: {e}")
+        # Re-raise so JS can catch it
+        raise e
+
+# Start the async task
 asyncio.ensure_future(main())
 `;
-            await pyodide.runPythonAsync(code);
+
+            try {
+                isRunning = true;
+                document.getElementById('stop-btn').disabled = false;
+                await pyodide.runPythonAsync(code);
+            } catch (err) {
+                status.innerText = "❌ Runtime Error";
+                errorLog.innerText = err;
+                isRunning = false;
+                document.getElementById('stop-btn').disabled = true;
+            }
         }
 
+        // Initialize on load
         init();
     </script>
 </body>
