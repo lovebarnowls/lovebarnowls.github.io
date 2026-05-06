@@ -175,8 +175,8 @@ import os
 
 # 1. Upload an image using the button on the right.
 # 2. Check the Console (bottom right) to see the exact filename.
-# 3. Type that name below inside the quotes (and remove the comment)!
-IMAGE_FILENAME = "Test1.png" 
+# 3. Type that name below inside the quotes!
+IMAGE_FILENAME = "player.png" 
 
 SPEED = 5
 SIZE  = 50
@@ -192,7 +192,7 @@ async def main():
     pygame.init()
     # Set screen size (matches the canvas below)
     screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Yang's Game IDE")
+    pygame.display.set_caption("Yang's Game")
 
     # Load an image if it exists, otherwise use a rectangle
     player_img = None
@@ -211,18 +211,30 @@ async def main():
         print("Using fallback square.")
 
     x, y = 375, 275
-    color = (0, 200, 80)
+    color = (0, 200, 80) # Default Green
 
-    print("Game started! Use Arrow Keys to move.")
-    print("Click the game window to focus controls.")
+    print("Game started!")
+    print("- Use Arrow Keys to move.")
+    print("- Click the square to change color.")
 
     while game_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_running = False
+            
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     game_running = False
+            
+            # MOUSE CLICK LOGIC RESTORED HERE
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = event.pos
+                # Check if click is inside the player square
+                if x <= mx <= x + SIZE and y <= my <= y + SIZE:
+                    print("Got me!")
+                    color = (200, 50, 50) # Change to Red
+                else:
+                    print("Missed!")
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:  x -= SPEED
@@ -240,6 +252,7 @@ async def main():
         if player_img:
             screen.blit(player_img, (x, y))
         else:
+            # If no image, draw the colored square
             pygame.draw.rect(screen, color, (x, y, SIZE, SIZE))
 
         pygame.display.flip()
