@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's Security Sentinel IDE</title>
+    <title>Yang's V2 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -30,7 +30,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v1.0.7 [Classroom Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v2 [Classroom Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -50,7 +50,7 @@ import json
 import asyncio
 
 # --- SYSTEM CONFIGURATION ---
-# The target model is managed globally by the script
+# Accessing the global variable defined in JS
 MODEL_URL = js.HIDDEN_MODEL_ENDPOINT
 
 async def audit_password(text, token):
@@ -59,22 +59,18 @@ async def audit_password(text, token):
         "Content-Type": "application/json"
     }
     
-    # Prompt optimized for Qwen2.5-3B
     prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided and respond in exactly one sentence: 'SECURE' or 'INSECURE' followed by the primary vulnerability.<|im_end|>\n<|im_start|>user\nAnalyze this password: {text}<|im_end|>\n<|im_start|>assistant\n"
     
     payload = json.dumps({
         "inputs": prompt,
-        "parameters": {"max_new_tokens": 50, "return_full_text": False}
+        "parameters": {"max_new_tokens": 60, "return_full_text": False}
     })
 
     try:
-        # Using native browser fetch to avoid CORS/Socket issues in Pyodide
         response = await js.fetch(MODEL_URL, method="POST", headers=headers, body=payload)
         
-        if response.status == 401:
-            return "ERROR: 401 Unauthorized. Check your Token."
-        if response.status == 503:
-            return "ERROR: 503 Service Unavailable (Model Loading)."
+        if response.status == 401: return "ERROR: 401 Unauthorized. Check your Token."
+        if response.status == 503: return "ERROR: 503 Service Unavailable (Model Loading)."
             
         res_data = await response.json()
         
@@ -92,7 +88,6 @@ async def main():
         return
 
     print(f"🛡️ Security Sentinel Analysis Started...")
-    print(f"📡 Remote Model: Qwen-2.5-3B")
     print("-" * 40)
     
     try:
@@ -104,14 +99,13 @@ async def main():
 
     for item in data:
         print(f"📝 Auditing: {item}")
-        # Await the async fetch call
         result = await audit_password(item, token)
         print(f"   ↳ Result: {result}\n")
     
     print("-" * 40)
     print("✅ Audit Cycle Complete.")
 
-# Start the async loop
+# Execute main
 asyncio.ensure_future(main())
 </textarea>
         <div id="output">System Booting...</div>
@@ -130,18 +124,15 @@ correcthorsebatterystaple
 </div>
 
 <script>
-    // Hidden Model Configuration
-    const HIDDEN_MODEL_ENDPOINT = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-3B-Instruct";
+    // Critical: Attach to window so Python can access it via 'js.HIDDEN_MODEL_ENDPOINT'
+    window.HIDDEN_MODEL_ENDPOINT = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-3B-Instruct";
     let pyodide;
 
     async function init() {
         const output = document.getElementById('output');
         const status = document.getElementById('engine-status');
-        
         try {
             pyodide = await loadPyodide();
-            // No longer strictly need requests/pyodide-http since we use js.fetch, 
-            // but keeping standard library loading for student extensibility.
             output.innerHTML = "✅ SOC Engine Online. Enter Token to proceed.";
             status.innerHTML = "ENGINE READY";
             status.style.color = "#00ff00";
@@ -155,12 +146,9 @@ correcthorsebatterystaple
         const code = document.getElementById('code-editor').value;
         const data = document.getElementById('data-input').value;
         
-        output.innerHTML = ""; // Clear log
-        
-        // Write the local virtual file
+        output.innerHTML = ""; 
         pyodide.FS.writeFile('target_data.txt', data);
         
-        // Redirect Python prints to the output div
         pyodide.setStdout({
             batched: (msg) => { 
                 output.innerHTML += msg + "<br>"; 
@@ -169,17 +157,13 @@ correcthorsebatterystaple
         });
 
         try {
-            // runPythonAsync handles the 'await' inside the script
             await pyodide.runPythonAsync(code);
         } catch (err) {
             output.innerHTML += `<br><span style="color:#ff4d4d">💀 SYSTEM CRASH: ${err}</span>`;
         }
     }
 
-    function clearOutput() {
-        document.getElementById('output').innerHTML = "Log cleared.";
-    }
-
+    function clearOutput() { document.getElementById('output').innerHTML = "Log cleared."; }
     init();
 </script>
 </body>
