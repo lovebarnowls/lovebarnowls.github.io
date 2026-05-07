@@ -24,95 +24,101 @@
         button.secondary { background: #444; }
         button.secondary:hover { background: #555; }
         
-        .warning { color: #ffcc00; font-size: 12px; margin-left: 10px; }
+        .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #333; color: #888; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v1.0.5 [Classroom Build]</div>
-    <div style="font-size: 12px; color: #888;">Pyodide Engine Active</div>
+    <div><strong>SECURITY SENTINEL</strong> | v1.0.7 [Classroom Build]</div>
+    <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
 <div class="controls">
-    <label for="api-key" style="font-size: 12px; color: #aaa;">HF API KEY:</label>
-    <input type="text" id="api-key" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx" value=""> 
+    <label for="api-key" style="font-size: 12px; color: #aaa;">AUTH TOKEN:</label>
+    <input type="text" id="api-key" placeholder="Enter HF Token..." value=""> 
     <button onclick="runAudit()">▶ EXECUTE AUDIT</button>
     <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
-    <span class="warning">⚠️ DO NOT SHARE YOUR KEY</span>
 </div>
 
 <div class="main">
     <div class="column" id="editor-col">
         <div class="label">main.py (System Logic)</div>
         <textarea id="code-editor">
-import requests
-import json
 import js
+import json
+import asyncio
 
-# --- CONFIGURATION ---
-MODEL_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-3B-Instruct"
-# ---------------------
+# --- SYSTEM CONFIGURATION ---
+# The target model is managed globally by the script
+MODEL_URL = js.HIDDEN_MODEL_ENDPOINT
 
-def get_api_key():
-    # Bridge JS and Python to get the live key from the input field
-    return js.document.getElementById('api-key').value
-
-def audit_item(text, api_key):
-    headers = {"Authorization": f"Bearer {api_key}"}
-    # Simple prompt for security audit
-    prompt = f"Is '{text}' a secure password? Answer only with 'SECURE' or 'INSECURE' and a brief reason."
-    payload = {"inputs": prompt}
+async def audit_password(text, token):
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
     
+    # Prompt optimized for Qwen2.5-3B
+    prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided and respond in exactly one sentence: 'SECURE' or 'INSECURE' followed by the primary vulnerability.<|im_end|>\n<|im_start|>user\nAnalyze this password: {text}<|im_end|>\n<|im_start|>assistant\n"
+    
+    payload = json.dumps({
+        "inputs": prompt,
+        "parameters": {"max_new_tokens": 50, "return_full_text": False}
+    })
+
     try:
-        # Note: In Pyodide, requests is patched to use the browser's fetch API
-        response = requests.post(MODEL_URL, headers=headers, json=payload)
+        # Using native browser fetch to avoid CORS/Socket issues in Pyodide
+        response = await js.fetch(MODEL_URL, method="POST", headers=headers, body=payload)
         
-        if response.status_code == 401:
-            return "ERROR: 401 Unauthorized. Check your API Key."
-        if response.status_code == 503:
-            return "ERROR: 503 Service Unavailable. Model is loading. Try again."
+        if response.status == 401:
+            return "ERROR: 401 Unauthorized. Check your Token."
+        if response.status == 503:
+            return "ERROR: 503 Service Unavailable (Model Loading)."
             
-        response.raise_for_status()
-        data = response.json()
+        res_data = await response.json()
         
-        # Hugging Face returns a list, we want the first result's text
-        return data[0]['generated_text'] if isinstance(data, list) else data
+        if isinstance(res_data, list) and len(res_data) > 0:
+            return res_data[0].get('generated_text', 'No response').strip()
+        return str(res_data)
         
     except Exception as e:
-        return f"CONNECTION ERROR: {str(e)}"
+        return f"NETWORK ERROR: {str(e)}"
 
-def main():
-    api_key = get_api_key()
-    if not api_key or api_key.strip() == "":
-        print("❌ CRITICAL ERROR: No API Key provided in the top bar.")
+async def main():
+    token = js.document.getElementById('api-key').value
+    if not token or token.strip() == "":
+        print("❌ CRITICAL ERROR: Access Token missing.")
         return
 
-    print(f"🛡️ Security Sentinel Starting...")
-    print(f"🔑 Using Key: {api_key[:5]}...{api_key[-5:]}")
-    print("-" * 30)
+    print(f"🛡️ Security Sentinel Analysis Started...")
+    print(f"📡 Remote Model: Qwen-2.5-3B")
+    print("-" * 40)
     
-    # Read the data from the right-hand column (saved via pyodide.FS)
     try:
         with open('target_data.txt', 'r') as f:
             data = [line.strip() for line in f if line.strip()]
-    except Exception as e:
-        print(f"❌ Error reading target_data.txt: {e}")
+    except:
+        print("❌ Error: Could not read target_data.txt")
         return
 
     for item in data:
         print(f"📝 Auditing: {item}")
-        result = audit_item(item, api_key)
-        print(f"   ↳ AI Response: {result}\n")
+        # Await the async fetch call
+        result = await audit_password(item, token)
+        print(f"   ↳ Result: {result}\n")
+    
+    print("-" * 40)
+    print("✅ Audit Cycle Complete.")
 
-if __name__ == "__main__":
-    main()
+# Start the async loop
+asyncio.ensure_future(main())
 </textarea>
-        <div id="output">System initialized. Waiting for engine...</div>
+        <div id="output">System Booting...</div>
     </div>
 
     <div class="column" id="data-col">
-        <div class="label">target_data.txt (Local Data Source)</div>
+        <div class="label">target_data.txt (Data Source)</div>
         <textarea id="data-input">
 Password123!
 admin_user_2026
@@ -124,62 +130,47 @@ correcthorsebatterystaple
 </div>
 
 <script>
+    // Hidden Model Configuration
+    const HIDDEN_MODEL_ENDPOINT = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-3B-Instruct";
     let pyodide;
 
     async function init() {
         const output = document.getElementById('output');
-        output.innerHTML = "⏳ Loading Python Engine (Pyodide)...<br>This may take 10-15 seconds on first load.";
+        const status = document.getElementById('engine-status');
         
         try {
             pyodide = await loadPyodide();
-            output.innerHTML += "<br>⏳ Installing network packages...";
-            
-            // Using micropip is the most reliable way to get requests working in the browser
-            await pyodide.loadPackage("micropip");
-            const micropip = pyodide.pyimport("micropip");
-            await micropip.install(['requests', 'pyodide-http']);
-            
-            // Patch requests globally once during setup
-            await pyodide.runPythonAsync(`
-import pyodide_http
-pyodide_http.patch_all()
-            `);
-            
-            output.innerHTML = "✅ Engine Ready. <br>⚠️ <span style='color:#ffcc00'>Enter your HF API Key above to begin.</span>";
+            // No longer strictly need requests/pyodide-http since we use js.fetch, 
+            // but keeping standard library loading for student extensibility.
+            output.innerHTML = "✅ SOC Engine Online. Enter Token to proceed.";
+            status.innerHTML = "ENGINE READY";
+            status.style.color = "#00ff00";
         } catch (err) {
-            output.innerHTML = `❌ Failed to load engine: ${err}`;
+            output.innerHTML = `❌ Init Error: ${err}`;
         }
     }
 
     async function runAudit() {
         const output = document.getElementById('output');
-        const apiKey = document.getElementById('api-key').value;
-        
-        if (!apiKey) {
-            output.innerHTML = "❌ ERROR: Please enter your Hugging Face API Key in the top bar.";
-            return;
-        }
-
-        output.innerHTML = "🔄 System Booting...<br>";
-        
         const code = document.getElementById('code-editor').value;
         const data = document.getElementById('data-input').value;
         
+        output.innerHTML = ""; // Clear log
+        
+        // Write the local virtual file
+        pyodide.FS.writeFile('target_data.txt', data);
+        
+        // Redirect Python prints to the output div
+        pyodide.setStdout({
+            batched: (msg) => { 
+                output.innerHTML += msg + "<br>"; 
+                output.scrollTop = output.scrollHeight;
+            }
+        });
+
         try {
-            // Write the text from the right panel into the virtual filesystem
-            pyodide.FS.writeFile('target_data.txt', data);
-            
-            // Capture Python print() statements and send them to our output div
-            pyodide.setStdout({
-                batched: (msg) => { 
-                    output.innerHTML += msg + "<br>"; 
-                    output.scrollTop = output.scrollHeight; // Auto-scroll
-                }
-            });
-            
-            // Run the user's code
+            // runPythonAsync handles the 'await' inside the script
             await pyodide.runPythonAsync(code);
-            
         } catch (err) {
             output.innerHTML += `<br><span style="color:#ff4d4d">💀 SYSTEM CRASH: ${err}</span>`;
         }
@@ -189,7 +180,6 @@ pyodide_http.patch_all()
         document.getElementById('output').innerHTML = "Log cleared.";
     }
 
-    // Start the loading process immediately
     init();
 </script>
 </body>
