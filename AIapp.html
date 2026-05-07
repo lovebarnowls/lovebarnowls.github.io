@@ -81,7 +81,7 @@ async def check_password(password):
 
 async def main():
     #You can edit the print statements if you think you know what you are doing
-    print(f"🛡️ Security Sentinel Analysis (Temp: {TEMP})...")
+    print(f"🛡️ Security Sentinel (Temp: {TEMP})...")
     print("-" * 40)
 
     try:
@@ -91,7 +91,7 @@ async def main():
         print("❌ Error: Could not read target_data.txt")
         return
 
-    for item in data:
+    for item in 
         print(f"📝 Auditing: {item}")
         try:
             result = await check_password(item)
@@ -123,7 +123,7 @@ correcthorsebatterystaple
     const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 
     // JS Bridge: Sends raw messages array to the Worker
-    async function js_send_to_llm(messages_json_string) {
+    async function js_send_to_llm(messages_json_string, temperature = 0.1) {
         try {
             const messages = JSON.parse(messages_json_string);
             
@@ -131,7 +131,7 @@ correcthorsebatterystaple
                 messages: messages,
                 model: "llama-3.1-8b-instant",
                 max_tokens: 88,
-                temperature: temperature 
+                temperature: temperature // <--- MUST match the argument name above
             };
 
             const response = await fetch(MODEL_ENDPOINT, {
@@ -142,7 +142,7 @@ correcthorsebatterystaple
 
             if (!response.ok) {
                 const err = await response.json();
-                throw new Error(err.error || "API Request Failed");
+                throw new Error(err.error?.message || "API Request Failed");
             }
 
             const data = await response.json();
@@ -150,9 +150,6 @@ correcthorsebatterystaple
 
         } catch (err) {
             return `🔌 Error: ${err.message}`;
-        }
-    }
-
     // -------------------------------------------------------
     // PYODIDE SETUP
     // -------------------------------------------------------
