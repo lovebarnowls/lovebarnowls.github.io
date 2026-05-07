@@ -154,8 +154,11 @@ correcthorsebatterystaple
 </div>
 
 <script>
-    // Critical: Attach to window so Python can access it via 'js.HIDDEN_MODEL_ENDPOINT'
-    window.HIDDEN_MODEL_ENDPOINT = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-3B-Instruct";
+    // We use a public CORS proxy to bypass browser security restrictions on HF Free Tier
+    // This wraps the HF URL so the browser allows the connection.
+    const HF_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-3B-Instruct";
+    window.HIDDEN_MODEL_ENDPOINT = "https://corsproxy.io/?" + encodeURIComponent(HF_URL);
+    
     let pyodide;
 
     async function init() {
