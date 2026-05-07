@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V4.0 Security Sentinel IDE</title>
+    <title>Yang's V4.1 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -29,7 +29,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v4.0 [Groq Proxy Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v4.1 [Groq Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -68,11 +68,12 @@ async def check_password(password):
         {"role": "user", "content": f"Is '{password}' secure?"}
     ]
     
-    # Call the JS Bridge
+    # Call the JS Bridge. Don't edit this unless you know what you are doing
     response = await js_send_to_llm(json.dumps(messages))
     return response
 
 async def main():
+    #you can edit the print statements if you would like        
     print("🛡️ Security Sentinel Analysis Started...")
     print("-" * 40)
 
