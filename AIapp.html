@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V2.4 Security Sentinel IDE</title>
+    <title>Yang's V3.0 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -18,7 +18,6 @@
         #output { flex: 0.4; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; overflow-y: auto; border-top: 2px solid #333; font-size: 13px; white-space: pre-wrap; }
         
         .controls { padding: 10px; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; align-items: center; }
-        input[type="text"] { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 300px; font-family: monospace; }
         button { background: #ce3c3c; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: background 0.2s; }
         button:hover { background: #ff4d4d; }
         button.secondary { background: #444; }
@@ -30,15 +29,14 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v2.4 [Classroom Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v3.0 [Cloud Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
 <div class="controls">
-    <label for="api-key" style="font-size: 12px; color: #aaa;">AUTH TOKEN:</label>
-    <input type="text" id="api-key" placeholder="Enter HF Token..." value=""> 
     <button onclick="runAudit()">▶ EXECUTE AUDIT</button>
     <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
+    <div style="font-size: 11px; color: #666; margin-left: auto;">Proxy: hfproxy.xu-yangen.workers.dev</div>
 </div>
 
 <div class="main">
@@ -52,71 +50,47 @@ import asyncio
 # --- SYSTEM CONFIGURATION ---
 MODEL_URL = js.HIDDEN_MODEL_ENDPOINT
 
-async def audit_password(text, token):
-    # 1. Define headers as a standard Python Dict
-    # Pyodide automatically converts this to a JS Object for fetch()
+async def audit_password(text):
+    # No Token needed! The Cloudflare Worker injects it.
     headers = {
-        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
     
-    # 2. Construct the Prompt
-    prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided and respond in exactly one sentence: 'SECURE' or 'INSECURE' followed by the primary vulnerability.<|im_end|>\n<|im_start|>user\nAnalyze this password: {text}<|im_end|>n<|im_start|>assistant\n"
+    # Qwen Chat Format
+    prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided.<|im_end|>\n<|im_start|>user\nIs the password '{text}' secure? Answer with exactly one word: SECURE or INSECURE, followed by a very short reason.<|im_end|>\n<|im_start|>assistant\n"
     
-    # 3. Construct Payload
     payload = {
         "inputs": prompt,
-        "parameters": {"max_new_tokens": 60, "return_full_text": False}
+        "parameters": {"max_new_tokens": 30, "return_full_text": False}
     }
     
-    # Convert payload to JSON string for the body
     body_str = json.dumps(payload)
 
     try:
-        # 4. Call fetch with URL and Options Dict
-        # Pyodide handles the conversion of the 'headers' dict inside 'options'
-        options = {
-            "method": "POST",
-            "headers": headers,
-            "body": body_str
-        }
-        
+        options = {"method": "POST", "headers": headers, "body": body_str}
         response = await js.fetch(MODEL_URL, options)
         
-        # Handle Status Codes
-        if response.status == 401: 
-            return "ERROR: 401 Unauthorized. Check your Token."
         if response.status == 503: 
-            return "ERROR: 503 Model is loading. Wait 30s and try again."
+            return "⏳ Model is sleeping. Wait 20s and retry."
+        if response.status == 429:
+            return "⚠️ Rate limit hit. Wait 10s."
         if response.status != 200:
-            return f"ERROR: HTTP {response.status}"
+            return f"❌ HTTP Error: {response.status}"
             
-        # Parse JSON Response
         res_data = await response.json()
         
-        # Handle HF specific response structure
         if isinstance(res_data, list) and len(res_data) > 0:
             return res_data[0].get('generated_text', 'No response').strip()
         elif isinstance(res_data, dict):
-             if 'error' in res_data:
-                 return f"API ERROR: {res_data['error']}"
-             return str(res_data)
-             
-        return "Unexpected Response Format"
+            if 'error' in res_
+                return f"API Error: {res_data['error']}"
+            
+        return str(res_data)
         
     except Exception as e:
-        # This catches CORS/Network drops
-        error_msg = str(e)
-        if "Failed to fetch" in error_msg:
-            return "NETWORK ERROR: CORS or Connection Blocked. Check Console."
-        return f"NETWORK ERROR: {error_msg}"
+        return f"🔌 Network Error: {str(e)}"
 
 async def main():
-    token = js.document.getElementById('api-key').value
-    if not token or token.strip() == "":
-        print("❌ CRITICAL ERROR: Access Token missing.")
-        return
-
     print(f"🛡️ Security Sentinel Analysis Started...")
     print("-" * 40)
     
@@ -127,9 +101,9 @@ async def main():
         print("❌ Error: Could not read target_data.txt")
         return
 
-    for item in data:
+    for item in 
         print(f"📝 Auditing: {item}")
-        result = await audit_password(item, token)
+        result = await audit_password(item)
         print(f"   ↳ Result: {result}\n")
     
     print("-" * 40)
@@ -154,10 +128,8 @@ correcthorsebatterystaple
 </div>
 
 <script>
-    // We use a public CORS proxy to bypass browser security restrictions on HF Free Tier
-    // This wraps the HF URL so the browser allows the connection.
-    const HF_URL = "hfproxy.xu-yangen.workers.dev";
-    window.HIDDEN_MODEL_ENDPOINT = "https://corsproxy.io/?" + encodeURIComponent(HF_URL);
+    // Point to your Cloudflare Worker
+    window.HIDDEN_MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
     
     let pyodide;
 
@@ -166,7 +138,7 @@ correcthorsebatterystaple
         const status = document.getElementById('engine-status');
         try {
             pyodide = await loadPyodide();
-            output.innerHTML = "✅ SOC Engine Online. Enter Token to proceed.";
+            output.innerHTML = "✅ SOC Engine Online. Ready to Audit.";
             status.innerHTML = "ENGINE READY";
             status.style.color = "#00ff00";
         } catch (err) {
