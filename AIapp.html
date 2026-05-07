@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V2.2 Security Sentinel IDE</title>
+    <title>Yang's V2.3 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -30,7 +30,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v2.2 [Classroom Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v2.3 [Classroom Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -48,60 +48,68 @@
 import js
 import json
 import asyncio
-from js import Object, JSON
 
 # --- SYSTEM CONFIGURATION ---
 MODEL_URL = js.HIDDEN_MODEL_ENDPOINT
 
 async def audit_password(text, token):
-    # 1. Construct Headers as a pure JS Object to ensure compatibility
-    headers = Object.new()
-    headers.set("Authorization", f"Bearer {token}")
-    headers.set("Content-Type", "application/json")
+    # 1. Define headers as a standard Python Dict
+    # Pyodide automatically converts this to a JS Object for fetch()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
     
     # 2. Construct the Prompt
-    prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided and respond in exactly one sentence: 'SECURE' or 'INSECURE' followed by the primary vulnerability.<|im_end|>\n<|im_start|>user\nAnalyze this password: {text}<|im_end|>\n<|im_start|>assistant\n"
+    prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided and respond in exactly one sentence: 'SECURE' or 'INSECURE' followed by the primary vulnerability.<|im_end|>\n<|im_start|>user\nAnalyze this password: {text}<|im_end|>n<|im_start|>assistant\n"
     
     # 3. Construct Payload
-    payload_data = {
+    payload = {
         "inputs": prompt,
         "parameters": {"max_new_tokens": 60, "return_full_text": False}
     }
-    # Convert Python dict to JSON string, then to JS String object if needed, 
-    # but usually standard string works fine for body.
-    payload_str = json.dumps(payload_data)
-
-    # 4. Construct Fetch Options Object
-    opts = Object.new()
-    opts.set("method", "POST")
-    opts.set("headers", headers)
-    opts.set("body", payload_str)
+    
+    # Convert payload to JSON string for the body
+    body_str = json.dumps(payload)
 
     try:
-        # Pass URL and the Options Object
-        response = await js.fetch(MODEL_URL, opts)
+        # 4. Call fetch with URL and Options Dict
+        # Pyodide handles the conversion of the 'headers' dict inside 'options'
+        options = {
+            "method": "POST",
+            "headers": headers,
+            "body": body_str
+        }
         
+        response = await js.fetch(MODEL_URL, options)
+        
+        # Handle Status Codes
         if response.status == 401: 
             return "ERROR: 401 Unauthorized. Check your Token."
         if response.status == 503: 
             return "ERROR: 503 Model is loading. Wait 30s and try again."
+        if response.status != 200:
+            return f"ERROR: HTTP {response.status}"
             
+        # Parse JSON Response
         res_data = await response.json()
         
         # Handle HF specific response structure
         if isinstance(res_data, list) and len(res_data) > 0:
             return res_data[0].get('generated_text', 'No response').strip()
         elif isinstance(res_data, dict):
-             # Sometimes errors come back as dicts
              if 'error' in res_data:
                  return f"API ERROR: {res_data['error']}"
              return str(res_data)
              
-        return str(res_data)
+        return "Unexpected Response Format"
         
     except Exception as e:
-        # This catches the CORS/Network drop
-        return f"NETWORK ERROR: {str(e)}"
+        # This catches CORS/Network drops
+        error_msg = str(e)
+        if "Failed to fetch" in error_msg:
+            return "NETWORK ERROR: CORS or Connection Blocked. Check Console."
+        return f"NETWORK ERROR: {error_msg}"
 
 async def main():
     token = js.document.getElementById('api-key').value
