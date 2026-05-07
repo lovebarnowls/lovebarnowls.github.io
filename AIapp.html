@@ -48,41 +48,59 @@
 import js
 import json
 import asyncio
+from js import Object, JSON
 
 # --- SYSTEM CONFIGURATION ---
 MODEL_URL = js.HIDDEN_MODEL_ENDPOINT
 
 async def audit_password(text, token):
-    # We create the dictionary in Python...
-    py_headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    # 1. Construct Headers as a pure JS Object to ensure compatibility
+    headers = Object.new()
+    headers.set("Authorization", f"Bearer {token}")
+    headers.set("Content-Type", "application/json")
     
-    # ...but we MUST convert it to a JS Object so fetch() can read it!
-    js_headers = js.Object.fromEntries(js.Object.entries(py_headers))
-    
+    # 2. Construct the Prompt
     prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided and respond in exactly one sentence: 'SECURE' or 'INSECURE' followed by the primary vulnerability.<|im_end|>\n<|im_start|>user\nAnalyze this password: {text}<|im_end|>\n<|im_start|>assistant\n"
     
-    payload = json.dumps({
+    # 3. Construct Payload
+    payload_data = {
         "inputs": prompt,
         "parameters": {"max_new_tokens": 60, "return_full_text": False}
-    })
+    }
+    # Convert Python dict to JSON string, then to JS String object if needed, 
+    # but usually standard string works fine for body.
+    payload_str = json.dumps(payload_data)
+
+    # 4. Construct Fetch Options Object
+    opts = Object.new()
+    opts.set("method", "POST")
+    opts.set("headers", headers)
+    opts.set("body", payload_str)
 
     try:
-        # Pass the converted js_headers here
-        response = await js.fetch(MODEL_URL, method="POST", headers=js_headers, body=payload)
+        # Pass URL and the Options Object
+        response = await js.fetch(MODEL_URL, opts)
         
-        if response.status == 401: return "ERROR: 401 Unauthorized. Check your Token."
-        if response.status == 503: return "ERROR: 503 Service Unavailable (Model Loading)."
+        if response.status == 401: 
+            return "ERROR: 401 Unauthorized. Check your Token."
+        if response.status == 503: 
+            return "ERROR: 503 Model is loading. Wait 30s and try again."
             
         res_data = await response.json()
         
+        # Handle HF specific response structure
         if isinstance(res_data, list) and len(res_data) > 0:
             return res_data[0].get('generated_text', 'No response').strip()
+        elif isinstance(res_data, dict):
+             # Sometimes errors come back as dicts
+             if 'error' in res_data:
+                 return f"API ERROR: {res_data['error']}"
+             return str(res_data)
+             
         return str(res_data)
         
     except Exception as e:
+        # This catches the CORS/Network drop
         return f"NETWORK ERROR: {str(e)}"
 
 async def main():
