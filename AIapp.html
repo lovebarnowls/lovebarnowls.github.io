@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V3.3 Security Sentinel IDE</title>
+    <title>Yang's V3.4 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -29,7 +29,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v3.3 [Cloud Proxy Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v3.4 [Cloud Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -111,11 +111,16 @@ correcthorsebatterystaple
     const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 
     async function js_fetch_password(password) {
-        const prompt = `<|im_start|>system\nYou are a security expert. Analyze the password provided.<|im_end|>\n<|im_start|>user\nIs the password '${password}' secure? Answer with exactly one word: SECURE or INSECURE, followed by a very short reason.<|im_end|>\n<|im_start|>assistant\n`;
+        // Use ChatML format which Qwen prefers
+        const prompt = `<|im_start|>system\nYou are a security expert. Answer with one word: SECURE or INSECURE.<|im_end|>\n<|im_start|>user\nPassword: "${password}"<|im_end|>\n<|im_start|>assistant\n`;
 
         const payload = {
             inputs: prompt,
-            parameters: { max_new_tokens: 30, return_full_text: false }
+            parameters: { 
+                max_new_tokens: 10, // Keep it small for speed
+                return_full_text: false,
+                temperature: 0.1 // Low temp for consistent answers
+            }
         };
 
         try {
@@ -125,12 +130,23 @@ correcthorsebatterystaple
                 body: JSON.stringify(payload)
             });
 
-            if (response.status === 503) return "⏳ Model is sleeping. Wait 20s and retry.";
-            if (response.status === 429) return "⚠️ Rate limit hit. Wait 10s.";
-            if (!response.ok) return `❌ HTTP Error: ${response.status}`;
-
             const data = await response.json();
 
+            // Handle 503 Model Loading
+            if (response.status === 503 || (data.error && data.error.includes("loading"))) {
+                return "⏳ Model is sleeping. Wait 20s and retry.";
+            }
+            
+            // Handle Auth Errors (401)
+            if (response.status === 401) {
+                return "❌ Auth Error: Check Worker Secrets.";
+            }
+
+            if (!response.ok) {
+                return `❌ HTTP Error: ${response.status} - ${JSON.stringify(data)}`;
+            }
+
+            // Parse Result
             if (Array.isArray(data) && data.length > 0) {
                 return (data[0].generated_text || "No response").trim();
             } else if (data && data.error) {
