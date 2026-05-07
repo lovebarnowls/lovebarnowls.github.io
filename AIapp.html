@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V3.1 Security Sentinel IDE</title>
+    <title>Yang's V3.2 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -29,7 +29,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v3.1 [Cloud Proxy Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v3.2 [Cloud Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -101,7 +101,7 @@ async def main():
         print("❌ Error: Could not read target_data.txt")
         return
 
-    for item in 
+    for item in data:
         print(f"📝 Auditing: {item}")
         result = await audit_password(item)
         print(f"   ↳ Result: {result}\n")
