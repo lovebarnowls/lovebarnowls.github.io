@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V3.5 Security Sentinel IDE</title>
+    <title>Yang's V4.0 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -29,7 +29,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v3.5 [Cloud Proxy Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v4.0 [Groq Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -41,28 +41,36 @@
 
 <div class="main">
     <div class="column" id="editor-col">
-        <div class="label">main.py (System Logic)</div>
+        <div class="label">main.py (Student Logic)</div>
         <textarea id="code-editor">
 import json
 import asyncio
 
 # -------------------------------------------------------
-# HOW THIS WORKS (for students):
+# STUDENT CHALLENGE:
 #
-# Pyodide (Python in the browser) cannot make cross-origin
-# fetch requests directly — the browser blocks them for
-# security reasons. So instead, we call a JavaScript
-# helper function (js_fetch_password) that lives in the
-# page's JS context, where fetch is fully allowed.
-#
-# js_fetch_password is exposed to Python via pyodide.globals
-# and we call it using: await js_fetch_password(password)
+# 1. Define your 'system' instructions below.
+# 2. Loop through the passwords in target_data.txt.
+# 3. Construct a 'messages' list for the LLM.
+# 4. Call js_send_to_llm(messages) to get a response.
 # -------------------------------------------------------
 
-async def audit_password(text):
-    # Call the JS bridge function defined in the HTML script block
-    result = await js_fetch_password(text)
-    return result
+SYSTEM_PROMPT = """
+You are a cybersecurity expert. 
+Analyze the password provided by the user.
+Answer with exactly one word: SECURE or INSECURE.
+"""
+
+async def check_password(password):
+    # Students can modify this structure!
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"Is '{password}' secure?"}
+    ]
+    
+    # Call the JS Bridge
+    response = await js_send_to_llm(json.dumps(messages))
+    return response
 
 async def main():
     print("🛡️ Security Sentinel Analysis Started...")
@@ -77,8 +85,11 @@ async def main():
 
     for item in data:
         print(f"📝 Auditing: {item}")
-        result = await audit_password(item)
-        print(f"   ↳ Result: {result}\n")
+        try:
+            result = await check_password(item)
+            print(f"   ↳ Result: {result}\n")
+        except Exception as e:
+            print(f"   ↳ Error: {e}\n")
 
     print("-" * 40)
     print("✅ Audit Cycle Complete.")
@@ -101,61 +112,35 @@ correcthorsebatterystaple
 </div>
 
 <script>
-    // -------------------------------------------------------
-    // THE JS BRIDGE
-    //
-    // This function does the actual fetch from JavaScript,
-    // where cross-origin requests are permitted.
-    // It is exposed to Python via pyodide.globals.set() below.
-    // -------------------------------------------------------
     const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 
-    async function js_fetch_password(password) {
-    // Phi-3.5 Prompt Format
-        const prompt = `<|system|>\nYou are a security expert. Answer with one word: SECURE or INSECURE.<|end|>\n<|user|>\nPassword: "${password}"<|end|>\n<|assistant|>\n`;
-
-        const payload = {
-            inputs: prompt,
-            parameters: { 
-                max_new_tokens: 5, // Smaller is faster
-                return_full_text: false,
-                temperature: 0.1 
-            }
-        };
-
+    // JS Bridge: Sends raw messages array to the Worker
+    async function js_send_to_llm(messages_json_string) {
         try {
+            const messages = JSON.parse(messages_json_string);
+            
+            const payload = {
+                messages: messages,
+                model: "llama-3.1-8b-instant",
+                max_tokens: 10
+            };
+
             const response = await fetch(MODEL_ENDPOINT, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
-
-            // Handle 503 Model Loading
-            if (response.status === 503 || (data.error && data.error.includes("loading"))) {
-                return "⏳ Model is sleeping. Wait 20s and retry.";
-            }
-            
-            // Handle Auth Errors (401)
-            if (response.status === 401) {
-                return "❌ Auth Error: Check Worker Secrets.";
-            }
-
             if (!response.ok) {
-                return `❌ HTTP Error: ${response.status} - ${JSON.stringify(data)}`;
+                const err = await response.json();
+                throw new Error(err.error || "API Request Failed");
             }
 
-            // Parse Result
-            if (Array.isArray(data) && data.length > 0) {
-                return (data[0].generated_text || "No response").trim();
-            } else if (data && data.error) {
-                return `API Error: ${data.error}`;
-            }
-            return String(data);
+            const data = await response.json();
+            return data.choices[0].message.content.trim();
 
         } catch (err) {
-            return `🔌 Network Error: ${err.message}`;
+            return `🔌 Error: ${err.message}`;
         }
     }
 
@@ -169,10 +154,7 @@ correcthorsebatterystaple
         const status = document.getElementById('engine-status');
         try {
             pyodide = await loadPyodide();
-
-            // Expose the JS fetch bridge to Python
-            pyodide.globals.set("js_fetch_password", js_fetch_password);
-
+            pyodide.globals.set("js_send_to_llm", js_send_to_llm);
             output.innerHTML = "✅ SOC Engine Online. Ready to Audit.";
             status.innerHTML = "ENGINE READY";
             status.style.color = "#00ff00";
