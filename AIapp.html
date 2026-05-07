@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Term 4: Security Sentinel IDE</title>
+    <title>Yang's Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -12,7 +12,7 @@
         #editor-col { flex: 3; border-right: 1px solid #333; }
         #data-col { flex: 2; background: #181818; }
         
-        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 15px; border: none; font-size: 14px; outline: none; line-height: 1.5; resize: none; }
+        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Courier New', monospace; padding: 15px; border: none; font-size: 14px; outline: none; line-height: 1.5; resize: none; }
         .label { background: #2d2d2d; padding: 8px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; }
         
         #output { flex: 0.4; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; overflow-y: auto; border-top: 2px solid #333; font-size: 13px; white-space: pre-wrap; }
@@ -30,13 +30,12 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v1.0.4 [Classroom Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v1.0.5 [Classroom Build]</div>
     <div style="font-size: 12px; color: #888;">Pyodide Engine Active</div>
 </header>
 
 <div class="controls">
     <label for="api-key" style="font-size: 12px; color: #aaa;">HF API KEY:</label>
-    <!-- Students paste their key here. You can pre-fill this via JS if you want. -->
     <input type="text" id="api-key" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx" value=""> 
     <button onclick="runAudit()">▶ EXECUTE AUDIT</button>
     <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
@@ -49,65 +48,67 @@
         <textarea id="code-editor">
 import requests
 import json
+import js
 
 # --- CONFIGURATION ---
-# We get the key from the input box above, not hardcoded here!
-API_KEY = get_api_key() 
 MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
 # ---------------------
 
 def get_api_key():
-    # This function bridges JS and Python
-    import js
+    # Bridge JS and Python to get the live key from the input field
     return js.document.getElementById('api-key').value
 
-def audit_item(text):
-    headers = {"Authorization": f"Bearer {API_KEY}"}
+def audit_item(text, api_key):
+    headers = {"Authorization": f"Bearer {api_key}"}
     # Simple prompt for security audit
     prompt = f"Is '{text}' a secure password? Answer only with 'SECURE' or 'INSECURE' and a brief reason."
     payload = {"inputs": prompt}
     
     try:
-        response = requests.post(MODEL_URL, headers=headers, json=payload, timeout=10)
+        # Note: In Pyodide, requests is patched to use the browser's fetch API
+        response = requests.post(MODEL_URL, headers=headers, json=payload)
         
-        # Check for HTTP errors
         if response.status_code == 401:
             return "ERROR: 401 Unauthorized. Check your API Key."
         if response.status_code == 503:
             return "ERROR: 503 Service Unavailable. Model is loading. Try again."
             
         response.raise_for_status()
-        return response.json()[0]['generated_text']
+        data = response.json()
+        
+        # Hugging Face returns a list, we want the first result's text
+        return data[0]['generated_text'] if isinstance(data, list) else data
         
     except Exception as e:
         return f"CONNECTION ERROR: {str(e)}"
 
 def main():
-    if not API_KEY or API_KEY == "":
+    api_key = get_api_key()
+    if not api_key or api_key.strip() == "":
         print("❌ CRITICAL ERROR: No API Key provided in the top bar.")
         return
 
-    print(f"🛡️  Security Sentinel Starting...")
-    print(f"🔑 Using Key: {API_KEY[:5]}...{API_KEY[-5:]}")
+    print(f"🛡️ Security Sentinel Starting...")
+    print(f"🔑 Using Key: {api_key[:5]}...{api_key[-5:]}")
     print("-" * 30)
     
-    # Read the local virtual file
+    # Read the data from the right-hand column (saved via pyodide.FS)
     try:
         with open('target_data.txt', 'r') as f:
             data = [line.strip() for line in f if line.strip()]
-    except:
-        print("❌ Error reading target_data.txt")
+    except Exception as e:
+        print(f"❌ Error reading target_data.txt: {e}")
         return
 
     for item in data:
         print(f"📝 Auditing: {item}")
-        result = audit_item(item)
+        result = audit_item(item, api_key)
         print(f"   ↳ AI Response: {result}\n")
 
 if __name__ == "__main__":
     main()
 </textarea>
-        <div id="output">System initialized. Enter API Key and press Execute...</div>
+        <div id="output">System initialized. Waiting for engine...</div>
     </div>
 
     <div class="column" id="data-col">
@@ -131,8 +132,19 @@ correcthorsebatterystaple
         
         try {
             pyodide = await loadPyodide();
-            output.innerHTML += "<br>⏳ Installing 'requests' package...";
-            await pyodide.loadPackage(["requests", "pyodide-http"]);
+            output.innerHTML += "<br>⏳ Installing network packages...";
+            
+            // Using micropip is the most reliable way to get requests working in the browser
+            await pyodide.loadPackage("micropip");
+            const micropip = pyodide.pyimport("micropip");
+            await micropip.install(['requests', 'pyodide-http']);
+            
+            // Patch requests globally once during setup
+            await pyodide.runPythonAsync(`
+import pyodide_http
+pyodide_http.patch_all()
+            `);
+            
             output.innerHTML = "✅ Engine Ready. <br>⚠️ <span style='color:#ffcc00'>Enter your HF API Key above to begin.</span>";
         } catch (err) {
             output.innerHTML = `❌ Failed to load engine: ${err}`;
@@ -154,16 +166,10 @@ correcthorsebatterystaple
         const data = document.getElementById('data-input').value;
         
         try {
-            // Write the virtual file
+            // Write the text from the right panel into the virtual filesystem
             pyodide.FS.writeFile('target_data.txt', data);
             
-            // Patch requests to work in browser
-            await pyodide.runPythonAsync(`
-import pyodide_http
-pyodide_http.patch_all()
-            `);
-            
-            // Capture stdout
+            // Capture Python print() statements and send them to our output div
             pyodide.setStdout({
                 batched: (msg) => { 
                     output.innerHTML += msg + "<br>"; 
@@ -171,6 +177,7 @@ pyodide_http.patch_all()
                 }
             });
             
+            // Run the user's code
             await pyodide.runPythonAsync(code);
             
         } catch (err) {
@@ -182,6 +189,7 @@ pyodide_http.patch_all()
         document.getElementById('output').innerHTML = "Log cleared.";
     }
 
+    // Start the loading process immediately
     init();
 </script>
 </body>
