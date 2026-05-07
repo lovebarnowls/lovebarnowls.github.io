@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V4.1 Security Sentinel IDE</title>
+    <title>Yang's V4.2 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -53,7 +53,11 @@ import asyncio
 # 2. Loop through the passwords in target_data.txt.
 # 3. Construct a 'messages' list for the LLM.
 # 4. Call js_send_to_llm(messages) to get a response.
+# 5. You can change the temperature to see how the AI responds
+# Caveats: The AI responses are set to be SHORT. DO NOT hope for long responses. The entire class is sharing ONE free tier AI key (API key), so yes they are meant to be short.
 # -------------------------------------------------------
+
+TEMP = 0.1 #1.0=creative, 0.1=strict
 
 SYSTEM_PROMPT = """
 You are a cybersecurity expert. 
@@ -62,19 +66,22 @@ Answer with exactly one word: SECURE or INSECURE.
 """
 
 async def check_password(password):
-    # Students can modify this structure!
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": f"Is '{password}' secure?"}
     ]
+    
+    # Pass the TEMP variable to the JS bridge
+    response = await js_send_to_llm(json.dumps(messages), TEMP)
+    return response
     
     # Call the JS Bridge. Don't edit this unless you know what you are doing
     response = await js_send_to_llm(json.dumps(messages))
     return response
 
 async def main():
-    #you can edit the print statements if you would like        
-    print("🛡️ Security Sentinel Analysis Started...")
+    #You can edit the print statements if you think you know what you are doing
+    print(f"🛡️ Security Sentinel Analysis (Temp: {TEMP})...")
     print("-" * 40)
 
     try:
@@ -123,7 +130,8 @@ correcthorsebatterystaple
             const payload = {
                 messages: messages,
                 model: "llama-3.1-8b-instant",
-                max_tokens: 40
+                max_tokens: 88,
+                temperature: temperature 
             };
 
             const response = await fetch(MODEL_ENDPOINT, {
