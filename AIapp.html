@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V3.2 Security Sentinel IDE</title>
+    <title>Yang's V3.3 Security Sentinel IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -29,7 +29,7 @@
 <body>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v3.2 [Cloud Proxy Build]</div>
+    <div><strong>SECURITY SENTINEL</strong> | v3.3 [Cloud Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
@@ -43,57 +43,31 @@
     <div class="column" id="editor-col">
         <div class="label">main.py (System Logic)</div>
         <textarea id="code-editor">
-import js
 import json
 import asyncio
 
-# --- SYSTEM CONFIGURATION ---
-MODEL_URL = js.HIDDEN_MODEL_ENDPOINT
+# -------------------------------------------------------
+# HOW THIS WORKS (for students):
+#
+# Pyodide (Python in the browser) cannot make cross-origin
+# fetch requests directly — the browser blocks them for
+# security reasons. So instead, we call a JavaScript
+# helper function (js_fetch_password) that lives in the
+# page's JS context, where fetch is fully allowed.
+#
+# js_fetch_password is exposed to Python via pyodide.globals
+# and we call it using: await js_fetch_password(password)
+# -------------------------------------------------------
 
 async def audit_password(text):
-    # No Token needed! The Cloudflare Worker injects it.
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
-    # Qwen Chat Format
-    prompt = f"<|im_start|>system\nYou are a security expert. Analyze the password provided.<|im_end|>\n<|im_start|>user\nIs the password '{text}' secure? Answer with exactly one word: SECURE or INSECURE, followed by a very short reason.<|im_end|>\n<|im_start|>assistant\n"
-    
-    payload = {
-        "inputs": prompt,
-        "parameters": {"max_new_tokens": 30, "return_full_text": False}
-    }
-    
-    body_str = json.dumps(payload)
-
-    try:
-        options = {"method": "POST", "headers": headers, "body": body_str}
-        response = await js.fetch(MODEL_URL, options)
-        
-        if response.status == 503: 
-            return "⏳ Model is sleeping. Wait 20s and retry."
-        if response.status == 429:
-            return "⚠️ Rate limit hit. Wait 10s."
-        if response.status != 200:
-            return f"❌ HTTP Error: {response.status}"
-            
-        res_data = await response.json()
-        
-        if isinstance(res_data, list) and len(res_data) > 0:
-            return res_data[0].get('generated_text', 'No response').strip()
-        elif isinstance(res_data, dict):
-            if 'error' in res_data:
-                return f"API Error: {res_data['error']}"
-            
-        return str(res_data)
-        
-    except Exception as e:
-        return f"🔌 Network Error: {str(e)}"
+    # Call the JS bridge function defined in the HTML script block
+    result = await js_fetch_password(text)
+    return result
 
 async def main():
-    print(f"🛡️ Security Sentinel Analysis Started...")
+    print("🛡️ Security Sentinel Analysis Started...")
     print("-" * 40)
-    
+
     try:
         with open('target_data.txt', 'r') as f:
             data = [line.strip() for line in f if line.strip()]
@@ -105,13 +79,12 @@ async def main():
         print(f"📝 Auditing: {item}")
         result = await audit_password(item)
         print(f"   ↳ Result: {result}\n")
-    
+
     print("-" * 40)
     print("✅ Audit Cycle Complete.")
 
-# Execute
 asyncio.ensure_future(main())
-</textarea>
+        </textarea>
         <div id="output">System Booting...</div>
     </div>
 
@@ -128,9 +101,51 @@ correcthorsebatterystaple
 </div>
 
 <script>
-    // Point to your Cloudflare Worker
-    window.HIDDEN_MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
-    
+    // -------------------------------------------------------
+    // THE JS BRIDGE
+    //
+    // This function does the actual fetch from JavaScript,
+    // where cross-origin requests are permitted.
+    // It is exposed to Python via pyodide.globals.set() below.
+    // -------------------------------------------------------
+    const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+
+    async function js_fetch_password(password) {
+        const prompt = `<|im_start|>system\nYou are a security expert. Analyze the password provided.<|im_end|>\n<|im_start|>user\nIs the password '${password}' secure? Answer with exactly one word: SECURE or INSECURE, followed by a very short reason.<|im_end|>\n<|im_start|>assistant\n`;
+
+        const payload = {
+            inputs: prompt,
+            parameters: { max_new_tokens: 30, return_full_text: false }
+        };
+
+        try {
+            const response = await fetch(MODEL_ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.status === 503) return "⏳ Model is sleeping. Wait 20s and retry.";
+            if (response.status === 429) return "⚠️ Rate limit hit. Wait 10s.";
+            if (!response.ok) return `❌ HTTP Error: ${response.status}`;
+
+            const data = await response.json();
+
+            if (Array.isArray(data) && data.length > 0) {
+                return (data[0].generated_text || "No response").trim();
+            } else if (data && data.error) {
+                return `API Error: ${data.error}`;
+            }
+            return String(data);
+
+        } catch (err) {
+            return `🔌 Network Error: ${err.message}`;
+        }
+    }
+
+    // -------------------------------------------------------
+    // PYODIDE SETUP
+    // -------------------------------------------------------
     let pyodide;
 
     async function init() {
@@ -138,6 +153,10 @@ correcthorsebatterystaple
         const status = document.getElementById('engine-status');
         try {
             pyodide = await loadPyodide();
+
+            // Expose the JS fetch bridge to Python
+            pyodide.globals.set("js_fetch_password", js_fetch_password);
+
             output.innerHTML = "✅ SOC Engine Online. Ready to Audit.";
             status.innerHTML = "ENGINE READY";
             status.style.color = "#00ff00";
@@ -150,13 +169,13 @@ correcthorsebatterystaple
         const output = document.getElementById('output');
         const code = document.getElementById('code-editor').value;
         const data = document.getElementById('data-input').value;
-        
-        output.innerHTML = ""; 
+
+        output.innerHTML = "";
         pyodide.FS.writeFile('target_data.txt', data);
-        
+
         pyodide.setStdout({
-            batched: (msg) => { 
-                output.innerHTML += msg + "<br>"; 
+            batched: (msg) => {
+                output.innerHTML += msg + "<br>";
                 output.scrollTop = output.scrollHeight;
             }
         });
@@ -169,6 +188,7 @@ correcthorsebatterystaple
     }
 
     function clearOutput() { document.getElementById('output').innerHTML = "Log cleared."; }
+
     init();
 </script>
 </body>
