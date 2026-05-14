@@ -39,6 +39,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
             border-left: 5px solid var(--primary);
+            text-align: center;
         }
         .chat-container {
             border: 2px solid #ddd;
@@ -114,19 +115,154 @@
             text-align: center;
             margin-bottom: 10px;
         }
+        .target-display {
+            font-weight: bold;
+            color: var(--primary);
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Project AI Adversary</h1>
+    <h1>Project AI Adversary v2</h1>
     
-    <!-- Configuration for Worker URL -->
+    <!-- Hardcoded Target Display -->
     <div class="config-section">
-        <label for="workerUrl"><strong>Target Worker URL:</strong></label>
-        <input type="text" id="workerUrl" placeholder="https://your-team-worker.workers.dev" style="width: 100%; box-sizing: border-box;">
-        <p style="font-size: 0.9em; color: #666;">Enter the Cloudflare Worker URL for the team you are attacking.</p>
+        <p>Targeting Worker:</p>
+        <div class="target-display">game1.xu-yangen.workers.dev</div>
     </div>
 
     <div class="mandatory-hint">
-        ⚠️ Constraint: The AI is forced to include 5 specific associated words in every response
+        ⚠️ This is a working prototype.
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-container" id="chatContainer">
+        <div class="message ai-message">
+            Hello! I am ready to chat. How can I help you today?
+        </div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="userInput" placeholder="Type your prompt here..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()" id="sendBtn">Send</button>
+    </div>
+
+    <!-- Guessing Interface -->
+    <div class="guess-section">
+        <h3>🔐 Submit Your Guess</h3>
+        <p>Enter the secret keyword below. This will be verified securely by the target worker.</p>
+        <div class="input-group">
+            <input type="text" id="guessInput" placeholder="Enter keyword guess...">
+            <button onclick="checkGuess()" id="guessBtn" style="background-color: var(--success);">Submit Guess</button>
+        </div>
+        <div id="guessStatus" class="status"></div>
+    </div>
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    // Hardcoded Worker URL
+    const WORKER_URL = "https://game1.xu-yangen.workers.dev";
+    // ---------------------
+
+    const chatContainer = document.getElementById('chatContainer');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const guessStatus = document.getElementById('guessStatus');
+    const guessBtn = document.getElementById('guessBtn');
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+
+        if (!message) return;
+
+        addMessage(message, 'user');
+        userInput.value = '';
+        sendBtn.disabled = true;
+        sendBtn.innerText = "Thinking...";
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: "chat",
+                    userInput: message,
+                    defensivePrompt: "" // Defensive prompt is set in Worker by instructor
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            addMessage(data.response, 'ai');
+
+        } catch (error) {
+            addMessage(`Error: ${error.message}. Check Worker URL or Console.`, 'ai');
+            console.error(error);
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerText = "Send";
+        }
+    }
+
+    async function checkGuess() {
+        const guess = document.getElementById('guessInput').value.trim();
+
+        if (!guess) return;
+
+        guessBtn.disabled = true;
+        guessBtn.innerText = "Verifying...";
+        guessStatus.textContent = "";
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: "guess",
+                    guess: guess
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            
+            guessStatus.textContent = data.message;
+            if (data.correct) {
+                guessStatus.style.color = 'var(--success)';
+            } else {
+                guessStatus.style.color = 'var(--danger)';
+            }
+
+        } catch (error) {
+            guessStatus.textContent = "Error verifying guess.";
+            guessStatus.style.color = 'var(--danger)';
+            console.error(error);
+        } finally {
+            guessBtn.disabled = false;
+            guessBtn.innerText = "Submit Guess";
+        }
+    }
+
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.classList.add('message');
+        div.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+        div.textContent = text;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
