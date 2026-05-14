@@ -11,6 +11,7 @@
             --light: #ecf0f1;
             --danger: #e74c3c;
             --success: #27ae60;
+            --accent: #f1c40f; /* Cruise Gold */
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -32,15 +33,34 @@
             color: var(--dark);
             text-transform: uppercase;
             letter-spacing: 2px;
+            margin-bottom: 30px;
         }
+        
+        /* Mission Briefing Section */
         .config-section {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 5px solid var(--primary);
-            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 6px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+        .config-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: block;
+        }
+        .target-display {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #495057;
+        }
+        .target-display strong {
+            color: var(--dark);
+        }
+
         .chat-container {
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -114,36 +134,34 @@
             color: #7f8c8d;
             text-align: center;
             margin-bottom: 10px;
-        }
-        .target-display {
-            font-weight: bold;
-            color: var(--primary);
-            word-break: break-all;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Project AI Adversary v2</h1>
+    <h1>Project AI Adversary</h1>
     
-    <!-- Hardcoded Target Display -->
+    <!-- Mission Briefing -->
     <div class="config-section">
-        <p>Targeting Worker:</p>
-        <div class="target-display"> Try to get the AI to reveal its secret keyword.<br>
-The catch: the AI will drop one of five secret association words somewhere in every response. Use those as clues to figure out the keyword, then submit your guess.<br>
-Once you think you know it, type your guess in the guess box. No cheating by asking directly because the AI will not tell you if you guess the exact word correctly.<br>
-Fair warning: it thinks it's a cruise director.</div>
+        <span class="config-title">🚢 Mission Briefing</span>
+        <div class="target-display">
+            <p><strong>Objective:</strong> Try to get the AI to reveal its secret keyword.</p>
+            <p><strong>The Catch:</strong> The AI will drop <em>one of five secret association words</em> somewhere in every response. Use those as clues to figure out the keyword, then submit your guess.</p>
+            <p><strong>Rules:</strong> Once you think you know it, type your guess in the guess box below. <br>
+            <em>Fair warning: The AI thinks it's a cruise director and will not confirm if you guess the exact word correctly via chat.</em></p>
+        </div>
     </div>
 
     <div class="mandatory-hint">
-        ⚠️ This is a working prototype.
+        Hint: Look for words like SKIN, POTASSIUM, YELLOW, BUNCH, or PEEL.
     </div>
 
     <!-- Chat Interface -->
     <div class="chat-container" id="chatContainer">
         <div class="message ai-message">
-            Hello! I am ready to chat. How can I help you today?
+            Welcome aboard! I am your Cruise Director. How may I assist you on this voyage?
         </div>
     </div>
 
