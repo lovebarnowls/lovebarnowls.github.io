@@ -20,35 +20,47 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background: #f5f5f5; overflow: hidden; }
         
         /* Top Control Bar */
-        #top-bar { height: 50px; background: #2c3e50; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: white; border-bottom: 2px solid #34495e; }
+        #top-bar { height: 50px; background: #2c3e50; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: white; border-bottom: 2px solid #34495e; flex-shrink: 0; }
         .nav-buttons { display: flex; gap: 10px; }
         button { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s; }
         button:hover { background: #2980b9; }
         button#mark-btn { background: #2ecc71; }
         button#mark-btn:hover { background: #27ae60; }
+        button#export-code-btn { background: #9b59b6; }
+        button#export-code-btn:hover { background: #8e44ad; }
         
         /* Instructions Section */
-        #instructions-box { background: #ffffff; padding: 15px 20px; border-bottom: 1px solid #ddd; max-height: 100px; overflow-y: auto; }
+        #instructions-box { background: #ffffff; padding: 10px 20px; border-bottom: 1px solid #ddd; flex-shrink: 0; }
         #instructions-box h2 { font-size: 18px; color: #2c3e50; margin-bottom: 5px; }
         #instructions-box p { font-size: 14px; color: #555; }
 
         /* Main Workspace Container */
-        #workspace { flex: 1; display: flex; height: calc(100vh - 150px); }
+        #workspace { flex: 1; display: flex; height: calc(100vh - 100px); overflow: hidden; }
         
-        /* Left Column: Code Editor */
+        /* LEFT COLUMN: Editor (Top) + Console (Bottom) */
         #left-col { width: 50%; height: 100%; display: flex; flex-direction: column; border-right: 2px solid #ccc; }
-        .CodeMirror { flex: 1; font-size: 16px; height: 100% !important; }
+        
+        #editor-container { flex: 3; position: relative; border-bottom: 2px solid #333; }
+        .CodeMirror { height: 100% !important; font-size: 16px; }
+        
+        #console-container { flex: 1; background: #1e1e1e; display: flex; flex-direction: column; min-height: 150px; }
+        .console-header { background: #333; color: #aaa; font-size: 12px; padding: 5px 10px; text-transform: uppercase; letter-spacing: 1px; }
+        #console-output { flex: 1; padding: 10px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; color: #00ff00; font-size: 14px; white-space: pre-wrap; }
 
-        /* Right Column: 3-Row Display Stack */
+        /* RIGHT COLUMN: Visuals */
         #right-col { width: 50%; height: 100%; display: flex; flex-direction: column; background: #fff; }
-        .right-row { position: relative; border-bottom: 1px solid #ddd; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .row-label { position: absolute; top: 5px; left: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #999; z-index: 10; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 3px; }
         
-        #row-student { flex: 2; overflow: hidden; }
-        #row-target { flex: 2; background: #fafafa; overflow: hidden; }
-        #row-console { flex: 1; background: #1e1e1e; border-bottom: none; display: block; padding: 25px 15px 10px 15px; overflow-y: auto; font-family: monospace; color: #00ff00; }
+        .visual-row { flex: 1; position: relative; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fdfdfd; }
+        .row-label { position: absolute; top: 10px; left: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; color: #7f8c8d; z-index: 10; background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 4px; border: 1px solid #eee; }
         
-        canvas, #student-canvas-div { max-width: 100%; max-height: 95%; object-fit: contain; }
+        /* Canvas Centering Fix */
+        canvas { 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+            max-width: 95%; 
+            max-height: 95%; 
+            object-fit: contain;
+            background: white; /* Ensure transparent canvases don't look weird */
+        }
     </style>
 </head>
 <body>
@@ -58,6 +70,7 @@
         <div id="lab-title" style="font-weight: bold; font-size: 16px;">Yang's Logic Lab</div>
         <div class="nav-buttons">
             <button onclick="exportImage()">Export Image</button>
+            <button id="export-code-btn" onclick="exportCode()">Export Code (.txt)</button>
             <button id="skip-btn" onclick="runCode(true)">Skip Animation</button>
             <button onclick="runCode(false)">Run Code</button>
             <button id="mark-btn" onclick="evaluateVisualWork()">Mark Work</button>
@@ -72,62 +85,66 @@
 
     <!-- MAIN INTERACTIVE WORKSPACE -->
     <div id="workspace">
-        <!-- LEFT PANEL: Editor -->
+        <!-- LEFT PANEL: Editor & Console -->
         <div id="left-col">
-            <textarea id="code-editor"></textarea>
+            <div id="editor-container">
+                <textarea id="code-editor"></textarea>
+            </div>
+            <div id="console-container">
+                <div class="console-header">Terminal Output</div>
+                <div id="console-output"></div>
+            </div>
         </div>
         
-        <!-- RIGHT PANEL: The 3-Row Grid -->
+        <!-- RIGHT PANEL: The Visual Grid -->
         <div id="right-col">
             <!-- Row 1: Student Live Turtle Output -->
-            <div id="row-student" class="right-row">
+            <div id="row-student" class="visual-row">
                 <div class="row-label">Your Output</div>
                 <div id="student-canvas-div"></div>
             </div>
             
             <!-- Row 2: Target Blueprint Panel -->
-            <div id="row-target" class="right-row">
-                <div class="row-label">Target Visual Template</div>
+            <div id="row-target" class="visual-row">
+                <div class="row-label">Target Template</div>
                 <canvas id="targetCanvas"></canvas>
-            </div>
-            
-            <!-- Row 3: Command Line Console -->
-            <div id="row-console" class="right-row">
-                <div class="row-label" style="background: transparent; color: #777;">Console Log</div>
-                <div id="console-output"></div>
             </div>
         </div>
     </div>
 
     <script type="text/javascript">
         // =========================================================================
-        // EDITABLE LAB DATA CONFIGURATION (JSON STRING ARRAY)
+        // CONFIGURATION
         // =========================================================================
+        
+        // SET THIS TO FALSE FOR LESSONS 1-3 (Shape Only)
+        // SET THIS TO TRUE FOR LATER LESSONS (Shape + Color Match)
+        const COLOR_CHECK_ENABLED = false; 
+
         const loopsLabData = `[
             {
                 "id": 0,
                 "title": "Challenge 1: The Foundations of a Square",
-                "description": "Task: Draw a perfect square using loops. You have total creative freedom—any size or position is fine. Only the final image and colors are checked, not your code lines!",
+                "description": "Task: Draw a perfect square using loops. Any size or position is fine.",
                 "imageFile": "1.png",
-                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
+                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\nfor i in range(4):\\n    t.forward(100)\\n    t.right(90)"
             },
             {
                 "id": 1,
                 "title": "Challenge 2: An Equilateral Triangle",
-                "description": "Task: Draw an equilateral triangle. Utilize your loop sequences to handle the geometric symmetry perfectly. Only the visual output shape and color choice are marked!",
+                "description": "Task: Draw an equilateral triangle. Utilize your loop sequences.",
                 "imageFile": "2.png",
                 "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
             },
             {
                 "id": 2,
                 "title": "Challenge 3: The Dodecagon Mastery",
-                "description": "Task: Draw a perfect 12-sided dodecagon. Calculate your exterior angles carefully inside your loop configuration. Only the final image layout matches are verified!",
+                "description": "Task: Draw a perfect 12-sided dodecagon. Calculate exterior angles carefully.",
                 "imageFile": "3.png",
                 "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
             }
         ]`;
 
-        // Parse the static JSON string dataset into memory objects
         const challenges = JSON.parse(loopsLabData);
         let currentChallengeIndex = 0;
         let editor;
@@ -138,12 +155,12 @@
                 mode: "python",
                 theme: "monokai",
                 lineNumbers: true,
-                indentUnit: 4
+                indentUnit: 4,
+                matchBrackets: true
             });
             loadChallenge(currentChallengeIndex);
         };
 
-        // Populate visual layouts based on dynamic state index parameters
         function loadChallenge(index) {
             if (index >= challenges.length) {
                 alert("Superb! You have mastered all foundational geometric vector labs for this unit.");
@@ -165,16 +182,23 @@
             const targetCanvas = document.getElementById("targetCanvas");
             const ctxT = targetCanvas.getContext("2d");
             const img = new Image();
+            
+            // Reset canvas size initially
+            targetCanvas.width = 400;
+            targetCanvas.height = 300;
+            ctxT.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+            
             img.onload = function() {
-                targetCanvas.width = img.width || 400;
-                targetCanvas.height = img.height || 300;
-                ctxT.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-                ctxT.drawImage(img, 0, 0);
+                // Scale image to fit nicely in the preview box while maintaining aspect ratio
+                const scale = Math.min(380 / img.width, 280 / img.height);
+                const w = img.width * scale;
+                const h = img.height * scale;
+                
+                targetCanvas.width = w;
+                targetCanvas.height = h;
+                ctxT.drawImage(img, 0, 0, w, h);
             };
             img.onerror = function() {
-                // Fallback graphic layout boundary indicator if asset file is missing
-                targetCanvas.width = 400;
-                targetCanvas.height = 300;
                 ctxT.fillStyle = "#eee";
                 ctxT.fillRect(0,0,400,300);
                 ctxT.fillStyle = "#333";
@@ -184,18 +208,22 @@
             img.src = current.imageFile;
         }
 
-        // Skulpt Engine Runtime Operations Container Wrapper
+        // Skulpt Engine Runtime Operations
         function runCode(skipAnimation = false) {
             const outputArea = document.getElementById("console-output");
             outputArea.innerHTML = "";
             
             if (skipAnimation) {
                 Sk.execLimit = 10000;
+            } else {
+                Sk.execLimit = 1000; // Standard limit
             }
 
             Sk.configure({
                 output: function(text) { 
                     outputArea.innerHTML += text.replace(/\n/g, "<br>"); 
+                    // Auto-scroll console
+                    outputArea.scrollTop = outputArea.scrollHeight;
                 },
                 read: function(x) {
                     if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
@@ -208,39 +236,55 @@
             const canvasDiv = document.getElementById("student-canvas-div");
             canvasDiv.innerHTML = "";
             
+            // Configure Skulpt Turtle Graphics
+            // We set a fixed size for the internal skulpt canvas to ensure consistency
             (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'student-canvas-div';
+            (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).width = 400;
+            (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).height = 300;
             
-            const code = editor.getValue();
-            let executedCode = code;
+            const code = editor.getValue(); let executedCode = code;
             
             if (skipAnimation) {
-                executedCode = "import turtle\nturtle.delay(0)\nturtle.speed(0)\n" + code;
+                // Inject speed commands at the very top
+                executedCode = "import turtle\n__t = turtle.Turtle()\n__t.speed(0)\nturtle.delay(0)\n" + code;
             }
 
             Sk.misceval.asyncToPromise(function() {
                 return Sk.importMainWithBody("<stdin>", false, executedCode, true);
             }).then(function() {
-                outputArea.innerHTML += "<span style='color:#2ecc71;'>> Execution process tracking complete.</span><br>";
+                outputArea.innerHTML += "<span style='color:#2ecc71;'>> Execution complete.</span><br>";
             }, function(err) {
                 outputArea.innerHTML += "<span style='color:#e74c3c;'>" + err.toString().replace(/\n/g, "<br>") + "</span><br>";
             });
         }
 
-        // Handle raw local data export streams cleanly
+        // Export Image Function
         function exportImage() {
             const canvas = document.querySelector("#student-canvas-div canvas");
             if (!canvas) {
-                alert("Compile and display output tracking data onto canvas prior to exporting.");
+                alert("Please run your code first to generate an image.");
                 return;
             }
             const dataURL = canvas.toDataURL("image/png");
             const link = document.createElement("a");
-            link.download = `student_output_challenge_${currentChallengeIndex}.png`;
+            link.download = `yang_lab_challenge_${currentChallengeIndex}.png`;
             link.href = dataURL;
             link.click();
         }
 
-        // Scan target matrix channels to calculate bounding box crop lines
+        // NEW: Export Code to .txt Function
+        function exportCode() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `yang_lab_code_challenge_${currentChallengeIndex}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Helper: Get Bounding Box of drawn pixels
         function getBoundingBoxData(canvasElement) {
             const ctx = canvasElement.getContext('2d');
             const w = canvasElement.width;
@@ -250,6 +294,7 @@
             let minX = w, maxX = 0, minY = h, maxY = 0;
             let capturedData = false;
 
+            // Scan for non-white/non-transparent pixels
             for (let y = 0; y < h; y++) {
                 for (let x = 0; x < w; x++) {
                     const idx = (y * w + x) * 4;
@@ -258,8 +303,8 @@
                     const b = imgData[idx+2];
                     const alpha = imgData[idx+3];
 
-                    // Check for active non-white shapes rendered on layout (with alpha transparency transparency buffer)
-                    if (alpha > 10 && (r < 240 || g < 240 || b < 240)) {
+                    // Detect ink (anything not pure white and not fully transparent)
+                    if (alpha > 10 && (r < 250 || g < 250 || b < 250)) {
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
                         if (y < minY) minY = y;
@@ -286,10 +331,11 @@
             const targetBox = getBoundingBoxData(targetCanvas);
 
             if (!studentBox) {
-                outputArea.innerHTML += "<span style='color:#e74c3c;'>> Marking Error: Canvas is blank. Color vector mapping unverified.</span><br>";
+                outputArea.innerHTML += "<span style='color:#e74c3c;'>> Marking Error: Canvas is blank.</span><br>";
                 return;
             }
 
+            // Normalize both shapes to a 100x100 grid for comparison
             const normSize = 100;
             const offScreenStudent = document.createElement('canvas');
             const offScreenTarget = document.createElement('canvas');
@@ -299,49 +345,68 @@
             const ctxS = offScreenStudent.getContext('2d');
             const ctxT = offScreenTarget.getContext('2d');
 
-            // Pre-fill backgrounds with crisp white to make transparency comparisons clean
+            // Fill white background
             ctxS.fillStyle = "#fff"; ctxS.fillRect(0,0,normSize,normSize);
             ctxT.fillStyle = "#fff"; ctxT.fillRect(0,0,normSize,normSize);
 
-            // Dynamically scale and center the geometric frames
+            // Draw scaled images into the 100x100 grid
+            // Note: If targetBox is null (missing image), we skip target drawing
+            if(targetBox) {
+                ctxT.drawImage(targetCanvas, targetBox.x, targetBox.y, targetBox.width, targetBox.height, 0, 0, normSize, normSize);
+            }
             ctxS.drawImage(studentCanvas, studentBox.x, studentBox.y, studentBox.width, studentBox.height, 0, 0, normSize, normSize);
-            ctxT.drawImage(targetCanvas, targetBox.x, targetBox.y, targetBox.width, targetBox.height, 0, 0, normSize, normSize);
 
             const dataS = ctxS.getImageData(0, 0, normSize, normSize).data;
             const dataT = ctxT.getImageData(0, 0, normSize, normSize).data;
 
-            let strictColorMatches = 0;
+            let strictMatches = 0;
             let totalChecks = normSize * normSize;
-
-            // Strictness variance buffer (allows adjustments for anti-aliasing pixels)
-            const colorTolerance = 25; 
+            const colorTolerance = 30; // Allow slight anti-aliasing differences
 
             for (let i = 0; i < dataS.length; i += 4) {
                 const rS = dataS[i];   const gS = dataS[i+1]; const bS = dataS[i+2];
                 const rT = dataT[i];   const gT = dataT[i+1]; const bT = dataT[i+2];
 
-                const rDiff = Math.abs(rS - rT);
-                const gDiff = Math.abs(gS - gT);
-                const bDiff = Math.abs(bS - bT);
+                // 1. Check Shape (Alpha/Brightness)
+                // If target is white (empty) and student is white (empty), it's a match.
+                // If target is drawn and student is drawn, it's a match.
+                const sIsEmpty = (rS > 240 && gS > 240 && bS > 240);
+                const tIsEmpty = (rT > 240 && gT > 240 && bT > 240);
 
-                // Verification criteria: All channels must stay within tolerance variance ceilings
-                if (rDiff < colorTolerance && gDiff < colorTolerance && bDiff < colorTolerance) {
-                    strictColorMatches++;
+                if (sIsEmpty === tIsEmpty) {
+                    // Shape matches at this pixel. Now check color IF enabled.
+                    if (COLOR_CHECK_ENABLED) {
+                        // Strict Color Check
+                        const rDiff = Math.abs(rS - rT);
+                        const gDiff = Math.abs(gS - gT);
+                        const bDiff = Math.abs(bS - bT);
+                        if (rDiff < colorTolerance && gDiff < colorTolerance && bDiff < colorTolerance) {
+                            strictMatches++;
+                        }
+                    } else {
+                        // Shape Only Check
+                        strictMatches++;
+                    }
                 }
             }
 
-            const matchRating = (strictColorMatches / totalChecks) * 100;
-            outputArea.innerHTML += `> Precision color similarity score: ${matchRating.toFixed(1)}%<br>`;
+            const matchRating = (strictMatches / totalChecks) * 100;
+            
+            let msg = `> Similarity Score: ${matchRating.toFixed(1)}%<br>`;
+            if (COLOR_CHECK_ENABLED) {
+                msg += `<span style='color:#aaa; font-size:12px;'>(Color Matching: ON)</span><br>`;
+            } else {
+                msg += `<span style='color:#aaa; font-size:12px;'>(Color Matching: OFF - Shape Only)</span><br>`;
+            }
 
-            // 90% benchmark target accommodates standard browser engine font/line anti-aliasing variations
-            if (matchRating >= 90.0) {
-                outputArea.innerHTML += "<span style='color:#2ecc71; font-weight:bold;'>> SUCCESS: Color pattern and geometry validated. Loading next lab profile...</span><br>";
+            if (matchRating >= 85.0) { // Lowered threshold slightly for shape-only flexibility
+                outputArea.innerHTML += msg + "<span style='color:#2ecc71; font-weight:bold;'>> SUCCESS: Validated. Loading next lab...</span><br>";
                 setTimeout(() => {
                     currentChallengeIndex++;
                     loadChallenge(currentChallengeIndex);
-                }, 2500);
+                }, 2000);
             } else {
-                outputArea.innerHTML += "<span style='color:#e74c3c;'>> CRITERIA MISMATCH: Colors or geometric patterns deviate from target palette parameters.</span><br>";
+                outputArea.innerHTML += msg + "<span style='color:#e74c3c;'>> MISMATCH: Check your geometry or colors.</span><br>";
             }
         }
     </script>
