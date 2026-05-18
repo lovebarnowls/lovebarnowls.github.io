@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Faithful IDE</title>
+    <title>Yang's Faithful Turtle Lab</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -54,7 +54,7 @@
 
 <div class="header">
     <div class="logo">
-        Yang's IDE
+        Yang's Faithful Turtle Lab
         <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
     </div>
     <div class="controls">
@@ -109,20 +109,64 @@ var LAB_DATA = [
     {
         id: 1,
         title: "Lab 1: The Square",
-        code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a square with side length 100\n# Hint: a square has 4 sides and turns 90 degrees\n\nprint('Square complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)"
+        code: `import turtle
+
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+# Draw a square with side length 100
+# Hint: a square has 4 sides and turns 90 degrees
+
+print('Square complete')`,
+        solutionCode: `import turtle
+
+faithful = turtle.Turtle()
+for i in range(4):
+    faithful.forward(100)
+    faithful.right(90)`
     },
     {
         id: 2,
         title: "Lab 2: Equilateral Triangle",
-        code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a triangle with side length 150\n# Hint: a triangle has 3 sides. What angle does it turn?\n\nprint('Triangle complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)"
+        code: `import turtle
+
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+# Draw a triangle with side length 150
+# Hint: a triangle has 3 sides. What angle does it turn?
+
+print('Triangle complete')`,
+        solutionCode: `import turtle
+
+faithful = turtle.Turtle()
+for i in range(3):
+    faithful.forward(150)
+    faithful.left(120)`
     },
     {
         id: 3,
         title: "Lab 3: Coloured Row",
-        code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw 3 red squares in a row\n# Each square has side length 50, spaced 70 apart\n\nprint('Row complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()"
+        code: `import turtle
+
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+# Draw 3 red squares in a row
+# Each square has side length 50, spaced 70 apart
+
+print('Row complete')`,
+        solutionCode: `import turtle
+
+faithful = turtle.Turtle()
+faithful.color('red')
+for sq in range(3):
+    for i in range(4):
+        faithful.forward(50)
+        faithful.right(90)
+    faithful.penup()
+    faithful.forward(70)
+    faithful.pendown()`
     }
 ];
 
