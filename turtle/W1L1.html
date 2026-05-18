@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE - Digitech Labs</title>
+    <title>Yang's UGH Labs</title>
     
     <!-- Dependencies -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
@@ -140,7 +140,7 @@
 </div>
 
 <script type="text/javascript">
-    // ==========================================
+   // ==========================================
     // LAB DATA CONFIGURATION
     // ==========================================
     const LAB_DATA = [
@@ -151,7 +151,7 @@
             code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\n\n# Draw a square\nfor i in range(4):\n    t.forward(100)\n    t.right(90)\n\nprint('Square complete')",
             targetImage: "1.png", 
             checkColor: false,    
-            tolerance: 10         
+            tolerance: 15         
         },
         {
             id: 2,
@@ -160,7 +160,7 @@
             code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\n\n# Draw Triangle\nfor i in range(3):\n    t.forward(150)\n    t.left(120)\n\nprint('Triangle complete')",
             targetImage: "2.png",
             checkColor: false,
-            tolerance: 10
+            tolerance: 15
         },
         {
             id: 3,
@@ -169,7 +169,7 @@
             code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\nt.color('red')\n\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()\n\nprint('Row complete')",
             targetImage: "3.png",
             checkColor: true,     
-            tolerance: 10
+            tolerance: 15
         }
     ];
 
@@ -210,10 +210,11 @@
             __future__: Sk.python3 
         });
 
+        // Use explicit, static logical dimensions to prevent CSS stretching bugs
         Sk.TurtleGraphics = { 
             target: 'my-canvas', 
-            width: wrapper.offsetWidth, 
-            height: wrapper.offsetHeight,
+            width: 600, 
+            height: 400,
             animate: !skipAnim 
         };
 
@@ -299,8 +300,8 @@
                 const g = imageData.data[i+1];
                 const b = imageData.data[i+2];
                 
-                // Check if pixel is NOT white/background (allow small variance for anti-aliasing)
-                if (r < 240 || g < 240 || b < 240) {
+                // Allow a tiny safety margin for background pixels
+                if (r < 250 || g < 250 || b < 250) {
                     if (x < minX) minX = x;
                     if (y < minY) minY = y;
                     if (x > maxX) maxX = x;
@@ -311,7 +312,7 @@
         }
         
         if (!hasContent) return null;
-        return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+        return { x: minX, y: minY, w: (maxX - minX) + 1, h: (maxY - minY) + 1 };
     }
 
     function checkAnswer() {
@@ -338,54 +339,57 @@
             return;
         }
 
-        // Create offscreen canvas for target
+        // 1. Create matching offscreen canvas sizes based on true Skulpt geometry
         const compCanvas = document.createElement("canvas");
         compCanvas.width = studentCanvas.width;
         compCanvas.height = studentCanvas.height;
         const ctx = compCanvas.getContext("2d");
 
-        // Draw target image stretched to fit
-        ctx.drawImage(targetImg, 0, 0, compCanvas.width, compCanvas.height);
+        // Fill background white to start clean
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, compCanvas.width, compCanvas.height);
+
+        // Draw original target image centered without distortion stretching
+        const scale = Math.min(compCanvas.width / targetImg.naturalWidth, compCanvas.height / targetImg.naturalHeight);
+        const nw = targetImg.naturalWidth * scale;
+        const nh = targetImg.naturalHeight * scale;
+        const nx = (compCanvas.width - nw) / 2;
+        const ny = (compCanvas.height - nh) / 2;
+        ctx.drawImage(targetImg, nx, ny, nw, nh);
 
         const sCtx = studentCanvas.getContext("2d");
         const sData = sCtx.getImageData(0, 0, studentCanvas.width, studentCanvas.height);
         const tData = ctx.getImageData(0, 0, compCanvas.width, compCanvas.height);
 
-        // 1. Find Bounding Boxes
+        // 2. Locate Active Bounding Boxes
         const sBox = getBoundingBox(sData, studentCanvas.width, studentCanvas.height);
         const tBox = getBoundingBox(tData, compCanvas.width, compCanvas.height);
 
         if (!sBox) {
-            alert("Your canvas is empty!");
+            alert("Your canvas is empty! Draw something first.");
             return;
         }
         if (!tBox) {
-            alert("Target image is empty/white!");
+            alert("Target reference image could not be processed.");
             return;
         }
 
-        // 2. Calculate Offset (Alignment)
-        // We want to shift the Target comparison window so its top-left matches Student's top-left
+        // Calculate layout shifts
         const offsetX = sBox.x - tBox.x;
         const offsetY = sBox.y - tBox.y;
 
-        // 3. Compare Pixels with Offset
         let mismatchPixels = 0;
         let comparedPixels = 0;
-        const threshold = 40; // Color difference threshold
+        const threshold = 50; // Increased error buffer for smoother evaluation
 
-        // We only need to iterate over the area where the student drew something
-        // To be safe, we iterate the whole canvas but apply offset logic
         for (let y = 0; y < studentCanvas.height; y++) {
             for (let x = 0; x < studentCanvas.width; x++) {
                 const sIdx = (y * studentCanvas.width + x) * 4;
                 
-                // Calculate corresponding target coordinate
                 const tx = x - offsetX;
                 const ty = y - offsetY;
 
-                // If target coordinate is out of bounds, we treat it as background (white)
-                let tR=255, tG=255, tB=255;
+                let tR = 255, tG = 255, tB = 255;
                 
                 if (tx >= 0 && tx < compCanvas.width && ty >= 0 && ty < compCanvas.height) {
                     const tIdx = (ty * compCanvas.width + tx) * 4;
@@ -398,18 +402,16 @@
                 const sG = sData.data[sIdx+1];
                 const sB = sData.data[sIdx+2];
 
-                // Skip completely white background pixels in both to avoid noise
-                if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
+                // Skip background environments
+                if (sR >= 250 && sG >= 250 && sB >= 250 && tR >= 250 && tG >= 250 && tB >= 250) continue;
 
                 comparedPixels++;
 
                 if (!lab.checkColor) {
-                    // Grayscale comparison
-                    const sGray = 0.299*sR + 0.587*sG + 0.114*sB;
-                    const tGray = 0.299*tR + 0.587*tG + 0.114*tB;
+                    const sGray = 0.299 * sR + 0.587 * sG + 0.114 * sB;
+                    const tGray = 0.299 * tR + 0.587 * tG + 0.114 * tB;
                     if (Math.abs(sGray - tGray) > threshold) mismatchPixels++;
                 } else {
-                    // Color comparison
                     if (Math.abs(sR - tR) > threshold || Math.abs(sG - tG) > threshold || Math.abs(sB - tB) > threshold) {
                         mismatchPixels++;
                     }
@@ -417,7 +419,6 @@
             }
         }
 
-        // Prevent division by zero
         if (comparedPixels === 0) comparedPixels = 1;
 
         const errorPercent = (mismatchPixels / comparedPixels) * 100;
@@ -426,7 +427,7 @@
         resultBox.style.display = "block";
         resultBox.className = passed ? "marker-pass" : "marker-fail";
         title.innerText = passed ? "✅ PASSED" : "❌ FAILED";
-        detail.innerHTML = `Difference: ${errorPercent.toFixed(1)}%<br>Allowed: ${lab.tolerance}%<br>Aligned Start Points automatically.`;
+        detail.innerHTML = `Difference: ${errorPercent.toFixed(1)}%<br>Allowed Limit: ${lab.tolerance}%<br>Aligned layouts cleanly.`;
     }
 
     window.onload = initLabs;
