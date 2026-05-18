@@ -3,431 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle Lab Playground</title>
+    <title>Yang's Loops Playground</title>
     
-    <!-- CodeMirror for a smooth code editing interface -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/monokai.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/python/python.min.js"></script>
-
-    <!-- Skulpt Engine for ultra-fast client-side execution -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js" type="text/javascript"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background: #f5f5f5; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1e1e1e; }
         
         /* Top Control Bar */
-        #top-bar { height: 50px; background: #2c3e50; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: white; border-bottom: 2px solid #34495e; flex-shrink: 0; }
-        .nav-buttons { display: flex; gap: 10px; }
-        button { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s; }
-        button:hover { background: #2980b9; }
-        button#mark-btn { background: #2ecc71; }
-        button#mark-btn:hover { background: #27ae60; }
-        button#export-code-btn { background: #9b59b6; }
-        button#export-code-btn:hover { background: #8e44ad; }
+        .header { height: 55px; background: #252526; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #333; }
+        .logo { font-weight: bold; color: #4EC9B0; letter-spacing: 1px; }
+        .controls { display: flex; gap: 15px; align-items: center; }
         
-        /* Instructions Section */
-        #instructions-box { background: #ffffff; padding: 10px 20px; border-bottom: 1px solid #ddd; flex-shrink: 0; }
-        #instructions-box h2 { font-size: 18px; color: #2c3e50; margin-bottom: 5px; }
-        #instructions-box p { font-size: 14px; color: #555; }
+        .toggle-container { font-size: 13px; display: flex; align-items: center; gap: 8px; color: #d4d4d4; cursor: pointer; user-select: none; }
+        button { border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .btn-run { background-color: #28a745; color: white; }
+        .btn-run:hover { background-color: #218838; }
+        .btn-mark { background-color: #2ecc71; color: white; }
+        .btn-mark:hover { background-color: #27ae60; }
+        .btn-download { background-color: #3e3e3e; color: white; border: 1px solid #555; }
+        .btn-download:hover { background-color: #505050; }
 
-        /* Main Workspace Container */
-        #workspace { flex: 1; display: flex; height: calc(100vh - 150px); overflow: hidden; }
-        
-        /* LEFT COLUMN: Editor (Top) + Console (Bottom) */
-        #left-col { width: 50%; height: 100%; display: flex; flex-direction: column; border-right: 2px solid #ccc; }
-        
-        #editor-container { flex: 3; position: relative; border-bottom: 2px solid #333; }
-        .CodeMirror { height: 100% !important; font-size: 16px; }
-        
-        #console-container { flex: 1; background: #1e1e1e; display: flex; flex-direction: column; min-height: 150px; }
-        .console-header { background: #333; color: #aaa; font-size: 12px; padding: 5px 10px; text-transform: uppercase; letter-spacing: 1px; }
-        #console-output { flex: 1; padding: 10px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; color: #00ff00; font-size: 14px; white-space: pre-wrap; }
+        /* Split Screen Instructions Header */
+        #instructions-box { background: #2d2d2d; color: #fff; padding: 12px 20px; border-bottom: 1px solid #3f3f3f; min-height: 75px; }
+        #instructions-box h2 { font-size: 16px; color: #4EC9B0; margin-bottom: 4px; }
+        #instructions-box p { font-size: 13px; color: #b5b5b5; margin: 0; }
 
-        /* RIGHT COLUMN: Visuals */
-        #right-col { width: 50%; height: 100%; display: flex; flex-direction: column; background: #fff; }
+        /* Workspace Grid Matrix Layout */
+        .main-container { display: flex; height: calc(100% - 130px); width: 100vw; }
         
-        .visual-row { 
-            flex: 1; 
-            position: relative; 
-            border-bottom: 1px solid #ddd; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
-            background: #fdfdfd; 
-        }
+        /* Left Panel: Raw text input area */
+        #editor-container { width: 45%; height: 100%; display: flex; flex-direction: column; }
+        #code-input { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; border: none; outline: none; resize: none; }
+
+        /* Right Panel: The 3-Row display stack (Student Canvas, Target Template Image, Console) */
+        #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #1e1e1e; border-left: 2px solid #333; }
         
-        .row-label { 
-            position: absolute; 
-            top: 10px; 
-            left: 10px; 
-            font-size: 12px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            color: #7f8c8d; 
-            z-index: 10; 
-            background: rgba(255,255,255,0.9); 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            border: 1px solid #eee; 
-        }
+        .output-row { position: relative; flex: 2; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #ffffff; border-bottom: 2px solid #333; }
+        .row-label { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #888; background: rgba(255,255,255,0.8); padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; z-index: 100; }
         
-        /* Canvas Layout Alignment Configuration */
-        canvas, #student-canvas-div canvas { 
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-            max-width: 95%; 
-            max-height: 95%; 
-            object-fit: contain;
-            background: white;
-        }
-        #student-canvas-div {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        #student-row { background: #ffffff; }
+        #my-canvas { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        #my-canvas canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        #target-row { background: #fafafa; }
+        #targetCanvas { max-width: 95%; max-height: 95%; object-fit: contain; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+
+        #console-output { flex: 1; min-height: 100px; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; font-size: 13px; overflow-y: auto; margin: 0; border-top: none; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
-    <!-- TOP CONTROL BAR -->
-    <div id="top-bar">
-        <div id="lab-title" style="font-weight: bold; font-size: 16px;">Yang's Logic Lab</div>
-        <div class="nav-buttons">
-            <button onclick="exportImage()">Export Image</button>
-            <button id="export-code-btn" onclick="exportCode()">Export Code (.txt)</button>
-            <button id="skip-btn" onclick="runCode(true)">Skip Animation</button>
-            <button onclick="runCode(false)">Run Code</button>
-            <button id="mark-btn" onclick="evaluateVisualWork()">Mark Work</button>
-        </div>
+<div class="header">
+    <div class="logo">Yang's Python Turtle IDE Lab</div>
+    <div class="controls">
+        <label class="toggle-container">
+            <input type="checkbox" id="skip-anim"> ⚡ Instant Draw
+        </label>
+        <button class="btn-run" onclick="runPython()">▶ RUN PROGRAM</button>
+        <button class="btn-mark" onclick="evaluateVisualWork()">✔ MARK WORK</button>
+        <button class="btn-download" onclick="downloadScript()">💾 SAVE .TXT</button>
+        <button class="btn-download" onclick="downloadCanvas()">🖼 SAVE .PNG</button>
+    </div>
+</div>
+
+<div id="instructions-box">
+    <h2 id="task-title">Loading Challenge...</h2>
+    <p id="task-desc">...</p>
+</div>
+
+<div class="main-container">
+    <div id="editor-container">
+        <textarea id="code-input" spellcheck="false"></textarea>
     </div>
 
-    <!-- INSTRUCTIONS SECTION -->
-    <div id="instructions-box">
-        <h2 id="task-title">Loading Challenge...</h2>
-        <p id="task-desc">...</p>
-    </div>
-
-    <!-- MAIN INTERACTIVE WORKSPACE -->
-    <div id="workspace">
-        <!-- LEFT PANEL: Editor & Console -->
-        <div id="left-col">
-            <div id="editor-container">
-                <textarea id="code-editor"></textarea>
-            </div>
-            <div id="console-container">
-                <div class="console-header">Terminal Output</div>
-                <div id="console-output"></div>
-            </div>
+    <div id="output-container">
+        <div id="student-row" class="output-row">
+            <div class="row-label">Your Live Output</div>
+            <div id="my-canvas"></div>
         </div>
         
-        <!-- RIGHT PANEL: The Visual Grid -->
-        <div id="right-col">
-            <!-- Row 1: Student Live Turtle Output -->
-            <div id="row-student" class="visual-row">
-                <div class="row-label">Your Output</div>
-                <div id="student-canvas-div"></div>
-            </div>
-            
-            <!-- Row 2: Target Blueprint Panel -->
-            <div id="row-target" class="visual-row">
-                <div class="row-label">Target Template</div>
-                <canvas id="targetCanvas"></canvas>
-            </div>
+        <div id="target-row" class="output-row">
+            <div class="row-label">Target Visual Template</div>
+            <canvas id="targetCanvas"></canvas>
         </div>
+        
+        <pre id="console-output">Ready...</pre>
     </div>
+</div>
 
-   <script type="text/javascript">
-        // =========================================================================
-        // LAB CONFIGURATION STRINGS (MODULAR EDIT ZONE)
-        // =========================================================================
-        const loopsLabData = `[
-            {
-                "id": 0,
-                "title": "Challenge 1: The Foundations of a Square",
-                "description": "Task: Draw a perfect square using loops. Any size or position is fine. Only the final shape lines matter for verification metrics!",
-                "imageFile": "1.png",
-                "colorCheck": false,
-                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\nfor i in range(4):\\n    t.forward(100)\\n    t.right(90)"
-            },
-            {
-                "id": 1,
-                "title": "Challenge 2: An Equilateral Triangle",
-                "description": "Task: Draw an equilateral triangle. Utilize your loop sequences.",
-                "imageFile": "2.png",
-                "colorCheck": false,
-                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
-            },
-            {
-                "id": 2,
-                "title": "Challenge 3: The Dodecagon Mastery",
-                "description": "Task: Draw a perfect 12-sided dodecagon. Calculate exterior angles carefully.",
-                "imageFile": "3.png",
-                "colorCheck": false,
-                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
-            },
-            {
-                "id": 3,
-                "title": "Extension Challenge: The Retro '67'",
-                "description": "Task: Construct the iconic '67' layout graphics tracking a blocky right-angle layout font. Ensure your text colors match the target profile template exactly!",
-                "imageFile": "4.png",
-                "colorCheck": true,
-                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Set your color parameters and build the digital 67 grid metrics...\\n"
-            }
-        ]`;
+<script type="text/javascript">
+    // =========================================================================
+    // MODULAR EDITABLE LESSON DATA VARIABLE CONTAINER
+    // =========================================================================
+    const loopsLabData = `[
+        {
+            "id": 0,
+            "title": "Challenge 1: The Foundations of a Square",
+            "description": "Task: Draw a perfect square using loops. Any size or position is fine. Only the final shape lines matter for verification metrics!",
+            "imageFile": "1.png",
+            "colorCheck": false,
+            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\nfor i in range(4):\\n    t.forward(100)\\n    t.right(90)"
+        },
+        {
+            "id": 1,
+            "title": "Challenge 2: An Equilateral Triangle",
+            "description": "Task: Draw an equilateral triangle. Utilize your loop sequences.",
+            "imageFile": "2.png",
+            "colorCheck": false,
+            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
+        },
+        {
+            "id": 2,
+            "title": "Challenge 3: The Dodecagon Mastery",
+            "description": "Task: Draw a perfect 12-sided dodecagon. Calculate exterior angles carefully.",
+            "imageFile": "3.png",
+            "colorCheck": false,
+            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
+        },
+        {
+            "id": 3,
+            "title": "Extension Challenge: The Retro '67'",
+            "description": "Task: Construct the iconic '67' layout tracking a blocky right-angle arcade font profile (100px width per number, 100px gap, 200px tall). Match colors exactly!",
+            "imageFile": "4.png",
+            "colorCheck": true,
+            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Set your color configurations and build the digital 67 grid metrics...\\n"
+        }
+    ]`;
 
-        const challenges = JSON.parse(loopsLabData);
-        let currentChallengeIndex = 0;
-        let editor;
+    const challenges = JSON.parse(loopsLabData);
+    let currentChallengeIndex = 0;
 
-        window.onload = function() {
-            editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
-                mode: "python",
-                theme: "monokai",
-                lineNumbers: true,
-                indentUnit: 4,
-                matchBrackets: true
-            });
-            loadChallenge(currentChallengeIndex);
+    window.onload = function() {
+        loadChallenge(currentChallengeIndex);
+    };
+
+    function loadChallenge(index) {
+        if (index >= challenges.length) {
+            alert("Superb! You have mastered all foundational geometric vector labs for this unit.");
+            return;
+        }
+        
+        currentChallengeIndex = index;
+        const current = challenges[index];
+        
+        document.getElementById("task-title").innerText = current.title;
+        document.getElementById("task-desc").innerText = current.description;
+        document.getElementById("code-input").value = current.defaultCode;
+        document.getElementById("console-output").innerHTML = "Ready...";
+        
+        document.getElementById("my-canvas").innerHTML = "";
+        
+        // Render Image Keys
+        const targetCanvas = document.getElementById("targetCanvas");
+        const ctxT = targetCanvas.getContext("2d");
+        const img = new Image();
+        
+        targetCanvas.width = 400;
+        targetCanvas.height = 300;
+        ctxT.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+        
+        img.onload = function() {
+            const scale = Math.min(380 / img.width, 280 / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            targetCanvas.width = w;
+            targetCanvas.height = h;
+            ctxT.drawImage(img, 0, 0, w, h);
+        };
+        img.onerror = function() {
+            ctxT.fillStyle = "#eee";
+            ctxT.fillRect(0,0,400,300);
+            ctxT.fillStyle = "#333";
+            ctxT.font = "14px monospace";
+            ctxT.fillText(`[Place target image "${current.imageFile}" in directory]`, 35, 150);
+        };
+        img.src = current.imageFile;
+    }
+
+    function outf(text) {
+        var mypre = document.getElementById("console-output");
+        mypre.innerHTML += text;
+        mypre.scrollTop = mypre.scrollHeight;
+    }
+
+    function builtinRead(x) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+            throw "File not found: '" + x + "'";
+        return Sk.builtinFiles["files"][x];
+    }
+
+    function runPython() {
+        var userCode = document.getElementById("code-input").value;
+        var skipAnim = document.getElementById("skip-anim").checked;
+        
+        document.getElementById("console-output").innerHTML = ""; 
+        document.getElementById("my-canvas").innerHTML = "";
+
+        var finalCode = userCode;
+        if (skipAnim) {
+            finalCode = "import turtle\nturtle.speed(0)\nturtle.tracer(0, 0)\n" + userCode + "\nturtle.update()";
+        }
+
+        var wrapper = document.getElementById("student-row");
+        
+        Sk.configure({ 
+            output: outf, 
+            read: builtinRead, 
+            __future__: Sk.python3 
+        });
+
+        Sk.TurtleGraphics = { 
+            target: 'my-canvas', 
+            width: wrapper.offsetWidth, 
+            height: wrapper.offsetHeight,
+            animate: !skipAnim 
         };
 
-        function loadChallenge(index) {
-            if (index >= challenges.length) {
-                alert("Superb! You have mastered all foundational geometric vector labs for this unit.");
-                return;
-            }
-            
-            currentChallengeIndex = index;
-            const current = challenges[index];
-            
-            document.getElementById("task-title").innerText = current.title;
-            document.getElementById("task-desc").innerText = current.description;
-            editor.setValue(current.defaultCode);
-            document.getElementById("console-output").innerHTML = "> Workspace ready. Connect instructions to logic flow.<br>";
-            
-            document.getElementById("student-canvas-div").innerHTML = "";
-            
-            const targetCanvas = document.getElementById("targetCanvas");
-            const ctxT = targetCanvas.getContext("2d");
-            const img = new Image();
-            
-            targetCanvas.width = 400;
-            targetCanvas.height = 300;
-            ctxT.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-            
-            img.onload = function() {
-                const scale = Math.min(380 / img.width, 280 / img.height);
-                const w = img.width * scale;
-                const h = img.height * scale;
-                
-                targetCanvas.width = w;
-                targetCanvas.height = h;
-                ctxT.drawImage(img, 0, 0, w, h);
-            };
-            img.onerror = function() {
-                ctxT.fillStyle = "#eee";
-                ctxT.fillRect(0,0,400,300);
-                ctxT.fillStyle = "#333";
-                ctxT.font = "14px monospace";
-                ctxT.fillText(`[Place target image "${current.imageFile}" in directory]`, 35, 150);
-            };
-            img.src = current.imageFile;
+        var myPromise = Sk.misceval.asyncToPromise(function() {
+            return Sk.importMainWithBody("<stdin>", false, finalCode, true);
+        });
+
+        myPromise.then(function() { 
+            outf("\n> Execution complete."); 
+        }, function(err) {
+            outf("\n" + err.toString());
+        });
+    }
+
+    function downloadScript() {
+        const code = document.getElementById("code-input").value;
+        const blob = new Blob([code], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        const safeTitle = challenges[currentChallengeIndex].title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        a.download = `student_code_${safeTitle}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // Flattens Skulpt's dynamic layers into a temporary canvas asset matching your IDE mechanism
+    function getFlattenedStudentCanvas() {
+        const canvases = document.querySelectorAll("#my-canvas canvas");
+        if (canvases.length === 0) return null;
+
+        const finalCanvas = document.createElement("canvas");
+        const firstCanvas = canvases[0];
+        finalCanvas.width = firstCanvas.width;
+        finalCanvas.height = firstCanvas.height;
+        const ctx = finalCanvas.getContext("2d");
+
+        // Merge every single layer down sequentially
+        canvases.forEach(c => ctx.drawImage(c, 0, 0));
+        return finalCanvas;
+    }
+
+    function downloadCanvas() {
+        const flattened = getFlattenedStudentCanvas();
+        if (flattened) {
+            const image = flattened.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = image;
+            a.download = `yang_lab_challenge_${currentChallengeIndex}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert("No drawing found to save.");
         }
+    }
 
-        function runCode(skipAnimation = false) {
-            const outputArea = document.getElementById("console-output");
-            outputArea.innerHTML = "";
-            
-            Sk.execLimit = 10000;
+    function getBoundingBoxData(canvasElement) {
+        const ctx = canvasElement.getContext('2d');
+        const w = canvasElement.width;
+        const h = canvasElement.height;
+        const imgData = ctx.getImageData(0, 0, w, h).data;
+        
+        let minX = w, maxX = 0, minY = h, maxY = 0;
+        let capturedData = false;
 
-            Sk.configure({
-                output: function(text) { 
-                    outputArea.innerHTML += text.replace(/\n/g, "<br>"); 
-                    outputArea.scrollTop = outputArea.scrollHeight;
-                },
-                read: function(x) {
-                    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
-                        throw "File not found: '" + x + "'";
-                    return Sk.builtinFiles["files"][x];
-                },
-                __future__: Sk.python3
-            });
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const idx = (y * w + x) * 4;
+                const r = imgData[idx];
+                const g = imgData[idx+1];
+                const b = imgData[idx+2];
+                const alpha = imgData[idx+3];
 
-            // FIX 1: Reset the container completely so Skulpt handles the layout generation internally
-            const canvasDiv = document.getElementById("student-canvas-div");
-            canvasDiv.innerHTML = ""; 
-            
-            // FIX 2: Reset Skulpt's global canvas manager context entirely before drawing
-            Sk.TurtleGraphics = {
-                target: 'student-canvas-div',
-                width: 400,
-                height: 300
-            };
-            
-            const code = editor.getValue(); 
-            let executedCode = code;
-            
-            if (skipAnimation) {
-                executedCode = "import turtle\nturtle.delay(0)\nturtle.speed(0)\n" + code;
-            }
-
-            Sk.misceval.asyncToPromise(function() {
-                return Sk.importMainWithBody("<stdin>", false, executedCode, true);
-            }).then(function() {
-                outputArea.innerHTML += "<span style='color:#2ecc71;'>> Execution complete.</span><br>";
-                
-                // FIX 3: Style the dynamically generated canvas immediately so it matches your alignment rules
-                const generatedCanvas = canvasDiv.querySelector("canvas");
-                if (generatedCanvas) {
-                    generatedCanvas.style.maxWidth = "95%";
-                    generatedCanvas.style.maxHeight = "95%;";
-                    generatedCanvas.style.objectFit = "contain";
-                    generatedCanvas.style.boxShadow = "0 0 10px rgba(0,0,0,0.1)";
-                    generatedCanvas.style.background = "white";
-                }
-            }, function(err) {
-                outputArea.innerHTML += "<span style='color:#e74c3c;'>" + err.toString().replace(/\n/g, "<br>") + "</span><br>";
-            });
-        }
-
-        function exportImage() {
-            const canvas = document.querySelector("#student-canvas-div canvas");
-            if (!canvas) {
-                alert("Please run your code first to generate an image.");
-                return;
-            }
-            const dataURL = canvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.download = `yang_lab_challenge_${currentChallengeIndex}.png`;
-            link.href = dataURL;
-            link.click();
-        }
-
-        function exportCode() {
-            const code = editor.getValue();
-            const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `yang_lab_code_challenge_${currentChallengeIndex}.txt`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function getBoundingBoxData(canvasElement) {
-            const ctx = canvasElement.getContext('2d');
-            const w = canvasElement.width;
-            const h = canvasElement.height;
-            const imgData = ctx.getImageData(0, 0, w, h).data;
-            
-            let minX = w, maxX = 0, minY = h, maxY = 0;
-            let capturedData = false;
-
-            for (let y = 0; y < h; y++) {
-                for (let x = 0; x < w; x++) {
-                    const idx = (y * w + x) * 4;
-                    const r = imgData[idx];
-                    const g = imgData[idx+1];
-                    const b = imgData[idx+2];
-                    const alpha = imgData[idx+3];
-
-                    // Anti-aliasing threshold: Treat off-white pixels as active space
-                    if (alpha > 10 && (r < 245 || g < 245 || b < 245)) {
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                        capturedData = true;
-                    }
+                // Detect drawn marks accurately on alpha/tint changes
+                if (alpha > 10 && (r < 245 || g < 245 || b < 245)) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                    capturedData = true;
                 }
             }
-            return capturedData ? { x: minX, y: minY, width: (maxX - minX) + 1, height: (maxY - minY) + 1 } : null;
+        }
+        return capturedData ? { x: minX, y: minY, width: (maxX - minX) + 1, height: (maxY - minY) + 1 } : null;
+    }
+
+    function evaluateVisualWork() {
+        // FIX: Utilize your multi-layer array flattener to secure all vector tracks
+        const studentCanvas = getFlattenedStudentCanvas();
+        const targetCanvas = document.getElementById("targetCanvas");
+
+        if (!studentCanvas) {
+            alert("Please execute code to generate a drawing output canvas before validation checks.");
+            return;
         }
 
-        function evaluateVisualWork() {
-            const studentCanvas = document.querySelector("#student-canvas-div canvas");
-            const targetCanvas = document.getElementById("targetCanvas");
-            const outputArea = document.getElementById("console-output");
+        const studentBox = getBoundingBoxData(studentCanvas);
+        const targetBox = getBoundingBoxData(targetCanvas);
 
-            if (!studentCanvas) {
-                alert("Please execute code to generate a drawing output canvas before validation checks.");
-                return;
-            }
+        if (!studentBox) {
+            outf("\n> Marking Error: Canvas is blank.");
+            return;
+        }
 
-            const studentBox = getBoundingBoxData(studentCanvas);
-            const targetBox = getBoundingBoxData(targetCanvas);
+        const normSize = 100;
+        const offScreenStudent = document.createElement('canvas');
+        const offScreenTarget = document.createElement('canvas');
+        offScreenStudent.width = normSize; offScreenStudent.height = normSize;
+        offScreenTarget.width = normSize;  offScreenTarget.height = normSize;
 
-            if (!studentBox) {
-                outputArea.innerHTML += "<span style='color:#e74c3c;'>> Marking Error: Canvas is blank.</span><br>";
-                return;
-            }
+        const ctxS = offScreenStudent.getContext('2d');
+        const ctxT = offScreenTarget.getContext('2d');
 
-            const normSize = 100;
-            const offScreenStudent = document.createElement('canvas');
-            const offScreenTarget = document.createElement('canvas');
-            offScreenStudent.width = normSize; offScreenStudent.height = normSize;
-            offScreenTarget.width = normSize;  offScreenTarget.height = normSize;
+        ctxS.fillStyle = "#fff"; ctxS.fillRect(0,0,normSize,normSize);
+        ctxT.fillStyle = "#fff"; ctxT.fillRect(0,0,normSize,normSize);
 
-            const ctxS = offScreenStudent.getContext('2d');
-            const ctxT = offScreenTarget.getContext('2d');
+        if(targetBox) {
+            ctxT.drawImage(targetCanvas, targetBox.x, targetBox.y, targetBox.width, targetBox.height, 0, 0, normSize, normSize);
+        }
+        ctxS.drawImage(studentCanvas, studentBox.x, studentBox.y, studentBox.width, studentBox.height, 0, 0, normSize, normSize);
 
-            ctxS.fillStyle = "#fff"; ctxS.fillRect(0,0,normSize,normSize);
-            ctxT.fillStyle = "#fff"; ctxT.fillRect(0,0,normSize,normSize);
+        const dataS = ctxS.getImageData(0, 0, normSize, normSize).data;
+        const dataT = ctxT.getImageData(0, 0, normSize, normSize).data;
 
-            if(targetBox) {
-                ctxT.drawImage(targetCanvas, targetBox.x, targetBox.y, targetBox.width, targetBox.height, 0, 0, normSize, normSize);
-            }
-            ctxS.drawImage(studentCanvas, studentBox.x, studentBox.y, studentBox.width, studentBox.height, 0, 0, normSize, normSize);
+        let strictMatches = 0;
+        let totalChecks = normSize * normSize;
+        const colorTolerance = 45; // Generous window buffer for image scaling aliasing
+        const isColorCheckActive = challenges[currentChallengeIndex].colorCheck;
 
-            const dataS = ctxS.getImageData(0, 0, normSize, normSize).data;
-            const dataT = ctxT.getImageData(0, 0, normSize, normSize).data;
+        for (let i = 0; i < dataS.length; i += 4) {
+            let rS = dataS[i];   let gS = dataS[i+1]; let bS = dataS[i+2];
+            let rT = dataT[i];   let gT = dataT[i+1]; let bT = dataT[i+2];
 
-            let strictMatches = 0;
-            let totalChecks = normSize * normSize;
-            const colorTolerance = 40; // Increased buffer room for anti-aliasing artifacts
-            const isColorCheckActive = challenges[currentChallengeIndex].colorCheck;
+            const sIsEmpty = (rS > 240 && gS > 240 && bS > 240);
+            const tIsEmpty = (rT > 240 && gT > 240 && bT > 240);
 
-            for (let i = 0; i < dataS.length; i += 4) {
-                let rS = dataS[i];   let gS = dataS[i+1]; let bS = dataS[i+2];
-                let rT = dataT[i];   let gT = dataT[i+1]; let bT = dataT[i+2];
-
-                const sIsEmpty = (rS > 240 && gS > 240 && bS > 240);
-                const tIsEmpty = (rT > 240 && gT > 240 && bT > 240);
-
-                if (sIsEmpty === tIsEmpty) {
-                    if (isColorCheckActive) {
-                        const rDiff = Math.abs(rS - rT);
-                        const gDiff = Math.abs(gS - gT);
-                        const bDiff = Math.abs(bS - bT);
-                        if (rDiff < colorTolerance && gDiff < colorTolerance && bDiff < colorTolerance) {
-                            strictMatches++;
-                        }
-                    } else {
+            if (sIsEmpty === tIsEmpty) {
+                if (isColorCheckActive) {
+                    const rDiff = Math.abs(rS - rT);
+                    const gDiff = Math.abs(gS - gT);
+                    const bDiff = Math.abs(bS - bT);
+                    if (rDiff < colorTolerance && gDiff < colorTolerance && bDiff < colorTolerance) {
                         strictMatches++;
                     }
+                } else {
+                    strictMatches++;
                 }
             }
-
-            const matchRating = (strictMatches / totalChecks) * 100;
-            
-            let msg = `> Similarity Score: ${matchRating.toFixed(1)}%<br>`;
-            msg += `<span style='color:#aaa; font-size:12px;'>(Color Matching: ${isColorCheckActive ? "ON" : "OFF - Shape Only"})</span><br>`;
-
-            if (matchRating >= 85.0) { 
-                outputArea.innerHTML += msg + "<span style='color:#2ecc71; font-weight:bold;'>> SUCCESS: Validated. Loading next lab...</span><br>";
-                setTimeout(() => {
-                    currentChallengeIndex++;
-                    loadChallenge(currentChallengeIndex);
-                }, 2000);
-            } else {
-                outputArea.innerHTML += msg + "<span style='color:#e74c3c;'>> MISMATCH: Check your geometry or colors.</span><br>";
-            }
         }
-    </script>
+
+        const matchRating = (strictMatches / totalChecks) * 100;
+        
+        outf(`\n> Similarity Score: ${matchRating.toFixed(1)}%`);
+        outf(`\n> Color Check Mode: ${isColorCheckActive ? "STRICT" : "IGNORE (Shape Only)"}`);
+
+        if (matchRating >= 85.0) { 
+            outf("\n> SUCCESS: Geometry profile verified. Advancing module...");
+            setTimeout(() => {
+                currentChallengeIndex++;
+                loadChallenge(currentChallengeIndex);
+            }, 2000);
+        } else {
+            outf("\n> MISMATCH: Structural trace variance exceeds threshold bounds.");
+        }
+    }
+</script>
+
 </body>
 </html>
