@@ -142,7 +142,7 @@
         </div>
     </div>
 
-    <script type="text/javascript">
+   <script type="text/javascript">
         // =========================================================================
         // LAB CONFIGURATION STRINGS (MODULAR EDIT ZONE)
         // =========================================================================
@@ -243,11 +243,7 @@
             const outputArea = document.getElementById("console-output");
             outputArea.innerHTML = "";
             
-            if (skipAnimation) {
-                Sk.execLimit = 10000;
-            } else {
-                Sk.execLimit = 10000; 
-            }
+            Sk.execLimit = 10000;
 
             Sk.configure({
                 output: function(text) { 
@@ -262,12 +258,16 @@
                 __future__: Sk.python3
             });
 
+            // FIX 1: Reset the container completely so Skulpt handles the layout generation internally
             const canvasDiv = document.getElementById("student-canvas-div");
             canvasDiv.innerHTML = ""; 
             
-            (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'student-canvas-div';
-            (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).width = 400;
-            (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).height = 300;
+            // FIX 2: Reset Skulpt's global canvas manager context entirely before drawing
+            Sk.TurtleGraphics = {
+                target: 'student-canvas-div',
+                width: 400,
+                height: 300
+            };
             
             const code = editor.getValue(); 
             let executedCode = code;
@@ -280,6 +280,16 @@
                 return Sk.importMainWithBody("<stdin>", false, executedCode, true);
             }).then(function() {
                 outputArea.innerHTML += "<span style='color:#2ecc71;'>> Execution complete.</span><br>";
+                
+                // FIX 3: Style the dynamically generated canvas immediately so it matches your alignment rules
+                const generatedCanvas = canvasDiv.querySelector("canvas");
+                if (generatedCanvas) {
+                    generatedCanvas.style.maxWidth = "95%";
+                    generatedCanvas.style.maxHeight = "95%;";
+                    generatedCanvas.style.objectFit = "contain";
+                    generatedCanvas.style.boxShadow = "0 0 10px rgba(0,0,0,0.1)";
+                    generatedCanvas.style.background = "white";
+                }
             }, function(err) {
                 outputArea.innerHTML += "<span style='color:#e74c3c;'>" + err.toString().replace(/\n/g, "<br>") + "</span><br>";
             });
@@ -326,6 +336,7 @@
                     const b = imgData[idx+2];
                     const alpha = imgData[idx+3];
 
+                    // Anti-aliasing threshold: Treat off-white pixels as active space
                     if (alpha > 10 && (r < 245 || g < 245 || b < 245)) {
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
@@ -378,7 +389,7 @@
 
             let strictMatches = 0;
             let totalChecks = normSize * normSize;
-            const colorTolerance = 30; 
+            const colorTolerance = 40; // Increased buffer room for anti-aliasing artifacts
             const isColorCheckActive = challenges[currentChallengeIndex].colorCheck;
 
             for (let i = 0; i < dataS.length; i += 4) {
