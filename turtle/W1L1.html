@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE - Digitech Labs</title>
+    <title>Yang</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -23,35 +23,28 @@
         .btn-save  { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
         .toggle-container { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
 
+        /* ── Three-column layout ── */
         .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
 
-        /* Left column */
-        .left-col { width:45%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
+        /* Left: editor + console — 30% */
+        .left-col { width:30%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
         #editor-wrapper { height:70%; display:flex; flex-direction:column; border-bottom:2px solid var(--border); }
         .panel-header { background:#2d2d2d; padding:5px 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; }
         #code-input { flex-grow:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; }
-
-        /* Bottom-left: console + target */
-        .bottom-panel { height:30%; display:flex; flex-direction:row; overflow:hidden; }
-        #console-wrapper { flex:1; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+        #console-wrapper { flex-grow:1; display:flex; flex-direction:column; overflow:hidden; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
-        /* Target thumbnail pane */
-        #target-wrapper { width:33%; flex-shrink:0; background:#fff; display:flex; flex-direction:column; overflow:hidden; position:relative; }
-        #target-inner { flex-grow:1; position:relative; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; }
-        #target-img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
-        #target-placeholder { color:#999; font-size:11px; font-style:italic; }
-
-        /* Right column: student canvas */
-        #output-container { width:55%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
-        #canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
+        /* Middle: student canvas — 35% */
+        .mid-col { width:35%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); background:#fff; position:relative; }
+        #my-canvas-wrapper { flex-grow:1; overflow:hidden; position:relative; background:#fff; }
         #my-canvas { width:100%; height:100%; }
 
-        /* Hidden solution render — visible to Skulpt but covered by a white overlay */
-        #solution-stage-wrapper { position:fixed; bottom:0; right:0; width:0; height:0; overflow:hidden; }
-        #solution-stage { position:absolute; bottom:0; right:0; }
+        /* Right: target/solution canvas — 35% */
+        .right-col { width:35%; height:100%; display:flex; flex-direction:column; background:#fff; }
+        #target-canvas-wrapper { flex-grow:1; overflow:hidden; position:relative; background:#fff; }
+        #target-canvas { width:100%; height:100%; }
 
-        /* Marker overlay */
+        /* Marker overlay on student canvas */
         #marker-result { position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.88); color:white; padding:14px 16px; border-radius:8px; display:none; z-index:100; min-width:190px; }
         .marker-pass { border-left:5px solid #28a745; }
         .marker-fail { border-left:5px solid #dc3545; }
@@ -68,35 +61,30 @@
     </div>
     <div class="controls">
         <label class="toggle-container"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
-        <button class="btn-run"   onclick="runPython()">&#9654; Run</button>
-        <button class="btn-check" onclick="checkAnswer()">&#10004; Auto-Check</button>
-        <button class="btn-save"  onclick="downloadScript()">&#128190; Save .txt</button>
+        <button class="btn-run"   onclick="runPython()">▶ Run</button>
+        <button class="btn-check" onclick="checkAnswer()">✔ Auto-Check</button>
+        <button class="btn-save"  onclick="downloadScript()">💾 Save .txt</button>
     </div>
 </div>
 
 <div class="main-container">
+
+    <!-- LEFT: editor + console -->
     <div class="left-col">
         <div id="editor-wrapper">
             <div class="panel-header">Python Code</div>
             <textarea id="code-input" spellcheck="false"></textarea>
         </div>
-        <div class="bottom-panel">
-            <div id="console-wrapper">
-                <div class="panel-header">Console Output</div>
-                <pre id="console-output">Ready...</pre>
-            </div>
-            <div id="target-wrapper">
-                <div class="panel-header" style="color:#333;background:rgba(255,255,255,0.92);">Target</div>
-                <div id="target-inner">
-                    <span id="target-placeholder">Loading...</span>
-                    <img id="target-img" alt="Target">
-                </div>
-            </div>
+        <div id="console-wrapper">
+            <div class="panel-header">Console Output</div>
+            <pre id="console-output">Ready...</pre>
         </div>
     </div>
 
-    <div id="output-container">
-        <div id="canvas-wrapper">
+    <!-- MIDDLE: student output -->
+    <div class="mid-col">
+        <div class="panel-header">Your Output</div>
+        <div id="my-canvas-wrapper">
             <div id="my-canvas"></div>
         </div>
         <div id="marker-result">
@@ -104,12 +92,15 @@
             <div class="marker-detail" id="marker-detail"></div>
         </div>
     </div>
-</div>
 
-<!-- Solution renders here at full size. Width/height set by JS to match student canvas.
-     The wrapper is 0x0 so it is off-screen but Skulpt can still paint into it. -->
-<div id="solution-stage-wrapper">
-    <div id="solution-stage"></div>
+    <!-- RIGHT: target/solution -->
+    <div class="right-col">
+        <div class="panel-header" style="color:#333;background:#f0f0f0;">Target</div>
+        <div id="target-canvas-wrapper">
+            <div id="target-canvas"></div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -182,86 +173,41 @@ function skulptRun(code, divId, width, height, animated, outputFn) {
 }
 
 // ================================================================
-// SOLUTION CANVAS
-// Stored after each lab loads — used by the automarker
-// ================================================================
-var solutionCanvas = null;
-
-// ================================================================
-// RENDER SOLUTION
-// Renders at the same size as the student canvas so the automarker
-// can do a direct pixel comparison with no normalisation.
-// The stage div is positioned off-screen but still in the DOM so
-// Skulpt can measure it and paint into it.
-// After render we capture a data URL for the thumbnail img,
-// then keep the canvas reference for the marker.
-// ================================================================
-function renderSolution(solutionCode) {
-    var wrapper  = document.getElementById("canvas-wrapper");
-    var stage    = document.getElementById("solution-stage");
-    var stageWrap = document.getElementById("solution-stage-wrapper");
-    var w = wrapper.offsetWidth;
-    var h = wrapper.offsetHeight;
-
-    // Give the stage real dimensions so Skulpt paints into it
-    stage.innerHTML = "";
-    stage.style.width  = w + "px";
-    stage.style.height = h + "px";
-    stageWrap.style.width  = w + "px";
-    stageWrap.style.height = h + "px";
-
-    solutionCanvas = null;
-    document.getElementById("target-img").style.display = "none";
-    document.getElementById("target-placeholder").style.display = "block";
-    document.getElementById("target-placeholder").textContent = "Loading...";
-
-    skulptRun(instantWrap(solutionCode), "solution-stage", w, h, false, null).then(function() {
-        var canvas = stage.querySelector("canvas");
-        if (!canvas) {
-            document.getElementById("target-placeholder").textContent = "Render failed";
-            return;
-        }
-        solutionCanvas = canvas;
-
-        // Capture thumbnail
-        try {
-            var dataURL = canvas.toDataURL("image/png");
-            var img = document.getElementById("target-img");
-            img.src = dataURL;
-            img.style.display = "block";
-            document.getElementById("target-placeholder").style.display = "none";
-        } catch(e) {
-            document.getElementById("target-placeholder").textContent = "Preview unavailable";
-        }
-
-        // Shrink the stage wrapper back to 0 so it is invisible
-        stageWrap.style.width  = "0";
-        stageWrap.style.height = "0";
-    });
-}
-
-// ================================================================
 // RUN STUDENT CODE
 // ================================================================
 function runPython() {
     var code    = document.getElementById("code-input").value;
     var instant = document.getElementById("skip-anim").checked;
-    var wrapper = document.getElementById("canvas-wrapper");
+    var wrapper = document.getElementById("my-canvas-wrapper");
 
     document.getElementById("console-output").innerHTML = "";
     document.getElementById("my-canvas").innerHTML = "";
     document.getElementById("marker-result").style.display = "none";
 
-    var w = wrapper.offsetWidth;
-    var h = wrapper.offsetHeight;
     var finalCode = instant ? instantWrap(code) : code;
+    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf);
+}
 
-    skulptRun(finalCode, "my-canvas", w, h, !instant, outf);
+// ================================================================
+// RENDER TARGET
+// ================================================================
+function renderTarget(solutionCode) {
+    var wrapper = document.getElementById("target-canvas-wrapper");
+    document.getElementById("target-canvas").innerHTML = "";
+
+    skulptRun(
+        instantWrap(solutionCode),
+        "target-canvas",
+        wrapper.offsetWidth,
+        wrapper.offsetHeight,
+        false,
+        null
+    );
 }
 
 // ================================================================
 // AUTO-MARKER
-// Student canvas vs solution canvas — same engine, same dimensions
+// Both canvases rendered by same Skulpt engine at same dimensions
 // ================================================================
 function getBBox(data, w, h) {
     var minX = w, minY = h, maxX = 0, maxY = 0, found = false;
@@ -281,29 +227,31 @@ function getBBox(data, w, h) {
 }
 
 function checkAnswer() {
-    var index  = parseInt(document.getElementById("lab-select").value);
-    var lab    = LAB_DATA[index];
-    var rBox   = document.getElementById("marker-result");
-    var rTitle = document.getElementById("marker-title");
+    var index   = parseInt(document.getElementById("lab-select").value);
+    var lab     = LAB_DATA[index];
+    var rBox    = document.getElementById("marker-result");
+    var rTitle  = document.getElementById("marker-title");
     var rDetail = document.getElementById("marker-detail");
 
     var sCanvas = document.querySelector("#my-canvas canvas");
-    if (!sCanvas)      { alert("Please run your code first!"); return; }
-    if (!solutionCanvas) { alert("Solution is still loading — please wait a moment."); return; }
+    if (!sCanvas) { alert("Please run your code first!"); return; }
 
+    var tCanvas = document.querySelector("#target-canvas canvas");
+    if (!tCanvas) { alert("Target has not rendered yet."); return; }
+
+    // Both canvases should be the same size — normalise just in case
     var w = sCanvas.width;
     var h = sCanvas.height;
 
     var sData, tData;
     try {
         sData = sCanvas.getContext("2d").getImageData(0, 0, w, h).data;
-        // Normalise solution canvas to same dimensions as student canvas (should already match)
         var norm = document.createElement("canvas");
         norm.width = w; norm.height = h;
         var nCtx = norm.getContext("2d");
         nCtx.fillStyle = "#fff";
         nCtx.fillRect(0, 0, w, h);
-        nCtx.drawImage(solutionCanvas, 0, 0, w, h);
+        nCtx.drawImage(tCanvas, 0, 0, w, h);
         tData = nCtx.getImageData(0, 0, w, h).data;
     } catch(e) { alert("Could not read canvas data: " + e); return; }
 
@@ -313,12 +261,12 @@ function checkAnswer() {
     if (!sBox) {
         rBox.style.display = "block";
         rBox.className = "marker-fail";
-        rTitle.innerText = "FAILED";
+        rTitle.innerText = "❌ FAILED";
         rDetail.innerHTML = "Canvas is empty — run your code first.";
         return;
     }
 
-    // Align by bounding box top-left so position does not affect the result
+    // Align by bounding box so position offset does not affect result
     var offX = sBox.x - tBox.x;
     var offY = sBox.y - tBox.y;
 
@@ -350,7 +298,7 @@ function checkAnswer() {
 
     rBox.style.display = "block";
     rBox.className     = passed ? "marker-pass" : "marker-fail";
-    rTitle.innerText   = passed ? "PASSED" : "FAILED";
+    rTitle.innerText   = passed ? "✅ PASSED" : "❌ FAILED";
     rDetail.innerHTML  = "Difference: " + pct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
 }
 
@@ -374,7 +322,7 @@ function loadLab() {
     document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
     document.getElementById("my-canvas").innerHTML      = "";
     document.getElementById("marker-result").style.display = "none";
-    requestAnimationFrame(function() { renderSolution(lab.solutionCode); });
+    requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
 }
 
 // ================================================================
