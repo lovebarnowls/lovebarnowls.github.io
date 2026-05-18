@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Digital Tech lessons</title>
+    <title>Yang's Faithful Python IDE</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -13,52 +13,41 @@
         :root { --bg-dark:#1e1e1e; --bg-panel:#252526; --border:#333; --accent:#4EC9B0; --text:#d4d4d4; }
         body,html { margin:0; padding:0; height:100%; font-family:'Segoe UI',sans-serif; overflow:hidden; background:var(--bg-dark); color:var(--text); }
 
-        /* ── Header ── */
         .header { height:50px; background:var(--bg-panel); display:flex; align-items:center; padding:0 20px; justify-content:space-between; border-bottom:1px solid var(--border); }
         .logo { font-weight:bold; color:var(--accent); letter-spacing:1px; display:flex; align-items:center; gap:15px; }
         .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; }
         .controls { display:flex; gap:10px; align-items:center; }
         button { border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; transition:0.2s; text-transform:uppercase; }
-        .btn-run   { background:#28a745; color:white; } .btn-run:hover   { background:#218838; }
-        .btn-check { background:#007acc; color:white; } .btn-check:hover { background:#005f9e; }
-        .btn-save  { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
+        .btn-run  { background:#28a745; color:white; } .btn-run:hover  { background:#218838; }
+        .btn-save { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
         .toggle-anim { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
 
-        /* ── Two-column layout ── */
         .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
 
-        /* Left 50%: toggles between code+console and target */
+        /* Left 50% */
         .left-col { width:50%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
-
-        /* Panel header — shared by both views */
         .panel-header { background:#2d2d2d; padding:0 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; height:30px; display:flex; align-items:center; justify-content:space-between; }
-        .panel-header-label { display:flex; align-items:center; gap:10px; }
-
-        /* Toggle view button inside panel header */
         .btn-view-toggle { background:#4EC9B0; color:#1e1e1e; border:none; padding:3px 10px; border-radius:3px; cursor:pointer; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
         .btn-view-toggle:hover { background:#3ab89f; }
 
-        /* Code view */
         #code-view { display:flex; flex-direction:column; flex-grow:1; overflow:hidden; }
         #code-input { flex:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; border-bottom:2px solid var(--border); }
         #console-wrapper { height:30%; display:flex; flex-direction:column; flex-shrink:0; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
-        /* Target view */
         #target-view { display:none; flex-grow:1; overflow:hidden; background:#fff; position:relative; }
-        #target-canvas { width:100%; height:100%; }
 
-        /* Right 50%: student canvas — always visible */
+        /* Right 50% */
         .right-col { width:50%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
         #my-canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
-        #my-canvas { width:100%; height:100%; }
 
-        /* Marker overlay */
-        #marker-result { position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.88); color:white; padding:14px 16px; border-radius:8px; display:none; z-index:100; min-width:190px; }
-        .marker-pass { border-left:5px solid #28a745; }
-        .marker-fail { border-left:5px solid #dc3545; }
-        .marker-title { font-weight:bold; margin-bottom:4px; font-size:14px; }
-        .marker-detail { font-size:12px; color:#ccc; line-height:1.6; }
+        /* Blink comparator overlay — solution canvas sits on top at 50% opacity */
+        #compare-overlay { position:absolute; top:0; left:0; width:100%; height:100%; display:none; pointer-events:none; opacity:0.5; z-index:10; }
+
+        /* Compare button styling */
+        .btn-compare { background:#f0a500; color:#1e1e1e; user-select:none; }
+        .btn-compare:hover { background:#d4900a; }
+        .btn-compare:active { background:#b87a08; }
     </style>
 </head>
 <body>
@@ -70,26 +59,25 @@
     </div>
     <div class="controls">
         <label class="toggle-anim"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
-        <button class="btn-run"   onclick="runPython()">▶ Run</button>
-        <button class="btn-check" onclick="checkAnswer()">✔ Auto-Check</button>
-        <button class="btn-save"  onclick="downloadScript()">💾 Save .txt</button>
+        <button class="btn-run"     onclick="runPython()">▶ Run</button>
+        <button class="btn-compare" id="btn-compare"
+                onmousedown="showOverlay()" onmouseup="hideOverlay()"
+                ontouchstart="showOverlay()" ontouchend="hideOverlay()">
+            👁 Hold to Compare
+        </button>
+        <button class="btn-save" onclick="downloadScript()">💾 Save .txt</button>
     </div>
 </div>
 
 <div class="main-container">
 
-    <!-- LEFT: code+console OR target, toggled -->
+    <!-- LEFT: code+console OR target view -->
     <div class="left-col">
-
-        <!-- Single header bar for both views -->
         <div class="panel-header">
-            <div class="panel-header-label">
-                <span id="panel-label">Python Code</span>
-                <button class="btn-view-toggle" onclick="toggleView()">👁 View Target</button>
-            </div>
+            <span id="panel-label">Python Code</span>
+            <button class="btn-view-toggle" onclick="toggleView()">👁 View Target</button>
         </div>
 
-        <!-- Code + console view (default) -->
         <div id="code-view">
             <textarea id="code-input" spellcheck="false"></textarea>
             <div id="console-wrapper">
@@ -98,22 +86,16 @@
             </div>
         </div>
 
-        <!-- Target view (hidden until toggled) -->
-        <div id="target-view">
-            <div id="target-canvas"></div>
-        </div>
-
+        <div id="target-view"></div>
     </div>
 
-    <!-- RIGHT: student output — always visible -->
+    <!-- RIGHT: student canvas + blink overlay -->
     <div class="right-col">
         <div class="panel-header" style="justify-content:flex-start;">Your Output</div>
         <div id="my-canvas-wrapper">
             <div id="my-canvas"></div>
-        </div>
-        <div id="marker-result">
-            <div class="marker-title" id="marker-title">Result</div>
-            <div class="marker-detail" id="marker-detail"></div>
+            <!-- Overlay canvas cloned from solution renders here -->
+            <div id="compare-overlay"></div>
         </div>
     </div>
 
@@ -128,25 +110,19 @@ var LAB_DATA = [
         id: 1,
         title: "Lab 1: The Square",
         code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a square with side length 100\n# Hint: a square has 4 sides and turns 90 degrees\n\nprint('Square complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)",
-        checkColor: false,
-        tolerance: 10
+        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)"
     },
     {
         id: 2,
         title: "Lab 2: Equilateral Triangle",
         code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a triangle with side length 150\n# Hint: a triangle has 3 sides. What angle does it turn?\n\nprint('Triangle complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)",
-        checkColor: false,
-        tolerance: 10
+        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)"
     },
     {
         id: 3,
         title: "Lab 3: Coloured Row",
         code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw 3 red squares in a row\n# Each square has side length 50, spaced 70 apart\n\nprint('Row complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()",
-        checkColor: true,
-        tolerance: 10
+        solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()"
     }
 ];
 
@@ -161,7 +137,6 @@ function toggleView() {
     var targetView = document.getElementById("target-view");
     var label      = document.getElementById("panel-label");
     var btn        = document.querySelector(".btn-view-toggle");
-
     if (showingTarget) {
         codeView.style.display   = "none";
         targetView.style.display = "block";
@@ -173,6 +148,39 @@ function toggleView() {
         label.textContent        = "Python Code";
         btn.textContent          = "👁 View Target";
     }
+}
+
+// ================================================================
+// BLINK COMPARATOR
+// The solution canvas is rendered into #target-view at the same
+// dimensions as the student canvas. When the student holds the
+// Compare button, we clone that canvas into the overlay div on
+// top of their drawing at 50% opacity.
+// ================================================================
+function showOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    // Clear any previous clone
+    overlay.innerHTML = "";
+
+    // Find the solution drawing canvas (first canvas Skulpt created)
+    var solCanvas = document.querySelector("#target-view canvas");
+    if (!solCanvas) return;
+
+    // Clone it into the overlay
+    var clone = solCanvas.cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.top      = "0";
+    clone.style.left     = "0";
+    clone.style.width    = "100%";
+    clone.style.height   = "100%";
+    overlay.appendChild(clone);
+    overlay.style.display = "block";
+}
+
+function hideOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.style.display = "none";
+    overlay.innerHTML     = "";
 }
 
 // ================================================================
@@ -194,7 +202,6 @@ function instantWrap(code) {
     return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
 }
 
-// Sequential queue — Skulpt can only run one program at a time
 var renderQueue = Promise.resolve();
 
 function skulptRun(code, divId, width, height, animated, outputFn) {
@@ -222,8 +229,8 @@ function runPython() {
     var wrapper = document.getElementById("my-canvas-wrapper");
 
     document.getElementById("console-output").innerHTML = "";
-    document.getElementById("my-canvas").innerHTML = "";
-    document.getElementById("marker-result").style.display = "none";
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
 
     var finalCode = instant ? instantWrap(code) : code;
     skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf);
@@ -231,95 +238,13 @@ function runPython() {
 
 // ================================================================
 // RENDER TARGET
-// The target-view div is display:none when not active, so we
-// temporarily show it to get real dimensions, render, then hide.
 // ================================================================
 function renderTarget(solutionCode) {
     document.getElementById("target-view").innerHTML = "";
-
-    // Use student canvas wrapper dimensions so both canvases are identical size
-    // — same width (both panels are 50vw) and same height (matched explicitly)
-    var studentWrapper = document.getElementById("my-canvas-wrapper");
-    var w = studentWrapper.offsetWidth;
-    var h = studentWrapper.offsetHeight;
-
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
     skulptRun(instantWrap(solutionCode), "target-view", w, h, false, null);
-}
-
-// ================================================================
-// AUTO-MARKER
-// Direct pixel comparison — same engine, same canvas dimensions,
-// same turtle centre-origin, so no alignment needed.
-// ================================================================
-function checkAnswer() {
-    var index   = parseInt(document.getElementById("lab-select").value);
-    var lab     = LAB_DATA[index];
-    var rBox    = document.getElementById("marker-result");
-    var rTitle  = document.getElementById("marker-title");
-    var rDetail = document.getElementById("marker-detail");
-
-    var sCanvas = document.querySelector("#my-canvas-wrapper canvas");
-    if (!sCanvas) { alert("Please run your code first!"); return; }
-
-    var tCanvas = document.querySelector("#target-view canvas");
-    if (!tCanvas) { alert("Target has not rendered yet."); return; }
-
-    var w = sCanvas.width;
-    var h = sCanvas.height;
-
-    var sData, tData;
-    try {
-        sData = sCanvas.getContext("2d").getImageData(0, 0, w, h).data;
-        var norm = document.createElement("canvas");
-        norm.width = w; norm.height = h;
-        var nCtx = norm.getContext("2d");
-        nCtx.fillStyle = "#fff";
-        nCtx.fillRect(0, 0, w, h);
-        nCtx.drawImage(tCanvas, 0, 0, w, h);
-        tData = nCtx.getImageData(0, 0, w, h).data;
-    } catch(e) { alert("Could not read canvas data: " + e); return; }
-
-    // Check student canvas is not empty
-    var hasContent = false;
-    for (var ci = 0; ci < sData.length; ci += 4) {
-        if (sData[ci] < 240 || sData[ci+1] < 240 || sData[ci+2] < 240) { hasContent = true; break; }
-    }
-    if (!hasContent) {
-        rBox.style.display = "block";
-        rBox.className = "marker-fail";
-        rTitle.innerText = "❌ FAILED";
-        rDetail.innerHTML = "Canvas is empty — run your code first.";
-        return;
-    }
-
-    // Direct pixel comparison — no offset, no bounding box alignment.
-    // Both canvases are same size, same engine, turtle starts at same centre.
-    var mismatched = 0, compared = 0, threshold = 40;
-
-    for (var y = 0; y < h; y++) {
-        for (var x = 0; x < w; x++) {
-            var si = (y * w + x) * 4;
-            var sR = sData[si], sG = sData[si+1], sB = sData[si+2];
-            var tR = tData[si], tG = tData[si+1], tB = tData[si+2];
-            // Skip mutual white background
-            if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
-            compared++;
-            if (lab.checkColor) {
-                if (Math.abs(sR-tR) > threshold || Math.abs(sG-tG) > threshold || Math.abs(sB-tB) > threshold) mismatched++;
-            } else {
-                if (Math.abs(0.299*sR + 0.587*sG + 0.114*sB - (0.299*tR + 0.587*tG + 0.114*tB)) > threshold) mismatched++;
-            }
-        }
-    }
-
-    if (compared === 0) compared = 1;
-    var pct    = (mismatched / compared) * 100;
-    var passed = pct <= lab.tolerance;
-
-    rBox.style.display = "block";
-    rBox.className     = passed ? "marker-pass" : "marker-fail";
-    rTitle.innerText   = passed ? "✅ PASSED" : "❌ FAILED";
-    rDetail.innerHTML  = "Difference: " + pct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
 }
 
 // ================================================================
@@ -341,11 +266,8 @@ function loadLab() {
     document.getElementById("code-input").value         = lab.code;
     document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
     document.getElementById("my-canvas").innerHTML      = "";
-    document.getElementById("marker-result").style.display = "none";
-
-    // Switch back to code view when loading a new lab
+    hideOverlay();
     if (showingTarget) toggleView();
-
     requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
 }
 
