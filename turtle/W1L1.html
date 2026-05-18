@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's UGH Labs</title>
+    <title>Yang's Python Turtle IDE - Digitech Labs</title>
     
-    <!-- Dependencies -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js" type="text/javascript"></script>
@@ -20,7 +19,6 @@
         }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: var(--bg-dark); color: var(--text); }
         
-        /* Header */
         .header { height: 50px; background: var(--bg-panel); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid var(--border); }
         .logo { font-weight: bold; color: var(--accent); letter-spacing: 1px; display: flex; align-items: center; gap: 15px; }
         .lab-selector { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
@@ -31,41 +29,38 @@
         .btn-run:hover { background-color: #218838; }
         .btn-check { background-color: #007acc; color: white; }
         .btn-check:hover { background-color: #005f9e; }
+        .btn-check:disabled { background-color: #444; color: #888; cursor: not-allowed; }
         .btn-save { background-color: #3e3e3e; color: white; border: 1px solid #555; }
         .btn-save:hover { background-color: #505050; }
 
-        /* Main Layout */
         .main-container { display: flex; height: calc(100% - 50px); width: 100vw; }
         
-        /* Left Column: Code + Console */
         .left-col { width: 45%; height: 100%; display: flex; flex-direction: column; border-right: 2px solid var(--border); }
         
-        /* Editor Area (Top Left - 70%) */
         #editor-wrapper { height: 70%; display: flex; flex-direction: column; border-bottom: 2px solid var(--border); }
-        .panel-header { background: #2d2d2d; padding: 5px 15px; font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+        .panel-header { background: #2d2d2d; padding: 5px 15px; font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         #code-input { flex-grow: 1; background: var(--bg-dark); color: #d4d4d4; padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; border: none; outline: none; resize: none; line-height: 1.5; }
 
-        /* Bottom Left Panel (30% Height) */
-        .bottom-panel { height: 30%; display: flex; flex-direction: row; } /* Horizontal Layout */
+        .bottom-panel { height: 30%; display: flex; flex-direction: row; }
         
-        /* Console (2/3 Width) */
         #console-wrapper { width: 66.6%; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
         #console-output { flex-grow: 1; background: #000; color: #00ff00; padding: 10px; font-family: 'Consolas', monospace; font-size: 12px; overflow-y: auto; margin: 0; white-space: pre-wrap; }
         
-        /* Sample Image (1/3 Width) */
-        #sample-wrapper { width: 33.3%; background: #fff; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #sample-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
-        .no-image-text { color: #333; font-size: 12px; font-style: italic; }
+        #sample-wrapper { width: 33.3%; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; overflow: hidden; }
+        #sample-img { max-width: 100%; max-height: calc(100% - 28px); object-fit: contain; margin-top: 28px; }
+        .no-image-text { color: #333; font-size: 12px; font-style: italic; margin-top: 28px; }
 
-        /* Right Column: Canvas */
         #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #fff; position: relative; }
-        #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #fff;}
+        #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #fff; }
         #my-canvas { width: 100%; height: 100%; }
 
-        /* Marker Overlay */
+        /* Hidden offscreen renders for solution canvases */
+        #offscreen-container { position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none; }
+        .offscreen-slot { width: 800px; height: 600px; background: #fff; }
+
         #marker-result {
             position: absolute; top: 20px; right: 20px; 
-            background: rgba(0,0,0,0.8); color: white; 
+            background: rgba(0,0,0,0.85); color: white; 
             padding: 15px; border-radius: 8px; 
             display: none; z-index: 100;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -73,11 +68,13 @@
         }
         .marker-pass { border-left: 5px solid #28a745; }
         .marker-fail { border-left: 5px solid #dc3545; }
+        .marker-pending { border-left: 5px solid #ffc107; }
         .marker-title { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         .marker-detail { font-size: 12px; color: #ccc; }
 
-        /* Toggle Switch */
         .toggle-container { font-size: 12px; display: flex; align-items: center; gap: 5px; color: #ccc; cursor: pointer; user-select: none; background: #333; padding: 4px 8px; border-radius: 4px; }
+
+        #prerender-status { font-size: 11px; color: #888; padding: 2px 8px; }
     </style>
 </head>
 <body>
@@ -85,53 +82,42 @@
 <div class="header">
     <div class="logo">
         Yang's IDE
-        <select id="lab-select" class="lab-selector" onchange="loadLab()">
-            <!-- Options populated by JS -->
-        </select>
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
     </div>
     <div class="controls">
+        <span id="prerender-status">Preparing solutions...</span>
         <label class="toggle-container">
             <input type="checkbox" id="skip-anim"> ⚡ Instant
         </label>
         <button class="btn-run" onclick="runPython()">▶ Run</button>
-        <button class="btn-check" onclick="checkAnswer()">✔ Auto-Check</button>
+        <button class="btn-check" id="btn-check" onclick="checkAnswer()" disabled>✔ Auto-Check</button>
         <button class="btn-save" onclick="downloadScript()">💾 Save .txt</button>
     </div>
 </div>
 
 <div class="main-container">
-    <!-- LEFT SIDE -->
     <div class="left-col">
-        <!-- Code Editor -->
         <div id="editor-wrapper">
             <div class="panel-header">Python Code</div>
             <textarea id="code-input" spellcheck="false"></textarea>
         </div>
-
-        <!-- Bottom Panel (Console + Sample Side-by-Side) -->
         <div class="bottom-panel">
-            <!-- Console -->
             <div id="console-wrapper">
                 <div class="panel-header">Console Output</div>
                 <pre id="console-output">Ready...</pre>
             </div>
-            
-            <!-- Sample Image -->
             <div id="sample-wrapper">
-                <div class="panel-header" style="position:absolute; top:0; left:0; width:100%; background:rgba(255,255,255,0.9); color:#333; z-index:10;">Target</div>
-                <span class="no-image-text">No sample</span>
-                <img id="sample-img" src="" alt="Target">
+                <div class="panel-header" style="position:absolute; top:0; left:0; width:100%; background:rgba(255,255,255,0.9); color:#333; z-index:10; box-sizing:border-box;">Target</div>
+                <span class="no-image-text" id="no-img-text">Preparing...</span>
+                <img id="sample-img" style="display:none; max-width:100%; max-height:calc(100% - 28px); object-fit:contain; margin-top:28px;" alt="Target">
             </div>
         </div>
     </div>
 
-    <!-- RIGHT SIDE -->
     <div id="output-container">
         <div id="canvas-wrapper">
             <div id="my-canvas"></div>
         </div>
-        
-        <!-- Auto Marker Result Popup -->
         <div id="marker-result">
             <div class="marker-title" id="marker-title">Result</div>
             <div class="marker-detail" id="marker-detail">Details...</div>
@@ -139,44 +125,55 @@
     </div>
 </div>
 
+<!-- Hidden container for solution pre-renders -->
+<div id="offscreen-container"></div>
+
 <script type="text/javascript">
-   // ==========================================
-    // LAB DATA CONFIGURATION
+
+    // ==========================================
+    // LAB DATA — add solutionCode to each lab.
+    // The starter 'code' is what the student sees.
+    // 'solutionCode' is rendered silently at load.
+    // 'checkColor' toggles colour-aware diffing.
+    // 'tolerance' is the allowed % pixel difference.
     // ==========================================
     const LAB_DATA = [
         {
             id: 1,
             title: "Lab 1: The Square",
-            description: "Draw a square with side length 100.",
-            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\n\n# Draw a square\nfor i in range(4):\n    t.forward(100)\n    t.right(90)\n\nprint('Square complete')",
-            targetImage: "1.png", 
-            checkColor: false,    
-            tolerance: 15         
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a square with side length 100\n# Hint: a square has 4 sides and turns 90 degrees\n\nprint('Square complete')",
+            solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)",
+            checkColor: false,
+            tolerance: 10
         },
         {
             id: 2,
             title: "Lab 2: Equilateral Triangle",
-            description: "Draw a triangle with side length 150.",
-            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\n\n# Draw Triangle\nfor i in range(3):\n    t.forward(150)\n    t.left(120)\n\nprint('Triangle complete')",
-            targetImage: "2.png",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a triangle with side length 150\n# Hint: a triangle has 3 sides. What angle does it turn?\n\nprint('Triangle complete')",
+            solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)",
             checkColor: false,
-            tolerance: 15
+            tolerance: 10
         },
         {
             id: 3,
-            title: "Lab 3: Colored Row",
-            description: "Draw 3 red squares in a row.",
-            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\nt.color('red')\n\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()\n\nprint('Row complete')",
-            targetImage: "3.png",
-            checkColor: true,     
-            tolerance: 15
+            title: "Lab 3: Coloured Row",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw 3 red squares in a row\n# Each square has side length 50, spaced 70 apart\n\nprint('Row complete')",
+            solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()",
+            checkColor: true,
+            tolerance: 10
         }
     ];
 
     // ==========================================
-    // CORE FUNCTIONS
+    // SOLUTION RENDER STATE
+    // Stores { canvas, dataURL } per lab index
     // ==========================================
+    const solutionRenders = {};
+    let rendersComplete = 0;
 
+    // ==========================================
+    // SKULPT HELPERS
+    // ==========================================
     function outf(text) {
         var mypre = document.getElementById("console-output");
         mypre.innerHTML += text;
@@ -189,52 +186,144 @@
         return Sk.builtinFiles["files"][x];
     }
 
+    // Wraps solution code so it runs at speed(0) with tracer off for instant render
+    function wrapInstant(code) {
+        return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
+    }
+
+    // ==========================================
+    // PRE-RENDER ALL SOLUTIONS AT PAGE LOAD
+    // Each solution is rendered sequentially into
+    // a hidden div, then the canvas is captured.
+    // ==========================================
+    function prerenderSolutions() {
+        const status = document.getElementById("prerender-status");
+        renderNext(0);
+
+        function renderNext(index) {
+            if (index >= LAB_DATA.length) {
+                allRendersComplete();
+                return;
+            }
+
+            status.textContent = "Preparing " + (index + 1) + "/" + LAB_DATA.length + "...";
+
+            const lab = LAB_DATA[index];
+            const slot = document.createElement("div");
+            slot.id = "offscreen-" + index;
+            slot.style.cssText = "width:800px;height:600px;background:#fff;position:relative;";
+            document.getElementById("offscreen-container").appendChild(slot);
+
+            Sk.configure({ output: function(){}, read: builtinRead, __future__: Sk.python3 });
+            Sk.TurtleGraphics = {
+                target: "offscreen-" + index,
+                width: 800,
+                height: 600,
+                animate: false
+            };
+
+            const code = wrapInstant(lab.solutionCode);
+
+            Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, code, true);
+            }).then(function() {
+                // Small delay to ensure canvas has painted
+                setTimeout(function() {
+                    const canvas = slot.querySelector("canvas");
+                    if (canvas) {
+                        // Store the canvas reference and a data URL for the thumbnail
+                        try {
+                            const dataURL = canvas.toDataURL("image/png");
+                            solutionRenders[index] = { canvas: canvas, dataURL: dataURL };
+                        } catch(e) {
+                            console.warn("Could not capture solution canvas for lab " + index, e);
+                            solutionRenders[index] = null;
+                        }
+                    } else {
+                        solutionRenders[index] = null;
+                    }
+                    renderNext(index + 1);
+                }, 300);
+            }).catch(function(err) {
+                console.warn("Solution render failed for lab " + index + ":", err);
+                solutionRenders[index] = null;
+                renderNext(index + 1);
+            });
+        }
+    }
+
+    function allRendersComplete() {
+        const status = document.getElementById("prerender-status");
+        status.textContent = "Ready ✓";
+        setTimeout(function(){ status.textContent = ""; }, 2000);
+
+        document.getElementById("btn-check").disabled = false;
+
+        // Update thumbnail for the currently selected lab
+        updateThumbnail(document.getElementById("lab-select").value);
+    }
+
+    // ==========================================
+    // THUMBNAIL DISPLAY
+    // Shows the solution render in the Target panel
+    // ==========================================
+    function updateThumbnail(index) {
+        const render = solutionRenders[index];
+        const imgEl = document.getElementById("sample-img");
+        const noImgText = document.getElementById("no-img-text");
+
+        if (render && render.dataURL) {
+            imgEl.src = render.dataURL;
+            imgEl.style.display = "block";
+            noImgText.style.display = "none";
+        } else {
+            imgEl.style.display = "none";
+            noImgText.style.display = "block";
+            noImgText.textContent = "No preview";
+        }
+    }
+
+    // ==========================================
+    // STUDENT CODE RUNNER
+    // ==========================================
     function runPython() {
         var userCode = document.getElementById("code-input").value;
         var skipAnim = document.getElementById("skip-anim").checked;
         
-        document.getElementById("console-output").innerHTML = ""; 
+        document.getElementById("console-output").innerHTML = "";
         document.getElementById("my-canvas").innerHTML = "";
         document.getElementById("marker-result").style.display = "none";
 
-        var finalCode = userCode;
-        if (skipAnim) {
-            finalCode = "import turtle\nturtle.speed(0)\nturtle.tracer(0, 0)\n" + userCode + "\nturtle.update()";
-        }
+        var finalCode = skipAnim ? wrapInstant(userCode) : userCode;
 
         var wrapper = document.getElementById("canvas-wrapper");
-        
-        Sk.configure({ 
-            output: outf, 
-            read: builtinRead, 
-            __future__: Sk.python3 
-        });
 
-        // Use explicit, static logical dimensions to prevent CSS stretching bugs
-        Sk.TurtleGraphics = { 
-            target: 'my-canvas', 
-            width: 600, 
-            height: 400,
-            animate: !skipAnim 
+        Sk.configure({ output: outf, read: builtinRead, __future__: Sk.python3 });
+        Sk.TurtleGraphics = {
+            target: 'my-canvas',
+            width: wrapper.offsetWidth,
+            height: wrapper.offsetHeight,
+            animate: !skipAnim
         };
 
-        var myPromise = Sk.misceval.asyncToPromise(function() {
+        Sk.misceval.asyncToPromise(function() {
             return Sk.importMainWithBody("<stdin>", false, finalCode, true);
-        });
-
-        myPromise.then(function() { 
-            console.log('Execution finished.'); 
+        }).then(function() {
+            console.log('Execution finished.');
         }, function(err) {
             outf("\n<span style='color:#ff5555'>Error: " + err.toString() + "</span>");
         });
     }
 
+    // ==========================================
+    // DOWNLOAD
+    // ==========================================
     function downloadScript() {
         const code = document.getElementById("code-input").value;
         const blob = new Blob([code], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "my_turtle_program.txt"; 
+        a.download = "my_turtle_program.txt";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -243,65 +332,46 @@
     // ==========================================
     // LAB MANAGEMENT
     // ==========================================
-
     function initLabs() {
         const select = document.getElementById("lab-select");
-        LAB_DATA.forEach((lab, index) => {
+        LAB_DATA.forEach(function(lab, index) {
             let option = document.createElement("option");
             option.value = index;
             option.text = lab.title;
             select.appendChild(option);
         });
-        loadLab(); 
+        loadLab();
+        prerenderSolutions();
     }
 
     function loadLab() {
-        const index = document.getElementById("lab-select").value;
+        const index = parseInt(document.getElementById("lab-select").value);
         const lab = LAB_DATA[index];
-        
         document.getElementById("code-input").value = lab.code;
-        
-        const imgEl = document.getElementById("sample-img");
-        const noImgText = document.querySelector(".no-image-text");
-        
-        if (lab.targetImage) {
-            imgEl.src = lab.targetImage;
-            imgEl.style.display = "block";
-            noImgText.style.display = "none";
-            
-            imgEl.onerror = function() { 
-                this.style.display = "none"; 
-                noImgText.style.display = "block";
-                noImgText.innerText = "Img not found";
-            };
-        } else {
-            imgEl.style.display = "none";
-            noImgText.style.display = "block";
-            noImgText.innerText = "No visual target";
-        }
-
         document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
         document.getElementById("marker-result").style.display = "none";
         document.getElementById("my-canvas").innerHTML = "";
+
+        // If renders are already done, update thumbnail immediately
+        if (solutionRenders.hasOwnProperty(index)) {
+            updateThumbnail(index);
+        } else {
+            document.getElementById("sample-img").style.display = "none";
+            document.getElementById("no-img-text").style.display = "block";
+            document.getElementById("no-img-text").textContent = "Preparing...";
+        }
     }
 
     // ==========================================
-    // SMART AUTO MARKER LOGIC
+    // BOUNDING BOX HELPER
     // ==========================================
-
     function getBoundingBox(imageData, width, height) {
         let minX = width, minY = height, maxX = 0, maxY = 0;
         let hasContent = false;
-
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                const r = imageData.data[i];
-                const g = imageData.data[i+1];
-                const b = imageData.data[i+2];
-                
-                // Allow a tiny safety margin for background pixels
-                if (r < 250 || g < 250 || b < 250) {
+                if (imageData.data[i] < 240 || imageData.data[i+1] < 240 || imageData.data[i+2] < 240) {
                     if (x < minX) minX = x;
                     if (y < minY) minY = y;
                     if (x > maxX) maxX = x;
@@ -310,22 +380,22 @@
                 }
             }
         }
-        
         if (!hasContent) return null;
-        return { x: minX, y: minY, w: (maxX - minX) + 1, h: (maxY - minY) + 1 };
+        return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
     }
 
+    // ==========================================
+    // AUTO MARKER
+    // Diffs student canvas against solution render.
+    // Both canvases come from Skulpt so resolution,
+    // anti-aliasing, and stroke width are identical.
+    // ==========================================
     function checkAnswer() {
-        const index = document.getElementById("lab-select").value;
+        const index = parseInt(document.getElementById("lab-select").value);
         const lab = LAB_DATA[index];
         const resultBox = document.getElementById("marker-result");
-        const title = document.getElementById("marker-title");
-        const detail = document.getElementById("marker-detail");
-
-        if (!lab.targetImage) {
-            alert("This lab does not have an image to check against.");
-            return;
-        }
+        const titleEl = document.getElementById("marker-title");
+        const detailEl = document.getElementById("marker-detail");
 
         const studentCanvas = document.querySelector("#my-canvas canvas");
         if (!studentCanvas) {
@@ -333,66 +403,67 @@
             return;
         }
 
-        const targetImg = document.getElementById("sample-img");
-        if (!targetImg.complete || targetImg.naturalWidth === 0) {
-            alert("Target image hasn't loaded yet.");
+        const solutionRender = solutionRenders[index];
+        if (!solutionRender || !solutionRender.canvas) {
+            alert("Solution reference is not available. Please reload the page.");
             return;
         }
 
-        // 1. Create matching offscreen canvas sizes based on true Skulpt geometry
-        const compCanvas = document.createElement("canvas");
-        compCanvas.width = studentCanvas.width;
-        compCanvas.height = studentCanvas.height;
-        const ctx = compCanvas.getContext("2d");
+        const solCanvas = solutionRender.canvas;
 
-        // Fill background white to start clean
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, compCanvas.width, compCanvas.height);
+        // Both canvases should be the same size — but we normalise anyway
+        // by scaling the student canvas into an offscreen canvas matching
+        // the solution canvas dimensions, to eliminate any size discrepancy.
+        const w = solCanvas.width;
+        const h = solCanvas.height;
 
-        // Draw original target image centered without distortion stretching
-        const scale = Math.min(compCanvas.width / targetImg.naturalWidth, compCanvas.height / targetImg.naturalHeight);
-        const nw = targetImg.naturalWidth * scale;
-        const nh = targetImg.naturalHeight * scale;
-        const nx = (compCanvas.width - nw) / 2;
-        const ny = (compCanvas.height - nh) / 2;
-        ctx.drawImage(targetImg, nx, ny, nw, nh);
+        const normCanvas = document.createElement("canvas");
+        normCanvas.width = w;
+        normCanvas.height = h;
+        const normCtx = normCanvas.getContext("2d");
+        normCtx.fillStyle = "#ffffff";
+        normCtx.fillRect(0, 0, w, h);
+        normCtx.drawImage(studentCanvas, 0, 0, w, h);
 
-        const sCtx = studentCanvas.getContext("2d");
-        const sData = sCtx.getImageData(0, 0, studentCanvas.width, studentCanvas.height);
-        const tData = ctx.getImageData(0, 0, compCanvas.width, compCanvas.height);
+        let sData, tData;
+        try {
+            sData = normCtx.getImageData(0, 0, w, h);
+            const solCtx = solCanvas.getContext("2d");
+            tData = solCtx.getImageData(0, 0, w, h);
+        } catch(e) {
+            alert("Could not read canvas pixel data. This may be a browser security restriction.");
+            return;
+        }
 
-        // 2. Locate Active Bounding Boxes
-        const sBox = getBoundingBox(sData, studentCanvas.width, studentCanvas.height);
-        const tBox = getBoundingBox(tData, compCanvas.width, compCanvas.height);
+        // Find bounding boxes for alignment
+        const sBox = getBoundingBox(sData, w, h);
+        const tBox = getBoundingBox(tData, w, h);
 
         if (!sBox) {
-            alert("Your canvas is empty! Draw something first.");
-            return;
-        }
-        if (!tBox) {
-            alert("Target reference image could not be processed.");
+            resultBox.style.display = "block";
+            resultBox.className = "marker-fail";
+            titleEl.innerText = "❌ FAILED";
+            detailEl.innerHTML = "Your canvas appears empty. Run your code first.";
             return;
         }
 
-        // Calculate layout shifts
+        // Offset to align top-left corners of both drawings
         const offsetX = sBox.x - tBox.x;
         const offsetY = sBox.y - tBox.y;
 
         let mismatchPixels = 0;
         let comparedPixels = 0;
-        const threshold = 50; // Increased error buffer for smoother evaluation
+        const threshold = 40;
 
-        for (let y = 0; y < studentCanvas.height; y++) {
-            for (let x = 0; x < studentCanvas.width; x++) {
-                const sIdx = (y * studentCanvas.width + x) * 4;
-                
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const sIdx = (y * w + x) * 4;
                 const tx = x - offsetX;
                 const ty = y - offsetY;
 
                 let tR = 255, tG = 255, tB = 255;
-                
-                if (tx >= 0 && tx < compCanvas.width && ty >= 0 && ty < compCanvas.height) {
-                    const tIdx = (ty * compCanvas.width + tx) * 4;
+                if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
+                    const tIdx = (ty * w + tx) * 4;
                     tR = tData.data[tIdx];
                     tG = tData.data[tIdx+1];
                     tB = tData.data[tIdx+2];
@@ -402,17 +473,17 @@
                 const sG = sData.data[sIdx+1];
                 const sB = sData.data[sIdx+2];
 
-                // Skip background environments
-                if (sR >= 250 && sG >= 250 && sB >= 250 && tR >= 250 && tG >= 250 && tB >= 250) continue;
+                // Skip mutual white background
+                if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
 
                 comparedPixels++;
 
                 if (!lab.checkColor) {
-                    const sGray = 0.299 * sR + 0.587 * sG + 0.114 * sB;
-                    const tGray = 0.299 * tR + 0.587 * tG + 0.114 * tB;
+                    const sGray = 0.299*sR + 0.587*sG + 0.114*sB;
+                    const tGray = 0.299*tR + 0.587*tG + 0.114*tB;
                     if (Math.abs(sGray - tGray) > threshold) mismatchPixels++;
                 } else {
-                    if (Math.abs(sR - tR) > threshold || Math.abs(sG - tG) > threshold || Math.abs(sB - tB) > threshold) {
+                    if (Math.abs(sR-tR) > threshold || Math.abs(sG-tG) > threshold || Math.abs(sB-tB) > threshold) {
                         mismatchPixels++;
                     }
                 }
@@ -426,8 +497,8 @@
 
         resultBox.style.display = "block";
         resultBox.className = passed ? "marker-pass" : "marker-fail";
-        title.innerText = passed ? "✅ PASSED" : "❌ FAILED";
-        detail.innerHTML = `Difference: ${errorPercent.toFixed(1)}%<br>Allowed Limit: ${lab.tolerance}%<br>Aligned layouts cleanly.`;
+        titleEl.innerText = passed ? "✅ PASSED" : "❌ FAILED";
+        detailEl.innerHTML = "Difference: " + errorPercent.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
     }
 
     window.onload = initLabs;
