@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE - Digitech Labs</title>
+    <title>Yaabs</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -38,9 +38,9 @@
 
         /* Target pane — small panel in the corner */
         #target-wrapper { width:33%; flex-shrink:0; background:#fff; display:flex; flex-direction:column; overflow:hidden; position:relative; }
-        #target-inner { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
-        #target-canvas { position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; }
-        #target-canvas canvas { display:block; }
+        #target-inner { flex-grow:1; overflow:hidden; background:#fff; }
+        #target-canvas { width:100%; height:100%; overflow:hidden; }
+        #target-canvas canvas { display:block; max-width:100%; max-height:100%; }
         .target-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; white-space:nowrap; }
 
         /* Right column: student canvas */
@@ -269,20 +269,17 @@ function runPython() {
 // Renders at a fixed 500x500 so the turtle has room, then scales
 // the canvas down with CSS to fit the visible pane.
 // ================================================================
-var TARGET_SIZE = 500;
-
 function renderTarget(solutionCode) {
     var inner = document.getElementById("target-inner");
     document.getElementById("target-canvas").innerHTML = "";
     document.getElementById("target-placeholder").style.display = "block";
 
-    skulptRun(instantWrap(solutionCode), "target-canvas", TARGET_SIZE, TARGET_SIZE, false, null).then(function() {
+    // Render at pane dimensions — no scaling needed, no clipping
+    var w = inner.offsetWidth  || 150;
+    var h = inner.offsetHeight || 200;
+
+    skulptRun(instantWrap(solutionCode), "target-canvas", w, h, false, null).then(function() {
         document.getElementById("target-placeholder").style.display = "none";
-        var canvas = document.querySelector("#target-canvas canvas");
-        if (!canvas) return;
-        var scale = Math.min(inner.offsetWidth / TARGET_SIZE, inner.offsetHeight / TARGET_SIZE);
-        canvas.style.transformOrigin = "top left";
-        canvas.style.transform = "scale(" + scale + ")";
     });
 }
 
