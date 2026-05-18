@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE - Digitech Labs</title>
+    <title>Yang</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -18,11 +18,11 @@
         .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; }
         .controls { display:flex; gap:10px; align-items:center; }
         button { border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; transition:0.2s; text-transform:uppercase; }
-        .btn-run  { background:#28a745; color:white; } .btn-run:hover  { background:#218838; }
-        .btn-save { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
+        .btn-run   { background:#28a745; color:white; } .btn-run:hover   { background:#218838; }
+        .btn-check { background:#007acc; color:white; } .btn-check:hover { background:#005f9e; }
+        .btn-save  { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
         .toggle-container { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
 
-        /* ── Layout ── */
         .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
 
         /* Left column */
@@ -31,21 +31,35 @@
         .panel-header { background:#2d2d2d; padding:5px 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; }
         #code-input { flex-grow:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; }
 
-        /* Bottom-left: console + target side by side */
+        /* Bottom-left: console + target */
         .bottom-panel { height:30%; display:flex; flex-direction:row; }
         #console-wrapper { flex:2; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
-        /* Target pane — small canvas live-rendered via Skulpt */
+        /* Target pane */
         #target-wrapper { flex:1; background:#fff; position:relative; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
         #target-canvas-area { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
         #target-canvas-area > div { width:100%; height:100%; }
-        .target-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; }
+        .canvas-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; white-space:nowrap; }
 
         /* Right column: student canvas */
         #output-container { width:55%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
         #canvas-wrapper { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
         #my-canvas { width:100%; height:100%; }
+
+        /* Zoom-to-fit: we scale the inner <canvas> element after render */
+        .canvas-area-inner canvas {
+            transform-origin: top left;
+            position: absolute;
+            top: 0; left: 0;
+        }
+
+        /* Marker result overlay */
+        #marker-result { position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.88); color:white; padding:14px 16px; border-radius:8px; display:none; z-index:100; min-width:190px; }
+        .marker-pass { border-left:5px solid #28a745; }
+        .marker-fail { border-left:5px solid #dc3545; }
+        .marker-title { font-weight:bold; margin-bottom:4px; font-size:14px; }
+        .marker-detail { font-size:12px; color:#ccc; line-height:1.6; }
     </style>
 </head>
 <body>
@@ -57,14 +71,13 @@
     </div>
     <div class="controls">
         <label class="toggle-container"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
-        <button class="btn-run" onclick="runPython()">▶ Run</button>
-        <button class="btn-save" onclick="downloadScript()">💾 Save .txt</button>
+        <button class="btn-run"   onclick="runPython()">▶ Run</button>
+        <button class="btn-check" onclick="checkAnswer()">✔ Auto-Check</button>
+        <button class="btn-save"  onclick="downloadScript()">💾 Save .txt</button>
     </div>
 </div>
 
 <div class="main-container">
-
-    <!-- LEFT: editor top, console + target bottom -->
     <div class="left-col">
         <div id="editor-wrapper">
             <div class="panel-header">Python Code</div>
@@ -77,21 +90,23 @@
             </div>
             <div id="target-wrapper">
                 <div class="panel-header" style="color:#333;background:rgba(255,255,255,0.92);">Target</div>
-                <div id="target-canvas-area">
+                <div id="target-canvas-area" class="canvas-area-inner">
                     <div id="target-canvas"></div>
-                    <span class="target-placeholder" id="target-placeholder">Loading...</span>
+                    <span class="canvas-placeholder" id="target-placeholder">Loading...</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- RIGHT: student output -->
     <div id="output-container">
-        <div id="canvas-wrapper">
+        <div id="canvas-wrapper" class="canvas-area-inner">
             <div id="my-canvas"></div>
         </div>
+        <div id="marker-result">
+            <div class="marker-title" id="marker-title">Result</div>
+            <div class="marker-detail" id="marker-detail"></div>
+        </div>
     </div>
-
 </div>
 
 <script>
@@ -99,25 +114,33 @@
 // LAB DATA
 // code         : starter scaffold shown to the student
 // solutionCode : rendered instantly into the Target pane on load
+// checkColor   : true = colour-sensitive diff, false = greyscale
+// tolerance    : max allowed % pixel difference to pass
 // ================================================================
 const LAB_DATA = [
     {
         id: 1,
         title: "Lab 1: The Square",
         code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a square with side length 100\n# Hint: a square has 4 sides and turns 90 degrees\n\nprint('Square complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)"
+        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)",
+        checkColor: false,
+        tolerance: 10
     },
     {
         id: 2,
         title: "Lab 2: Equilateral Triangle",
         code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a triangle with side length 150\n# Hint: a triangle has 3 sides. What angle does it turn?\n\nprint('Triangle complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)"
+        solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)",
+        checkColor: false,
+        tolerance: 10
     },
     {
         id: 3,
         title: "Lab 3: Coloured Row",
         code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw 3 red squares in a row\n# Each square has side length 50, spaced 70 apart\n\nprint('Row complete')",
-        solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()"
+        solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()",
+        checkColor: true,
+        tolerance: 10
     }
 ];
 
@@ -140,10 +163,7 @@ function instantWrap(code) {
     return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
 }
 
-// ================================================================
-// Skulpt can only run one program at a time — we queue renders
-// so the student Run and the target render never collide.
-// ================================================================
+// Sequential render queue so student Run and target render never collide
 var renderQueue = Promise.resolve();
 
 function skulptRun(code, targetId, width, height, animated, outputFn) {
@@ -163,6 +183,73 @@ function skulptRun(code, targetId, width, height, animated, outputFn) {
 }
 
 // ================================================================
+// ZOOM-TO-FIT
+// After Skulpt draws into a container div, it creates a <canvas>
+// inside it at the dimensions we specified. We read the bounding
+// box of non-white pixels, then CSS-scale the canvas so the drawn
+// content fills the visible pane with a small padding margin.
+// ================================================================
+var ZOOM_PADDING = 16; // px padding inside the pane after scaling
+
+function zoomToFit(containerDivId) {
+    var container = document.getElementById(containerDivId);
+    if (!container) return;
+    var canvas = container.querySelector("canvas");
+    if (!canvas) return;
+
+    var pane = canvas.parentElement; // the canvas-area-inner div
+    var paneW = pane.offsetWidth;
+    var paneH = pane.offsetHeight;
+
+    var ctx = canvas.getContext("2d");
+    var imgData;
+    try {
+        imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } catch(e) { return; }
+
+    // Find bounding box of non-white pixels
+    var data = imgData.data;
+    var cw = canvas.width, ch = canvas.height;
+    var minX = cw, minY = ch, maxX = 0, maxY = 0, found = false;
+    for (var y = 0; y < ch; y++) {
+        for (var x = 0; x < cw; x++) {
+            var i = (y * cw + x) * 4;
+            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+                found = true;
+            }
+        }
+    }
+
+    if (!found) return; // nothing drawn yet
+
+    var drawW = maxX - minX + 1;
+    var drawH = maxY - minY + 1;
+
+    // Scale so the drawn region fits inside the pane minus padding
+    var scaleX = (paneW - ZOOM_PADDING * 2) / drawW;
+    var scaleY = (paneH - ZOOM_PADDING * 2) / drawH;
+    var scale  = Math.min(scaleX, scaleY, 1); // never zoom in, only out
+
+    // After scaling, centre the drawn region inside the pane
+    var scaledW = cw * scale;
+    var scaledH = ch * scale;
+
+    // Offset so the drawn region ends up centred
+    var centreOffsetX = (paneW - drawW * scale) / 2 - minX * scale;
+    var centreOffsetY = (paneH - drawH * scale) / 2 - minY * scale;
+
+    canvas.style.transform       = "scale(" + scale + ")";
+    canvas.style.transformOrigin = "top left";
+    canvas.style.left            = centreOffsetX + "px";
+    canvas.style.top             = centreOffsetY + "px";
+    canvas.style.position        = "absolute";
+}
+
+// ================================================================
 // RUN STUDENT CODE
 // ================================================================
 function runPython() {
@@ -172,9 +259,14 @@ function runPython() {
 
     document.getElementById("console-output").innerHTML = "";
     document.getElementById("my-canvas").innerHTML = "";
+    document.getElementById("marker-result").style.display = "none";
 
     var finalCode = instant ? instantWrap(code) : code;
-    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf);
+
+    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf)
+        .then(function() {
+            zoomToFit("my-canvas");
+        });
 }
 
 // ================================================================
@@ -188,7 +280,128 @@ function renderTarget(solutionCode) {
     skulptRun(instantWrap(solutionCode), "target-canvas", area.offsetWidth, area.offsetHeight, false, null)
         .then(function() {
             document.getElementById("target-placeholder").style.display = "none";
+            zoomToFit("target-canvas");
         });
+}
+
+// ================================================================
+// AUTO-MARKER
+// Both canvases were rendered by the same Skulpt engine at the
+// same dimensions, so pixel comparison is now meaningful.
+// We align by bounding box centre before diffing so that a drawing
+// that is correctly shaped but slightly offset still passes.
+// ================================================================
+function getBoundingBox(data, w, h) {
+    var minX = w, minY = h, maxX = 0, maxY = 0, found = false;
+    for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+            var i = (y * w + x) * 4;
+            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+                found = true;
+            }
+        }
+    }
+    return found ? { x:minX, y:minY, w:maxX-minX+1, h:maxY-minY+1 } : null;
+}
+
+function checkAnswer() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+
+    var resultBox = document.getElementById("marker-result");
+    var titleEl   = document.getElementById("marker-title");
+    var detailEl  = document.getElementById("marker-detail");
+
+    var studentCanvas = document.querySelector("#my-canvas canvas");
+    if (!studentCanvas) { alert("Please run your code first!"); return; }
+
+    var targetCanvas = document.querySelector("#target-canvas canvas");
+    if (!targetCanvas) { alert("Target has not rendered yet — please wait a moment."); return; }
+
+    // Both canvases were rendered at the same dimensions
+    var w = studentCanvas.width;
+    var h = studentCanvas.height;
+
+    var sCtx = studentCanvas.getContext("2d");
+    var tCtx = targetCanvas.getContext("2d");
+
+    var sData, tData;
+    try {
+        sData = sCtx.getImageData(0, 0, w, h).data;
+        // Target canvas may be a different pixel size — normalise it
+        var normCanvas = document.createElement("canvas");
+        normCanvas.width  = w;
+        normCanvas.height = h;
+        var nCtx = normCanvas.getContext("2d");
+        nCtx.fillStyle = "#ffffff";
+        nCtx.fillRect(0, 0, w, h);
+        nCtx.drawImage(targetCanvas, 0, 0, w, h);
+        tData = nCtx.getImageData(0, 0, w, h).data;
+    } catch(e) {
+        alert("Could not read canvas pixel data.");
+        return;
+    }
+
+    var sBox = getBoundingBox(sData, w, h);
+    var tBox = getBoundingBox(tData, w, h);
+
+    if (!sBox) {
+        resultBox.style.display = "block";
+        resultBox.className     = "marker-fail";
+        titleEl.innerText  = "❌ FAILED";
+        detailEl.innerHTML = "Your canvas is empty — run your code first.";
+        return;
+    }
+
+    // Align by bounding box top-left corner
+    var offX = Math.round(sBox.x - tBox.x);
+    var offY = Math.round(sBox.y - tBox.y);
+
+    var mismatched = 0, compared = 0;
+    var threshold  = 40;
+
+    for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+            var si = (y * w + x) * 4;
+            var tx = x - offX;
+            var ty = y - offY;
+
+            var tR = 255, tG = 255, tB = 255;
+            if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
+                var ti = (ty * w + tx) * 4;
+                tR = tData[ti]; tG = tData[ti+1]; tB = tData[ti+2];
+            }
+
+            var sR = sData[si], sG = sData[si+1], sB = sData[si+2];
+
+            // Skip mutual white background
+            if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
+
+            compared++;
+
+            if (lab.checkColor) {
+                if (Math.abs(sR-tR) > threshold || Math.abs(sG-tG) > threshold || Math.abs(sB-tB) > threshold)
+                    mismatched++;
+            } else {
+                var sGray = 0.299*sR + 0.587*sG + 0.114*sB;
+                var tGray = 0.299*tR + 0.587*tG + 0.114*tB;
+                if (Math.abs(sGray - tGray) > threshold) mismatched++;
+            }
+        }
+    }
+
+    if (compared === 0) compared = 1;
+    var errorPct = (mismatched / compared) * 100;
+    var passed   = errorPct <= lab.tolerance;
+
+    resultBox.style.display = "block";
+    resultBox.className     = passed ? "marker-pass" : "marker-fail";
+    titleEl.innerText       = passed ? "✅ PASSED" : "❌ FAILED";
+    detailEl.innerHTML      = "Difference: " + errorPct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
 }
 
 // ================================================================
@@ -197,7 +410,7 @@ function renderTarget(solutionCode) {
 function initLabs() {
     var select = document.getElementById("lab-select");
     LAB_DATA.forEach(function(lab, i) {
-        var opt = document.createElement("option");
+        var opt   = document.createElement("option");
         opt.value = i;
         opt.text  = lab.title;
         select.appendChild(opt);
@@ -209,9 +422,10 @@ function loadLab() {
     var index = parseInt(document.getElementById("lab-select").value);
     var lab   = LAB_DATA[index];
 
-    document.getElementById("code-input").value         = lab.code;
-    document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
-    document.getElementById("my-canvas").innerHTML      = "";
+    document.getElementById("code-input").value          = lab.code;
+    document.getElementById("console-output").innerHTML  = "Loaded: " + lab.title;
+    document.getElementById("my-canvas").innerHTML       = "";
+    document.getElementById("marker-result").style.display = "none";
 
     requestAnimationFrame(function() {
         renderTarget(lab.solutionCode);
