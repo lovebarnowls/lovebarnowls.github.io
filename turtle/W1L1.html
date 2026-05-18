@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle Lab Playground</title>
+    <title>Yang</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
@@ -34,65 +34,134 @@
         /* Workspace Grid Matrix Layout */
         .main-container { display: flex; height: calc(100% - 130px); width: 100vw; }
         
-        /* Left Panel: Code Editor */
-        #editor-container { width: 45%; height: 100%; display: flex; flex-direction: column; border-right: 2px solid #333; }
-        #code-input { flex-grow: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; border: none; outline: none; resize: none; }
-
-        /* Right Panel: Output & Console Stack */
-        #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #1e1e1e; }
-        
-        /* Top Row: Student Canvas (Takes up roughly 60% of right side) */
-        #student-row { 
-            flex: 3; 
-            position: relative; 
-            background: #ffffff; 
-            border-bottom: 2px solid #333; 
+        /* LEFT PANEL: Code (Top) + Console/Target (Bottom) */
+        #left-panel { 
+            width: 45%; 
+            height: 100%; 
             display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: hidden; 
-        }
-        
-        .row-label { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #888; background: rgba(255,255,255,0.8); padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; z-index: 100; }
-        
-        #my-canvas { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-        /* Ensure Skulpt canvas fits nicely */
-        #my-canvas canvas { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
-
-        /* Bottom Row: Console (Left) + Target (Right) */
-        #bottom-panel { 
-            flex: 2; 
-            display: flex; 
-            background: #000; 
+            flex-direction: column; 
+            border-right: 2px solid #333; 
         }
 
-        /* Console Output Area (Left 2/3 of bottom panel) */
+        /* Code Editor Area */
+        #editor-wrapper {
+            flex: 2; /* Takes up 2/3 of left panel */
+            position: relative;
+            border-bottom: 1px solid #333;
+        }
+        #code-input { 
+            width: 100%; 
+            height: 100%; 
+            background: #1e1e1e; 
+            color: #d4d4d4; 
+            padding: 20px; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            font-size: 15px; 
+            border: none; 
+            outline: none; 
+            resize: none; 
+        }
+
+        /* Bottom Left Area: Console + Target */
+        #bottom-left-stack {
+            flex: 1; /* Takes up 1/3 of left panel */
+            display: flex;
+            background: #000;
+            min-height: 150px;
+        }
+
+        /* Console Output (Left 2/3 of bottom stack) */
         #console-wrapper {
-            width: 66.66%;
+            width: 65%;
             border-right: 1px solid #333;
             display: flex;
             flex-direction: column;
         }
-        .console-header { background: #252526; color: #aaa; font-size: 11px; padding: 5px 10px; text-transform: uppercase; border-bottom: 1px solid #333; }
-        #console-output { flex: 1; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; font-size: 13px; overflow-y: auto; white-space: pre-wrap; }
+        .panel-header { 
+            background: #252526; 
+            color: #aaa; 
+            font-size: 11px; 
+            padding: 5px 10px; 
+            text-transform: uppercase; 
+            border-bottom: 1px solid #333; 
+            font-weight: bold;
+        }
+        #console-output { 
+            flex: 1; 
+            color: #00ff00; 
+            padding: 10px; 
+            font-family: 'Consolas', monospace; 
+            font-size: 13px; 
+            overflow-y: auto; 
+            white-space: pre-wrap; 
+            margin: 0;
+        }
 
-        /* Target Image Area (Right 1/3 of bottom panel) */
+        /* Target Image (Right 1/3 of bottom stack) */
         #target-wrapper {
-            width: 33.33%;
+            width: 35%;
             background: #111;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
         #target-container {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 5px;
             background: #fafafa;
+            overflow: hidden;
         }
-        #targetCanvas { max-width: 100%; max-height: 100%; object-fit: contain; background: white; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+        #targetCanvas { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            background: white; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.2); 
+        }
+
+        /* RIGHT PANEL: Student Drawing (Full Height) */
+        #output-container { 
+            width: 55%; 
+            height: 100%; 
+            background-color: #ffffff; 
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .row-label { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            color: #888; 
+            background: rgba(255,255,255,0.8); 
+            padding: 3px 6px; 
+            border-radius: 4px; 
+            border: 1px solid #ccc; 
+            z-index: 100; 
+        }
+
+        #my-canvas { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        /* Ensure Skulpt canvas fits nicely */
+        #my-canvas canvas { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.1); 
+        }
     </style>
 </head>
 <body>
@@ -116,32 +185,27 @@
 </div>
 
 <div class="main-container">
-    <!-- LEFT: Code Editor -->
-    <div id="editor-container">
-        <textarea id="code-input" spellcheck="false"></textarea>
-    </div>
-
-    <!-- RIGHT: Output Stack -->
-    <div id="output-container">
+    
+    <!-- LEFT SIDE: Code, Console, Target -->
+    <div id="left-panel">
         
-        <!-- TOP: Student Drawing -->
-        <div id="student-row">
-            <div class="row-label">Your Live Output</div>
-            <div id="my-canvas"></div>
+        <!-- Top: Code Editor -->
+        <div id="editor-wrapper">
+            <textarea id="code-input" spellcheck="false"></textarea>
         </div>
-        
-        <!-- BOTTOM: Console (Left) + Target (Right) -->
-        <div id="bottom-panel">
+
+        <!-- Bottom: Console & Target Split -->
+        <div id="bottom-left-stack">
             
-            <!-- Console Log -->
+            <!-- Console -->
             <div id="console-wrapper">
-                <div class="console-header">Terminal Output</div>
+                <div class="panel-header">Terminal Output</div>
                 <pre id="console-output">Ready...</pre>
             </div>
 
-            <!-- Target Template -->
+            <!-- Target Image -->
             <div id="target-wrapper">
-                <div class="console-header">Target Template</div>
+                <div class="panel-header">Target Template</div>
                 <div id="target-container">
                     <canvas id="targetCanvas"></canvas>
                 </div>
@@ -149,6 +213,13 @@
 
         </div>
     </div>
+
+    <!-- RIGHT SIDE: Large Student Drawing Area -->
+    <div id="output-container">
+        <div class="row-label">Your Live Output</div>
+        <div id="my-canvas"></div>
+    </div>
+
 </div>
 
 <script type="text/javascript">
@@ -227,8 +298,8 @@
         img.onload = function() {
             // Scale image to fit the small target box nicely
             const container = document.getElementById("target-container");
-            const maxW = container.clientWidth - 20;
-            const maxH = container.clientHeight - 20;
+            const maxW = container.clientWidth - 10;
+            const maxH = container.clientHeight - 10;
             const scale = Math.min(maxW / img.width, maxH / img.height);
             
             const w = img.width * scale;
@@ -272,7 +343,7 @@
             finalCode = "import turtle\nturtle.speed(0)\nturtle.tracer(0, 0)\n" + userCode + "\nturtle.update()";
         }
 
-        var wrapper = document.getElementById("student-row");
+        var wrapper = document.getElementById("output-container");
         
         Sk.configure({ 
             output: outf, 
