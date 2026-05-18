@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Faithful Python IDE</title>
+    <title>Yang's Python Turtle IDE - Digitech Labs</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -35,7 +35,7 @@
         #console-wrapper { height:30%; display:flex; flex-direction:column; flex-shrink:0; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
-        #target-view { display:none; flex-grow:1; overflow:hidden; background:#fff; position:relative; }
+        #target-view { display:none; flex-grow:1; background:#fff; position:relative; overflow:hidden; }
 
         /* Right 50% */
         .right-col { width:50%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
@@ -158,22 +158,27 @@ function toggleView() {
 // top of their drawing at 50% opacity.
 // ================================================================
 function showOverlay() {
-    var overlay = document.getElementById("compare-overlay");
-    // Clear any previous clone
+    var overlay   = document.getElementById("compare-overlay");
     overlay.innerHTML = "";
 
-    // Find the solution drawing canvas (first canvas Skulpt created)
     var solCanvas = document.querySelector("#target-view canvas");
     if (!solCanvas) return;
 
-    // Clone it into the overlay
-    var clone = solCanvas.cloneNode(true);
-    clone.style.position = "absolute";
-    clone.style.top      = "0";
-    clone.style.left     = "0";
-    clone.style.width    = "100%";
-    clone.style.height   = "100%";
-    overlay.appendChild(clone);
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    // Draw solution onto a fresh canvas at exact student canvas dimensions
+    var c = document.createElement("canvas");
+    c.width  = solCanvas.width;
+    c.height = solCanvas.height;
+    c.style.position = "absolute";
+    c.style.top      = "0";
+    c.style.left     = "0";
+    c.style.width    = w + "px";
+    c.style.height   = h + "px";
+    c.getContext("2d").drawImage(solCanvas, 0, 0);
+    overlay.appendChild(c);
     overlay.style.display = "block";
 }
 
@@ -240,10 +245,19 @@ function runPython() {
 // RENDER TARGET
 // ================================================================
 function renderTarget(solutionCode) {
-    document.getElementById("target-view").innerHTML = "";
+    var targetView = document.getElementById("target-view");
+    targetView.innerHTML = "";
+
+    // Match student canvas dimensions exactly
     var wrapper = document.getElementById("my-canvas-wrapper");
     var w = wrapper.offsetWidth;
     var h = wrapper.offsetHeight;
+
+    // Give target-view explicit pixel dimensions so Skulpt
+    // does not rely on CSS flex to determine the canvas size
+    targetView.style.width  = w + "px";
+    targetView.style.height = h + "px";
+
     skulptRun(instantWrap(solutionCode), "target-view", w, h, false, null);
 }
 
