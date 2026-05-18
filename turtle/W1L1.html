@@ -48,15 +48,14 @@
         
         #sample-wrapper { width: 33.3%; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; overflow: hidden; }
         #sample-img { max-width: 100%; max-height: calc(100% - 28px); object-fit: contain; margin-top: 28px; }
-        .no-image-text { color: #333; font-size: 12px; font-style: italic; margin-top: 28px; }
+        .no-image-text { color: #333; font-size: 12px; font-style: italic; margin-top: 50px; text-align: center; font-weight: 500; }
 
         #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #fff; position: relative; }
         #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #fff; }
-        #my-canvas { width: 100%; height: 100%; }
+        #my-canvas { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
 
-        /* Hidden offscreen renders for solution canvases */
-        #offscreen-container { position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none; }
-        .offscreen-slot { width: 800px; height: 600px; background: #fff; }
+        /* Hidden offscreen container for solution renders */
+        #offscreen-container { position: absolute; left: -9999px; top: -9999px; width: 600px; height: 400px; overflow: hidden; }
 
         #marker-result {
             position: absolute; top: 20px; right: 20px; 
@@ -68,12 +67,10 @@
         }
         .marker-pass { border-left: 5px solid #28a745; }
         .marker-fail { border-left: 5px solid #dc3545; }
-        .marker-pending { border-left: 5px solid #ffc107; }
         .marker-title { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         .marker-detail { font-size: 12px; color: #ccc; }
 
         .toggle-container { font-size: 12px; display: flex; align-items: center; gap: 5px; color: #ccc; cursor: pointer; user-select: none; background: #333; padding: 4px 8px; border-radius: 4px; }
-
         #prerender-status { font-size: 11px; color: #888; padding: 2px 8px; }
     </style>
 </head>
@@ -87,7 +84,7 @@
     <div class="controls">
         <span id="prerender-status">Preparing solutions...</span>
         <label class="toggle-container">
-            <input type="checkbox" id="skip-anim"> ⚡ Instant
+            <input type="checkbox" id="skip-anim" checked> ⚡ Instant
         </label>
         <button class="btn-run" onclick="runPython()">▶ Run</button>
         <button class="btn-check" id="btn-check" onclick="checkAnswer()" disabled>✔ Auto-Check</button>
@@ -108,8 +105,8 @@
             </div>
             <div id="sample-wrapper">
                 <div class="panel-header" style="position:absolute; top:0; left:0; width:100%; background:rgba(255,255,255,0.9); color:#333; z-index:10; box-sizing:border-box;">Target</div>
-                <span class="no-image-text" id="no-img-text">Preparing...</span>
-                <img id="sample-img" style="display:none; max-width:100%; max-height:calc(100% - 28px); object-fit:contain; margin-top:28px;" alt="Target">
+                <span class="no-image-text" id="no-img-text">Preparing solution graphics...</span>
+                <img id="sample-img" style="display:none;" alt="Target Visual">
             </div>
         </div>
     </div>
@@ -125,55 +122,43 @@
     </div>
 </div>
 
-<!-- Hidden container for solution pre-renders -->
-<div id="offscreen-container"></div>
+<!-- Safe Workspace for Background Generator -->
+<div id="offscreen-container">
+    <div id="secret-canvas-slot" style="width: 600px; height: 400px; background: #ffffff;"></div>
+</div>
 
 <script type="text/javascript">
 
-    // ==========================================
-    // LAB DATA — add solutionCode to each lab.
-    // The starter 'code' is what the student sees.
-    // 'solutionCode' is rendered silently at load.
-    // 'checkColor' toggles colour-aware diffing.
-    // 'tolerance' is the allowed % pixel difference.
-    // ==========================================
     const LAB_DATA = [
         {
             id: 1,
             title: "Lab 1: The Square",
-            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a square with side length 100\n# Hint: a square has 4 sides and turns 90 degrees\n\nprint('Square complete')",
-            solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a square with side length 100\n\nprint('Square complete')",
+            solutionCode: "import turtle\nt = turtle.Turtle()\nfor i in range(4):\n    t.forward(100)\n    t.right(90)",
             checkColor: false,
-            tolerance: 10
+            tolerance: 12
         },
         {
             id: 2,
             title: "Lab 2: Equilateral Triangle",
-            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a triangle with side length 150\n# Hint: a triangle has 3 sides. What angle does it turn?\n\nprint('Triangle complete')",
-            solutionCode: "import turtle\n\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw a triangle with side length 150\n\nprint('Triangle complete')",
+            solutionCode: "import turtle\nt = turtle.Turtle()\nfor i in range(3):\n    t.forward(150)\n    t.left(120)",
             checkColor: false,
-            tolerance: 10
+            tolerance: 12
         },
         {
             id: 3,
             title: "Lab 3: Coloured Row",
             code: "import turtle\n\nt = turtle.Turtle()\nt.speed(3)\n\n# Draw 3 red squares in a row\n# Each square has side length 50, spaced 70 apart\n\nprint('Row complete')",
-            solutionCode: "import turtle\n\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()",
+            solutionCode: "import turtle\nt = turtle.Turtle()\nt.color('red')\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()",
             checkColor: true,
-            tolerance: 10
+            tolerance: 12
         }
     ];
 
-    // ==========================================
-    // SOLUTION RENDER STATE
-    // Stores { canvas, dataURL } per lab index
-    // ==========================================
+    // Global Key Map caching virtual data representations
     const solutionRenders = {};
-    let rendersComplete = 0;
 
-    // ==========================================
-    // SKULPT HELPERS
-    // ==========================================
     function outf(text) {
         var mypre = document.getElementById("console-output");
         mypre.innerHTML += text;
@@ -186,106 +171,78 @@
         return Sk.builtinFiles["files"][x];
     }
 
-    // Wraps solution code so it runs at speed(0) with tracer off for instant render
     function wrapInstant(code) {
         return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
     }
 
-    // ==========================================
-    // PRE-RENDER ALL SOLUTIONS AT PAGE LOAD
-    // Each solution is rendered sequentially into
-    // a hidden div, then the canvas is captured.
-    // ==========================================
+    // Sequential Engine generator to safely loop pre-renders asynchronously
     function prerenderSolutions() {
         const status = document.getElementById("prerender-status");
         renderNext(0);
 
         function renderNext(index) {
             if (index >= LAB_DATA.length) {
-                allRendersComplete();
+                status.textContent = "Ready ✓";
+                document.getElementById("btn-check").disabled = false;
+                updateThumbnail(document.getElementById("lab-select").value);
                 return;
             }
 
-            status.textContent = "Preparing " + (index + 1) + "/" + LAB_DATA.length + "...";
-
+            status.textContent = `Preparing ${index + 1}/${LAB_DATA.length}...`;
             const lab = LAB_DATA[index];
-            const slot = document.createElement("div");
-            slot.id = "offscreen-" + index;
-            slot.style.cssText = "width:800px;height:600px;background:#fff;position:relative;";
-            document.getElementById("offscreen-container").appendChild(slot);
+            const slot = document.getElementById("secret-canvas-slot");
+            slot.innerHTML = ""; // Hard clean target nodes 
 
             Sk.configure({ output: function(){}, read: builtinRead, __future__: Sk.python3 });
             Sk.TurtleGraphics = {
-                target: "offscreen-" + index,
-                width: 800,
-                height: 600,
+                target: "secret-canvas-slot",
+                width: 600,
+                height: 400,
                 animate: false
             };
 
-            const code = wrapInstant(lab.solutionCode);
+            const systemExecutable = wrapInstant(lab.solutionCode);
 
             Sk.misceval.asyncToPromise(function() {
-                return Sk.importMainWithBody("<stdin>", false, code, true);
+                return Sk.importMainWithBody("<stdin>", false, systemExecutable, true);
             }).then(function() {
-                // Small delay to ensure canvas has painted
+                // Yield thread calculation slightly to ensure canvas initialization buffer complete
                 setTimeout(function() {
                     const canvas = slot.querySelector("canvas");
                     if (canvas) {
-                        // Store the canvas reference and a data URL for the thumbnail
-                        try {
-                            const dataURL = canvas.toDataURL("image/png");
-                            solutionRenders[index] = { canvas: canvas, dataURL: dataURL };
-                        } catch(e) {
-                            console.warn("Could not capture solution canvas for lab " + index, e);
-                            solutionRenders[index] = null;
-                        }
+                        // Decouple pixel representations out of canvas pipeline context
+                        const imgData = canvas.getContext("2d").getImageData(0, 0, 600, 400);
+                        const dataURL = canvas.toDataURL("image/png");
+                        solutionRenders[index] = { rawBytes: imgData, thumbUrl: dataURL };
                     } else {
                         solutionRenders[index] = null;
                     }
                     renderNext(index + 1);
-                }, 300);
+                }, 100);
             }).catch(function(err) {
-                console.warn("Solution render failed for lab " + index + ":", err);
+                console.error(err);
                 solutionRenders[index] = null;
                 renderNext(index + 1);
             });
         }
     }
 
-    function allRendersComplete() {
-        const status = document.getElementById("prerender-status");
-        status.textContent = "Ready ✓";
-        setTimeout(function(){ status.textContent = ""; }, 2000);
-
-        document.getElementById("btn-check").disabled = false;
-
-        // Update thumbnail for the currently selected lab
-        updateThumbnail(document.getElementById("lab-select").value);
-    }
-
-    // ==========================================
-    // THUMBNAIL DISPLAY
-    // Shows the solution render in the Target panel
-    // ==========================================
     function updateThumbnail(index) {
         const render = solutionRenders[index];
         const imgEl = document.getElementById("sample-img");
         const noImgText = document.getElementById("no-img-text");
 
-        if (render && render.dataURL) {
-            imgEl.src = render.dataURL;
+        if (render && render.thumbUrl) {
+            imgEl.src = render.thumbUrl;
             imgEl.style.display = "block";
             noImgText.style.display = "none";
         } else {
             imgEl.style.display = "none";
             noImgText.style.display = "block";
-            noImgText.textContent = "No preview";
+            noImgText.textContent = "Preview rendering...";
         }
     }
 
-    // ==========================================
-    // STUDENT CODE RUNNER
-    // ==========================================
     function runPython() {
         var userCode = document.getElementById("code-input").value;
         var skipAnim = document.getElementById("skip-anim").checked;
@@ -296,13 +253,11 @@
 
         var finalCode = skipAnim ? wrapInstant(userCode) : userCode;
 
-        var wrapper = document.getElementById("canvas-wrapper");
-
         Sk.configure({ output: outf, read: builtinRead, __future__: Sk.python3 });
         Sk.TurtleGraphics = {
             target: 'my-canvas',
-            width: wrapper.offsetWidth,
-            height: wrapper.offsetHeight,
+            width: 600,
+            height: 400,
             animate: !skipAnim
         };
 
@@ -315,9 +270,6 @@
         });
     }
 
-    // ==========================================
-    // DOWNLOAD
-    // ==========================================
     function downloadScript() {
         const code = document.getElementById("code-input").value;
         const blob = new Blob([code], { type: "text/plain" });
@@ -329,9 +281,6 @@
         document.body.removeChild(a);
     }
 
-    // ==========================================
-    // LAB MANAGEMENT
-    // ==========================================
     function initLabs() {
         const select = document.getElementById("lab-select");
         LAB_DATA.forEach(function(lab, index) {
@@ -352,26 +301,23 @@
         document.getElementById("marker-result").style.display = "none";
         document.getElementById("my-canvas").innerHTML = "";
 
-        // If renders are already done, update thumbnail immediately
-        if (solutionRenders.hasOwnProperty(index)) {
+        if (solutionRenders[index]) {
             updateThumbnail(index);
         } else {
             document.getElementById("sample-img").style.display = "none";
             document.getElementById("no-img-text").style.display = "block";
-            document.getElementById("no-img-text").textContent = "Preparing...";
+            document.getElementById("no-img-text").textContent = "Preparing model solutions...";
         }
     }
 
-    // ==========================================
-    // BOUNDING BOX HELPER
-    // ==========================================
     function getBoundingBox(imageData, width, height) {
         let minX = width, minY = height, maxX = 0, maxY = 0;
         let hasContent = false;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const i = (y * width + x) * 4;
-                if (imageData.data[i] < 240 || imageData.data[i+1] < 240 || imageData.data[i+2] < 240) {
+                // Capture drawing pixels (not pure white background space)
+                if (imageData.data[i] < 245 || imageData.data[i+1] < 245 || imageData.data[i+2] < 245) {
                     if (x < minX) minX = x;
                     if (y < minY) minY = y;
                     if (x > maxX) maxX = x;
@@ -384,12 +330,6 @@
         return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
     }
 
-    // ==========================================
-    // AUTO MARKER
-    // Diffs student canvas against solution render.
-    // Both canvases come from Skulpt so resolution,
-    // anti-aliasing, and stroke width are identical.
-    // ==========================================
     function checkAnswer() {
         const index = parseInt(document.getElementById("lab-select").value);
         const lab = LAB_DATA[index];
@@ -399,24 +339,20 @@
 
         const studentCanvas = document.querySelector("#my-canvas canvas");
         if (!studentCanvas) {
-            alert("Please run your code first!");
+            alert("Please run your code first before trying to auto-check!");
             return;
         }
 
         const solutionRender = solutionRenders[index];
-        if (!solutionRender || !solutionRender.canvas) {
-            alert("Solution reference is not available. Please reload the page.");
+        if (!solutionRender) {
+            alert("Solution engine not ready yet.");
             return;
         }
 
-        const solCanvas = solutionRender.canvas;
+        const w = 600;
+        const h = 400;
 
-        // Both canvases should be the same size — but we normalise anyway
-        // by scaling the student canvas into an offscreen canvas matching
-        // the solution canvas dimensions, to eliminate any size discrepancy.
-        const w = solCanvas.width;
-        const h = solCanvas.height;
-
+        // Flatten client viewport variations to standardized size coordinates
         const normCanvas = document.createElement("canvas");
         normCanvas.width = w;
         normCanvas.height = h;
@@ -425,17 +361,9 @@
         normCtx.fillRect(0, 0, w, h);
         normCtx.drawImage(studentCanvas, 0, 0, w, h);
 
-        let sData, tData;
-        try {
-            sData = normCtx.getImageData(0, 0, w, h);
-            const solCtx = solCanvas.getContext("2d");
-            tData = solCtx.getImageData(0, 0, w, h);
-        } catch(e) {
-            alert("Could not read canvas pixel data. This may be a browser security restriction.");
-            return;
-        }
+        const sData = normCtx.getImageData(0, 0, w, h);
+        const tData = solutionRender.rawBytes;
 
-        // Find bounding boxes for alignment
         const sBox = getBoundingBox(sData, w, h);
         const tBox = getBoundingBox(tData, w, h);
 
@@ -443,17 +371,17 @@
             resultBox.style.display = "block";
             resultBox.className = "marker-fail";
             titleEl.innerText = "❌ FAILED";
-            detailEl.innerHTML = "Your canvas appears empty. Run your code first.";
+            detailEl.innerHTML = "Your workspace canvas appears completely empty.";
             return;
         }
 
-        // Offset to align top-left corners of both drawings
+        // Auto-alignment algorithm logic offsets positional starts
         const offsetX = sBox.x - tBox.x;
         const offsetY = sBox.y - tBox.y;
 
         let mismatchPixels = 0;
         let comparedPixels = 0;
-        const threshold = 40;
+        const threshold = 45; // Buffer variance to handle anti-aliasing artifacts smoothly
 
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
@@ -473,7 +401,6 @@
                 const sG = sData.data[sIdx+1];
                 const sB = sData.data[sIdx+2];
 
-                // Skip mutual white background
                 if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
 
                 comparedPixels++;
@@ -498,7 +425,7 @@
         resultBox.style.display = "block";
         resultBox.className = passed ? "marker-pass" : "marker-fail";
         titleEl.innerText = passed ? "✅ PASSED" : "❌ FAILED";
-        detailEl.innerHTML = "Difference: " + errorPercent.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
+        detailEl.innerHTML = "Difference: " + errorPercent.toFixed(1) + "%<br>Allowed Limit: " + lab.tolerance + "%";
     }
 
     window.onload = initLabs;
