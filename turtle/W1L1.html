@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's MVP</title>
+    <title>Yang's Digital Tech lessons</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -248,26 +248,9 @@ function renderTarget(solutionCode) {
 
 // ================================================================
 // AUTO-MARKER
-// Both canvases rendered by same Skulpt engine.
-// We normalise target to student canvas dimensions before diffing.
+// Direct pixel comparison — same engine, same canvas dimensions,
+// same turtle centre-origin, so no alignment needed.
 // ================================================================
-function getBBox(data, w, h) {
-    var minX = w, minY = h, maxX = 0, maxY = 0, found = false;
-    for (var y = 0; y < h; y++) {
-        for (var x = 0; x < w; x++) {
-            var i = (y * w + x) * 4;
-            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-                found = true;
-            }
-        }
-    }
-    return found ? { x:minX, y:minY, w:maxX-minX+1, h:maxY-minY+1 } : null;
-}
-
 function checkAnswer() {
     var index   = parseInt(document.getElementById("lab-select").value);
     var lab     = LAB_DATA[index];
@@ -296,10 +279,12 @@ function checkAnswer() {
         tData = nCtx.getImageData(0, 0, w, h).data;
     } catch(e) { alert("Could not read canvas data: " + e); return; }
 
-    var sBox = getBBox(sData, w, h);
-    var tBox = getBBox(tData, w, h);
-
-    if (!sBox) {
+    // Check student canvas is not empty
+    var hasContent = false;
+    for (var ci = 0; ci < sData.length; ci += 4) {
+        if (sData[ci] < 240 || sData[ci+1] < 240 || sData[ci+2] < 240) { hasContent = true; break; }
+    }
+    if (!hasContent) {
         rBox.style.display = "block";
         rBox.className = "marker-fail";
         rTitle.innerText = "❌ FAILED";
@@ -307,22 +292,16 @@ function checkAnswer() {
         return;
     }
 
-    // Align by bounding box so position offset does not penalise correct drawings
-    var offX = sBox.x - tBox.x;
-    var offY = sBox.y - tBox.y;
-
+    // Direct pixel comparison — no offset, no bounding box alignment.
+    // Both canvases are same size, same engine, turtle starts at same centre.
     var mismatched = 0, compared = 0, threshold = 40;
 
     for (var y = 0; y < h; y++) {
         for (var x = 0; x < w; x++) {
             var si = (y * w + x) * 4;
-            var tx = x - offX, ty = y - offY;
-            var tR = 255, tG = 255, tB = 255;
-            if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
-                var ti = (ty * w + tx) * 4;
-                tR = tData[ti]; tG = tData[ti+1]; tB = tData[ti+2];
-            }
             var sR = sData[si], sG = sData[si+1], sB = sData[si+2];
+            var tR = tData[si], tG = tData[si+1], tB = tData[si+2];
+            // Skip mutual white background
             if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
             compared++;
             if (lab.checkColor) {
