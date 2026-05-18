@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang</title>
+    <title>Yang's Python Turtle IDE - Digitech Labs</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -31,30 +31,26 @@
         .panel-header { background:#2d2d2d; padding:5px 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; }
         #code-input { flex-grow:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; }
 
-        /* Bottom-left: console + target */
-        .bottom-panel { height:30%; display:flex; flex-direction:row; }
-        #console-wrapper { flex:2; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; }
+        /* Bottom-left: console + target side by side */
+        .bottom-panel { height:30%; display:flex; flex-direction:row; overflow:hidden; }
+        #console-wrapper { flex:2; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; overflow:hidden; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
-        /* Target pane */
-        #target-wrapper { flex:1; background:#fff; position:relative; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
-        #target-canvas-area { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
-        #target-canvas-area > div { width:100%; height:100%; }
-        .canvas-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; white-space:nowrap; }
+        /* Target pane — small panel in the corner */
+        #target-wrapper { flex:1; background:#fff; display:flex; flex-direction:column; min-width:0; overflow:hidden; position:relative; }
+        #target-inner { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
+        /* Skulpt creates a canvas directly inside #target-inner via the div#target-canvas child */
+        #target-canvas { width:100%; height:100%; }
+        #target-canvas canvas { display:block; }
+        .target-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; white-space:nowrap; }
 
         /* Right column: student canvas */
         #output-container { width:55%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
-        #canvas-wrapper { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
+        #canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
         #my-canvas { width:100%; height:100%; }
+        #my-canvas canvas { display:block; }
 
-        /* Zoom-to-fit: we scale the inner <canvas> element after render */
-        .canvas-area-inner canvas {
-            transform-origin: top left;
-            position: absolute;
-            top: 0; left: 0;
-        }
-
-        /* Marker result overlay */
+        /* Marker overlay */
         #marker-result { position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.88); color:white; padding:14px 16px; border-radius:8px; display:none; z-index:100; min-width:190px; }
         .marker-pass { border-left:5px solid #28a745; }
         .marker-fail { border-left:5px solid #dc3545; }
@@ -90,16 +86,16 @@
             </div>
             <div id="target-wrapper">
                 <div class="panel-header" style="color:#333;background:rgba(255,255,255,0.92);">Target</div>
-                <div id="target-canvas-area" class="canvas-area-inner">
+                <div id="target-inner">
                     <div id="target-canvas"></div>
-                    <span class="canvas-placeholder" id="target-placeholder">Loading...</span>
+                    <span class="target-placeholder" id="target-placeholder">Loading...</span>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="output-container">
-        <div id="canvas-wrapper" class="canvas-area-inner">
+        <div id="canvas-wrapper">
             <div id="my-canvas"></div>
         </div>
         <div id="marker-result">
@@ -112,12 +108,8 @@
 <script>
 // ================================================================
 // LAB DATA
-// code         : starter scaffold shown to the student
-// solutionCode : rendered instantly into the Target pane on load
-// checkColor   : true = colour-sensitive diff, false = greyscale
-// tolerance    : max allowed % pixel difference to pass
 // ================================================================
-const LAB_DATA = [
+var LAB_DATA = [
     {
         id: 1,
         title: "Lab 1: The Square",
@@ -163,14 +155,14 @@ function instantWrap(code) {
     return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
 }
 
-// Sequential render queue so student Run and target render never collide
+// Sequential queue — Skulpt can only run one program at a time
 var renderQueue = Promise.resolve();
 
-function skulptRun(code, targetId, width, height, animated, outputFn) {
+function skulptRun(code, divId, width, height, animated, outputFn) {
     renderQueue = renderQueue.then(function() {
         return new Promise(function(resolve) {
             Sk.configure({ output: outputFn || function(){}, read: builtinRead, __future__: Sk.python3 });
-            Sk.TurtleGraphics = { target: targetId, width: width, height: height, animate: animated };
+            Sk.TurtleGraphics = { target: divId, width: width, height: height, animate: animated };
             Sk.misceval.asyncToPromise(function() {
                 return Sk.importMainWithBody("<stdin>", false, code, true);
             }).then(resolve, function(err) {
@@ -184,37 +176,38 @@ function skulptRun(code, targetId, width, height, animated, outputFn) {
 
 // ================================================================
 // ZOOM-TO-FIT
-// After Skulpt draws into a container div, it creates a <canvas>
-// inside it at the dimensions we specified. We read the bounding
-// box of non-white pixels, then CSS-scale the canvas so the drawn
-// content fills the visible pane with a small padding margin.
+// Reads the bounding box of drawn (non-white) pixels on the canvas
+// then uses CSS transform to scale and centre the drawing within
+// the visible pane. The canvas itself is NOT moved — only scaled
+// around a calculated transform-origin so it stays in-flow.
 // ================================================================
-var ZOOM_PADDING = 16; // px padding inside the pane after scaling
+var ZOOM_PAD = 12;
 
-function zoomToFit(containerDivId) {
-    var container = document.getElementById(containerDivId);
-    if (!container) return;
-    var canvas = container.querySelector("canvas");
+function zoomToFit(divId) {
+    var div    = document.getElementById(divId);
+    if (!div) return;
+    var canvas = div.querySelector("canvas");
     if (!canvas) return;
 
-    var pane = canvas.parentElement; // the canvas-area-inner div
+    // The pane is the div's parent (target-inner or canvas-wrapper)
+    var pane  = div.parentElement;
     var paneW = pane.offsetWidth;
     var paneH = pane.offsetHeight;
+    if (!paneW || !paneH) return;
+
+    var cw = canvas.width;
+    var ch = canvas.height;
+    if (!cw || !ch) return;
 
     var ctx = canvas.getContext("2d");
-    var imgData;
-    try {
-        imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    } catch(e) { return; }
+    var d;
+    try { d = ctx.getImageData(0, 0, cw, ch).data; } catch(e) { return; }
 
-    // Find bounding box of non-white pixels
-    var data = imgData.data;
-    var cw = canvas.width, ch = canvas.height;
     var minX = cw, minY = ch, maxX = 0, maxY = 0, found = false;
     for (var y = 0; y < ch; y++) {
         for (var x = 0; x < cw; x++) {
             var i = (y * cw + x) * 4;
-            if (data[i] < 240 || data[i+1] < 240 || data[i+2] < 240) {
+            if (d[i] < 240 || d[i+1] < 240 || d[i+2] < 240) {
                 if (x < minX) minX = x;
                 if (y < minY) minY = y;
                 if (x > maxX) maxX = x;
@@ -223,30 +216,34 @@ function zoomToFit(containerDivId) {
             }
         }
     }
-
-    if (!found) return; // nothing drawn yet
+    if (!found) return;
 
     var drawW = maxX - minX + 1;
     var drawH = maxY - minY + 1;
 
-    // Scale so the drawn region fits inside the pane minus padding
-    var scaleX = (paneW - ZOOM_PADDING * 2) / drawW;
-    var scaleY = (paneH - ZOOM_PADDING * 2) / drawH;
-    var scale  = Math.min(scaleX, scaleY, 1); // never zoom in, only out
+    // Scale to fit inside the pane with padding — never enlarge
+    var scale = Math.min(
+        (paneW - ZOOM_PAD * 2) / drawW,
+        (paneH - ZOOM_PAD * 2) / drawH,
+        1
+    );
 
-    // After scaling, centre the drawn region inside the pane
-    var scaledW = cw * scale;
-    var scaledH = ch * scale;
+    // Where the drawn region's top-left ends up after scaling from origin (0,0)
+    // We want it centred, so shift the origin so that the centre of the
+    // drawn region maps to the centre of the pane.
+    var drawnCentreX = (minX + drawW / 2) * scale;
+    var drawnCentreY = (minY + drawH / 2) * scale;
+    var paneCentreX  = paneW / 2;
+    var paneCentreY  = paneH / 2;
 
-    // Offset so the drawn region ends up centred
-    var centreOffsetX = (paneW - drawW * scale) / 2 - minX * scale;
-    var centreOffsetY = (paneH - drawH * scale) / 2 - minY * scale;
+    // transform-origin shift needed (CSS uses the point on the *original* canvas)
+    // Simpler: just use translate + scale via transform property
+    var tx = paneCentreX - (minX + drawW / 2) * scale;
+    var ty = paneCentreY - (minY + drawH / 2) * scale;
 
-    canvas.style.transform       = "scale(" + scale + ")";
-    canvas.style.transformOrigin = "top left";
-    canvas.style.left            = centreOffsetX + "px";
-    canvas.style.top             = centreOffsetY + "px";
-    canvas.style.position        = "absolute";
+    canvas.style.transformOrigin = "0 0";
+    canvas.style.transform = "translate(" + tx + "px, " + ty + "px) scale(" + scale + ")";
+    canvas.style.display = "block";
 }
 
 // ================================================================
@@ -261,37 +258,38 @@ function runPython() {
     document.getElementById("my-canvas").innerHTML = "";
     document.getElementById("marker-result").style.display = "none";
 
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
     var finalCode = instant ? instantWrap(code) : code;
 
-    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf)
-        .then(function() {
-            zoomToFit("my-canvas");
-        });
+    skulptRun(finalCode, "my-canvas", w, h, !instant, outf).then(function() {
+        zoomToFit("my-canvas");
+    });
 }
 
 // ================================================================
 // RENDER SOLUTION INTO TARGET PANE
 // ================================================================
 function renderTarget(solutionCode) {
-    var area = document.getElementById("target-canvas-area");
+    var inner = document.getElementById("target-inner");
     document.getElementById("target-canvas").innerHTML = "";
     document.getElementById("target-placeholder").style.display = "block";
 
-    skulptRun(instantWrap(solutionCode), "target-canvas", area.offsetWidth, area.offsetHeight, false, null)
-        .then(function() {
-            document.getElementById("target-placeholder").style.display = "none";
-            zoomToFit("target-canvas");
-        });
+    var w = inner.offsetWidth;
+    var h = inner.offsetHeight;
+
+    skulptRun(instantWrap(solutionCode), "target-canvas", w, h, false, null).then(function() {
+        document.getElementById("target-placeholder").style.display = "none";
+        zoomToFit("target-canvas");
+    });
 }
 
 // ================================================================
 // AUTO-MARKER
-// Both canvases were rendered by the same Skulpt engine at the
-// same dimensions, so pixel comparison is now meaningful.
-// We align by bounding box centre before diffing so that a drawing
-// that is correctly shaped but slightly offset still passes.
+// Both canvases are rendered by the same Skulpt engine at the same
+// dimensions so pixel comparison is genuinely meaningful.
 // ================================================================
-function getBoundingBox(data, w, h) {
+function getBBox(data, w, h) {
     var minX = w, minY = h, maxX = 0, maxY = 0, found = false;
     for (var y = 0; y < h; y++) {
         for (var x = 0; x < w; x++) {
@@ -311,97 +309,77 @@ function getBoundingBox(data, w, h) {
 function checkAnswer() {
     var index = parseInt(document.getElementById("lab-select").value);
     var lab   = LAB_DATA[index];
+    var rBox  = document.getElementById("marker-result");
+    var rTitle = document.getElementById("marker-title");
+    var rDetail = document.getElementById("marker-detail");
 
-    var resultBox = document.getElementById("marker-result");
-    var titleEl   = document.getElementById("marker-title");
-    var detailEl  = document.getElementById("marker-detail");
+    var sCanvas = document.querySelector("#my-canvas canvas");
+    if (!sCanvas) { alert("Please run your code first!"); return; }
 
-    var studentCanvas = document.querySelector("#my-canvas canvas");
-    if (!studentCanvas) { alert("Please run your code first!"); return; }
+    var tCanvas = document.querySelector("#target-canvas canvas");
+    if (!tCanvas) { alert("Target has not rendered yet."); return; }
 
-    var targetCanvas = document.querySelector("#target-canvas canvas");
-    if (!targetCanvas) { alert("Target has not rendered yet — please wait a moment."); return; }
-
-    // Both canvases were rendered at the same dimensions
-    var w = studentCanvas.width;
-    var h = studentCanvas.height;
-
-    var sCtx = studentCanvas.getContext("2d");
-    var tCtx = targetCanvas.getContext("2d");
+    var w = sCanvas.width;
+    var h = sCanvas.height;
 
     var sData, tData;
     try {
-        sData = sCtx.getImageData(0, 0, w, h).data;
-        // Target canvas may be a different pixel size — normalise it
-        var normCanvas = document.createElement("canvas");
-        normCanvas.width  = w;
-        normCanvas.height = h;
-        var nCtx = normCanvas.getContext("2d");
-        nCtx.fillStyle = "#ffffff";
+        sData = sCanvas.getContext("2d").getImageData(0, 0, w, h).data;
+        // Normalise target to same pixel dimensions as student canvas
+        var norm = document.createElement("canvas");
+        norm.width = w; norm.height = h;
+        var nCtx = norm.getContext("2d");
+        nCtx.fillStyle = "#fff";
         nCtx.fillRect(0, 0, w, h);
-        nCtx.drawImage(targetCanvas, 0, 0, w, h);
+        nCtx.drawImage(tCanvas, 0, 0, w, h);
         tData = nCtx.getImageData(0, 0, w, h).data;
-    } catch(e) {
-        alert("Could not read canvas pixel data.");
-        return;
-    }
+    } catch(e) { alert("Could not read canvas data."); return; }
 
-    var sBox = getBoundingBox(sData, w, h);
-    var tBox = getBoundingBox(tData, w, h);
+    var sBox = getBBox(sData, w, h);
+    var tBox = getBBox(tData, w, h);
 
     if (!sBox) {
-        resultBox.style.display = "block";
-        resultBox.className     = "marker-fail";
-        titleEl.innerText  = "❌ FAILED";
-        detailEl.innerHTML = "Your canvas is empty — run your code first.";
+        rBox.style.display = "block";
+        rBox.className = "marker-fail";
+        rTitle.innerText = "❌ FAILED";
+        rDetail.innerHTML = "Canvas is empty — run your code first.";
         return;
     }
 
-    // Align by bounding box top-left corner
-    var offX = Math.round(sBox.x - tBox.x);
-    var offY = Math.round(sBox.y - tBox.y);
+    // Align drawings by top-left corner of their bounding boxes
+    var offX = sBox.x - tBox.x;
+    var offY = sBox.y - tBox.y;
 
-    var mismatched = 0, compared = 0;
-    var threshold  = 40;
+    var mismatched = 0, compared = 0, threshold = 40;
 
     for (var y = 0; y < h; y++) {
         for (var x = 0; x < w; x++) {
             var si = (y * w + x) * 4;
-            var tx = x - offX;
-            var ty = y - offY;
-
+            var tx = x - offX, ty = y - offY;
             var tR = 255, tG = 255, tB = 255;
             if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
                 var ti = (ty * w + tx) * 4;
                 tR = tData[ti]; tG = tData[ti+1]; tB = tData[ti+2];
             }
-
             var sR = sData[si], sG = sData[si+1], sB = sData[si+2];
-
-            // Skip mutual white background
             if (sR > 250 && sG > 250 && sB > 250 && tR > 250 && tG > 250 && tB > 250) continue;
-
             compared++;
-
             if (lab.checkColor) {
-                if (Math.abs(sR-tR) > threshold || Math.abs(sG-tG) > threshold || Math.abs(sB-tB) > threshold)
-                    mismatched++;
+                if (Math.abs(sR-tR) > threshold || Math.abs(sG-tG) > threshold || Math.abs(sB-tB) > threshold) mismatched++;
             } else {
-                var sGray = 0.299*sR + 0.587*sG + 0.114*sB;
-                var tGray = 0.299*tR + 0.587*tG + 0.114*tB;
-                if (Math.abs(sGray - tGray) > threshold) mismatched++;
+                if (Math.abs(0.299*sR + 0.587*sG + 0.114*sB - (0.299*tR + 0.587*tG + 0.114*tB)) > threshold) mismatched++;
             }
         }
     }
 
     if (compared === 0) compared = 1;
-    var errorPct = (mismatched / compared) * 100;
-    var passed   = errorPct <= lab.tolerance;
+    var pct = (mismatched / compared) * 100;
+    var passed = pct <= lab.tolerance;
 
-    resultBox.style.display = "block";
-    resultBox.className     = passed ? "marker-pass" : "marker-fail";
-    titleEl.innerText       = passed ? "✅ PASSED" : "❌ FAILED";
-    detailEl.innerHTML      = "Difference: " + errorPct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
+    rBox.style.display = "block";
+    rBox.className = passed ? "marker-pass" : "marker-fail";
+    rTitle.innerText = passed ? "✅ PASSED" : "❌ FAILED";
+    rDetail.innerHTML = "Difference: " + pct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
 }
 
 // ================================================================
@@ -410,9 +388,8 @@ function checkAnswer() {
 function initLabs() {
     var select = document.getElementById("lab-select");
     LAB_DATA.forEach(function(lab, i) {
-        var opt   = document.createElement("option");
-        opt.value = i;
-        opt.text  = lab.title;
+        var opt = document.createElement("option");
+        opt.value = i; opt.text = lab.title;
         select.appendChild(opt);
     });
     loadLab();
@@ -421,15 +398,11 @@ function initLabs() {
 function loadLab() {
     var index = parseInt(document.getElementById("lab-select").value);
     var lab   = LAB_DATA[index];
-
-    document.getElementById("code-input").value          = lab.code;
-    document.getElementById("console-output").innerHTML  = "Loaded: " + lab.title;
-    document.getElementById("my-canvas").innerHTML       = "";
+    document.getElementById("code-input").value         = lab.code;
+    document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
+    document.getElementById("my-canvas").innerHTML      = "";
     document.getElementById("marker-result").style.display = "none";
-
-    requestAnimationFrame(function() {
-        renderTarget(lab.solutionCode);
-    });
+    requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
 }
 
 // ================================================================
@@ -437,12 +410,10 @@ function loadLab() {
 // ================================================================
 function downloadScript() {
     var blob = new Blob([document.getElementById("code-input").value], { type:"text/plain" });
-    var a    = document.createElement("a");
-    a.href   = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
     a.download = "my_turtle_program.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 window.onload = initLabs;
