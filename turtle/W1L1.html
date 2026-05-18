@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Y</title>
+    <title>Yang's Python Turtle IDE - Digitech Labs</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -33,14 +33,13 @@
 
         /* Bottom-left: console + target side by side */
         .bottom-panel { height:30%; display:flex; flex-direction:row; overflow:hidden; }
-        #console-wrapper { flex:2; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+        #console-wrapper { flex:1; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; overflow:hidden; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
         /* Target pane — small panel in the corner */
-        #target-wrapper { flex:1; background:#fff; display:flex; flex-direction:column; min-width:0; overflow:hidden; position:relative; }
+        #target-wrapper { width:33%; flex-shrink:0; background:#fff; display:flex; flex-direction:column; overflow:hidden; position:relative; }
         #target-inner { flex-grow:1; position:relative; overflow:hidden; background:#fff; }
-        /* Skulpt creates a canvas directly inside #target-inner via the div#target-canvas child */
-        #target-canvas { width:100%; height:100%; }
+        #target-canvas { position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; }
         #target-canvas canvas { display:block; }
         .target-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; white-space:nowrap; }
 
