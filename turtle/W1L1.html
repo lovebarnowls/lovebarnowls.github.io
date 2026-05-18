@@ -20,6 +20,7 @@
         button { border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; transition:0.2s; text-transform:uppercase; }
         .btn-run  { background:#28a745; color:white; } .btn-run:hover  { background:#218838; }
         .btn-save { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
+        .btn-complete { background:#9b59b6; color:white; } .btn-complete:hover { background:#7d3c98; }
         .toggle-anim { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
 
         .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
@@ -65,7 +66,8 @@
                 ontouchstart="showOverlay()" ontouchend="hideOverlay()">
             👁 Hold to Compare
         </button>
-        <button class="btn-save" onclick="downloadScript()">💾 Save .txt</button>
+        <button class="btn-save" onclick="downloadScript()">📤 Export Code</button>
+        <button class="btn-complete" onclick="showComplete()">✔ Complete</button>
     </div>
 </div>
 
@@ -123,7 +125,9 @@ print('Square complete')`,
 faithful = turtle.Turtle()
 for i in range(4):
     faithful.forward(100)
-    faithful.right(90)`
+    faithful.right(90)`,
+        completeText: `Great work! You have drawn a square using a loop.
+Check that your drawing matches the target, then click OK to move on to the next lab.`
     },
     {
         id: 2,
@@ -142,7 +146,9 @@ print('Triangle complete')`,
 faithful = turtle.Turtle()
 for i in range(3):
     faithful.forward(150)
-    faithful.left(120)`
+    faithful.left(120)`,
+        completeText: `Excellent! A triangle turns a different angle to a square.
+Check your drawing matches the target, then click OK to continue.`
     },
     {
         id: 3,
@@ -166,7 +172,10 @@ for sq in range(3):
         faithful.right(90)
     faithful.penup()
     faithful.forward(70)
-    faithful.pendown()`
+    faithful.pendown()`,
+        finalText: `Congratulations — you have completed all three labs!
+You have practised drawing shapes, turning angles, and using colour.
+Next lesson we will explore more complex patterns. Well done!`
     }
 ];
 
@@ -333,7 +342,42 @@ function downloadScript() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
+
+// ================================================================
+// COMPLETION MODAL
+// ================================================================
+function showComplete() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var isLast = index >= LAB_DATA.length - 1;
+    var text  = isLast ? (lab.finalText || "Congratulations — you have completed all labs!") 
+                       : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+    document.getElementById("complete-modal-text").textContent = text;
+    document.getElementById("complete-modal").style.display = "flex";
+}
+
+function confirmComplete() {
+    document.getElementById("complete-modal").style.display = "none";
+    var index = parseInt(document.getElementById("lab-select").value);
+    var isLast = index >= LAB_DATA.length - 1;
+    if (!isLast) {
+        document.getElementById("lab-select").value = index + 1;
+        loadLab();
+    }
+}
+
 window.onload = initLabs;
 </script>
+
+<!-- Completion modal -->
+<div id="complete-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:480px; width:90%; border:1px solid #444; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="font-size:32px; text-align:center; margin-bottom:16px;">🎉</div>
+        <p id="complete-modal-text" style="font-size:15px; line-height:1.7; margin:0 0 24px; white-space:pre-wrap;"></p>
+        <div style="text-align:center;">
+            <button onclick="confirmComplete()" style="background:#4EC9B0; color:#1e1e1e; border:none; padding:10px 32px; border-radius:5px; font-size:14px; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px;">OK</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
