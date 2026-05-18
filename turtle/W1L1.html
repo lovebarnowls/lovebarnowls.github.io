@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE - Digitech Labs</title>
+    <title>Y</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -262,25 +262,28 @@ function runPython() {
     var h = wrapper.offsetHeight;
     var finalCode = instant ? instantWrap(code) : code;
 
-    skulptRun(finalCode, "my-canvas", w, h, !instant, outf).then(function() {
-        zoomToFit("my-canvas");
-    });
+    skulptRun(finalCode, "my-canvas", w, h, !instant, outf);
 }
 
 // ================================================================
 // RENDER SOLUTION INTO TARGET PANE
+// Renders at a fixed 500x500 so the turtle has room, then scales
+// the canvas down with CSS to fit the visible pane.
 // ================================================================
+var TARGET_SIZE = 500;
+
 function renderTarget(solutionCode) {
     var inner = document.getElementById("target-inner");
     document.getElementById("target-canvas").innerHTML = "";
     document.getElementById("target-placeholder").style.display = "block";
 
-    var w = inner.offsetWidth;
-    var h = inner.offsetHeight;
-
-    skulptRun(instantWrap(solutionCode), "target-canvas", w, h, false, null).then(function() {
+    skulptRun(instantWrap(solutionCode), "target-canvas", TARGET_SIZE, TARGET_SIZE, false, null).then(function() {
         document.getElementById("target-placeholder").style.display = "none";
-        zoomToFit("target-canvas");
+        var canvas = document.querySelector("#target-canvas canvas");
+        if (!canvas) return;
+        var scale = Math.min(inner.offsetWidth / TARGET_SIZE, inner.offsetHeight / TARGET_SIZE);
+        canvas.style.transformOrigin = "top left";
+        canvas.style.transform = "scale(" + scale + ")";
     });
 }
 
