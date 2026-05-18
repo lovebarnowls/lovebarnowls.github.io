@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yaabs</title>
+    <title>Yang's Python Turtle IDE - Digitech Labs</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -31,23 +31,25 @@
         .panel-header { background:#2d2d2d; padding:5px 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; }
         #code-input { flex-grow:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; }
 
-        /* Bottom-left: console + target side by side */
+        /* Bottom-left: console + target */
         .bottom-panel { height:30%; display:flex; flex-direction:row; overflow:hidden; }
         #console-wrapper { flex:1; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; overflow:hidden; }
         #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
 
-        /* Target pane — small panel in the corner */
+        /* Target thumbnail pane */
         #target-wrapper { width:33%; flex-shrink:0; background:#fff; display:flex; flex-direction:column; overflow:hidden; position:relative; }
-        #target-inner { flex-grow:1; overflow:hidden; background:#fff; }
-        #target-canvas { width:100%; height:100%; overflow:hidden; }
-        #target-canvas canvas { display:block; max-width:100%; max-height:100%; }
-        .target-placeholder { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#999; font-size:11px; font-style:italic; pointer-events:none; white-space:nowrap; }
+        #target-inner { flex-grow:1; position:relative; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; }
+        #target-img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
+        #target-placeholder { color:#999; font-size:11px; font-style:italic; }
 
         /* Right column: student canvas */
         #output-container { width:55%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
         #canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
         #my-canvas { width:100%; height:100%; }
-        #my-canvas canvas { display:block; }
+
+        /* Hidden solution render — visible to Skulpt but covered by a white overlay */
+        #solution-stage-wrapper { position:fixed; bottom:0; right:0; width:0; height:0; overflow:hidden; }
+        #solution-stage { position:absolute; bottom:0; right:0; }
 
         /* Marker overlay */
         #marker-result { position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.88); color:white; padding:14px 16px; border-radius:8px; display:none; z-index:100; min-width:190px; }
@@ -66,9 +68,9 @@
     </div>
     <div class="controls">
         <label class="toggle-container"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
-        <button class="btn-run"   onclick="runPython()">▶ Run</button>
-        <button class="btn-check" onclick="checkAnswer()">✔ Auto-Check</button>
-        <button class="btn-save"  onclick="downloadScript()">💾 Save .txt</button>
+        <button class="btn-run"   onclick="runPython()">&#9654; Run</button>
+        <button class="btn-check" onclick="checkAnswer()">&#10004; Auto-Check</button>
+        <button class="btn-save"  onclick="downloadScript()">&#128190; Save .txt</button>
     </div>
 </div>
 
@@ -86,8 +88,8 @@
             <div id="target-wrapper">
                 <div class="panel-header" style="color:#333;background:rgba(255,255,255,0.92);">Target</div>
                 <div id="target-inner">
-                    <div id="target-canvas"></div>
-                    <span class="target-placeholder" id="target-placeholder">Loading...</span>
+                    <span id="target-placeholder">Loading...</span>
+                    <img id="target-img" alt="Target">
                 </div>
             </div>
         </div>
@@ -102,6 +104,12 @@
             <div class="marker-detail" id="marker-detail"></div>
         </div>
     </div>
+</div>
+
+<!-- Solution renders here at full size. Width/height set by JS to match student canvas.
+     The wrapper is 0x0 so it is off-screen but Skulpt can still paint into it. -->
+<div id="solution-stage-wrapper">
+    <div id="solution-stage"></div>
 </div>
 
 <script>
@@ -174,75 +182,62 @@ function skulptRun(code, divId, width, height, animated, outputFn) {
 }
 
 // ================================================================
-// ZOOM-TO-FIT
-// Reads the bounding box of drawn (non-white) pixels on the canvas
-// then uses CSS transform to scale and centre the drawing within
-// the visible pane. The canvas itself is NOT moved — only scaled
-// around a calculated transform-origin so it stays in-flow.
+// SOLUTION CANVAS
+// Stored after each lab loads — used by the automarker
 // ================================================================
-var ZOOM_PAD = 12;
+var solutionCanvas = null;
 
-function zoomToFit(divId) {
-    var div    = document.getElementById(divId);
-    if (!div) return;
-    var canvas = div.querySelector("canvas");
-    if (!canvas) return;
+// ================================================================
+// RENDER SOLUTION
+// Renders at the same size as the student canvas so the automarker
+// can do a direct pixel comparison with no normalisation.
+// The stage div is positioned off-screen but still in the DOM so
+// Skulpt can measure it and paint into it.
+// After render we capture a data URL for the thumbnail img,
+// then keep the canvas reference for the marker.
+// ================================================================
+function renderSolution(solutionCode) {
+    var wrapper  = document.getElementById("canvas-wrapper");
+    var stage    = document.getElementById("solution-stage");
+    var stageWrap = document.getElementById("solution-stage-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
 
-    // The pane is the div's parent (target-inner or canvas-wrapper)
-    var pane  = div.parentElement;
-    var paneW = pane.offsetWidth;
-    var paneH = pane.offsetHeight;
-    if (!paneW || !paneH) return;
+    // Give the stage real dimensions so Skulpt paints into it
+    stage.innerHTML = "";
+    stage.style.width  = w + "px";
+    stage.style.height = h + "px";
+    stageWrap.style.width  = w + "px";
+    stageWrap.style.height = h + "px";
 
-    var cw = canvas.width;
-    var ch = canvas.height;
-    if (!cw || !ch) return;
+    solutionCanvas = null;
+    document.getElementById("target-img").style.display = "none";
+    document.getElementById("target-placeholder").style.display = "block";
+    document.getElementById("target-placeholder").textContent = "Loading...";
 
-    var ctx = canvas.getContext("2d");
-    var d;
-    try { d = ctx.getImageData(0, 0, cw, ch).data; } catch(e) { return; }
-
-    var minX = cw, minY = ch, maxX = 0, maxY = 0, found = false;
-    for (var y = 0; y < ch; y++) {
-        for (var x = 0; x < cw; x++) {
-            var i = (y * cw + x) * 4;
-            if (d[i] < 240 || d[i+1] < 240 || d[i+2] < 240) {
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-                found = true;
-            }
+    skulptRun(instantWrap(solutionCode), "solution-stage", w, h, false, null).then(function() {
+        var canvas = stage.querySelector("canvas");
+        if (!canvas) {
+            document.getElementById("target-placeholder").textContent = "Render failed";
+            return;
         }
-    }
-    if (!found) return;
+        solutionCanvas = canvas;
 
-    var drawW = maxX - minX + 1;
-    var drawH = maxY - minY + 1;
+        // Capture thumbnail
+        try {
+            var dataURL = canvas.toDataURL("image/png");
+            var img = document.getElementById("target-img");
+            img.src = dataURL;
+            img.style.display = "block";
+            document.getElementById("target-placeholder").style.display = "none";
+        } catch(e) {
+            document.getElementById("target-placeholder").textContent = "Preview unavailable";
+        }
 
-    // Scale to fit inside the pane with padding — never enlarge
-    var scale = Math.min(
-        (paneW - ZOOM_PAD * 2) / drawW,
-        (paneH - ZOOM_PAD * 2) / drawH,
-        1
-    );
-
-    // Where the drawn region's top-left ends up after scaling from origin (0,0)
-    // We want it centred, so shift the origin so that the centre of the
-    // drawn region maps to the centre of the pane.
-    var drawnCentreX = (minX + drawW / 2) * scale;
-    var drawnCentreY = (minY + drawH / 2) * scale;
-    var paneCentreX  = paneW / 2;
-    var paneCentreY  = paneH / 2;
-
-    // transform-origin shift needed (CSS uses the point on the *original* canvas)
-    // Simpler: just use translate + scale via transform property
-    var tx = paneCentreX - (minX + drawW / 2) * scale;
-    var ty = paneCentreY - (minY + drawH / 2) * scale;
-
-    canvas.style.transformOrigin = "0 0";
-    canvas.style.transform = "translate(" + tx + "px, " + ty + "px) scale(" + scale + ")";
-    canvas.style.display = "block";
+        // Shrink the stage wrapper back to 0 so it is invisible
+        stageWrap.style.width  = "0";
+        stageWrap.style.height = "0";
+    });
 }
 
 // ================================================================
@@ -265,28 +260,8 @@ function runPython() {
 }
 
 // ================================================================
-// RENDER SOLUTION INTO TARGET PANE
-// Renders at a fixed 500x500 so the turtle has room, then scales
-// the canvas down with CSS to fit the visible pane.
-// ================================================================
-function renderTarget(solutionCode) {
-    var inner = document.getElementById("target-inner");
-    document.getElementById("target-canvas").innerHTML = "";
-    document.getElementById("target-placeholder").style.display = "block";
-
-    // Render at pane dimensions — no scaling needed, no clipping
-    var w = inner.offsetWidth  || 150;
-    var h = inner.offsetHeight || 200;
-
-    skulptRun(instantWrap(solutionCode), "target-canvas", w, h, false, null).then(function() {
-        document.getElementById("target-placeholder").style.display = "none";
-    });
-}
-
-// ================================================================
 // AUTO-MARKER
-// Both canvases are rendered by the same Skulpt engine at the same
-// dimensions so pixel comparison is genuinely meaningful.
+// Student canvas vs solution canvas — same engine, same dimensions
 // ================================================================
 function getBBox(data, w, h) {
     var minX = w, minY = h, maxX = 0, maxY = 0, found = false;
@@ -306,17 +281,15 @@ function getBBox(data, w, h) {
 }
 
 function checkAnswer() {
-    var index = parseInt(document.getElementById("lab-select").value);
-    var lab   = LAB_DATA[index];
-    var rBox  = document.getElementById("marker-result");
+    var index  = parseInt(document.getElementById("lab-select").value);
+    var lab    = LAB_DATA[index];
+    var rBox   = document.getElementById("marker-result");
     var rTitle = document.getElementById("marker-title");
     var rDetail = document.getElementById("marker-detail");
 
     var sCanvas = document.querySelector("#my-canvas canvas");
-    if (!sCanvas) { alert("Please run your code first!"); return; }
-
-    var tCanvas = document.querySelector("#target-canvas canvas");
-    if (!tCanvas) { alert("Target has not rendered yet."); return; }
+    if (!sCanvas)      { alert("Please run your code first!"); return; }
+    if (!solutionCanvas) { alert("Solution is still loading — please wait a moment."); return; }
 
     var w = sCanvas.width;
     var h = sCanvas.height;
@@ -324,15 +297,15 @@ function checkAnswer() {
     var sData, tData;
     try {
         sData = sCanvas.getContext("2d").getImageData(0, 0, w, h).data;
-        // Normalise target to same pixel dimensions as student canvas
+        // Normalise solution canvas to same dimensions as student canvas (should already match)
         var norm = document.createElement("canvas");
         norm.width = w; norm.height = h;
         var nCtx = norm.getContext("2d");
         nCtx.fillStyle = "#fff";
         nCtx.fillRect(0, 0, w, h);
-        nCtx.drawImage(tCanvas, 0, 0, w, h);
+        nCtx.drawImage(solutionCanvas, 0, 0, w, h);
         tData = nCtx.getImageData(0, 0, w, h).data;
-    } catch(e) { alert("Could not read canvas data."); return; }
+    } catch(e) { alert("Could not read canvas data: " + e); return; }
 
     var sBox = getBBox(sData, w, h);
     var tBox = getBBox(tData, w, h);
@@ -340,12 +313,12 @@ function checkAnswer() {
     if (!sBox) {
         rBox.style.display = "block";
         rBox.className = "marker-fail";
-        rTitle.innerText = "❌ FAILED";
+        rTitle.innerText = "FAILED";
         rDetail.innerHTML = "Canvas is empty — run your code first.";
         return;
     }
 
-    // Align drawings by top-left corner of their bounding boxes
+    // Align by bounding box top-left so position does not affect the result
     var offX = sBox.x - tBox.x;
     var offY = sBox.y - tBox.y;
 
@@ -372,13 +345,13 @@ function checkAnswer() {
     }
 
     if (compared === 0) compared = 1;
-    var pct = (mismatched / compared) * 100;
+    var pct    = (mismatched / compared) * 100;
     var passed = pct <= lab.tolerance;
 
     rBox.style.display = "block";
-    rBox.className = passed ? "marker-pass" : "marker-fail";
-    rTitle.innerText = passed ? "✅ PASSED" : "❌ FAILED";
-    rDetail.innerHTML = "Difference: " + pct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
+    rBox.className     = passed ? "marker-pass" : "marker-fail";
+    rTitle.innerText   = passed ? "PASSED" : "FAILED";
+    rDetail.innerHTML  = "Difference: " + pct.toFixed(1) + "%<br>Allowed: " + lab.tolerance + "%";
 }
 
 // ================================================================
@@ -401,7 +374,7 @@ function loadLab() {
     document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
     document.getElementById("my-canvas").innerHTML      = "";
     document.getElementById("marker-result").style.display = "none";
-    requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
+    requestAnimationFrame(function() { renderSolution(lab.solutionCode); });
 }
 
 // ================================================================
