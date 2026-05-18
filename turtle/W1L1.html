@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Loops playground</title>
+    <title>Yang's Python Turtle Lab Playground</title>
     
     <!-- CodeMirror for a smooth code editing interface -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
@@ -35,7 +35,7 @@
         #instructions-box p { font-size: 14px; color: #555; }
 
         /* Main Workspace Container */
-        #workspace { flex: 1; display: flex; height: calc(100vh100px); overflow: hidden; }
+        #workspace { flex: 1; display: flex; height: calc(100vh - 150px); overflow: hidden; }
         
         /* LEFT COLUMN: Editor (Top) + Console (Bottom) */
         #left-col { width: 50%; height: 100%; display: flex; flex-direction: column; border-right: 2px solid #ccc; }
@@ -76,16 +76,20 @@
             border: 1px solid #eee; 
         }
         
-        /* Canvas Styling to ensure it shows up */
-        canvas { 
+        /* Canvas Layout Alignment Configuration */
+        canvas, #student-canvas-div canvas { 
             box-shadow: 0 0 10px rgba(0,0,0,0.1); 
             max-width: 95%; 
             max-height: 95%; 
             object-fit: contain;
             background: white;
-            /* Important: Prevents canvas from being invisible if 0 size */
-            min-width: 200px;
-            min-height: 150px;
+        }
+        #student-canvas-div {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -127,7 +131,6 @@
             <!-- Row 1: Student Live Turtle Output -->
             <div id="row-student" class="visual-row">
                 <div class="row-label">Your Output</div>
-                <!-- PRE-CREATED CANVAS CONTAINER FOR SKULPT -->
                 <div id="student-canvas-div"></div>
             </div>
             
@@ -141,19 +144,15 @@
 
     <script type="text/javascript">
         // =========================================================================
-        // CONFIGURATION
+        // LAB CONFIGURATION STRINGS (MODULAR EDIT ZONE)
         // =========================================================================
-        
-        // SET THIS TO FALSE FOR LESSONS 1-3 (Shape Only)
-        // SET THIS TO TRUE FOR LATER LESSONS (Shape + Color Match)
-        const COLOR_CHECK_ENABLED = false; 
-
         const loopsLabData = `[
             {
                 "id": 0,
                 "title": "Challenge 1: The Foundations of a Square",
-                "description": "Task: Draw a perfect square using loops. Any size or position is fine.",
+                "description": "Task: Draw a perfect square using loops. Any size or position is fine. Only the final shape lines matter for verification metrics!",
                 "imageFile": "1.png",
+                "colorCheck": false,
                 "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\nfor i in range(4):\\n    t.forward(100)\\n    t.right(90)"
             },
             {
@@ -161,6 +160,7 @@
                 "title": "Challenge 2: An Equilateral Triangle",
                 "description": "Task: Draw an equilateral triangle. Utilize your loop sequences.",
                 "imageFile": "2.png",
+                "colorCheck": false,
                 "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
             },
             {
@@ -168,7 +168,16 @@
                 "title": "Challenge 3: The Dodecagon Mastery",
                 "description": "Task: Draw a perfect 12-sided dodecagon. Calculate exterior angles carefully.",
                 "imageFile": "3.png",
+                "colorCheck": false,
                 "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
+            },
+            {
+                "id": 3,
+                "title": "Extension Challenge: The Retro '67'",
+                "description": "Task: Construct the iconic '67' layout graphics tracking a blocky right-angle layout font. Ensure your text colors match the target profile template exactly!",
+                "imageFile": "4.png",
+                "colorCheck": true,
+                "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Set your color parameters and build the digital 67 grid metrics...\\n"
             }
         ]`;
 
@@ -176,7 +185,6 @@
         let currentChallengeIndex = 0;
         let editor;
 
-        // Initialize CodeMirror interface on boot
         window.onload = function() {
             editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
                 mode: "python",
@@ -202,23 +210,17 @@
             editor.setValue(current.defaultCode);
             document.getElementById("console-output").innerHTML = "> Workspace ready. Connect instructions to logic flow.<br>";
             
-            // Clear student canvas container BUT keep the div ID intact
-            // We do NOT innerHTML = "" here because we want to preserve the structure if possible,
-            // but Skulpt usually appends. Let's clear it to be safe, Skulpt will recreate.
             document.getElementById("student-canvas-div").innerHTML = "";
             
-            // Draw Target Validation Template
             const targetCanvas = document.getElementById("targetCanvas");
             const ctxT = targetCanvas.getContext("2d");
             const img = new Image();
             
-            // Reset canvas size initially
             targetCanvas.width = 400;
             targetCanvas.height = 300;
             ctxT.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
             
             img.onload = function() {
-                // Scale image to fit nicely in the preview box while maintaining aspect ratio
                 const scale = Math.min(380 / img.width, 280 / img.height);
                 const w = img.width * scale;
                 const h = img.height * scale;
@@ -237,7 +239,6 @@
             img.src = current.imageFile;
         }
 
-        // Skulpt Engine Runtime Operations
         function runCode(skipAnimation = false) {
             const outputArea = document.getElementById("console-output");
             outputArea.innerHTML = "";
@@ -245,13 +246,12 @@
             if (skipAnimation) {
                 Sk.execLimit = 10000;
             } else {
-                Sk.execLimit1000; // Standard limit
+                Sk.execLimit = 10000; 
             }
 
             Sk.configure({
                 output: function(text) { 
                     outputArea.innerHTML += text.replace(/\n/g, "<br>"); 
-                    // Auto-scroll console
                     outputArea.scrollTop = outputArea.scrollHeight;
                 },
                 read: function(x) {
@@ -263,19 +263,17 @@
             });
 
             const canvasDiv = document.getElementById("student-canvas-div");
-            canvasDiv.innerHTML = ""; // Clear previous run
+            canvasDiv.innerHTML = ""; 
             
-            // Configure Skulpt Turtle Graphics
-            // CRITICAL: Define width/height HERE so Skulpt creates the canvas correctly
             (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'student-canvas-div';
             (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).width = 400;
             (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).height = 300;
             
-            const code = editor.getValue(); let executedCode = code;
+            const code = editor.getValue(); 
+            let executedCode = code;
             
             if (skipAnimation) {
-                // Inject speed commands at the very top
-                executedCode = "import turtle\n__t = turtle.Turtle()\n__t.speed(0)\nturtle.delay(0)\n" + code;
+                executedCode = "import turtle\nturtle.delay(0)\nturtle.speed(0)\n" + code;
             }
 
             Sk.misceval.asyncToPromise(function() {
@@ -287,7 +285,6 @@
             });
         }
 
-        // Export Image Function
         function exportImage() {
             const canvas = document.querySelector("#student-canvas-div canvas");
             if (!canvas) {
@@ -301,7 +298,6 @@
             link.click();
         }
 
-        // NEW: Export Code to .txt Function
         function exportCode() {
             const code = editor.getValue();
             const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
@@ -313,7 +309,6 @@
             document.body.removeChild(link);
         }
 
-        // Helper: Get Bounding Box of drawn pixels
         function getBoundingBoxData(canvasElement) {
             const ctx = canvasElement.getContext('2d');
             const w = canvasElement.width;
@@ -323,7 +318,6 @@
             let minX = w, maxX = 0, minY = h, maxY = 0;
             let capturedData = false;
 
-            // Scan for non-white/non-transparent pixels
             for (let y = 0; y < h; y++) {
                 for (let x = 0; x < w; x++) {
                     const idx = (y * w + x) * 4;
@@ -332,8 +326,7 @@
                     const b = imgData[idx+2];
                     const alpha = imgData[idx+3];
 
-                    // Detect ink (anything not pure white and not fully transparent)
-                    if (alpha > 10 && (r < 250 || g < 250 || b < 250)) {
+                    if (alpha > 10 && (r < 245 || g < 245 || b < 245)) {
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
                         if (y < minY) minY = y;
@@ -345,7 +338,6 @@
             return capturedData ? { x: minX, y: minY, width: (maxX - minX) + 1, height: (maxY - minY) + 1 } : null;
         }
 
-        // Structural Color Normalization & Precision Match Engine
         function evaluateVisualWork() {
             const studentCanvas = document.querySelector("#student-canvas-div canvas");
             const targetCanvas = document.getElementById("targetCanvas");
@@ -364,7 +356,6 @@
                 return;
             }
 
-            // Normalize both shapes to a 100x100 grid for comparison
             const normSize = 100;
             const offScreenStudent = document.createElement('canvas');
             const offScreenTarget = document.createElement('canvas');
@@ -374,12 +365,9 @@
             const ctxS = offScreenStudent.getContext('2d');
             const ctxT = offScreenTarget.getContext('2d');
 
-            // Fill white background
             ctxS.fillStyle = "#fff"; ctxS.fillRect(0,0,normSize,normSize);
             ctxT.fillStyle = "#fff"; ctxT.fillRect(0,0,normSize,normSize);
 
-            // Draw scaled images into the 100x100 grid
-            // Note: If targetBox is null (missing image), we skip target drawing
             if(targetBox) {
                 ctxT.drawImage(targetCanvas, targetBox.x, targetBox.y, targetBox.width, targetBox.height, 0, 0, normSize, normSize);
             }
@@ -390,22 +378,18 @@
 
             let strictMatches = 0;
             let totalChecks = normSize * normSize;
-            const colorTolerance = 30; // Allow slight anti-aliasing differences
+            const colorTolerance = 30; 
+            const isColorCheckActive = challenges[currentChallengeIndex].colorCheck;
 
             for (let i = 0; i < dataS.length; i += 4) {
-                const rS = dataS[i];   const gS = dataS[i+1]; const bS = dataS[i+2];
-                const rT = dataT[i];   const gT = dataT[i+1]; const bT = dataT[i+2];
+                let rS = dataS[i];   let gS = dataS[i+1]; let bS = dataS[i+2];
+                let rT = dataT[i];   let gT = dataT[i+1]; let bT = dataT[i+2];
 
-                // 1. Check Shape (Alpha/Brightness)
-                // If target is white (empty) and student is white (empty), it's a match.
-                // If target is drawn and student is drawn, it's a match.
                 const sIsEmpty = (rS > 240 && gS > 240 && bS > 240);
                 const tIsEmpty = (rT > 240 && gT > 240 && bT > 240);
 
                 if (sIsEmpty === tIsEmpty) {
-                    // Shape matches at this pixel. Now check color IF enabled.
-                    if (COLOR_CHECK_ENABLED) {
-                        // Strict Color Check
+                    if (isColorCheckActive) {
                         const rDiff = Math.abs(rS - rT);
                         const gDiff = Math.abs(gS - gT);
                         const bDiff = Math.abs(bS - bT);
@@ -413,7 +397,6 @@
                             strictMatches++;
                         }
                     } else {
-                        // Shape Only Check
                         strictMatches++;
                     }
                 }
@@ -422,13 +405,9 @@
             const matchRating = (strictMatches / totalChecks) * 100;
             
             let msg = `> Similarity Score: ${matchRating.toFixed(1)}%<br>`;
-            if (COLOR_CHECK_ENABLED) {
-                msg += `<span style='color:#aaa; font-size:12px;'>(Color Matching: ON)</span><br>`;
-            } else {
-                msg += `<span style='color:#aaa; font-size:12px;'>(Color Matching: OFF - Shape Only)</span><br>`;
-            }
+            msg += `<span style='color:#aaa; font-size:12px;'>(Color Matching: ${isColorCheckActive ? "ON" : "OFF - Shape Only"})</span><br>`;
 
-            if (matchRating >= 85.0) { // Lowered threshold slightly for shape-only flexibility
+            if (matchRating >= 85.0) { 
                 outputArea.innerHTML += msg + "<span style='color:#2ecc71; font-weight:bold;'>> SUCCESS: Validated. Loading next lab...</span><br>";
                 setTimeout(() => {
                     currentChallengeIndex++;
