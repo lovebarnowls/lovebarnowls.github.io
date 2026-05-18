@@ -3,321 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang</title>
+    <title>Yang Digitech Labs</title>
     
+    <!-- Dependencies -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js" type="text/javascript"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1e1e1e; }
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --border: #333;
+            --accent: #4EC9B0;
+            --text: #d4d4d4;
+        }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: var(--bg-dark); color: var(--text); }
         
-        /* Top Control Bar */
-        .header { height: 55px; background: #252526; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid #333; }
-        .logo { font-weight: bold; color: #4EC9B0; letter-spacing: 1px; }
-        .controls { display: flex; gap: 15px; align-items: center; }
+        /* Header */
+        .header { height: 50px; background: var(--bg-panel); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .logo { font-weight: bold; color: var(--accent); letter-spacing: 1px; display: flex; align-items: center; gap: 15px; }
+        .lab-selector { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
         
-        .toggle-container { font-size: 13px; display: flex; align-items: center; gap: 8px; color: #d4d4d4; cursor: pointer; user-select: none; }
-        button { border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        button { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s; text-transform: uppercase; }
         .btn-run { background-color: #28a745; color: white; }
         .btn-run:hover { background-color: #218838; }
-        .btn-mark { background-color: #2ecc71; color: white; }
-        .btn-mark:hover { background-color: #27ae60; }
-        .btn-download { background-color: #3e3e3e; color: white; border: 1px solid #555; }
-        .btn-download:hover { background-color: #505050; }
+        .btn-check { background-color: #007acc; color: white; }
+        .btn-check:hover { background-color: #005f9e; }
+        .btn-save { background-color: #3e3e3e; color: white; border: 1px solid #555; }
+        .btn-save:hover { background-color: #505050; }
 
-        /* Instructions Header */
-        #instructions-box { background: #2d2d2d; color: #fff; padding: 12px 20px; border-bottom: 1px solid #3f3f3f; min-height: 75px; }
-        #instructions-box h2 { font-size: 16px; color: #4EC9B0; margin-bottom: 4px; }
-        #instructions-box p { font-size: 13px; color: #b5b5b5; margin: 0; }
-
-        /* Workspace Grid Matrix Layout */
-        .main-container { display: flex; height: calc(100% - 130px); width: 100vw; }
+        /* Main Layout */
+        .main-container { display: flex; height: calc(100% - 50px); width: 100vw; }
         
-        /* LEFT PANEL: Code (Top) + Console/Target (Bottom) */
-        #left-panel { 
-            width: 45%; 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            border-right: 2px solid #333; 
-        }
-
-        /* Code Editor Area */
-        #editor-wrapper {
-            flex: 2; /* Takes up 2/3 of left panel */
-            position: relative;
-            border-bottom: 1px solid #333;
-        }
-        #code-input { 
-            width: 100%; 
-            height: 100%; 
-            background: #1e1e1e; 
-            color: #d4d4d4; 
-            padding: 20px; 
-            font-family: 'Consolas', 'Courier New', monospace; 
-            font-size: 15px; 
-            border: none; 
-            outline: none; 
-            resize: none; 
-        }
-
-        /* Bottom Left Area: Console + Target */
-        #bottom-left-stack {
-            flex: 1; /* Takes up 1/3 of left panel */
-            display: flex;
-            background: #000;
-            min-height: 150px;
-        }
-
-        /* Console Output (Left 2/3 of bottom stack) */
-        #console-wrapper {
-            width: 65%;
-            border-right: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-        }
-        .panel-header { 
-            background: #252526; 
-            color: #aaa; 
-            font-size: 11px; 
-            padding: 5px 10px; 
-            text-transform: uppercase; 
-            border-bottom: 1px solid #333; 
-            font-weight: bold;
-        }
-        #console-output { 
-            flex: 1; 
-            color: #00ff00; 
-            padding: 10px; 
-            font-family: 'Consolas', monospace; 
-            font-size: 13px; 
-            overflow-y: auto; 
-            white-space: pre-wrap; 
-            margin: 0;
-        }
-
-        /* Target Image (Right 1/3 of bottom stack) */
-        #target-wrapper {
-            width: 35%;
-            background: #111;
-            display: flex;
-            flex-direction: column;
-        }
-        #target-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5px;
-            background: #fafafa;
-            overflow: hidden;
-        }
-        #targetCanvas { 
-            max-width: 100%; 
-            max-height: 100%; 
-            object-fit: contain; 
-            background: white; 
-            box-shadow: 0 0 5px rgba(0,0,0,0.2); 
-        }
-
-        /* RIGHT PANEL: Student Drawing (Full Height) */
-        #output-container { 
-            width: 55%; 
-            height: 100%; 
-            background-color: #ffffff; 
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
+        /* Left Column: Code + Console */
+        .left-col { width: 45%; height: 100%; display: flex; flex-direction: column; border-right: 2px solid var(--border); }
         
-        .row-label { 
-            position: absolute; 
-            top: 10px; 
-            left: 10px; 
-            font-size: 11px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            color: #888; 
-            background: rgba(255,255,255,0.8); 
-            padding: 3px 6px; 
-            border-radius: 4px; 
-            border: 1px solid #ccc; 
-            z-index: 100; 
-        }
+        /* Editor Area (Top Left) */
+        #editor-wrapper { height: 60%; display: flex; flex-direction: column; border-bottom: 2px solid var(--border); }
+        .panel-header { background: #2d2d2d; padding: 5px 15px; font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+        #code-input { flex-grow: 1; background: var(--bg-dark); color: #d4d4d4; padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; border: none; outline: none; resize: none; line-height: 1.5; }
 
-        #my-canvas { 
-            width: 100%; 
-            height: 100%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+        /* Bottom Left: Console & Sample */
+        .bottom-panel { height: 40%; display: flex; flex-direction: column; }
+        
+        /* Console (2/3 of bottom panel) */
+        #console-wrapper { height: 66%; overflow: hidden; display: flex; flex-direction: column; border-bottom: 1px solid var(--border); }
+        #console-output { flex-grow: 1; background: #000; color: #00ff00; padding: 10px; font-family: 'Consolas', monospace; font-size: 12px; overflow-y: auto; margin: 0; white-space: pre-wrap; }
+        
+        /* Sample Image (1/3 of bottom panel) */
+        #sample-wrapper { height: 34%; background: #fff; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #sample-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        .no-image-text { color: #333; font-size: 12px; font-style: italic; }
+
+        /* Right Column: Canvas */
+        #output-container { width: 55%; height: 100%; display: flex; flex-direction: column; background-color: #fff; position: relative; }
+        #canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #fff;}
+        #my-canvas { width: 100%; height: 100%; }
+
+        /* Marker Overlay */
+        #marker-result {
+            position: absolute; top: 20px; right: 20px; 
+            background: rgba(0,0,0,0.8); color: white; 
+            padding: 15px; border-radius: 8px; 
+            display: none; z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            min-width: 200px;
         }
-        /* Ensure Skulpt canvas fits nicely */
-        #my-canvas canvas { 
-            max-width: 100%; 
-            max-height: 100%; 
-            object-fit: contain; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.1); 
-        }
+        .marker-pass { border-left: 5px solid #28a745; }
+        .marker-fail { border-left: 5px solid #dc3545; }
+        .marker-title { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .marker-detail { font-size: 12px; color: #ccc; }
+
+        /* Toggle Switch */
+        .toggle-container { font-size: 12px; display: flex; align-items: center; gap: 5px; color: #ccc; cursor: pointer; user-select: none; background: #333; padding: 4px 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo">Yang's Python Turtle IDE Lab</div>
+    <div class="logo">
+        Yang's IDE
+        <select id="lab-select" class="lab-selector" onchange="loadLab()">
+            <!-- Options populated by JS -->
+        </select>
+    </div>
     <div class="controls">
         <label class="toggle-container">
-            <input type="checkbox" id="skip-anim"> ⚡ Instant Draw
+            <input type="checkbox" id="skip-anim"> ⚡ Instant
         </label>
-        <button class="btn-run" onclick="runPython()">▶ RUN PROGRAM</button>
-        <button class="btn-mark" onclick="evaluateVisualWork()">✔ MARK WORK</button>
-        <button class="btn-download" onclick="downloadScript()">💾 SAVE .TXT</button>
-        <button class="btn-download" onclick="downloadCanvas()">🖼 SAVE .PNG</button>
+        <button class="btn-run" onclick="runPython()">▶ Run</button>
+        <button class="btn-check" onclick="checkAnswer()">✔ Auto-Check</button>
+        <button class="btn-save" onclick="downloadScript()">💾 Save .txt</button>
     </div>
-</div>
-
-<div id="instructions-box">
-    <h2 id="task-title">Loading Challenge...</h2>
-    <p id="task-desc">...</p>
 </div>
 
 <div class="main-container">
-    
-    <!-- LEFT SIDE: Code, Console, Target -->
-    <div id="left-panel">
-        
-        <!-- Top: Code Editor -->
+    <!-- LEFT SIDE -->
+    <div class="left-col">
+        <!-- Code Editor -->
         <div id="editor-wrapper">
+            <div class="panel-header">Python Code</div>
             <textarea id="code-input" spellcheck="false"></textarea>
         </div>
 
-        <!-- Bottom: Console & Target Split -->
-        <div id="bottom-left-stack">
-            
+        <!-- Bottom Panel (Console + Sample) -->
+        <div class="bottom-panel">
             <!-- Console -->
             <div id="console-wrapper">
-                <div class="panel-header">Terminal Output</div>
+                <div class="panel-header">Console Output</div>
                 <pre id="console-output">Ready...</pre>
             </div>
-
-            <!-- Target Image -->
-            <div id="target-wrapper">
-                <div class="panel-header">Target Template</div>
-                <div id="target-container">
-                    <canvas id="targetCanvas"></canvas>
-                </div>
+            
+            <!-- Sample Image -->
+            <div id="sample-wrapper">
+                <div class="panel-header" style="position:absolute; top:0; left:0; width:100%; background:rgba(255,255,255,0.9); color:#333; z-index:10;">Target Sample</div>
+                <span class="no-image-text">No sample for this lab</span>
+                <img id="sample-img" src="" alt="Target">
             </div>
-
         </div>
     </div>
 
-    <!-- RIGHT SIDE: Large Student Drawing Area -->
+    <!-- RIGHT SIDE -->
     <div id="output-container">
-        <div class="row-label">Your Live Output</div>
-        <div id="my-canvas"></div>
+        <div id="canvas-wrapper">
+            <div id="my-canvas"></div>
+        </div>
+        
+        <!-- Auto Marker Result Popup -->
+        <div id="marker-result">
+            <div class="marker-title" id="marker-title">Result</div>
+            <div class="marker-detail" id="marker-detail">Details...</div>
+        </div>
     </div>
-
 </div>
 
 <script type="text/javascript">
-    // =========================================================================
-    // MODULAR EDITABLE LESSON DATA VARIABLE CONTAINER
-    // =========================================================================
-    const loopsLabData = `[
+    // ==========================================
+    // LAB DATA CONFIGURATION
+    // ==========================================
+    const LAB_DATA = [
         {
-            "id": 0,
-            "title": "Challenge 1: The Foundations of a Square",
-            "description": "Task: Draw a perfect square using loops. Any size or position is fine. Only the final shape lines matter!",
-            "imageFile": "1.png",
-            "colorCheck": false,
-            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\nfor i in range(4):\\n    t.forward(100)\\n    t.right(90)"
+            id: 1,
+            title: "Lab 1: The Square",
+            description: "Draw a square with side length 100.",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\n\n# Draw a square\nfor i in range(4):\n    t.forward(100)\n    t.right(90)\n\nprint('Square complete')",
+            targetImage: "1.png", // Ensure this file exists in your folder
+            checkColor: false,    // Don't care about color, just shape
+            tolerance: 15         // Allow 15% pixel difference
         },
         {
-            "id": 1,
-            "title": "Challenge 2: An Equilateral Triangle",
-            "description": "Task: Draw an equilateral triangle. Utilize your loop sequences.",
-            "imageFile": "2.png",
-            "colorCheck": false,
-            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
+            id: 2,
+            title: "Lab 2: Equilateral Triangle",
+            description: "Draw a triangle with side length 150.",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\n\n# Draw Triangle\nfor i in range(3):\n    t.forward(150)\n    t.left(120)\n\nprint('Triangle complete')",
+            targetImage: "2.png",
+            checkColor: false,
+            tolerance: 15
         },
         {
-            "id": 2,
-            "title": "Challenge 3: The Dodecagon Mastery",
-            "description": "Task: Draw a perfect 12-sided dodecagon. Calculate exterior angles carefully.",
-            "imageFile": "3.png",
-            "colorCheck": false,
-            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Write your loop logic below...\\n"
-        },
-        {
-            "id": 3,
-            "title": "Extension Challenge: The Retro '67'",
-            "description": "Task: Construct the iconic '67' layout tracking a blocky right-angle arcade font profile. Match colors exactly!",
-            "imageFile": "4.png",
-            "colorCheck": true,
-            "defaultCode": "import turtle\\nt = turtle.Turtle()\\n\\n# Set your color configurations and build the digital 67 grid metrics...\\n"
+            id: 3,
+            title: "Lab 3: Colored Row",
+            description: "Draw 3 red squares in a row.",
+            code: "import turtle\n\nt = turtle.Turtle()\nt.speed(0)\nt.color('red')\n\nfor sq in range(3):\n    for i in range(4):\n        t.forward(50)\n        t.right(90)\n    t.penup()\n    t.forward(70)\n    t.pendown()\n\nprint('Row complete')",
+            targetImage: "3.png",
+            checkColor: true,     // MUST be red
+            tolerance: 10
         }
-    ]`;
+    ];
 
-    const challenges = JSON.parse(loopsLabData);
-    let currentChallengeIndex = 0;
-
-    window.onload = function() {
-        loadChallenge(currentChallengeIndex);
-    };
-
-    function loadChallenge(index) {
-        if (index >= challenges.length) {
-            alert("Superb! You have mastered all foundational geometric vector labs for this unit.");
-            return;
-        }
-        
-        currentChallengeIndex = index;
-        const current = challenges[index];
-        
-        document.getElementById("task-title").innerText = current.title;
-        document.getElementById("task-desc").innerText = current.description;
-        document.getElementById("code-input").value = current.defaultCode;
-        document.getElementById("console-output").innerHTML = "Ready...";
-        
-        // Clear previous student drawing
-        document.getElementById("my-canvas").innerHTML = "";
-        
-        // Render Target Image
-        const targetCanvas = document.getElementById("targetCanvas");
-        const ctxT = targetCanvas.getContext("2d");
-        const img = new Image();
-        
-        // Reset target canvas
-        targetCanvas.width = 300;
-        targetCanvas.height = 200;
-        ctxT.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-        
-        img.onload = function() {
-            // Scale image to fit the small target box nicely
-            const container = document.getElementById("target-container");
-            const maxW = container.clientWidth - 10;
-            const maxH = container.clientHeight - 10;
-            const scale = Math.min(maxW / img.width, maxH / img.height);
-            
-            const w = img.width * scale;
-            const h = img.height * scale;
-            
-            targetCanvas.width = w;
-            targetCanvas.height = h;
-            ctxT.drawImage(img, 0, 0, w, h);
-        };
-        img.onerror = function() {
-            ctxT.fillStyle = "#eee";
-            ctxT.fillRect(0,0,300,200);
-            ctxT.fillStyle = "#333";
-            ctxT.font = "12px monospace";
-            ctxT.fillText(`[Missing: ${current.imageFile}]`, 80, 100);
-        };
-        img.src = current.imageFile;
-    }
+    // ==========================================
+    // CORE FUNCTIONS
+    // ==========================================
 
     function outf(text) {
         var mypre = document.getElementById("console-output");
@@ -337,13 +195,15 @@
         
         document.getElementById("console-output").innerHTML = ""; 
         document.getElementById("my-canvas").innerHTML = "";
+        document.getElementById("marker-result").style.display = "none";
 
+        // Inject speed overrides if Instant Draw is checked
         var finalCode = userCode;
         if (skipAnim) {
             finalCode = "import turtle\nturtle.speed(0)\nturtle.tracer(0, 0)\n" + userCode + "\nturtle.update()";
         }
 
-        var wrapper = document.getElementById("output-container");
+        var wrapper = document.getElementById("canvas-wrapper");
         
         Sk.configure({ 
             output: outf, 
@@ -351,7 +211,6 @@
             __future__: Sk.python3 
         });
 
-        // Explicitly set Turtle Graphics target and size
         Sk.TurtleGraphics = { 
             target: 'my-canvas', 
             width: wrapper.offsetWidth, 
@@ -364,9 +223,9 @@
         });
 
         myPromise.then(function() { 
-            outf("\n> Execution complete."); 
+            console.log('Execution finished.'); 
         }, function(err) {
-            outf("\n" + err.toString());
+            outf("\n<span style='color:#ff5555'>Error: " + err.toString() + "</span>");
         });
     }
 
@@ -375,169 +234,144 @@
         const blob = new Blob([code], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        const safeTitle = challenges[currentChallengeIndex].title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        a.download = `student_code_${safeTitle}.txt`;
+        a.download = "my_turtle_program.txt"; // Changed to .txt
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     }
 
-    // FIX: Robustly flatten all Skulpt layers into one image
-    function getFlattenedStudentCanvas() {
-        const container = document.getElementById("my-canvas");
-        const canvases = container.querySelectorAll("canvas");
-        
-        if (canvases.length === 0) return null;
+    // ==========================================
+    // LAB MANAGEMENT
+    // ==========================================
 
-        // Use the first canvas as the reference for dimensions
-        const firstCanvas = canvases[0];
-        const finalCanvas = document.createElement("canvas");
-        finalCanvas.width = firstCanvas.width;
-        finalCanvas.height = firstCanvas.height;
-        const ctx = finalCanvas.getContext("2d");
-
-        // Fill white background first (so transparent parts don't look black in comparison)
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-        // Draw every canvas layer Skulpt created onto our single canvas
-        canvases.forEach(c => {
-            ctx.drawImage(c, 0, 0);
+    function initLabs() {
+        const select = document.getElementById("lab-select");
+        LAB_DATA.forEach((lab, index) => {
+            let option = document.createElement("option");
+            option.value = index;
+            option.text = lab.title;
+            select.appendChild(option);
         });
-        
-        return finalCanvas;
+        loadLab(); // Load first lab on start
     }
 
-    function downloadCanvas() {
-        const flattened = getFlattenedStudentCanvas();
-        if (flattened) {
-            const image = flattened.toDataURL("image/png");
-            const a = document.createElement("a");
-            a.href = image;
-            a.download = `yang_lab_challenge_${currentChallengeIndex}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+    function loadLab() {
+        const index = document.getElementById("lab-select").value;
+        const lab = LAB_DATA[index];
+        
+        // Set Code
+        document.getElementById("code-input").value = lab.code;
+        
+        // Set Sample Image
+        const imgEl = document.getElementById("sample-img");
+        const noImgText = document.querySelector(".no-image-text");
+        
+        if (lab.targetImage) {
+            imgEl.src = lab.targetImage;
+            imgEl.style.display = "block";
+            noImgText.style.display = "none";
+            
+            // Handle broken images gracefully
+            imgEl.onerror = function() { 
+                this.style.display = "none"; 
+                noImgText.style.display = "block";
+                noImgText.innerText = "Image '" + lab.targetImage + "' not found.";
+            };
         } else {
-            alert("No drawing found to save.");
+            imgEl.style.display = "none";
+            noImgText.style.display = "block";
+            noImgText.innerText = "No visual target for this lab.";
         }
-    }
 
-    function getBoundingBoxData(canvasElement) {
-        const ctx = canvasElement.getContext('2d');
-        const w = canvasElement.width;
-        const h = canvasElement.height;
-        const imgData = ctx.getImageData(0, 0, w, h).data;
+        // Clear Console
+        document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
+        document.getElementById("marker-result").style.display = "none";
         
-        let minX = w, maxX = 0, minY = h, maxY = 0;
-        let capturedData = false;
-
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                const idx = (y * w + x) * 4;
-                const r = imgData[idx];
-                const g = imgData[idx+1];
-                const b = imgData[idx+2];
-                const alpha = imgData[idx+3];
-
-                // Detect drawn marks accurately on alpha/tint changes
-                if (alpha > 10 && (r < 245 || g < 245 || b < 245)) {
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
-                    capturedData = true;
-                }
-            }
-        }
-        return capturedData ? { x: minX, y: minY, width: (maxX - minX) + 1, height: (maxY - minY) + 1 } : null;
+        // Clear Canvas
+        document.getElementById("my-canvas").innerHTML = "";
     }
 
-    function evaluateVisualWork() {
-        const studentCanvas = getFlattenedStudentCanvas();
-        const targetCanvas = document.getElementById("targetCanvas");
+    // ==========================================
+    // AUTO MARKER LOGIC
+    // ==========================================
 
+    function checkAnswer() {
+        const index = document.getElementById("lab-select").value;
+        const lab = LAB_DATA[index];
+        const resultBox = document.getElementById("marker-result");
+        const title = document.getElementById("marker-title");
+        const detail = document.getElementById("marker-detail");
+
+        if (!lab.targetImage) {
+            alert("This lab does not have an image to check against.");
+            return;
+        }
+
+        // 1. Get Student Canvas
+        const studentCanvas = document.querySelector("#my-canvas canvas");
         if (!studentCanvas) {
-            outf("\n> Marking Error: Canvas is blank.");
+            alert("Please run your code first!");
             return;
         }
 
-        const studentBox = getBoundingBoxData(studentCanvas);
-        const targetBox = getBoundingBoxData(targetCanvas);
-
-        if (!studentBox) {
-            outf("\n> Marking Error: No drawing detected on canvas.");
+        // 2. Load Target Image to compare
+        const targetImg = document.getElementById("sample-img");
+        if (!targetImg.complete || targetImg.naturalWidth === 0) {
+            alert("Target image hasn't loaded yet. Wait a moment and try again.");
             return;
         }
 
-        const normSize = 100;
-        const offScreenStudent = document.createElement('canvas');
-        const offScreenTarget = document.createElement('canvas');
-        offScreenStudent.width = normSize; offScreenStudent.height = normSize;
-        offScreenTarget.width = normSize;  offScreenTarget.height = normSize;
+        // Create a temporary canvas to process the target image to match student canvas size
+        const comparisonCanvas = document.createElement("canvas");
+        comparisonCanvas.width = studentCanvas.width;
+        comparisonCanvas.height = studentCanvas.height;
+        const ctx = comparisonCanvas.getContext("2d");
 
-        const ctxS = offScreenStudent.getContext('2d');
-        const ctxT = offScreenTarget.getContext('2d');
+        // Draw target image stretched to fit student canvas (normalization)
+        ctx.drawImage(targetImg, 0, 0, comparisonCanvas.width, comparisonCanvas.height);
 
-        // White backgrounds
-        ctxS.fillStyle = "#fff"; ctxS.fillRect(0,0,normSize,normSize);
-        ctxT.fillStyle = "#fff"; ctxT.fillRect(0,0,normSize,normSize);
+        // Get Pixel Data
+        const studentData = studentCanvas.getContext("2d").getImageData(0, 0, studentCanvas.width, studentCanvas.height).data;
+        const targetData = ctx.getImageData(0, 0, comparisonCanvas.width, comparisonCanvas.height).data;
 
-        // Draw normalized shapes
-        if(targetBox) {
-            ctxT.drawImage(targetCanvas, targetBox.x, targetBox.y, targetBox.width, targetBox.height, 0, 0, normSize, normSize);
-        }
-        ctxS.drawImage(studentCanvas, studentBox.x, studentBox.y, studentBox.width, studentBox.height, 0, 0, normSize, normSize);
+        let mismatchPixels = 0;
+        const totalPixels = studentData.length / 4;
+        const threshold = 30; // Color difference threshold per channel
 
-        const dataS = ctxS.getImageData(0, 0, normSize, normSize).data;
-        const dataT = ctxT.getImageData(0, 0, normSize, normSize).data;
+        for (let i = 0; i < studentData.length; i += 4) {
+            let sR = studentData[i], sG = studentData[i+1], sB = studentData[i+2];
+            let tR = targetData[i], tG = targetData[i+1], tB = targetData[i+2];
 
-        let strictMatches = 0;
-        let totalChecks = normSize * normSize;
-        const colorTolerance = 45; 
-        
-        // Get Color Check Setting from JSON Data
-        const isColorCheckActive = challenges[currentChallengeIndex].colorCheck;
-
-        for (let i = 0; i < dataS.length; i += 4) {
-            let rS = dataS[i];   let gS = dataS[i+1]; let bS = dataS[i+2];
-            let rT = dataT[i];   let gT = dataT[i+1]; let bT = dataT[i+2];
-
-            const sIsEmpty = (rS > 240 && gS > 240 && bS > 240);
-            const tIsEmpty = (rT > 240 && gT > 240 && bT > 240);
-
-            // 1. Check if both pixels are either empty (white) or drawn
-            if (sIsEmpty === tIsEmpty) {
-                if (isColorCheckActive) {
-                    // STRICT COLOR CHECK
-                    const rDiff = Math.abs(rS - rT);
-                    const gDiff = Math.abs(gS - gT);
-                    const bDiff = Math.abs(bS - bT);
-                    if (rDiff < colorTolerance && gDiff < colorTolerance && bDiff < colorTolerance) {
-                        strictMatches++;
-                    }
-                } else {
-                    // SHAPE ONLY CHECK
-                    strictMatches++;
+            // If Color Check is OFF, convert both to grayscale
+            if (!lab.checkColor) {
+                const sGray = 0.299*sR + 0.587*sG + 0.114*sB;
+                const tGray = 0.299*tR + 0.587*tG + 0.114*tB;
+                
+                // Compare brightness only
+                if (Math.abs(sGray - tGray) > threshold) {
+                    mismatchPixels++;
+                }
+            } else {
+                // Compare RGB
+                if (Math.abs(sR - tR) > threshold || Math.abs(sG - tG) > threshold || Math.abs(sB - tB) > threshold) {
+                    mismatchPixels++;
                 }
             }
         }
 
-        const matchRating = (strictMatches / totalChecks) * 100;
-        
-        outf(`\n> Similarity Score: ${matchRating.toFixed(1)}%`);
-        outf(`\n> Mode: ${isColorCheckActive ? "COLOR + SHAPE" : "SHAPE ONLY"}`);
+        const errorPercent = (mismatchPixels / totalPixels) * 100;
+        const passed = errorPercent <= lab.tolerance;
 
-        if (matchRating >= 85.0) { 
-            outf("\n> SUCCESS: Geometry profile verified. Advancing module...");
-            setTimeout(() => {
-                currentChallengeIndex++;
-                loadChallenge(currentChallengeIndex);
-            }, 2000);
-        } else {
-            outf("\n> MISMATCH: Structural trace variance exceeds threshold bounds.");
-        }
+        // Display Results
+        resultBox.style.display = "block";
+        resultBox.className = passed ? "marker-pass" : "marker-fail";
+        title.innerText = passed ? "✅ PASSED" : "❌ FAILED";
+        detail.innerHTML = `Difference: ${errorPercent.toFixed(1)}%<br>Allowed: ${lab.tolerance}%<br>Color Check: ${lab.checkColor ? "ON" : "OFF"}`;
     }
+
+    // Initialize on Load
+    window.onload = initLabs;
+
 </script>
 
 </body>
