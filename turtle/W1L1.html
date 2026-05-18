@@ -235,24 +235,14 @@ function runPython() {
 // temporarily show it to get real dimensions, render, then hide.
 // ================================================================
 function renderTarget(solutionCode) {
-    var targetView   = document.getElementById("target-view");
     var targetCanvas = document.getElementById("target-canvas");
     targetCanvas.innerHTML = "";
 
-    // Briefly make visible so offsetWidth/Height are real
-    var wasHidden = targetView.style.display === "none" || targetView.style.display === "";
-    if (wasHidden) {
-        targetView.style.visibility = "hidden";
-        targetView.style.display    = "block";
-    }
-
-    var w = targetView.offsetWidth;
-    var h = targetView.offsetHeight;
-
-    if (wasHidden) {
-        targetView.style.display    = "none";
-        targetView.style.visibility = "";
-    }
+    // Use student canvas wrapper dimensions so both canvases are identical size
+    // — same width (both panels are 50vw) and same height (matched explicitly)
+    var studentWrapper = document.getElementById("my-canvas-wrapper");
+    var w = studentWrapper.offsetWidth;
+    var h = studentWrapper.offsetHeight;
 
     skulptRun(instantWrap(solutionCode), "target-canvas", w, h, false, null);
 }
