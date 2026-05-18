@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yang's Python Turtle IDE - Dig Labs</title>
+    <title>Yang's MVP</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -235,8 +235,7 @@ function runPython() {
 // temporarily show it to get real dimensions, render, then hide.
 // ================================================================
 function renderTarget(solutionCode) {
-    var targetCanvas = document.getElementById("target-canvas");
-    targetCanvas.innerHTML = "";
+    document.getElementById("target-view").innerHTML = "";
 
     // Use student canvas wrapper dimensions so both canvases are identical size
     // — same width (both panels are 50vw) and same height (matched explicitly)
@@ -244,7 +243,7 @@ function renderTarget(solutionCode) {
     var w = studentWrapper.offsetWidth;
     var h = studentWrapper.offsetHeight;
 
-    skulptRun(instantWrap(solutionCode), "target-canvas", w, h, false, null);
+    skulptRun(instantWrap(solutionCode), "target-view", w, h, false, null);
 }
 
 // ================================================================
@@ -279,7 +278,7 @@ function checkAnswer() {
     var sCanvas = document.querySelector("#my-canvas-wrapper canvas");
     if (!sCanvas) { alert("Please run your code first!"); return; }
 
-    var tCanvas = document.querySelector("#target-canvas canvas");
+    var tCanvas = document.querySelector("#target-view canvas");
     if (!tCanvas) { alert("Target has not rendered yet."); return; }
 
     var w = sCanvas.width;
