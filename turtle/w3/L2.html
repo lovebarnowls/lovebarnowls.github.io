@@ -448,10 +448,12 @@ def draw_treeleaves():
         faithful.forward(80)
         faithful.left(90)
 
-def draw_tree ():
+def draw_tree():
     draw_treetrunk()
     faithful.backward(10)
     draw_treeleaves()
+    
+draw_tree()
 
 #You might be wondering why there is a faithful.backward.
 # It is because Faithful needs to move back slightly before drawing the sqare.
