@@ -439,7 +439,8 @@ def draw_treetrunk():
         faithful.right(90)
         faithful.forward(50)
         faithful.right(90)
-
+    faithful.end_fill()
+    
 def draw_treeleaves():
     faithful.pencolor("green")
     faithful.fillcolor("green")
@@ -447,10 +448,10 @@ def draw_treeleaves():
     for i in range (4):
         faithful.forward(80)
         faithful.left(90)
-
+    faithful.end_fill()
 def draw_tree():
     draw_treetrunk()
-    faithful.backward(10)
+    faithful.backward(25)
     draw_treeleaves()
     
 draw_tree()
