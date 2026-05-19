@@ -298,143 +298,66 @@ Check your two lines with a gap, then click OK.`
 
     {
         id: 7,
-        title: "Lab 7: goto()",
+        title: "Lab 7: 67 is SOOOO 2025",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
 
-# So far Faithful has moved relative to where it is.
-# goto(x, y) jumps Faithful to an exact position on the screen.
+# Some students go crazy with 67. But it was so 2025.
 
-# imagine the entire screen is a piece of graph paper.
-# The centre of the screen where Faithful starts is (0, 0).
+# We still want to draw 67 though. Using digital computer font (click on "view target" to see a sample)
+# Each number is 100 pixels across horizontally, and 200 pixels vertically, and between 6 and 7 there is a 100 pixel gap.
+# The first part of the 6 is drawn for you, as is the first part of the 7.
+# Try filling in the rest of the numbers
 
-# Positive x goes right. Negative x goes left.
-# Positive y goes up. Negative y goes down.
+#Draw the 6
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.left(180)
+faithful.forward(200)
+#fill in the rest of the 6
 
-# Some students will ask how big does the canvas go. Depending on your screen size, Faith could go between (-400,-400) in the bottom left to (400,400) in the top right. 
-#However, it might look ugly on some screens, so you need to find what numbers suit your screen the best.
 
-# Run the code below and watch where Faithful goes.
+faithful.penup()
+faithful.goto(300,0)
+faithful.pendown()
+faithful.setheading(90) #This basically tells faithful to face up
+faithful.forward(200)
+#move Faithful left to complete the rest of the 7
 
-
-faithful.goto(100, 0)
-
-
-# Now try: goto(0, 100). Where does Faithful end up?
-# Try: goto(-100, -100). What quadrant (top left/top right/bottom left/bottom right) is that?
-# The 'Hold to Compare' operation will not work here
 
 
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
 faithful = turtle.Turtle()
-faithful.goto(100, 0)
-faithful.hideturtle()`,
-        completeText: `goto() lets you jump Faithful to any exact position on the screen.
-This is very useful when you know exactly where something should be drawn. Click OK.`
-    },
-
-{
-        id: 8,
-        title: "Lab 8: Drawing With goto()",
-        code: `import turtle
-faithful = turtle.Turtle()
-faithful.speed(3)
-
-# You can draw shapes using goto() alone — no forward() or right() needed, if your shape uses straight lines.
-
-# Just visit each corner of the shape in order.
-
-# The code below draws two sides of a square using goto().
-# Can you add the remaining two sides to complete the square?
-
-# Hint: the four corners are at (0,0), (100,0), (100,100), and (0,100).
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.left(180)
+faithful.forward(200)
+faithful.right(90)
+faithful.forward(100)
 
 
-faithful.goto(100, 0)
-faithful.goto(100, 100)
-
-# Add the remaining two goto() calls here:
-
-
-
-print('Program complete')`,
-
-    
-    solutionCode: `import turtle
-turtle.hideturtle()
-faithful = turtle.Turtle()
 faithful.penup()
-faithful.goto(0, 0)
+faithful.goto(300,0)
 faithful.pendown()
-faithful.goto(100, 0)
-faithful.goto(100, 100)
-faithful.goto(0, 100)
-faithful.goto(0, 0)
+faithful.setheading(90) #This basically tells faithful to face up
+faithful.forward(200)
+faithful.left(90)
+faithful.forward(100)
 faithful.hideturtle()`,
-        completeText: `A square using goto() — you just visited each corner in order.
-This is one of two ways to draw shapes. We will compare both methods soon. Click OK.`
-    },
-
-    {
-        id: 9,
-        title: "Lab 9: Using penup, pendown with goto",
-        code: `import turtle
-faithful = turtle.Turtle()
-faithful.speed(3)
-
-# Let's say we wanted to draw two squares using the goto function.
-
-# Both squares are 50 pixels by 50 pixels.
-# The first square starts from (0,0) and the second square starts from (50,50).
-# The code for both squares is completed here for you
-
-#First square
-faithful.goto(0, 0)
-faithful.goto(50, 0)
-faithful.goto(50, 50)
-faithful.goto(0, 50)
-faithful.goto(0, 0)
-
-
-
-# Second square code
-faithful.goto(50, 50)
-faithful.goto(100, 50)
-faithful.goto(100, 100)
-faithful.goto(50, 100)
-faithful.goto(50, 50)
-
-# However, there is an ugly diagonal line from (0,0) to (50,50).
-
-# I can only remove the ugly diagonal by using penup, pendown
-# Where should i place my penup and where should i place my pendown?
-
-#Hint: Your penup should be AFTER where the first square starts
-
-#Hint2: Your pendown should be AFTER where Faithful moves to the new location, but BEFORE it moves to the second point.
-
-print('Program complete')`,
-        solutionCode: `import turtle
-turtle.hideturtle()
-faithful = turtle.Turtle()
-faithful.goto(0, 0)
-faithful.goto(50, 0)
-faithful.goto(50, 50)
-faithful.goto(0, 50)
-faithful.goto(0, 0)
-faithful.penup()
-faithful.goto(50, 50)
-faithful.pendown()
-faithful.goto(100, 50)
-faithful.goto(100, 100)
-faithful.goto(50, 100)
-faithful.goto(50, 50)
-
-faithful.hideturtle()`,
-        finalText: `Congratulations on completing Week 1 Lesson 1 labs. Now use this page to challenge yourself to draw squares on all four corners!`
+        finalText: `Congratulations on completing Week 1 Lesson 1 labs. Now try to draw a number 8 after the 7!`
     }
 
 ];
