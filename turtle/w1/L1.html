@@ -112,7 +112,7 @@ var LAB_DATA = [
         id: 1,
         title: "Lab 1: The Line",
         code: `import turtle
-
+turtle.hideturtle()  
 faithful = turtle.Turtle()
 faithful.speed(3) #pick number from 1-10
 
@@ -134,8 +134,8 @@ print('Program complete')`,
 
         
         solutionCode: `import turtle
+turtle.hideturtle()  
 faithful = turtle.Turtle()
-faithful.hideturtle()
 faithful.forward(200)
 faithful.hideturtle()`,
         completeText: `Great work! You have drawn a straight line.
@@ -157,9 +157,8 @@ faithful.left(45)
 
 print('Program complete')`,
         solutionCode: `import turtle
-
+turtle.hideturtle()  
 faithful = turtle.Turtle()
-faithful.hideturtle()
 faithful.left(45)
 faithful.hideturtle()`,
         completeText: `Excellent! you have made Faithful face upwards.
@@ -206,11 +205,13 @@ faithful.speed(3)
 
 print('Program complete')`,
         solutionCode: `import turtle
+turtle.hideturtle()          
 faithful = turtle.Turtle()
 faithful.right(90)
 faithful.forward(150)
 faithful.left(90)
-faithful.forward(100)`,
+faithful.forward(100)
+faithful.hideturtle()`,
         completeText: `Congratulations — you have completed lab 4. Now let's move on to diagonals.`
     }
 ];
