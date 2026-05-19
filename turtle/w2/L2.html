@@ -169,30 +169,23 @@ for i in range(4):
     faithful.forward(100)
 faithful.right(90)
 
+# Run the code. What shape do you get?
+# Why is that the case?
 
-# A for loop lets us repeat code without writing it out every time.
-# for i in range(4): means "repeat the indented code 4 times".
-# the i stands for "iteration", which means to be repeated.
-# you could also use for banana in range(4): if you like.
 
-# The indented code must use 4 spaces (In some code-editing software, you get 4 spaces by pressing tab, but tab is disabled here).
-# Any code that is indented only works within the loop that it is subsidiary within.
+# Here's explaining what happened.
+# In the code above, only forward(100) is in the loop
+# That means Faithful moves forward (100)....then... repeats moving forward(100)... until it is done four times
+# Faithful finally turns right (90) after it is done.
 
-# Run the code below — it draws a square in 3 lines instead of 8!
-for i in range(4):
-    faithful.forward(100)
-    faithful.right(90)
-# What the code does:
-# It reads (I need to repeat this for times)
-# What do i need to repeat? forward, then right
-# And that happens four times
-# And that is how you get a square.
+# Lesson learnt
+# If you want a line of code to be repeated, it needs to be within the loop indent.
+# If you want to continue the code AFTER the loop, it needs to be OUTSIDE the loop.
+
+
 
     
-# Now try changing 4 to 3. What shape do you get?
-
-# Try 5, 6, 36. What happens as the number gets larger?
-
+# Now try fixing the code above, drawing a square with 100pixel sides, but using left(90) instead of right(90)
 
 
 print('Program complete')`,
@@ -201,26 +194,32 @@ turtle.hideturtle()
 faithful = turtle.Turtle()
 for i in range(4):
     faithful.forward(100)
-    faithful.right(90)
+    faithful.left(90)
 faithful.hideturtle()`,
         completeText: `A for loop repeats the indented code as many times as you tell it.
 This is one of the most powerful ideas in programming. Click OK.`
     },
   
     {
-        id: 13,
-        title: "Lab 13: The Exterior Angle Formula",
+        id: 3,
+        title: "Lab 3: The Exterior Angle Formula",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
+
+
 # Here is a formula that works for every regular polygon:
 # exterior angle = 360 / number of sides
 # Triangle: 360 / 3 = 120 degrees
 # Square:   360 / 4 = 90 degrees
 # Pentagon: 360 / 5 = 72 degrees
+
+
 # The code below draws a hexagon (6 sides).
 # Change the values of sides and angle to draw a triangle, then a pentagon.
 # Then try sides = 36. What does that look like?
+
+
 sides = 6
 angle = 360 / sides
 for i in range(sides):
@@ -241,20 +240,42 @@ faithful.hideturtle()`,
 36 sides gets very close to a circle. Click OK.`
     },
 
-    {
-        id: 14,
-        title: "Lab 14: Drawing a Star",
+ {
+        id: 4,
+        title: "Lab 4: Taking an input",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
-# A 5-pointed star uses a special angle: 144 degrees.
-# That is because 360 / 5 = 72, and the exterior angle of a star point is 180 - 36 = 144.
-# (You do not need to memorise that — just remember 144 for a 5-pointed star!)
-# Run the code below to see a star.
-# Then try adding pencolor, fillcolor, begin_fill, and end_fill to make it gold.
-for i in range(5):
-    faithful.forward(100)
-    faithful.right(144)
+
+
+# You could ask your user to give you a number [integer]
+# Using the formula in lab 3, you could use that to decide what shape to draw.
+# This is an advanced technique involving variables.
+# We will talk more about variables next week, but for now try running this code.
+
+# The int(...) in the code below means to take an integer (whole number) input - so that Faithful can do math calculations.
+# Without the int(...), Faithful will think any number you put in is text, and will not be able to calculate anything.
+
+sides = int(input("How many sides do you want your polygon to be?"))
+# Code below this line has not changed
+# Run it to see what happens. The "hold to compare" will show a pentagon
+
+angle = 360 / sides
+for i in range(sides):
+    faithful.forward(80)
+    faithful.right(angle)
+faithful.hideturtle()
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+sides = 5
+angle = 360 / sides
+for i in range(sides):
+    faithful.forward(80)
+    faithful.right(angle)
+
+
 faithful.hideturtle()
 print('Program complete')`,
         solutionCode: `import turtle
@@ -268,8 +289,45 @@ for i in range(5):
     faithful.right(144)
 faithful.end_fill()
 faithful.hideturtle()`,
-        completeText: `A filled gold star — combining loops, colour, and fill in one program.
-This is the building block for your Week 2 capstone. Click OK.`
+        completeText: `This is how to make Faithful interactive. You could take inputs from your user. Click ok to move on to drawing stars.`
+    }
+
+    
+    {
+        id: 5,
+        title: "Lab 5: Drawing a Star",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+# A 5-pointed star uses a special angle: 144 degrees.
+# That is because 360 / 5 = 72, and the exterior angle of a star point is 180 - 36 = 144.
+
+# (You do not need to memorise that — just remember 144 for a 5-pointed star!)
+
+# Run the code below to see a star.
+# Then try adding pencolor, fillcolor, begin_fill, and end_fill to make it gold.
+
+for i in range(5):
+    faithful.forward(100)
+    faithful.right(144)
+
+print('Program complete')`,
+
+            
+            solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.pencolor("gold")
+faithful.fillcolor("gold")
+faithful.begin_fill()
+for i in range(5):
+    faithful.forward(100)
+    faithful.right(144)
+faithful.end_fill()
+faithful.hideturtle()`,
+        finalText: `A filled gold star — combining loops, colour, and fill in one program. Well done.
+Did you notice that with the star it looks prettier when filled in? Otherwise the lines would show. Try creating a starry starry night`
     }
 
 ];
