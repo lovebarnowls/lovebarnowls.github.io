@@ -110,227 +110,70 @@
 var LAB_DATA = [
     {
         id: 1,
-        title: "Lab 1: Functions",
+        title: "Lab 1: Colour my Functions",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
 
-# A function is a named series of code commands that you can reuse.
-# Imagine of you were trying to draw a starry starry night.
-# You would have to go for i in range (5) so many times.
+# Last week we drew stars, but the lines were not pretty.
+# Now we make the colour a variable in the star.
+# In order for stars to not show the ugly line in the middle, make the pencolour the same as the fillcolour
 
-# However there is a shortcut.
-# def draw_star(): defines the function.
-# draw_star() calls (runs) it.
-
-# The indented code inside the function runs each time you call it.
-# If there is a loop within the function, it will need to be double-indented (8 spaces)
-
-# The program below starts by defining a function called draw_star()
-# When the function is defined, nothing happens.
-# But somewhere in the program's memory, it remembers that draw_star() means doing all that in a row.
-
-# Defining functions starts with def, and ends with a :
-# Anything within the function is indented (4 spaces). If it is not indented, it will not be part of the function.
-
-
-def draw_star():
-    faithful.fillcolor("red")
+def move_to(x,y):
+    faithful.penup()
+    faithful.goto(x,y)
+    faithful.pendown()
+    
+def draw_star(length,colour):
+    faithful.pencolour(colour)
+    faithful.fillcolor(colour)
     faithful.begin_fill()
     for i in range(5):
-        faithful.forward(80)
+        faithful.forward(length)
         faithful.right(144)
     faithful.end_fill()
 
-# This is when we draw a star.
+# This is when we draw a coloured star.
 
-draw_star()
+draw_star(80, "red")
+move_to(100,0)
+draw_star(100, "blue")
 
-# We move to a different spot to draw another star.
-faithful.penup()
-faithful.goto(0,120)
-faithful.pendown()
-
-draw_star()
-
-# Try drawing two gold stars instead by using functions!
+# Try drawing two gold stars of length 100 each instead by using functions!
 
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
 faithful = turtle.Turtle()
-def draw_star():
-    faithful.fillcolor("gold")
+def move_to(x,y):
+    faithful.penup()
+    faithful.goto(x,y)
+    faithful.pendown()
+    
+def draw_star(length,colour):
+    faithful.pencolour(colour)
+    faithful.fillcolor(colour)
     faithful.begin_fill()
     for i in range(5):
-        faithful.forward(80)
+        faithful.forward(length)
         faithful.right(144)
     faithful.end_fill()
-draw_star()
-faithful.penup()
-faithful.goto(0,120)
-faithful.pendown()
-draw_star()
+
+draw_star(100, "gold")
+move_to(100,0)
+draw_star(100, "gold")
 faithful.hideturtle()`,
-        completeText: `A function lets you run the same block of code as many times as you like.
-Next we will use parameters within functions. Click OK.`
+        completeText: `Yes you can add colour variables in functions! Click OK.`
     },
+
+   
 
     {
         id: 2,
-        title: "Lab 2: Parameters",
+        title: "Lab 2: Colouring draw_rectangle()",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
-
-# Parameters let you pass information into a function.
-# draw_star(x, y) now takes an x and y position.
-
-# Inside the function, goto(x, y) moves faithful before drawing.
-# The difference now is when we define draw_star, we put x and y as variables within the function.
-# Then we write the code block for the function. 
-
-# Anything we want to change to x, we leave as x within the function.
-# Anything we want to change to y, we leave as y within the function.
-# It all looks a bit weird, but it will make sense when you call the function.
-
-
-def draw_star(x, y):
-    faithful.penup()
-    faithful.goto(x, y)
-    faithful.pendown()
-    faithful.fillcolor("gold")
-    faithful.begin_fill()
-    for i in range(5):
-        faithful.forward(80)
-        faithful.right(144)
-    faithful.end_fill()
-
-# We defined draw_star(x,y) above.
-# Now we call the function by putting values for (x,y) in the draw_star, like below.
-# The code below draws stars at coordinates (-150,0), then (0,0), then (150,0)
-
-draw_star(-150, 0)
-draw_star(0, 0)
-draw_star(150, 0)
-
-
-# Now modify the above code so you are drawing stars at (-120, -120), (120,-120), (120,120), (-120,120)
-# They are respectively Bottomleft, Bottomright, Topright and Topleft
-
-
-print('Program complete')`,
-        solutionCode: `import turtle
-turtle.hideturtle()
-faithful = turtle.Turtle()
-def draw_star(x, y):
-    faithful.penup()
-    faithful.goto(x, y)
-    faithful.pendown()
-    faithful.fillcolor("gold")
-    faithful.begin_fill()
-    for i in range(5):
-        faithful.forward(80)
-        faithful.right(144)
-    faithful.end_fill()
-draw_star(-120,-120)
-draw_star(120,-120)
-draw_star(120,120)
-draw_star(-120,120)
-faithful.hideturtle()`,
-        completeText: `Parameters make functions flexible — the same function, different results each call.
-This is one of the most important ideas in programming. You can even use parameters to change lengths. Click OK.`
-    },
-{
-        id: 3,
-        title: "Lab 3: move_to(x,y)",
-        code: `import turtle
-faithful = turtle.Turtle()
-faithful.speed(3)
-
-
-# You may have realized by now that the program above did penup, goto, and pendown within draw star function.
-# But in complicated drawings, you may want the function to only draw the star, and instead, use move_to(x,y) as a separate function.
-# This teacher recommends separating move_to() from draw()
-# Here is how it might look like:
-
-def move_to(x,y):
-    faithful.penup()
-    faithful.goto(x,y)
-    faithful.pendown()
-
-# Let's now define a star, but let's make the colour a variable
-# In this example, we make pencolor and fillcolor the same, but you could make them different colors
-
-def draw_star(colour)
-    faithful.pencolor(colour)
-    faithful.fillcolor(colour)
-    faithful.begin_fill()
-    for i in range (5):
-        faithful.forward(80)
-        faithful.right(144)
-    faithful.end_fill()
-
-# Now that we have our functions, let's draw our stars, but using our new move_to function
-
-move_to(-120,-120)
-draw_star("gold")
-move_to(120,-120)
-draw_star("red")
-move_to(120,120)
-draw_star("blue)
-
-
-
-
-# Think you can add two lines of code above to make Faithful add on a green star in the top left corner?
-
-
-# You might prefer the previous way of doing it - putting the coordinates in the function. That works, and is a matter of preference.
-# There will come a time you are drawing many different shapes one after another, so it may be easier to visualise it separately, or together.
-# It is up to you.
-# Code that works is good code.
-
-print('Program complete')`,
-        solutionCode: `import turtle
-turtle.hideturtle()
-faithful = turtle.Turtle()
-def move_to(x,y):
-    faithful.penup()
-    faithful.goto(x,y)
-    faithful.pendown()
-
-def draw_star(colour)
-    faithful.pencolor(colour)
-    faithful.fillcolor(colour)
-    faithful.begin_fill()
-    for i in range (5):
-        faithful.forward(80)
-        faithful.right(144)
-    faithful.end_fill()
-
-move_to(-120,-120)
-draw_star("gold")
-move_to(120,-120)
-draw_star("red")
-move_to(120,120)
-draw_star("blue)
-
-faithful.hideturtle()`,
-        completeText: `We just discovered we can customize our functions to our preference. Now let's create the backbone of our assignment`
-    },
-
-    {
-        id: 4,
-        title: "Lab 4: draw_rectangle()",
-        code: `import turtle
-faithful = turtle.Turtle()
-faithful.speed(3)
-
-
-# It is up to you whether to include (x,y) in draw_rectangle()
-# The rest of this unit assumes you prefer a move_to(x,y) function.
-# Let's definie that first
 
 def move_to(x,y):
     faithful.penup()
@@ -338,8 +181,10 @@ def move_to(x,y):
     faithful.pendown()
 
 
-# draw_rectangle is a function you will use throughout this unit.
-# Here is a simple rectangle function that takes width and height. pencolor and fillcolor.
+# Last lesson we drew rectangles but they were only black and white.
+# If we wanted to fill and colour the outline we would have needed to separate put pencolor, fillcolor and all that multiple times.
+# But, you could declare them as variables in your function.
+# Check out this rectangle function.
 
 
 def draw_rectangle(width, height, pencolour, fillcolour):
@@ -389,32 +234,25 @@ move_to(100,0)
 draw_rectangle(100, 100, "black", "black")    
 
 faithful.hideturtle()`,
-        completeText: `draw_rectangle() is the workhorse of your summative assessment — keep this code somewhere safe!
-Check your two squares/rectangles, then click OK.`
+        completeText: `Now you can customize your colours. Woohoo! Click OK.`
     },
 
-   
-    {
-        id: 5,
-        title: "Lab 5: draw_triangle()",
+     {
+        id: 3,
+        title: "Lab 3: Paint it black",
         code: `import turtle
 turtle.hideturtle()
 faithful = turtle.Turtle()
 faithful.speed(3)
 
-# draw_triangle is another function you are likely to use in the church project.
-
-# An equilateral triangle turns left 120 degrees each side (360 / 3 = 120).
-# You may think it is left(60), but it is actually left (120). Just try it out if you are unsure.
-
-
-# Complete draw_triangle() using a for loop with forward and left.
 
 def move_to(x,y):
     faithful.penup()
     faithful.goto(x,y)
     faithful.pendown()
 
+
+# The same works for variables within triangles, but this time we are creating different variables for triangle colours!
 
 def draw_triangle(length, pencolour,fillcolour):
     faithful.pencolor(pencolour)
@@ -426,13 +264,7 @@ def draw_triangle(length, pencolour,fillcolour):
     faithful.end_fill()
 
 move_to(-100,100)
-draw_triangle(100, "black", "white")
-
-# Try running the code to see what happens
-
-
-# The same def draw-rectangle function in the previous lab is copied below.
-# Do you think you can put the rectangle (width100, height200) below the triangle so it looks like a house?
+draw_triangle(100, "black", "black")
 
 def draw_rectangle(width, height, pencolour, fillcolour):
     faithful.pencolor(pencolour)
@@ -444,10 +276,97 @@ def draw_rectangle(width, height, pencolour, fillcolour):
         faithful.forward(height)
         faithful.right(90)
     faithful.end_fill()
+draw_rectangle(100,200,"green",green")
 
-# Hint: Because the bottom left of the triangle is the same starting point as the topleft of our rectangle, all you need to do is to use draw_rectangle right after rectangle is defined.
+# Notice that the house that your code draws uses the same variable names within the functions of draw_triangle and draw_rectangle?
+# Variables within a function are local, and are used and forgotten once the rectangle is drawn.
+# So a draw_triangle(100, gold) will not affect the draw_rectangle(100,100,"black","black")
+# Try to make the entire house black.
+
+
+print('Program complete')`,
+        solutionCode: `import turtle
+faithful = turtle.Turtle()
+def draw_triangle(length, pencolour,fillcolour):
+    faithful.pencolor(pencolour)
+    faithful.fillcolor(fillcolour)
+    faithful.begin_fill()
+    for i in range (3):
+        faithful.forward(length)
+        faithful.left(120)
+    faithful.end_fill()
+
+move_to(-100,100)
+draw_triangle(100, "black", "black")
+
+def draw_rectangle(width, height, pencolour, fillcolour):
+    faithful.pencolor(pencolour)
+    faithful.fillcolor(fillcolour)
+    faithful.begin_fill()
+    for i in range (2):
+        faithful.forward(width)
+        faithful.right(90)
+        faithful.forward(height)
+        faithful.right(90)
+    faithful.end_fill()
+draw_rectangle(100,200,"black",black")
+faithful.hideturtle()`,
+        completeText: `It does look a bit creepy, so maybe stick with brighter colours next time. Click OK.`
+    },
 
     
+    {
+        id: 5,
+        title: "Lab 5: When you need more variables",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+
+def move_to(x,y):
+    faithful.penup()
+    faithful.goto(x,y)
+    faithful.pendown()
+
+# You will want different variables for pencolour and fillcolour if you are wanting to customize them WITHIN the same function
+# The code below has 3 functions
+# Starts with defining a triangle
+# Then defining a rectangle
+# Then a house which combines both triangle and rectangle
+# If i want them to have four different colours, I will need to have four different variable names.
+
+def draw_triangle(width, tripencolour,trifillcolour):
+    faithful.pencolor(tripencolour)
+    faithful.fillcolor(trifillcolour)
+    faithful.begin_fill()
+    for i in range (3):
+        faithful.forward(width)
+        faithful.left(120)
+    faithful.end_fill()
+
+def draw_rectangle(width, height, recpencolour, recfillcolour):
+    faithful.pencolor(recpencolour)
+    faithful.fillcolor(recfillcolour)
+    faithful.begin_fill()
+    for i in range (2):
+        faithful.forward(width)
+        faithful.right(90)
+        faithful.forward(height)
+        faithful.right(90)
+    faithful.end_fill()
+
+
+
+def draw_house(width, height, tripencolour, trifillcolour, recpencolour,recfillcolour):
+    draw_triangle(width, tripencolour, trifillcolour)
+    draw_rectangle(width, height, recpencolour, recfillcolour)
+
+draw_house(100,200, "red", "blue", "green", "yellow")
+
+    
+# Think you can make the house in black outline with a red roof but a blue building?
+
 print('Program complete')`,
         solutionCode: `import turtle
 faithful = turtle.Turtle()
@@ -456,21 +375,18 @@ def move_to(x,y):
     faithful.goto(x,y)
     faithful.pendown()
 
-
-def draw_triangle(length, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
+def draw_triangle(width, tripencolour,trifillcolour):
+    faithful.pencolor(tripencolour)
+    faithful.fillcolor(trifillcolour)
     faithful.begin_fill()
     for i in range (3):
-        faithful.forward(length)
+        faithful.forward(width)
         faithful.left(120)
     faithful.end_fill()
 
-move_to(-100,100)
-draw_triangle(100, "black", "white")
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
+def draw_rectangle(width, height, recpencolour, recfillcolour):
+    faithful.pencolor(recpencolour)
+    faithful.fillcolor(recfillcolour)
     faithful.begin_fill()
     for i in range (2):
         faithful.forward(width)
@@ -478,7 +394,14 @@ def draw_rectangle(width, height, pencolour, fillcolour):
         faithful.forward(height)
         faithful.right(90)
     faithful.end_fill()
-draw_rectangle(100,200,"black","white")
+
+
+
+def draw_house(width, height, tripencolour, trifillcolour, recpencolour,recfillcolour):
+    draw_triangle(width, tripencolour, trifillcolour)
+    draw_rectangle(width, height, recpencolour, recfillcolour)
+
+draw_house(100,200, "red", "red", "black", "blue")
 faithful.hideturtle()`,
         completeText: `A rectangle with a triangle on top already looks like a building!
 These two functions are the foundation of your summative assessment. Click OK.`
@@ -486,91 +409,57 @@ These two functions are the foundation of your summative assessment. Click OK.`
 
     {
         id: 6,
-        title: "Lab Ext: Functions Calling Functions",
+        title: "Lab Ext: Draw a tree",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
-
-# Functions can call other functions inside them!
-# draw_house() calls draw_rectangle() for the walls and draw_triangle() for the roof.
-# Complete draw_house() using your two functions.
-# The move_to, draw_triangle, draw_rectangle, and part of the draw_house functions are copied here for you.
-# The width of the triangle should be the same size as the width of the rectangle, so we use width as the variable
 
 def move_to(x,y):
     faithful.penup()
     faithful.goto(x,y)
     faithful.pendown()
+    
+# A tree is essentially a brown rectangle under a green rectangle/circle/triangle.
+# We haven't yet taught circles and will do so in the next lesson.
+# Try to create a tree drawing function, then using move_to(x,y), place your trees in different parts of your drawing!
+# Hint: Draw your brown rectangle first before drawing your triangle/other rectangle
+# The starter code below gives you code for trees with square trunks
+# The tricky bit is actually turning width and height into variables. You don't have to.
 
-
-def draw_triangle(width, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
-    for i in range (3):
-        faithful.forward(width)
-        faithful.left(120)
-    faithful.end_fill()
-
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
+def draw_treetrunk():
+    faithful.pencolor("brown")
+    faithful.fillcolor("brown")
     faithful.begin_fill()
     for i in range (2):
-        faithful.forward(width)
+        faithful.forward(30)
         faithful.right(90)
-        faithful.forward(height)
+        faithful.forward(50)
         faithful.right(90)
-    faithful.end_fill()
 
-def draw_house(width, height, pencolour, fillcolour):
-    draw_triangle(width, pencolour, fillcolour)
-    draw_rectangle(width, height, pencolour, fillcolour)
+def draw_treeleaves(leaflength):
+    faithful.pencolor("green")
+    faithful.fillcolor("green")
+    faithful.begin_fill()
+    for i in range (4):
+        faithful.forward(80)
+        faithful.left(90)
 
-move_to(0,-100)
-draw_house(100, 200, "black", "white")
+def draw_tree ():
+    draw_treetrunk()
+    faithful.backward(10)
+    draw_treeleaves()
 
-# Try running the above code to see what happens
-# If you made it work, try making the house on a square instead of a rectangle (200x200 pixels)
+#You might be wondering why there is a faithful.backward.
+# It is because Faithful needs to move back slightly before drawing the sqare.
+
+
+
 faithful.hideturtle()
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
 faithful = turtle.Turtle()
-def move_to(x,y):
-    faithful.penup()
-    faithful.goto(x,y)
-    faithful.pendown()
-
-
-def draw_triangle(width, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
-    for i in range (3):
-        faithful.forward(width)
-        faithful.left(120)
-    faithful.end_fill()
-
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
-    for i in range (2):
-        faithful.forward(width)
-        faithful.right(90)
-        faithful.forward(height)
-        faithful.right(90)
-    faithful.end_fill()
-
-
-
-def draw_house(width, height, pencolour, fillcolour):
-    draw_triangle(width, pencolour, fillcolour)
-    draw_rectangle(width, height, pencolour, fillcolour)
-
-move_to(0,-100)
-draw_house(200, 200, "black", "white")
+faithful.write("This is a free assignment")
 faithful.hideturtle()`,
         finalText: `draw_house() calls draw_rectangle and draw_triangle inside it — functions calling functions!
 Imagine needing 10 houses — you would only need 10 lines. Congrats on finishing the lab! Think about what other functions you could call within functions.`
