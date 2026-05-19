@@ -243,7 +243,7 @@ This is one of the most important ideas in programming. You can even use paramet
     },
 {
         id: 4,
-        title: "Lab 4: moveto(x,y)",
+        title: "Lab 4: move_to(x,y)",
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
@@ -275,9 +275,9 @@ def draw_star(colour)
 
 move_to(-120,-120)
 draw_star("gold")
-moveto(120,-120)
+move_to(120,-120)
 draw_star("red")
-moveto(120,120)
+move_to(120,120)
 draw_star("blue)
 
 
@@ -311,9 +311,9 @@ def draw_star(colour)
 
 move_to(-120,-120)
 draw_star("gold")
-moveto(120,-120)
+move_to(120,-120)
 draw_star("red")
-moveto(120,120)
+move_to(120,120)
 draw_star("blue)
 
 faithful.hideturtle()`,
@@ -353,9 +353,9 @@ def draw_rectangle(width, height, pencolour, fillcolour):
         faithful.left(90)
     faithful.end_fill()
 
-moveto(-100,0)
+move_to(-100,0)
 draw_rectangle(200, 100, "red", "blue")
-moveto(100,0)
+move_to(100,0)
 draw_rectangle(150, 50, "green", "yellow")
 
 # The program above draws two rectangles.
@@ -383,9 +383,9 @@ def draw_rectangle(width, height, pencolour, fillcolour):
         faithful.forward(height)
         faithful.left(90)
     faithful.end_fill()
-moveto(-100,0)
+move_to(-100,0)
 draw_rectangle(100, 100, "black", "black")
-moveto(100,0)
+move_to(100,0)
 draw_rectangle(100, 100, "black", "black")    
 
 faithful.hideturtle()`,
@@ -425,7 +425,7 @@ def draw_triangle(length, pencolour,fillcolour):
         faithful.left(120)
     faithful.end_fill()
 
-moveto(-100,100)
+move_to(-100,100)
 draw_triangle(100, "black", "white")
 
 # Try running the code to see what happens
@@ -466,7 +466,7 @@ def draw_triangle(length, pencolour,fillcolour):
         faithful.left(120)
     faithful.end_fill()
 
-moveto(-100,100)
+move_to(-100,100)
 draw_triangle(100, "black", "white")
 def draw_rectangle(width, height, pencolour, fillcolour):
     faithful.pencolor(pencolour)
