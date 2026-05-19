@@ -287,6 +287,10 @@ draw_rectangle(100,200,"green","green")
 print('Program complete')`,
         solutionCode: `import turtle
 faithful = turtle.Turtle()
+def move_to(x,y):
+    faithful.penup()
+    faithful.goto(x,y)
+    faithful.pendown()
 def draw_triangle(length, pencolour,fillcolour):
     faithful.pencolor(pencolour)
     faithful.fillcolor(fillcolour)
@@ -309,7 +313,7 @@ def draw_rectangle(width, height, pencolour, fillcolour):
         faithful.forward(height)
         faithful.right(90)
     faithful.end_fill()
-draw_rectangle(100,200,"black",black")
+draw_rectangle(100,200,"black","black")
 faithful.hideturtle()`,
         completeText: `It does look a bit creepy, so maybe stick with brighter colours next time. Click OK.`
     },
