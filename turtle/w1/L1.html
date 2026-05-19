@@ -258,20 +258,21 @@ faithful.speed(3)
 # faithful.pendown() puts the pen back. Faithful draws again.
 # The code below draws two separate lines with a gap between them.
 # Run it and see what happens. Then try changing where the gap is.
+# The "hold to compare" function will not work here"
+
 faithful.forward(80)
 faithful.penup()
 faithful.forward(40)
+#try putting penup here instead of before forward(40)
 faithful.pendown()
+faithful.forward(60)
+#try putting pendown here instead of before forward(60)
 faithful.forward(80)
 faithful.hideturtle()
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
 faithful = turtle.Turtle()
-faithful.forward(80)
-faithful.penup()
-faithful.forward(40)
-faithful.pendown()
 faithful.forward(80)
 faithful.hideturtle()`,
         completeText: `penup() and pendown() let you move without drawing — essential for more complex pictures.
