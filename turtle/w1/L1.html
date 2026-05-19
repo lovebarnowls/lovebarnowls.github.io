@@ -214,6 +214,175 @@ faithful.forward(100)
 faithful.hideturtle()`,
         completeText: `Congratulations — you have completed lab 4. Now let's move on to diagonals.`
     }
+{
+        id: 5,
+        title: "Lab 5: Diagonals",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+# So far Faithful has only turned 90 degrees.
+# But Faithful can turn any angle!
+# The code below makes Faithful draw a diagonal line going up-right.
+# Try changing 45 to other numbers. What happens at 30? At 60? At 135?
+faithful.right(45)
+faithful.forward(100)
+
+# Now try adding another left 90 degree turn and another forward to make a V shape.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.right(45)
+faithful.forward(100)
+faithful.left(90)
+faithful.forward(100)
+faithful.hideturtle()`,
+        completeText: `Great work! Any angle is fair game for Faithful — not just 90 degrees.
+Check your V shape matches the target, then click OK.`
+    },
+
+{
+        id: 6,
+        title: "Lab 6: Pen Up and Pen Down",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+# Faithful draws a line everywhere it moves — unless you lift the pen!
+# faithful.penup() lifts the pen. Faithful moves but leaves no line.
+# faithful.pendown() puts the pen back. Faithful draws again.
+# The code below draws two separate lines with a gap between them.
+# Run it and see what happens. Then try changing where the gap is.
+faithful.forward(80)
+faithful.penup()
+faithful.forward(40)
+faithful.pendown()
+faithful.forward(80)
+faithful.hideturtle()
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.forward(80)
+faithful.penup()
+faithful.forward(40)
+faithful.pendown()
+faithful.forward(80)
+faithful.hideturtle()`,
+        completeText: `penup() and pendown() let you move without drawing — essential for more complex pictures.
+Check your two lines with a gap, then click OK.`
+    },
+
+    {
+        id: 7,
+        title: "Lab 7: goto()",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+# So far Faithful has moved relative to where it is.
+# goto(x, y) jumps Faithful to an exact position on the screen.
+# imagine the entire screen is a piece of graph paper.
+# The centre of the screen where Faithful starts is (0, 0).
+# Positive x goes right. Negative x goes left.
+# Positive y goes up. Negative y goes down.
+# Run the code below and watch where Faithful goes.
+faithful.goto(100, 0)
+# Now try: goto(0, 100). Where does Faithful end up?
+# Try: goto(-100, -100). What quadrant (top left/top right/bottom left/bottom right) is that?
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.goto(100, 0)
+faithful.hideturtle()`,
+        completeText: `goto() lets you jump Faithful to any exact position on the screen.
+This is very useful when you know exactly where something should be drawn. Click OK.`
+    },
+
+{
+        id: 8,
+        title: "Lab 8: Drawing With goto()",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+# You can draw shapes using goto() alone — no forward() or right() needed.
+# Just visit each corner of the shape in order.
+# The code below draws two sides of a square using goto().
+# Can you add the remaining two sides to complete the square?
+# Hint: the four corners are at (0,0), (100,0), (100,100), and (0,100).
+faithful.goto(100, 0)
+faithful.goto(100, 100)
+# Add the remaining two goto() calls here:
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.penup()
+faithful.goto(0, 0)
+faithful.pendown()
+faithful.goto(100, 0)
+faithful.goto(100, 100)
+faithful.goto(0, 100)
+faithful.goto(0, 0)
+faithful.hideturtle()`,
+        completeText: `A square using goto() — you just visited each corner in order.
+This is one of two ways to draw shapes. We will compare both methods soon. Click OK.`
+    },
+
+    {
+        id: 9,
+        title: "Lab 9: Using penup, pendown with goto",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+# Let's say we wanted to draw two squares using the goto function.
+# The first square starts from (0,0) and is 50 pixels long and wide.
+# The code for both squares is completed here for you
+
+#First square
+faithful.goto(0, 0)
+faithful.goto(50, 0)
+faithful.goto(50, 50)
+faithful.goto(0, 50)
+faithful.goto(0, 0)
+
+
+
+# Second square code
+faithful.goto(50, 50)
+faithful.goto(100, 50)
+faithful.goto(100, 100)
+faithful.goto(50, 100)
+faithful.goto(50, 50)
+
+#However, there is an ugly diagonal line from (0,0) to (50,50).
+#I can only remove them by using penup, pendown
+#Where should i place my penup and where should i place my pendown?
+#Hint: Your penup should be AFTER where the first square starts
+#Hint2: Your pendown should be AFTER where Faithful moves to the new location, but BEFORE it moves to the second point.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.goto(0, 0)
+faithful.goto(50, 0)
+faithful.goto(50, 50)
+faithful.goto(0, 50)
+faithful.goto(0, 0)
+faithful.penup()
+faithful.goto(50, 50)
+faithful.pendown()
+faithful.goto(100, 50)
+faithful.goto(100, 100)
+faithful.goto(50, 100)
+faithful.goto(50, 50)
+
+faithful.hideturtle()`,
+        finalText: `Congratulations on completing Week 1 Lesson 1 labs. Now use this page to challenge yourself to draw squares on all four corners!`
+    }
+
 ];
 
 // ================================================================
