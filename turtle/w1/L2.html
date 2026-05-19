@@ -114,15 +114,25 @@ var LAB_DATA = [
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
+
+
 # Faithful can draw in colour!
 # faithful.pencolor("red") changes the line colour.
+
+
 # faithful.fillcolor("gold") sets the fill colour for shapes.
 # faithful.begin_fill() and faithful.end_fill() wrap the shape you want filled.
+# put faithful.begin_fill() BEFORE the shape starts drawing.
+# put faithful.end_fill() AFTER the shape has finished drawing. 
+
 # Run the code below. Then try changing the colours.
 # Colour names in Python include: "red", "blue", "green", "gold", "orange", "purple", "white"
+
 faithful.pencolor("blue")
 faithful.fillcolor("gold")
+
 faithful.begin_fill()
+#begin_fill is for BEFORE the shape starts drawing. It's like putting colours on the paintbrush
 faithful.forward(100)
 faithful.right(90)
 faithful.forward(100)
@@ -131,7 +141,10 @@ faithful.forward(100)
 faithful.right(90)
 faithful.forward(100)
 faithful.end_fill()
-faithful.hideturtle()
+#end_fill is for AFTER the shape finishes drawing. It's not so important now but later on as you draw different shapes and colours and move about the screen you will need to use end_fill at the end of every colouring.
+
+
+
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
@@ -158,19 +171,30 @@ begin_fill() and end_fill() always come in pairs — one before, one after your 
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
+
 # faithful.pensize() controls how thick the line is.
 # The default is 1. Try 3, 5, or 10.
+
 # Run the code below, then try changing the pensize number.
 faithful.pensize(1)
 faithful.forward(200)
-# Now try drawing a second line below the first with a different pensize.
+
+# Now try drawing a second line below the first (starting at 0,-100) with a different pensize.
 # Hint: use penup(), goto() to move down, pendown(), then change pensize.
+
+
+
 faithful.hideturtle()
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
 faithful = turtle.Turtle()
 faithful.pensize(5)
+faithful.forward(200)
+faithful.penup()
+faithful.goto(0,-100)
+faithful.pendown()
+faithful.pensize(10)
 faithful.forward(200)
 faithful.hideturtle()`,
         completeText: `pensize() gives your lines weight and personality.
@@ -183,22 +207,38 @@ Thick outlines on filled shapes look very professional. Click OK.`
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(0)
+
 # Important note: bgcolor() does not work in this editor.
 # Instead, we draw a large filled black rectangle to act as the background.
+
 # It must be drawn BEFORE anything else, so it sits behind everything.
 # The rectangle starts at (-300, -300) and is 600 x 600 pixels.
+# If your screen resolution allows for a bigger screen, by all means please draw a bigger background.
+
 # Run this code and see the black background appear.
-# Then try adding a gold star on top — or any shape you like!
+# Then try adding a gold square on top — or any shape you like!
+# You can do that by using penup, goto (0,0), then pendown again, then change the colours and start drawing the square.
+
+
 faithful.penup()
 faithful.goto(-300, -300)
 faithful.pendown()
 faithful.fillcolor("black")
 faithful.begin_fill()
-for i in range(4):
-    faithful.forward(600)
-    faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
 faithful.end_fill()
+
 # Add your drawing on top here:
+# The "hold to compare" solution will show a gold star, but if your solution is different that is okay.
+
+
 faithful.hideturtle()
 print('Program complete')`,
         solutionCode: `import turtle
@@ -226,7 +266,7 @@ for i in range(5):
 faithful.end_fill()
 faithful.hideturtle()`,
         finalText: `The black rectangle trick is how we create backgrounds in this editor — remember it!
-Always draw your background first, then everything else on top. You've reached the end of Week 1 Lesson 2 lab. Now try to add white squares to your black rectangle!`
+Always draw your background first, then everything else on top. You've reached the end of Week 1 Lesson 2 lab. Now try to draw a chessboard with your editor!`
     }
 
 ];
