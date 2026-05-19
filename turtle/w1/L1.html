@@ -134,8 +134,9 @@ print('Program complete')`,
 
         
         solutionCode: `import turtle
-        faithful = turtle.Turtle()
-faithful.forward(200)`,
+faithful = turtle.Turtle()
+faithful.forward(200)
+faithful.hideturtle()`,
         completeText: `Great work! You have drawn a straight line.
 Check that your drawing matches the target, then click OK to move on to the next lab.`
     },
@@ -143,7 +144,6 @@ Check that your drawing matches the target, then click OK to move on to the next
         id: 2,
         title: "Lab 2: Turning Left",
         code: `import turtle
-
 faithful = turtle.Turtle()
 faithful.speed(3)
 faithful.left(45)
@@ -158,7 +158,8 @@ print('Program complete')`,
         solutionCode: `import turtle
 
 faithful = turtle.Turtle()
-faithful.left(45)`,
+faithful.left(45)
+faithful.hideturtle()`,
         completeText: `Excellent! you have made Faithful face upwards.
 Check your drawing matches the target, then click OK to continue.`
     },
@@ -181,11 +182,11 @@ faithful.forward(100)
 
 print('Program complete')`,
     solutionCode: `import turtle
-
 faithful = turtle.Turtle()
 faithful.forward(100)
 faithful.right(90)
-faithful.forward(100)`,
+faithful.forward(100)
+faithful.hideturtle()`,
     completeText: `Congratulations — you have drawn a square! Now let's move on to drawing an "L"`
 },
     {
@@ -207,7 +208,8 @@ faithful = turtle.Turtle()
 faithful.right(90)
 faithful.forward(150)
 faithful.left(90)
-faithful.forward(100)`,
+faithful.forward(100)
+faithful.hideturtle()`,
         completeText: `Congratulations — you have completed lab 4. Now let's move on to diagonals.`
     }
 ];
