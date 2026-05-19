@@ -151,6 +151,7 @@ faithful.left(45)
 
 # Faithful always starts facing right.
 # How do we make Faithful face upwards?
+
 # we turn left by 90 degrees.
 # The code above makes faithful turn left by 45 degrees. Try fixing it.
 # Note: The "compare" function will not work for this Lab.
@@ -174,12 +175,19 @@ faithful.speed(3)
 
 # Check out the program below.
 # It draws two sides of the sqare. And yes, you could make Faithful turn either right or left. 
+
 # Commands one after another are carried out consecutively.
 # Try to put in 4 more lines of code to complete the square!
+
 # Hint: You need need the following commands in order: right, forward, right, forward
+
+
 faithful.forward(100)
 faithful.right(90)
 faithful.forward(100)
+
+
+
 
 print('Program complete')`,
     solutionCode: `import turtle
@@ -225,12 +233,18 @@ faithful.hideturtle()`,
         code: `import turtle
 faithful = turtle.Turtle()
 faithful.speed(3)
+
 # So far Faithful has only turned 90 degrees.
 # But Faithful can turn any angle!
+
 # The code below makes Faithful draw a diagonal line going up-right.
 # Try changing 45 to other numbers. What happens at 30? At 60? At 135?
+
+
 faithful.right(45)
 faithful.forward(100)
+
+
 
 # Now try adding another left 90 degree turn and another forward to make a V shape.
 
@@ -259,6 +273,7 @@ faithful.speed(3)
 # faithful.pendown() puts the pen back. Faithful draws again.
 
 # The code below draws separate lines with a gap between them.
+
 # Run it and see what happens. Then try changing where the gap is.
 # The "hold to compare" function will not work here"
 
@@ -293,8 +308,12 @@ faithful.speed(3)
 
 # imagine the entire screen is a piece of graph paper.
 # The centre of the screen where Faithful starts is (0, 0).
+
 # Positive x goes right. Negative x goes left.
 # Positive y goes up. Negative y goes down.
+
+# Some students will ask how big does the canvas go. Depending on your screen size, Faith could go between (-400,-400) in the bottom left to (400,400) in the top right. 
+#However, it might look ugly on some screens, so you need to find what numbers suit your screen the best.
 
 # Run the code below and watch where Faithful goes.
 
@@ -369,7 +388,7 @@ faithful.speed(3)
 # Let's say we wanted to draw two squares using the goto function.
 
 # Both squares are 50 pixels by 50 pixels.
-#The first square starts from (0,0) and the second square starts from (50,50).
+# The first square starts from (0,0) and the second square starts from (50,50).
 # The code for both squares is completed here for you
 
 #First square
@@ -388,10 +407,10 @@ faithful.goto(100, 100)
 faithful.goto(50, 100)
 faithful.goto(50, 50)
 
-#However, there is an ugly diagonal line from (0,0) to (50,50).
+# However, there is an ugly diagonal line from (0,0) to (50,50).
 
-#I can only remove the ugly diagonal by using penup, pendown
-#Where should i place my penup and where should i place my pendown?
+# I can only remove the ugly diagonal by using penup, pendown
+# Where should i place my penup and where should i place my pendown?
 
 #Hint: Your penup should be AFTER where the first square starts
 
