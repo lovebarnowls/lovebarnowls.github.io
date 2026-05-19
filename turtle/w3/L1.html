@@ -259,31 +259,28 @@ def move_to(x,y):
     faithful.goto(x,y)
     faithful.pendown()
 
-# Let's now define a star, but let's make the colour a variable
-# In this example, we make pencolor and fillcolor the same, but you could make them different colors
+# Let's now define a star
 
-def draw_star(colour)
-    faithful.pencolor(colour)
-    faithful.fillcolor(colour)
-    faithful.begin_fill()
+def draw_star()
     for i in range (5):
         faithful.forward(80)
         faithful.right(144)
-    faithful.end_fill()
+
 
 # Now that we have our functions, let's draw our stars, but using our new move_to function
 
 move_to(-120,-120)
-draw_star("gold")
+draw_star()
 move_to(120,-120)
-draw_star("red")
+draw_star()
 move_to(120,120)
-draw_star("blue)
+draw_star()
 
 
 
 
-# Think you can add two lines of code above to make Faithful add on a green star in the top left corner?
+# Think you can add two lines of code above to make Faithful add on a star in the top left corner?
+# The stars do look ugly for now. We will manage them in the next lesson. Don't worry!
 
 
 # You might prefer the previous way of doing it - putting the coordinates in the function. That works, and is a matter of preference.
@@ -300,21 +297,17 @@ def move_to(x,y):
     faithful.goto(x,y)
     faithful.pendown()
 
-def draw_star(colour)
-    faithful.pencolor(colour)
-    faithful.fillcolor(colour)
-    faithful.begin_fill()
+def draw_star()
     for i in range (5):
         faithful.forward(80)
         faithful.right(144)
-    faithful.end_fill()
 
 move_to(-120,-120)
-draw_star("gold")
+draw_star()
 move_to(120,-120)
-draw_star("red")
+draw_star()
 move_to(120,120)
-draw_star("blue)
+draw_star()
 
 faithful.hideturtle()`,
         completeText: `We just discovered we can customize our functions to our preference. Now let's create the backbone of our assignment`
@@ -342,27 +335,24 @@ def move_to(x,y):
 # Here is a simple rectangle function that takes width and height. pencolor and fillcolor.
 
 
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_rectangle(width, height):
     for i in range (2):
         faithful.forward(width)
         faithful.right(90)
         faithful.forward(height)
         faithful.right(90)
-    faithful.end_fill()
+
 
 move_to(-100,0)
-draw_rectangle(200, 100, "red", "blue")
+draw_rectangle(200, 100)
 move_to(100,0)
-draw_rectangle(150, 50, "green", "yellow")
+draw_rectangle(150, 50)
 
 # The program above draws two rectangles.
-# Try changing the numbers and colours in draw_rectangle and see what happens.
+# Try changing the numbers in draw_rectangle and see what happens.
 
 
-# Can you draw two squares that are completely black, 100pixels in length by only changing the values in the functions?
+# Can you draw two squares that are 100pixels in length by only changing the values in the functions?
 # Hint: You don't need to change anything in the move_to
 
 print('Program complete')`,
@@ -373,20 +363,16 @@ def move_to(x,y):
     faithful.penup()
     faithful.goto(x,y)
     faithful.pendown()
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_rectangle(width, height):
     for i in range (2):
         faithful.forward(width)
         faithful.right(90)
         faithful.forward(height)
         faithful.right(90)
-    faithful.end_fill()
 move_to(-100,0)
-draw_rectangle(100, 100, "black", "black")
+draw_rectangle(100, 100)
 move_to(100,0)
-draw_rectangle(100, 100, "black", "black")    
+draw_rectangle(100, 100)    
 
 faithful.hideturtle()`,
         completeText: `draw_rectangle() is the workhorse of your summative assessment — keep this code somewhere safe!
@@ -416,17 +402,13 @@ def move_to(x,y):
     faithful.pendown()
 
 
-def draw_triangle(length, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_triangle(length):
     for i in range (3):
         faithful.forward(length)
         faithful.left(120)
-    faithful.end_fill()
 
 move_to(-100,100)
-draw_triangle(100, "black", "white")
+draw_triangle(100)
 
 # Try running the code to see what happens
 
@@ -434,16 +416,12 @@ draw_triangle(100, "black", "white")
 # The same def draw-rectangle function in the previous lab is copied below.
 # Do you think you can put the rectangle (width100, height200) below the triangle so it looks like a house?
 
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_rectangle(width, height):
     for i in range (2):
         faithful.forward(width)
         faithful.right(90)
         faithful.forward(height)
         faithful.right(90)
-    faithful.end_fill()
 
 # Hint: Because the bottom left of the triangle is the same starting point as the topleft of our rectangle, all you need to do is to use draw_rectangle right after rectangle is defined.
 
@@ -457,28 +435,21 @@ def move_to(x,y):
     faithful.pendown()
 
 
-def draw_triangle(length, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_triangle(length):
     for i in range (3):
         faithful.forward(length)
         faithful.left(120)
-    faithful.end_fill()
 
 move_to(-100,100)
-draw_triangle(100, "black", "white")
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+draw_triangle(100)
+def draw_rectangle(width, height):
     for i in range (2):
         faithful.forward(width)
         faithful.right(90)
         faithful.forward(height)
         faithful.right(90)
     faithful.end_fill()
-draw_rectangle(100,200,"black","white")
+draw_rectangle(100,200)
 faithful.hideturtle()`,
         completeText: `A rectangle with a triangle on top already looks like a building!
 These two functions are the foundation of your summative assessment. Click OK.`
@@ -503,32 +474,26 @@ def move_to(x,y):
     faithful.pendown()
 
 
-def draw_triangle(width, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_triangle(width):
     for i in range (3):
         faithful.forward(width)
         faithful.left(120)
-    faithful.end_fill()
 
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+
+def draw_rectangle(width, height):
     for i in range (2):
         faithful.forward(width)
         faithful.right(90)
         faithful.forward(height)
         faithful.right(90)
-    faithful.end_fill()
 
-def draw_house(width, height, pencolour, fillcolour):
-    draw_triangle(width, pencolour, fillcolour)
-    draw_rectangle(width, height, pencolour, fillcolour)
+
+def draw_house(width, height):
+    draw_triangle(width)
+    draw_rectangle(width, height)
 
 move_to(0,-100)
-draw_house(100, 200, "black", "white")
+draw_house(100, 200)
 
 # Try running the above code to see what happens
 # If you made it work, try making the house on a square instead of a rectangle (200x200 pixels)
@@ -543,34 +508,28 @@ def move_to(x,y):
     faithful.pendown()
 
 
-def draw_triangle(width, pencolour,fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+def draw_triangle(width):
     for i in range (3):
         faithful.forward(width)
         faithful.left(120)
-    faithful.end_fill()
 
-def draw_rectangle(width, height, pencolour, fillcolour):
-    faithful.pencolor(pencolour)
-    faithful.fillcolor(fillcolour)
-    faithful.begin_fill()
+
+def draw_rectangle(width, height):
     for i in range (2):
         faithful.forward(width)
         faithful.right(90)
         faithful.forward(height)
         faithful.right(90)
-    faithful.end_fill()
 
 
 
-def draw_house(width, height, pencolour, fillcolour):
-    draw_triangle(width, pencolour, fillcolour)
-    draw_rectangle(width, height, pencolour, fillcolour)
+
+def draw_house(width, height):
+    draw_triangle(width)
+    draw_rectangle(width, height)
 
 move_to(0,-100)
-draw_house(200, 200, "black", "white")
+draw_house(200, 200)
 faithful.hideturtle()`,
         finalText: `draw_house() calls draw_rectangle and draw_triangle inside it — functions calling functions!
 Imagine needing 10 houses — you would only need 10 lines. Congrats on finishing the lab! Think about what other functions you could call within functions.`
