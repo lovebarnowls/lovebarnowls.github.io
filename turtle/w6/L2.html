@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W6L2 Yang's Faithful Turtle Lab</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+    <style>
+        :root { --bg-dark:#1e1e1e; --bg-panel:#252526; --border:#333; --accent:#4EC9B0; --text:#d4d4d4; }
+        body,html { margin:0; padding:0; height:100%; font-family:'Segoe UI',sans-serif; overflow:hidden; background:var(--bg-dark); color:var(--text); }
+
+        .header { height:50px; background:var(--bg-panel); display:flex; align-items:center; padding:0 20px; justify-content:space-between; border-bottom:1px solid var(--border); }
+        .logo { font-weight:bold; color:var(--accent); letter-spacing:1px; display:flex; align-items:center; gap:15px; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; }
+        .controls { display:flex; gap:10px; align-items:center; }
+        button { border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; transition:0.2s; text-transform:uppercase; }
+        .btn-run  { background:#28a745; color:white; } .btn-run:hover  { background:#218838; }
+        .btn-save { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
+        .btn-complete { background:#9b59b6; color:white; } .btn-complete:hover { background:#7d3c98; }
+        .toggle-anim { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
+
+        .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
+
+        /* Left 50% */
+        .left-col { width:50%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
+        .panel-header { background:#2d2d2d; padding:0 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; height:30px; display:flex; align-items:center; justify-content:space-between; }
+        .btn-view-toggle { background:#4EC9B0; color:#1e1e1e; border:none; padding:3px 10px; border-radius:3px; cursor:pointer; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+        .btn-view-toggle:hover { background:#3ab89f; }
+
+        #code-view { display:flex; flex-direction:column; flex-grow:1; overflow:hidden; }
+        #code-input { flex:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; border-bottom:2px solid var(--border); }
+        #console-wrapper { height:30%; display:flex; flex-direction:column; flex-shrink:0; }
+        #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
+
+        #target-view { display:none; flex-grow:1; background:#fff; position:relative; overflow:hidden; }
+
+        /* Right 50% */
+        .right-col { width:50%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
+        #my-canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
+
+        /* Blink comparator overlay — solution canvas sits on top at 50% opacity */
+        #compare-overlay { position:absolute; top:0; left:0; width:100%; height:100%; display:none; pointer-events:none; opacity:0.5; z-index:10; }
+
+        /* Compare button styling */
+        .btn-compare { background:#f0a500; color:#1e1e1e; user-select:none; }
+        .btn-compare:hover { background:#d4900a; }
+        .btn-compare:active { background:#b87a08; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">
+        Yang's Faithful Turtle Lab W6L2 - Final Tutorial before submission
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="controls">
+        <label class="toggle-anim"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
+        <button class="btn-run"     onclick="runPython()">▶ Run</button>
+        <button class="btn-compare" id="btn-compare"
+                onmousedown="showOverlay()" onmouseup="hideOverlay()"
+                ontouchstart="showOverlay()" ontouchend="hideOverlay()">
+            👁 Hold to Compare
+        </button>
+        <button class="btn-save" onclick="downloadScript()">📤 Export Code</button>
+        <button class="btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</div>
+
+<div class="main-container">
+
+    <!-- LEFT: code+console OR target view -->
+    <div class="left-col">
+        <div class="panel-header">
+            <span id="panel-label">Python Code</span>
+            <button class="btn-view-toggle" onclick="toggleView()">👁 View Target</button>
+        </div>
+
+        <div id="code-view">
+            <textarea id="code-input" spellcheck="false"></textarea>
+            <div id="console-wrapper">
+                <div class="panel-header" style="justify-content:flex-start;">Console Output</div>
+                <pre id="console-output">Ready...</pre>
+            </div>
+        </div>
+
+        <div id="target-view"></div>
+    </div>
+
+    <!-- RIGHT: student canvas + blink overlay -->
+    <div class="right-col">
+        <div class="panel-header" style="justify-content:flex-start;">Your Output</div>
+        <div id="my-canvas-wrapper">
+            <div id="my-canvas"></div>
+            <!-- Overlay canvas cloned from solution renders here -->
+            <div id="compare-overlay"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ================================================================
+// LAB DATA
+// ================================================================
+var LAB_DATA = [
+    {
+        id: 1,
+        title: "Lab 1: Final Tutorial before submission",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+
+# This is it. Ask your questions!
+# Don't forget to comment in your code
+# Also, if you used the AI chatbot, all your logs need to be included.
+# All the best!
+# The rest of this space is an empty lab for you to try out your assignment
+
+
+
+        
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful.write("Keep working on your assessment!")
+faithful.hideturtle()`,
+        finalText: `Don't forget to submit your work!.`
+    }
+
+];
+
+// ================================================================
+// VIEW TOGGLE
+// ================================================================
+var showingTarget = false;
+
+function toggleView() {
+    showingTarget = !showingTarget;
+    var codeView   = document.getElementById("code-view");
+    var targetView = document.getElementById("target-view");
+    var label      = document.getElementById("panel-label");
+    var btn        = document.querySelector(".btn-view-toggle");
+    if (showingTarget) {
+        codeView.style.display   = "none";
+        targetView.style.display = "block";
+        label.textContent        = "Target";
+        btn.textContent          = "✏ Edit Code";
+    } else {
+        codeView.style.display   = "flex";
+        targetView.style.display = "none";
+        label.textContent        = "Python Code";
+        btn.textContent          = "👁 View Target";
+    }
+}
+
+// ================================================================
+// BLINK COMPARATOR
+// The solution canvas is rendered into #target-view at the same
+// dimensions as the student canvas. When the student holds the
+// Compare button, we clone that canvas into the overlay div on
+// top of their drawing at 50% opacity.
+// ================================================================
+function showOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.innerHTML = "";
+    overlay.style.display = "block";
+
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    overlay.style.width  = w + "px";
+    overlay.style.height = h + "px";
+
+    // Render solution fresh into the overlay — same as target, no tricks
+    skulptRun(instantWrap(lab.solutionCode), "compare-overlay", w, h, false, null);
+}
+
+function hideOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.style.display = "none";
+    overlay.innerHTML     = "";
+}
+
+// ================================================================
+// SKULPT HELPERS
+// ================================================================
+function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+        throw "File not found: '" + x + "'";
+    return Sk.builtinFiles["files"][x];
+}
+
+function outf(text) {
+    var el = document.getElementById("console-output");
+    el.innerHTML += text;
+    el.scrollTop = el.scrollHeight;
+}
+
+function instantWrap(code) {
+    return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
+}
+
+var renderQueue = Promise.resolve();
+
+function skulptRun(code, divId, width, height, animated, outputFn) {
+    renderQueue = renderQueue.then(function() {
+        return new Promise(function(resolve) {
+            Sk.configure({ output: outputFn || function(){}, read: builtinRead, __future__: Sk.python3 });
+            Sk.TurtleGraphics = { target: divId, width: width, height: height, animate: animated };
+            Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, code, true);
+            }).then(resolve, function(err) {
+                if (outputFn) outputFn("\n<span style='color:#ff5555'>Error: " + err.toString() + "</span>");
+                resolve();
+            });
+        });
+    });
+    return renderQueue;
+}
+
+// ================================================================
+// RUN STUDENT CODE
+// ================================================================
+function runPython() {
+    var code    = document.getElementById("code-input").value;
+    var instant = document.getElementById("skip-anim").checked;
+    var wrapper = document.getElementById("my-canvas-wrapper");
+
+    document.getElementById("console-output").innerHTML = "";
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
+
+    var finalCode = instant ? instantWrap(code) : code;
+    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf);
+}
+
+// ================================================================
+// RENDER TARGET
+// ================================================================
+function renderTarget(solutionCode) {
+    var targetView = document.getElementById("target-view");
+    targetView.innerHTML = "";
+
+    // Match student canvas dimensions exactly
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    // Give target-view explicit pixel dimensions so Skulpt
+    // does not rely on CSS flex to determine the canvas size
+    targetView.style.width  = w + "px";
+    targetView.style.height = h + "px";
+
+    skulptRun(instantWrap(solutionCode), "target-view", w, h, false, null);
+}
+
+// ================================================================
+// LAB MANAGEMENT
+// ================================================================
+function initLabs() {
+    var select = document.getElementById("lab-select");
+    LAB_DATA.forEach(function(lab, i) {
+        var opt = document.createElement("option");
+        opt.value = i; opt.text = lab.title;
+        select.appendChild(opt);
+    });
+    loadLab();
+}
+
+function loadLab() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    document.getElementById("code-input").value         = lab.code;
+    document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
+    if (showingTarget) toggleView();
+    requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
+}
+
+// ================================================================
+// DOWNLOAD
+// ================================================================
+function downloadScript() {
+    var blob = new Blob([document.getElementById("code-input").value], { type:"text/plain" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "my_turtle_program.txt";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+
+// ================================================================
+// COMPLETION MODAL
+// ================================================================
+function showComplete() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var isLast = index >= LAB_DATA.length - 1;
+    var text  = isLast ? (lab.finalText || "Congratulations — you have completed all labs!") 
+                       : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+    document.getElementById("complete-modal-text").textContent = text;
+    document.getElementById("complete-modal").style.display = "flex";
+}
+
+function confirmComplete() {
+    document.getElementById("complete-modal").style.display = "none";
+    var index = parseInt(document.getElementById("lab-select").value);
+    var isLast = index >= LAB_DATA.length - 1;
+    if (!isLast) {
+        document.getElementById("lab-select").value = index + 1;
+        loadLab();
+    }
+}
+
+window.onload = initLabs;
+</script>
+
+<!-- Completion modal -->
+<div id="complete-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:480px; width:90%; border:1px solid #444; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="font-size:32px; text-align:center; margin-bottom:16px;">🎉</div>
+        <p id="complete-modal-text" style="font-size:15px; line-height:1.7; margin:0 0 24px; white-space:pre-wrap;"></p>
+        <div style="text-align:center;">
+            <button onclick="confirmComplete()" style="background:#4EC9B0; color:#1e1e1e; border:none; padding:10px 32px; border-radius:5px; font-size:14px; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px;">OK</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
