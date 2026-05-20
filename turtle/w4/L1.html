@@ -337,20 +337,15 @@ faithful.speed(4)
 # The next tutorial lesson will be spent covering some of this in detail, but the Formative Assessment is given out in advance, for students who prefer to work on their own without tutorials.
 
 # Formative Assessment task:
-# The code below uses Nested-If (If Statement within an If Statement) statements to draw Country Flags.
-
+# The code below uses Nested-If statements to draw Country Flags.
 # It starts by asking you to choose a background colour. Pick 1 for Black and 2 for White, with the default being White.
 # Then it asks whether you prefer Group 1 (Vertical flags) or Group 2 (Horizontal flags).
 # Finally it takes a 3rd input - choose a country.
 #   Group 1 options are: France, Ireland, Italy
 #   Group 2 options are: Germany, Netherlands
-
 # Give this code a run and try it before moving on to the task.
 
 # THE TASK: You need to read the code and SUBSTITUTE out parts of the code.
-# You DO NOT need to write in new code.
-# If you are not replacing a colour with another colour, or a country name with another country name, you are on the wrong track.
-
 # Replace the Group 1 flags with Belgium, Ivory Coast, and Romania.
 #   HINT: Belgium:     Black,  Yellow, Red
 #   HINT: Ivory Coast: Orange, White,  Green
@@ -359,9 +354,8 @@ faithful.speed(4)
 #   HINT: Estonia:   Blue,   Black, White  (top to bottom)
 #   HINT: Lithuania: Yellow, Green, Red    (top to bottom)
 
-# Don't forget to export your final code when you are done!
-# Yes you could get an AI to do this for you quickly, but you wouldn't learn anything.
-# Try to read the code because it will be of great help to you in future.
+# If you can't solve this TODAY It is perfectly fine. There will be more help given in the next Tutorial!
+
 
 bg_choice = input("Choose background (1 for Black or 2 for White): ")
 group_choice = input("Choose Group 1 (Vertical) or Group 2 (Horizontal): ")
@@ -382,10 +376,11 @@ faithful.end_fill()
 
 # 3. THE NESTED LOGIC (Branching)
 # We move Faithful to the flag starting position
-faithful.goto(-150, 150)
+faithful.goto(-150, 100)
 
 if group_choice == "1":
     # --- NESTED IF: VERTICAL FLAGS ---
+    # Each stripe is 100 wide x 200 tall (flag total: 300 x 200)
     if country == "france":
         c1, c2, c3 = "blue", "white", "red"
     elif country == "ireland":
@@ -400,13 +395,14 @@ if group_choice == "1":
         for _ in range(2):
             faithful.forward(100)
             faithful.right(90)
-            faithful.forward(300)
+            faithful.forward(200)
             faithful.right(90)
         faithful.end_fill()
         faithful.forward(100)
 
 elif group_choice == "2":
     # --- NESTED IF: HORIZONTAL FLAGS ---
+    # Each stripe is 300 wide x 67 tall (flag total: 300 x 200, rounding to ~67 per stripe)
     if country == "germany":
         s1, s2, s3 = "black", "red", "yellow"
     else:  # Default to Netherlands
@@ -419,50 +415,21 @@ elif group_choice == "2":
         for _ in range(2):
             faithful.forward(300)
             faithful.right(90)
-            faithful.forward(100)
+            faithful.forward(67)
             faithful.right(90)
         faithful.end_fill()
         # Move down for the next stripe
         faithful.penup()
         faithful.right(90)
-        faithful.forward(100)
+        faithful.forward(67)
         faithful.left(90)
         faithful.pendown()
-
 
         
 print('Program complete')`,
         solutionCode: `import turtle
 turtle.hideturtle()
-faithful = turtle.Turtle()
-def move_to(x,y):
-    faithful.penup()
-    faithful.goto(x,y)
-    faithful.pendown()
-
-
-def draw_triangle(width):
-    for i in range (3):
-        faithful.forward(width)
-        faithful.left(120)
-
-
-def draw_rectangle(width, height):
-    for i in range (2):
-        faithful.forward(width)
-        faithful.right(90)
-        faithful.forward(height)
-        faithful.right(90)
-
-
-
-
-def draw_house(width, height):
-    draw_triangle(width)
-    draw_rectangle(width, height)
-
-move_to(0,-100)
-draw_house(200, 200)
+faithful.write("Formative assessment! Good luck! Don't forget to export your program and save it")
 faithful.hideturtle()`,
         finalText: `draw_house() calls draw_rectangle and draw_triangle inside it — functions calling functions!
 Imagine needing 10 houses — you would only need 10 lines. Congrats on finishing the lab! Think about what other functions you could call within functions.`
