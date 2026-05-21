@@ -3,188 +3,507 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project AI Adversary</title>
+    <title>ICT Club</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3498db;
-            --dark: #2c3e50;
-            --light: #ecf0f1;
-            --danger: #e74c3c;
-            --success: #27ae60;
-            --accent: #f1c40f; /* Cruise Gold */
+            --bg: #0a0e1a;
+            --panel: #0f1524;
+            --border: #1a2a4a;
+            --primary: #00d4ff;
+            --primary-dim: rgba(0, 212, 255, 0.15);
+            --danger: #ff3860;
+            --danger-dim: rgba(255, 56, 96, 0.15);
+            --success: #00e676;
+            --success-dim: rgba(0, 230, 118, 0.15);
+            --warning: #ffd600;
+            --text: #c8d8f0;
+            --text-dim: #4a6080;
+            --user-bubble: #0d2040;
+            --ai-bubble: #0f1e35;
+            --scan-line: rgba(0, 212, 255, 0.03);
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light);
-            margin: 0;
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
             padding: 20px;
-            color: var(--dark);
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    var(--scan-line) 0px,
+                    var(--scan-line) 1px,
+                    transparent 1px,
+                    transparent 4px
+                );
         }
+
         .container {
-            max-width: 900px;
+            max-width: 860px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        h1 {
+
+        /* HEADER */
+        .header {
             text-align: center;
-            color: var(--dark);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 30px;
+            padding: 30px 0 20px;
+            position: relative;
         }
-        
-        /* Mission Briefing Section */
-        .config-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            border-left: 6px solid var(--primary);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, var(--primary));
         }
-        .config-title {
-            font-weight: bold;
-            font-size: 1.1em;
+
+        .header-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7em;
+            letter-spacing: 6px;
             color: var(--primary);
-            margin-bottom: 10px;
-            display: block;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.8;
         }
-        .target-display {
-            font-size: 0.95em;
-            line-height: 1.6;
-            color: #495057;
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.4em, 4vw, 2.2em);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5), 0 0 60px rgba(0, 212, 255, 0.2);
+            margin-bottom: 6px;
         }
-        .target-display strong {
-            color: var(--dark);
+
+        .header-sub {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-chip {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-chip .label {
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85em;
+        }
+
+        .stat-chip .value {
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-left: auto;
+        }
+
+        .stat-chip.danger .value { color: var(--danger); }
+        .stat-chip.success .value { color: var(--success); }
+
+        /* MISSION BRIEF */
+        .mission-brief {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission-brief::after {
+            content: 'CLASSIFIED';
+            position: absolute;
+            top: 12px; right: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.55em;
+            letter-spacing: 3px;
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            padding: 2px 6px;
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+
+        .mission-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 3px;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .mission-brief p {
+            font-size: 0.85em;
+            line-height: 1.7;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .mission-brief p:last-child { margin-bottom: 0; }
+
+        .mission-brief strong {
+            color: var(--warning);
+        }
+
+        /* CHAT */
+        .chat-wrap {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--border);
+            padding: 8px 16px;
+            font-size: 0.7em;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
         .chat-container {
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            height: 400px;
+            height: 380px;
             overflow-y: auto;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: #fff;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
         }
+
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+        .chat-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
         .message {
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            border-radius: 15px;
-            max-width: 80%;
-            line-height: 1.4;
+            padding: 10px 14px;
+            border-radius: 4px;
+            max-width: 82%;
+            font-size: 0.85em;
+            line-height: 1.6;
+            animation: fadeIn 0.2s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .user-message {
-            background-color: var(--dark);
-            color: white;
+            background: var(--user-bubble);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-bottom-right-radius: 0;
             margin-left: auto;
-            border-bottom-right-radius: 2px;
+            color: var(--primary);
         }
+
+        .user-message::before {
+            content: '> YOU  ';
+            font-size: 0.75em;
+            color: var(--text-dim);
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+
         .ai-message {
-            background-color: #e9ecef;
-            color: var(--dark);
+            background: var(--ai-bubble);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 0;
             margin-right: auto;
-            border-bottom-left-radius: 2px;
+            color: var(--text);
         }
-        .input-group {
+
+        .ai-message::before {
+            content: '> TARGET  ';
+            font-size: 0.75em;
+            color: var(--success);
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+
+        .thinking {
+            color: var(--text-dim);
+            font-size: 0.8em;
+            font-style: italic;
+            padding: 8px 0;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* INPUT */
+        .input-row {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
+
         input[type="text"] {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px 16px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9em;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
         }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1);
+        }
+
+        input[type="text"]::placeholder { color: var(--text-dim); }
+
         button {
-            padding: 12px 24px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7em;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 12px 20px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
+
         button:hover {
-            background-color: #2980b9;
+            background: var(--primary-dim);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
         }
+
         button:disabled {
-            background-color: #ccc;
+            border-color: var(--text-dim);
+            color: var(--text-dim);
             cursor: not-allowed;
+            box-shadow: none;
+            background: transparent;
         }
+
+        /* DIVIDER */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6em;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* GUESS SECTION */
         .guess-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px dashed #ccc;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--danger);
+            border-radius: 6px;
+            padding: 20px 24px;
         }
-        .status {
-            text-align: center;
-            margin-top: 10px;
-            font-weight: bold;
-            min-height: 24px;
-        }
-        .mandatory-hint {
-            font-size: 0.85em;
-            color: #7f8c8d;
-            text-align: center;
+
+        .guess-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 3px;
+            color: var(--danger);
+            text-transform: uppercase;
             margin-bottom: 10px;
-            font-style: italic;
+        }
+
+        .guess-desc {
+            font-size: 0.8em;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .guess-btn {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .guess-btn:hover {
+            background: var(--danger-dim);
+            box-shadow: 0 0 12px rgba(255, 56, 96, 0.2);
+        }
+
+        .status {
+            margin-top: 14px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            display: none;
+        }
+
+        .status.show { display: block; }
+        .status.correct { background: var(--success-dim); border: 1px solid var(--success); color: var(--success); }
+        .status.incorrect { background: var(--danger-dim); border: 1px solid var(--danger); color: var(--danger); }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-bottom: 20px;
+            font-size: 0.7em;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-bar { gap: 8px; }
+            .stat-chip { min-width: 100px; padding: 8px 12px; }
+            h1 { font-size: 1.3em; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Project AI Adversary</h1>
-    
-    <!-- Mission Briefing -->
-    <div class="config-section">
-        <span class="config-title">🚢 Mission Briefing</span>
-        <div class="target-display">
-            <p><strong>Objective:</strong> Try to get the AI to reveal its secret keyword.</p>
-            <p><strong>The Catch:</strong> The AI will drop <em>one of five secret association words</em> somewhere in every response. Use those as clues to figure out the keyword, then submit your guess.</p>
-            <p><strong>Rules:</strong> Once you think you know it, type your guess in the guess box below. <br>
-            <em>Fair warning: The AI thinks it's a cruise director and will not confirm if you guess the exact word correctly via chat.</em></p>
+
+    <div class="header">
+        <div class="header-label">ICT Club</div>
+        <h1>AI Fun Game</h1>
+        <div class="header-sub">Red Team Exercise // Session Alpha</div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-chip">
+            <span class="label">Attempts</span>
+            <span class="value" id="statAttempts">0</span>
+        </div>
+        <div class="stat-chip danger">
+            <span class="label">Failed Guesses</span>
+            <span class="value" id="statFailed">0</span>
+        </div>
+        <div class="stat-chip success">
+            <span class="label">Status</span>
+            <span class="value" id="statStatus">ACTIVE</span>
         </div>
     </div>
 
-    
+    <!-- Mission Brief -->
+    <div class="mission-brief">
+        <div class="mission-title">// Mission Briefing</div>
+        <p><strong>Objective:</strong> Extract the secret keyword from the AI target.</p>
+        <p><strong>Intel:</strong> The target will drop one of five association words somewhere in every response. Analyse the pattern — these clues point to the keyword.</p>
+        <p><strong>Rules:</strong> The AI will not confirm a correct guess via chat. Submit your keyword guess in the secure input below. <em>Fair warning: the target believes it is a cruise director.</em></p>
+    </div>
 
-    <!-- Chat Interface -->
-    <div class="chat-container" id="chatContainer">
-        <div class="message ai-message">
-            Welcome aboard! I am your Cruise Director. How may I assist you on this voyage?
+    <!-- Chat -->
+    <div class="chat-wrap">
+        <div class="chat-header">Live Connection — Target AI Online</div>
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai-message">Welcome aboard! I am your Cruise Director. How may I assist you on this voyage?</div>
         </div>
     </div>
 
-    <div class="input-group">
-        <input type="text" id="userInput" placeholder="Type your prompt here..." onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()" id="sendBtn">Send</button>
+    <div class="input-row">
+        <input type="text" id="userInput" placeholder="Enter your prompt..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()" id="sendBtn">Transmit</button>
     </div>
 
-    <!-- Guessing Interface -->
+    <div class="divider"><span>Keyword Submission</span></div>
+
+    <!-- Guess -->
     <div class="guess-section">
-        <h3>🔐 Submit Your Guess</h3>
-        <p>Enter the secret keyword below. This will be verified securely by the target worker.</p>
-        <div class="input-group">
-            <input type="text" id="guessInput" placeholder="Enter keyword guess...">
-            <button onclick="checkGuess()" id="guessBtn" style="background-color: var(--success);">Submit Guess</button>
+        <div class="guess-title">// Secure Keyword Submission</div>
+        <p class="guess-desc">When you have identified the secret keyword, submit it below. Verification is handled server-side.</p>
+        <div class="input-row" style="margin-bottom:0;">
+            <input type="text" id="guessInput" placeholder="Enter keyword...">
+            <button class="guess-btn" onclick="checkGuess()" id="guessBtn">Submit</button>
         </div>
         <div id="guessStatus" class="status"></div>
     </div>
+
+    <div class="footer">PROJECT AI ADVERSARY &nbsp;·&nbsp; ICT SECURITY CLUB &nbsp;·&nbsp; AUTHORISED USE ONLY</div>
+
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    // Hardcoded Worker URL
     const WORKER_URL = "https://game1.xu-yangen.workers.dev";
-    // ---------------------
+
+    let attemptCount = 0;
+    let failedGuesses = 0;
+    let solved = false;
 
     const chatContainer = document.getElementById('chatContainer');
     const userInput = document.getElementById('userInput');
@@ -192,96 +511,111 @@
     const guessStatus = document.getElementById('guessStatus');
     const guessBtn = document.getElementById('guessBtn');
 
+    function updateStats() {
+        document.getElementById('statAttempts').textContent = attemptCount;
+        document.getElementById('statFailed').textContent = failedGuesses;
+    }
+
     function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            sendMessage();
-        }
+        if (event.key === 'Enter') sendMessage();
     }
 
     async function sendMessage() {
         const message = userInput.value.trim();
-
-        if (!message) return;
+        if (!message || solved) return;
 
         addMessage(message, 'user');
         userInput.value = '';
         sendBtn.disabled = true;
-        sendBtn.innerText = "Thinking...";
+        sendBtn.innerText = "...";
+
+        attemptCount++;
+        updateStats();
+
+        const thinking = document.createElement('div');
+        thinking.classList.add('thinking');
+        thinking.id = 'thinking';
+        thinking.textContent = '> Awaiting target response...';
+        chatContainer.appendChild(thinking);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
 
         try {
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: "chat",
-                    userInput: message,
-                    defensivePrompt: "" // Defensive prompt is set in Worker by instructor
-                })
+                body: JSON.stringify({ action: "chat", userInput: message, defensivePrompt: "" })
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             const data = await response.json();
+
+            const t = document.getElementById('thinking');
+            if (t) t.remove();
+
             addMessage(data.response, 'ai');
 
         } catch (error) {
-            addMessage(`Error: ${error.message}. Check Worker URL or Console.`, 'ai');
-            console.error(error);
+            const t = document.getElementById('thinking');
+            if (t) t.remove();
+            addMessage(`Connection error: ${error.message}`, 'ai');
         } finally {
             sendBtn.disabled = false;
-            sendBtn.innerText = "Send";
+            sendBtn.innerText = "Transmit";
         }
     }
 
     async function checkGuess() {
         const guess = document.getElementById('guessInput').value.trim();
-
         if (!guess) return;
 
         guessBtn.disabled = true;
-        guessBtn.innerText = "Verifying...";
-        guessStatus.textContent = "";
+        guessBtn.innerText = "...";
+
+        guessStatus.className = 'status';
+        guessStatus.textContent = '';
 
         try {
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: "guess",
-                    guess: guess
-                })
+                body: JSON.stringify({ action: "guess", guess: guess })
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             const data = await response.json();
-            
-            guessStatus.textContent = data.message;
+
+            guessStatus.classList.add('show');
+
             if (data.correct) {
-                guessStatus.style.color = 'var(--success)';
+                guessStatus.classList.add('correct');
+                guessStatus.textContent = `✓ ACCESS GRANTED — Keyword verified in ${attemptCount} attempt${attemptCount !== 1 ? 's' : ''}.`;
+                document.getElementById('statStatus').textContent = 'CRACKED';
+                document.getElementById('statStatus').style.color = 'var(--success)';
+                solved = true;
+                sendBtn.disabled = true;
             } else {
-                guessStatus.style.color = 'var(--danger)';
+                guessStatus.classList.add('incorrect');
+                guessStatus.textContent = '✗ ACCESS DENIED — Incorrect keyword.';
+                failedGuesses++;
+                updateStats();
             }
 
         } catch (error) {
-            guessStatus.textContent = "Error verifying guess.";
-            guessStatus.style.color = 'var(--danger)';
-            console.error(error);
+            guessStatus.classList.add('show', 'incorrect');
+            guessStatus.textContent = 'Verification error — check connection.';
         } finally {
             guessBtn.disabled = false;
-            guessBtn.innerText = "Submit Guess";
+            guessBtn.innerText = "Submit";
         }
     }
 
     function addMessage(text, sender) {
         const div = document.createElement('div');
-        div.classList.add('message');
-        div.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+        div.classList.add('message', sender === 'user' ? 'user-message' : 'ai-message');
         div.textContent = text;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 </script>
-
 </body>
 </html>
