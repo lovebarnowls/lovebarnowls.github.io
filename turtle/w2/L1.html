@@ -202,13 +202,12 @@ faithful.hideturtle()`,
         completeText: `pensize() gives your lines weight and personality.
 Thick outlines on filled shapes look very professional. Click OK.`
     },
-
-    {
+{
         id: 3,
         title: "Lab 3: Black Background",
         code: `import turtle
 faithful = turtle.Turtle()
-faithful.speed(0)
+faithful.speed(3)
 
 # Important note: bgcolor() does not work in this editor.
 # Instead, we draw a large filled black rectangle to act as the background.
@@ -265,6 +264,74 @@ faithful.begin_fill()
 for i in range(5):
     faithful.forward(100)
     faithful.right(144)
+faithful.end_fill()
+faithful.hideturtle()`,
+        finalText: `The black rectangle trick is how we create backgrounds in this editor — remember it!
+Always draw your background first, then everything else on top. You've reached the end of Week 1 Lesson 2 lab. Now try to draw a chessboard with your editor!`
+    },
+    {
+        id: 3,
+        title: "Lab Ext: A red-bordered white square on a black background",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# Here's our black background. Remember, you need to draw it first.
+
+faithful.penup()
+faithful.goto(-300, -300)
+faithful.pendown()
+faithful.fillcolor("black")
+faithful.begin_fill()
+faithful.forward(600)
+faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
+faithful.forward(600)
+faithful.left(90)
+faithful.end_fill()
+
+# Now in the code below, go back to (0,0), and draw a white square with red pencolor (100 pixels per side), starting from (0,0)
+
+
+
+faithful.hideturtle()
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+faithful.penup()
+faithful.goto(-300, -300)
+faithful.pendown()
+faithful.fillcolor("black")
+faithful.begin_fill()
+for i in range(4):
+    faithful.forward(600)
+    faithful.left(90)
+faithful.end_fill()
+faithful.pencolor("gold")
+faithful.fillcolor("gold")
+faithful.penup()
+faithful.goto(0, 0)
+faithful.pendown()
+faithful.begin_fill()
+for i in range(5):
+    faithful.forward(100)
+    faithful.right(144)
+faithful.end_fill()
+
+faithful.penup()
+faithful.goto(0,0)
+faithful.pendown()
+faithful.pencolor("red")
+faithful.fillcolor("white")
+faithful.begin_fill()
+for i in range (4):
+    faithful.forward(100)
+    faithful.left(90)
 faithful.end_fill()
 faithful.hideturtle()`,
         finalText: `The black rectangle trick is how we create backgrounds in this editor — remember it!
