@@ -281,7 +281,6 @@ faithful.hideturtle()`,
         completeText: `This is how to make Faithful interactive. You could take inputs from your user. Click ok to move on to drawing stars.`
     },
 
-    
     {
         id: 5,
         title: "Lab 5: Drawing a Star",
@@ -314,6 +313,46 @@ for i in range(5):
     faithful.forward(100)
     faithful.right(144)
 faithful.end_fill()
+faithful.hideturtle()`,
+        finalText: `A filled gold star — combining loops, colour, and fill in one program. Well done.
+Did you notice that with the star it looks prettier when filled in? Otherwise the lines would show. Try creating a starry starry night`
+    },
+
+    {
+        id: 6,
+        title: "Lab Ext: A loop within a loop",
+        code: `import turtle
+faithful = turtle.Turtle()
+faithful.speed(3)
+
+# Let's say you wanted a pattern of multiple squares.
+
+# You could do this:
+# (You MIGHT want to enable Instant before running the code below as it might take a while)
+
+for i in range (35):
+    for j in range (4):
+        faithful.forward(30)
+        faithful.right(90)
+    faithful.right(10)
+
+# Let's explain what the code above does.
+# Looking at the for j in range.
+# That's just a square.
+# Why do we call it j? Because it's the next letter after i.
+
+# The last faithful.right belongs to the for i in range 35
+# So what we are doing is we are drawing a square, rotating Faithful by 10 degrees, and drawing another square, for a total of 35 times.
+# Nice pattern isn't it?
+# Try out various numbers and see what you get!
+
+print('Program complete')`,
+
+            
+            solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.write("Having fun with your loops within loops?")
 faithful.hideturtle()`,
         finalText: `A filled gold star — combining loops, colour, and fill in one program. Well done.
 Did you notice that with the star it looks prettier when filled in? Otherwise the lines would show. Try creating a starry starry night`
