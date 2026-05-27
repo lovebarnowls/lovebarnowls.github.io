@@ -7,128 +7,112 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:        #161616;
-  --panel:     #1f1f1f;
-  --panel2:    #272727;
-  --border:    #2e2e2e;
-  --border2:   #3a3a3a;
-  --accent:    #F0A500;
-  --accent2:   #c98b00;
-  --accent-dim:#3a2800;
-  --text:      #e0e0e0;
-  --text-dim:  #888;
-  --text-dark: #555;
-  --green:     #4ec94e;
-  --red:       #f05050;
-  --blue:      #5ab4f0;
-  --mono:      'JetBrains Mono', monospace;
-  --sans:      'Syne', sans-serif;
+  --bg:#161616; --panel:#1f1f1f; --panel2:#272727;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#F0A500; --accent2:#c98b00; --accent-dim:#3a2800;
+  --text:#e0e0e0; --text-dim:#888; --text-dark:#555;
+  --green:#4ec94e; --red:#f05050; --blue:#5ab4f0;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
 
 /* HEADER */
-.header {
-  height: 48px; background: var(--panel); border-bottom: 2px solid var(--accent);
-  display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
-}
-.logo { font-family: var(--sans); font-weight: 800; font-size: 13px; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
-.lab-selector { background: var(--panel2); color: var(--text); border: 1px solid var(--border2); padding: 4px 10px; border-radius: 4px; font-family: var(--sans); font-size: 12px; cursor: pointer; outline: none; }
-.lab-selector:focus { border-color: var(--accent); }
-.btn { border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-family: var(--sans); font-weight: 700; font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; transition: background 0.15s, transform 0.1s; white-space: nowrap; }
-.btn:active { transform: scale(0.97); }
-.btn-complete { background: #9b59b6; color: #fff; } .btn-complete:hover { background: #7d3c98; }
-.btn-accent   { background: var(--accent); color: #161616; } .btn-accent:hover { background: var(--accent2); }
-.btn-small    { padding: 4px 10px; font-size: 10px; }
+.header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.logo{font-family:var(--sans);font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.lab-selector{background:var(--panel2);color:var(--text);border:1px solid var(--border2);padding:4px 10px;border-radius:4px;font-family:var(--sans);font-size:12px;cursor:pointer;outline:none;}
+.lab-selector:focus{border-color:var(--accent);}
+
+/* Name input */
+.name-wrapper{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.name-label{font-size:11px;color:var(--text-dim);white-space:nowrap;font-family:var(--sans);}
+.name-input{background:var(--panel2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:4px 10px;outline:none;width:110px;transition:border-color 0.15s;}
+.name-input:focus{border-color:var(--accent);}
+.name-input::placeholder{color:var(--text-dark);}
+.name-status{font-size:10px;font-family:var(--mono);white-space:nowrap;}
+.name-status.ok{color:var(--green);}
+.name-status.waiting{color:var(--text-dark);}
+
+.btn{border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;transition:background 0.15s,transform 0.1s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-complete{background:#9b59b6;color:#fff;} .btn-complete:hover{background:#7d3c98;}
+.btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
+.btn-small{padding:4px 10px;font-size:10px;}
 
 /* LAYOUT */
-.workspace { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - 48px); width: 100%; }
+.workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
 
 /* LEFT */
-.left-col { display: grid; grid-template-rows: 1fr 28px auto; border-right: 2px solid var(--border); overflow: hidden; }
-.instructions-pane { overflow: hidden; background: var(--panel); display: flex; flex-direction: column; }
-.pane-header { background: var(--panel2); border-bottom: 1px solid var(--border); padding: 0 14px; height: 28px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; }
-.pane-header-accent { color: var(--accent); font-size: 10px; font-weight: 600; }
-.instructions-body { padding: 16px 18px; font-size: 13px; line-height: 1.75; color: var(--text); overflow-y: auto; flex: 1; }
-.instructions-body h2 { font-size: 15px; font-weight: 800; color: var(--accent); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 1px; }
-.instructions-body h3 { font-size: 12px; font-weight: 700; color: var(--accent); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: 0.8px; border-left: 3px solid var(--accent); padding-left: 8px; }
-.instructions-body p { margin-bottom: 10px; color: #ccc; }
-.instructions-body code { font-family: var(--mono); background: var(--panel2); border: 1px solid var(--border2); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--accent); }
-.instructions-body pre { font-family: var(--mono); background: #111; border: 1px solid var(--border2); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 4px; font-size: 12px; color: #d4d4d4; overflow-x: auto; margin: 8px 0 12px; line-height: 1.6; }
-.instructions-body .task-box { background: var(--accent-dim); border: 1px solid var(--accent2); border-radius: 6px; padding: 10px 14px; margin: 10px 0; }
-.instructions-body .task-box strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; }
-.instructions-body ol, .instructions-body ul { padding-left: 20px; margin-bottom: 10px; color: #ccc; }
-.instructions-body li { margin-bottom: 5px; }
+.left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
+.instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
+.pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
+.pane-header-accent{color:var(--accent);font-size:10px;font-weight:600;}
+.instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;color:var(--text);overflow-y:auto;flex:1;}
+.instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
+.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
+.instructions-body p{margin-bottom:10px;color:#ccc;}
+.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
+.instructions-body pre{font-family:var(--mono);background:#111;border:1px solid var(--border2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:4px;font-size:12px;color:#d4d4d4;overflow-x:auto;margin:8px 0 12px;line-height:1.6;}
+.instructions-body .task-box{background:var(--accent-dim);border:1px solid var(--accent2);border-radius:6px;padding:10px 14px;margin:10px 0;}
+.instructions-body .task-box strong{color:var(--accent);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body ol,.instructions-body ul{padding-left:20px;margin-bottom:10px;color:#ccc;}
+.instructions-body li{margin-bottom:5px;}
 
-.resize-handle { height: 28px; background: var(--panel2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: ns-resize; user-select: none; color: var(--text-dark); font-size: 11px; letter-spacing: 2px; transition: background 0.15s; flex-shrink: 0; }
-.resize-handle:hover { background: #2a2a2a; color: var(--text-dim); }
+.resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
+.resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
 
-.console-pane { display: flex; flex-direction: column; background: #0d0d0d; border-top: 1px solid var(--border); overflow: hidden; min-height: 80px; }
-.console-output { flex: 1; padding: 10px 14px; font-family: var(--mono); font-size: 11px; line-height: 1.6; overflow-y: auto; white-space: pre-wrap; color: #aaa; }
-.console-output .err  { color: var(--red); }
-.console-output .ok   { color: var(--green); }
-.console-output .info { color: var(--blue); }
-.console-output .warn { color: var(--accent); }
+.console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
+.console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
+.console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
 
 /* RIGHT */
-.right-col { display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; background: var(--bg); }
+.right-col{display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;background:var(--bg);}
+.sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
+.sql-textarea-wrapper{position:relative;}
+.sql-textarea{width:100%;background:#111;color:#d4d4d4;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px 36px 12px 14px;border:none;outline:none;resize:none;min-height:90px;max-height:220px;overflow-y:auto;tab-size:4;display:block;}
+.sql-semicolon{position:absolute;bottom:8px;right:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);opacity:0.4;pointer-events:none;line-height:1;user-select:none;}
+.sql-toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--panel2);border-top:1px solid var(--border);gap:8px;}
+.sql-hint{font-size:10px;color:var(--text-dark);font-family:var(--mono);}
 
-.sql-input-pane { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); background: var(--panel); }
+.results-pane{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.results-scroll{flex:1;overflow:auto;padding:10px;}
+.results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.results-table th{background:var(--panel2);color:var(--accent);font-weight:700;padding:7px 12px;text-align:left;border:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.results-table td{padding:6px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap;}
+.results-table tr:nth-child(even) td{background:#1a1a1a;}
+.results-table tr:hover td{background:var(--accent-dim);}
+.results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
+.row-count{font-size:10px;color:var(--text-dim);font-family:var(--mono);padding:0 4px;}
 
-/* textarea wrapper — positions the decorative semicolon */
-.sql-textarea-wrapper { position: relative; }
-.sql-textarea {
-  width: 100%; background: #111; color: #d4d4d4; font-family: var(--mono);
-  font-size: 13px; line-height: 1.6; padding: 12px 36px 12px 14px;
-  border: none; outline: none; resize: none; min-height: 90px; max-height: 220px;
-  overflow-y: auto; tab-size: 4; display: block;
-}
-.sql-semicolon {
-  position: absolute; bottom: 8px; right: 10px;
-  font-family: var(--mono); font-size: 18px; font-weight: 700;
-  color: var(--accent); opacity: 0.4; pointer-events: none; line-height: 1;
-  user-select: none;
-}
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);min-height:96px;max-height:120px;}
+.query-info-pane{display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--border);overflow:hidden;}
+.query-info-body{padding:8px 14px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;overflow-y:auto;flex:1;}
 
-.sql-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--panel2); border-top: 1px solid var(--border); gap: 8px; }
-.sql-hint { font-size: 10px; color: var(--text-dark); font-family: var(--mono); }
+/* FLAG PANE */
+.flag-pane{display:flex;flex-direction:column;background:var(--panel);overflow:hidden;}
+.flag-inner{flex:1;display:flex;flex-direction:column;justify-content:center;padding:6px 12px;gap:5px;}
+.flag-input-row{display:flex;gap:6px;align-items:center;}
+.flag-input{flex:1;background:#111;border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 10px;outline:none;transition:border-color 0.15s;}
+.flag-input:focus{border-color:var(--accent);}
+.flag-input::placeholder{color:var(--text-dark);}
+.flag-result{font-family:var(--mono);font-size:11px;min-height:14px;padding-left:2px;}
+.flag-result.correct{color:var(--green);} .flag-result.wrong{color:var(--red);}
 
-.results-pane { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
-.results-scroll { flex: 1; overflow: auto; padding: 10px; }
-.results-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
-.results-table th { background: var(--panel2); color: var(--accent); font-weight: 700; padding: 7px 12px; text-align: left; border: 1px solid var(--border2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-.results-table td { padding: 6px 12px; border: 1px solid var(--border); color: var(--text); white-space: nowrap; }
-.results-table tr:nth-child(even) td { background: #1a1a1a; }
-.results-table tr:hover td { background: var(--accent-dim); }
-.results-empty { padding: 24px; text-align: center; color: var(--text-dark); font-family: var(--mono); font-size: 12px; }
-.row-count { font-size: 10px; color: var(--text-dim); font-family: var(--mono); padding: 0 4px; }
+/* Flag display — shows personalised flags once name is entered */
+.flag-display{font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:0 2px;line-height:1.6;overflow-y:auto;max-height:40px;}
+.flag-display .flag-chip{color:var(--accent);cursor:pointer;transition:opacity 0.15s;}
+.flag-display .flag-chip:hover{opacity:0.7;}
+.flag-display .flag-chip::before{content:"📋 ";}
 
-.bottom-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); min-height: 80px; max-height: 110px; }
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
 
-.query-info-pane { display: flex; flex-direction: column; background: var(--bg); border-right: 1px solid var(--border); overflow: hidden; }
-.query-info-body { padding: 8px 14px; font-family: var(--mono); font-size: 11px; color: var(--text-dim); line-height: 1.7; overflow-y: auto; flex: 1; }
-
-.flag-pane { display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
-.flag-inner { flex: 1; display: flex; flex-direction: column; align-items: stretch; justify-content: center; padding: 8px 12px; gap: 6px; }
-.flag-input-row { display: flex; gap: 6px; align-items: center; }
-.flag-input { flex: 1; background: #111; border: 1px solid var(--border2); border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 12px; padding: 6px 10px; outline: none; transition: border-color 0.15s; }
-.flag-input:focus { border-color: var(--accent); }
-.flag-input::placeholder { color: var(--text-dark); }
-.flag-result { font-family: var(--mono); font-size: 11px; min-height: 16px; padding-left: 2px; }
-.flag-result.correct { color: var(--green); }
-.flag-result.wrong   { color: var(--red); }
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #444; }
-
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
-.modal-overlay.open { display: flex; }
-.modal-box { background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; padding: 32px 36px; max-width: 460px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
-.modal-emoji { font-size: 36px; text-align: center; margin-bottom: 14px; }
-.modal-text { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 24px; white-space: pre-wrap; }
-.modal-actions { text-align: center; }
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+.modal-emoji{font-size:36px;text-align:center;margin-bottom:14px;}
+.modal-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:24px;white-space:pre-wrap;}
+.modal-actions{text-align:center;}
 </style>
 </head>
 <body>
@@ -136,7 +120,15 @@ html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text
 <div class="header">
   <div class="logo">⚑ School F — SQL Lab</div>
   <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
-  <button class="btn btn-complete" style="margin-left:auto;" onclick="showComplete()">✔ Complete</button>
+  <div class="name-wrapper">
+    <span class="name-label">Your first name:</span>
+    <input type="text" id="name-input" class="name-input"
+      placeholder="e.g. Furai"
+      onchange="onNameChange()"
+      onkeydown="if(event.key==='Enter') onNameChange()" />
+    <span class="name-status waiting" id="name-status">enter name to unlock flags</span>
+  </div>
+  <button class="btn btn-complete" style="margin-left:8px;" onclick="showComplete()">✔ Complete</button>
 </div>
 
 <div class="workspace">
@@ -157,7 +149,7 @@ html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text
         <span class="pane-header-accent" id="console-status">Ready</span>
       </div>
       <div class="console-output" id="console-output">
-        <span class="info">SQL Lab ready. Select a query and click Run.</span>
+        <span class="info">SQL Lab ready. Enter your name above, then run a query.</span>
       </div>
     </div>
   </div>
@@ -171,12 +163,8 @@ html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text
         <span class="row-count" id="row-count"></span>
       </div>
       <div class="sql-textarea-wrapper">
-        <textarea
-          id="sql-input"
-          class="sql-textarea"
-          spellcheck="false"
-          placeholder="-- Type your SQL query here&#10;SELECT * FROM students LIMIT 5"
-        ></textarea>
+        <textarea id="sql-input" class="sql-textarea" spellcheck="false"
+          placeholder="-- Type your SQL query here&#10;SELECT * FROM students LIMIT 5"></textarea>
         <span class="sql-semicolon">;</span>
       </div>
       <div class="sql-toolbar">
@@ -202,11 +190,16 @@ html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text
         <div class="query-info-body" id="query-info">No query run yet.</div>
       </div>
       <div class="flag-pane">
-        <div class="pane-header"><span>Flag Submission</span></div>
+        <div class="pane-header">
+          <span>Flag Submission</span>
+          <span class="pane-header-accent" id="flag-pane-status">—</span>
+        </div>
         <div class="flag-inner">
+          <!-- Personalised flag chips — click to copy into submission box -->
+          <div class="flag-display" id="flag-display"></div>
           <div class="flag-input-row">
             <input type="text" class="flag-input" id="flag-input"
-              placeholder="Faith{...}"
+              placeholder="FCSDE{...}"
               onkeydown="if(event.key==='Enter') checkFlag()" />
             <button class="btn btn-accent btn-small" onclick="checkFlag()">Submit</button>
           </div>
@@ -233,28 +226,33 @@ html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text
 const WORKER_URL = "https://formativeassessment.xu-yangen.workers.dev";
 
 // ── LAB DATA ──────────────────────────────────────────────────────────────────
-// db: matches the binding name in the Worker (DB_SWIMMING, DB_ATHLETICS etc)
-// flags: array of accepted flag strings for this lab
+// flags: array of { id, leet } objects
+// id:    unique string used as part of the hash input — should match labId below
+// leet:  the static leet-speak part of the flag
+// labId: sent to the Worker for hash generation — unique per lab
 const LAB_DATA = [
   {
     title: "Lab 1 — Getting Started",
     db:    "formative",
-    flags: [],
+    labId: "SW1",
+    flags: [
+      { id: "SW1_F1", leet: "5ch3m4_unl0ck3d" }
+    ],
     instructions: `
       <h2>Welcome to the SQL Investigation Lab</h2>
       <p>You are going to explore a real database hosted in the cloud. No software to install — just type SQL and click Run.</p>
+      <p>First, enter your first name in the box at the top of the page. This unlocks your personalised flag for each lab.</p>
       <h3>Step 1 — Discover the tables</h3>
-      <p>You have not been given the schema. Start by running this query to see what tables exist:</p>
+      <p>You have not been given the schema. Start here:</p>
       <pre>SELECT name FROM sqlite_master WHERE type='table'</pre>
       <h3>Step 2 — Explore each table</h3>
-      <p>Once you know the table names, find out what columns each one has:</p>
       <pre>PRAGMA table_info(students)</pre>
       <p>Replace <code>students</code> with each table name you found.</p>
       <h3>Step 3 — Look at the data</h3>
       <pre>SELECT * FROM students LIMIT 10</pre>
       <div class="task-box">
         <strong>Your task</strong>
-        How many tables does this database have? Write down all the table names and column names in your notes before moving to Lab 2.
+        How many tables does this database have? Write down all table names and column names. Once you have explored every table, your flag will appear in the flag panel — click it to copy, then submit it.
       </div>
     `,
     completeText: "Well done! You have discovered the database schema. Move on to Lab 2."
@@ -262,19 +260,21 @@ const LAB_DATA = [
   {
     title: "Lab 2 — Basic Queries",
     db:    "formative",
-    flags: [],
+    labId: "SW2",
+    flags: [
+      { id: "SW2_F1", leet: "qu3ry_m4st3r" }
+    ],
     instructions: `
       <h2>Lab 2 — Basic Queries</h2>
-      <p>Now that you know the schema, practice these fundamental SQL queries.</p>
-      <h3>SELECT with WHERE</h3>
+      <p>Practice these fundamental SQL queries against the swimming carnival database.</p>
+      <h3>WHERE — filter rows</h3>
       <pre>SELECT * FROM students WHERE gender = 'Girls'</pre>
-      <h3>ORDER BY</h3>
+      <h3>ORDER BY — sort results</h3>
       <pre>SELECT * FROM results ORDER BY result_value ASC</pre>
-      <h3>COUNT</h3>
+      <h3>COUNT — count rows</h3>
       <pre>SELECT COUNT(*) FROM results WHERE eventID = 'E01'</pre>
       <div class="task-box">
-        <strong>Section 1 Questions</strong>
-        Write the SQL query AND paste in the result for each.
+        <strong>Section 1 Questions — write the query AND the result</strong>
         <ol style="margin-top:8px;">
           <li>How many students are in the database?</li>
           <li>Which student has the lowest result_value in the entire results table?</li>
@@ -288,11 +288,16 @@ const LAB_DATA = [
   {
     title: "Lab 3 — The Investigation",
     db:    "formative",
-    flags: [],
+    labId: "SW3",
+    flags: [
+      { id: "SW3_F1", leet: "t1m3_l00k5_wr0ng"  },
+      { id: "SW3_F2", leet: "s3ss10n_cl4sh"      },
+      { id: "SW3_F3", leet: "gh0st_sw1mm3r"      },
+      { id: "SW3_F4", leet: "p01nts_g0n3_wr0ng"  },
+    ],
     instructions: `
       <h2>Lab 3 — The Investigation</h2>
-      <p>School F held a swimming carnival. The data was entered by a volunteer who made several mistakes.</p>
-      <p>Your job is to find them.</p>
+      <p>School F held a swimming carnival. The data was entered by a volunteer who made several mistakes. Your job is to find them.</p>
       <h3>How to approach this</h3>
       <ul>
         <li>There are errors in this data. There may also be things that look unusual but turn out to be fine.</li>
@@ -315,21 +320,101 @@ Session 5:  2:30pm –  3:30pm</pre>
           <li>What you found</li>
           <li>Why you think it is an error (or why it turned out to be fine)</li>
         </ol>
-        Submit your findings via the Microsoft Form when done.
+        Each error you find unlocks a personalised flag. Submit all flags you find via the Microsoft Form along with your write-up.
       </div>
     `,
-    completeText: "Investigation complete. Submit your findings via the Microsoft Form link provided by Teacher Yang."
+    completeText: "Investigation complete. Submit your findings and flags via the Microsoft Form provided by Teacher Yang."
   }
 ];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let studentName    = "";
+let sessionFlags   = {};   // { flagId: "FCSDE{leet_suffix}" }
+let validFlags     = new Set();
+
+// ── NAME HANDLING ─────────────────────────────────────────────────────────────
+
+function onNameChange() {
+  const raw = document.getElementById("name-input").value.trim();
+  if (!raw) return;
+  studentName = raw;
+  generateFlags();
+}
+
+async function generateFlags() {
+  const index = parseInt(document.getElementById("lab-select").value);
+  const lab   = LAB_DATA[index];
+  if (!studentName || !lab.flags || lab.flags.length === 0) return;
+
+  const status = document.getElementById("name-status");
+  status.textContent = "generating...";
+  status.className   = "name-status waiting";
+
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "generate_flags",
+        name:   studentName,
+        labId:  lab.labId,
+        flags:  lab.flags
+      })
+    });
+
+    const data = await resp.json();
+
+    if (data.success) {
+      // Store flags for this lab
+      data.flags.forEach(f => {
+        sessionFlags[f.id] = f.flag;
+        validFlags.add(f.flag);
+      });
+
+      status.textContent = `✓ ${studentName}`;
+      status.className   = "name-status ok";
+      renderFlagChips(data.flags);
+      log(`✓ Flags generated for ${studentName} (${lab.labId})`, "ok");
+    } else {
+      status.textContent = "error — try again";
+      status.className   = "name-status waiting";
+      log("✗ Flag generation failed: " + data.error, "err");
+    }
+  } catch (err) {
+    status.textContent = "offline";
+    status.className   = "name-status waiting";
+    log("✗ Network error: " + err.message, "err");
+  }
+}
+
+function renderFlagChips(flags) {
+  const display = document.getElementById("flag-display");
+  const paneStatus = document.getElementById("flag-pane-status");
+
+  if (!flags || flags.length === 0) {
+    display.innerHTML = "";
+    paneStatus.textContent = "no flags this lab";
+    return;
+  }
+
+  paneStatus.textContent = `${flags.length} flag${flags.length > 1 ? "s" : ""} this lab`;
+  display.innerHTML = flags.map(f =>
+    `<span class="flag-chip" title="Click to copy" onclick="copyFlag('${f.flag}')">${f.flag}</span> `
+  ).join("");
+}
+
+function copyFlag(flag) {
+  document.getElementById("flag-input").value = flag;
+  document.getElementById("flag-input").focus();
+  log(`Copied flag to submission box: ${flag}`, "info");
+}
 
 // ── QUERY ENGINE ──────────────────────────────────────────────────────────────
 
 async function runQuery() {
   const index = parseInt(document.getElementById("lab-select").value);
   const lab   = LAB_DATA[index];
-
-  // Strip trailing semicolons and whitespace — Worker rejects them
-  let query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
+  let query   = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
   if (!query) return;
 
   setConsoleStatus("Running...", "warn");
@@ -339,7 +424,7 @@ async function runQuery() {
     const resp = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, db: lab.db })
+      body: JSON.stringify({ action: "query", query, db: lab.db })
     });
 
     const data = await resp.json();
@@ -369,18 +454,15 @@ async function runQuery() {
 function renderTable(rows) {
   const empty = document.getElementById("results-empty");
   const table = document.getElementById("results-table");
-
   if (!rows || rows.length === 0) {
-    empty.textContent      = "Query returned no rows.";
-    empty.style.display    = "block";
-    table.style.display    = "none";
+    empty.textContent   = "Query returned no rows.";
+    empty.style.display = "block";
+    table.style.display = "none";
     return;
   }
-
   empty.style.display = "none";
   table.style.display = "table";
   table.innerHTML     = "";
-
   const thead = document.createElement("thead");
   const hrow  = document.createElement("tr");
   Object.keys(rows[0]).forEach(col => {
@@ -390,7 +472,6 @@ function renderTable(rows) {
   });
   thead.appendChild(hrow);
   table.appendChild(thead);
-
   const tbody = document.createElement("tbody");
   rows.forEach(row => {
     const tr = document.createElement("tr");
@@ -408,9 +489,9 @@ function renderTable(rows) {
 function renderError(msg) {
   const empty = document.getElementById("results-empty");
   const table = document.getElementById("results-table");
-  empty.innerHTML        = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
-  empty.style.display    = "block";
-  table.style.display    = "none";
+  empty.innerHTML     = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  table.style.display = "none";
   document.getElementById("result-count").textContent = "";
 }
 
@@ -437,18 +518,18 @@ function setConsoleStatus(text, cls) {
 // ── FLAG CHECKER ──────────────────────────────────────────────────────────────
 
 function checkFlag() {
-  const index  = parseInt(document.getElementById("lab-select").value);
-  const lab    = LAB_DATA[index];
   const input  = document.getElementById("flag-input").value.trim();
   const result = document.getElementById("flag-result");
   if (!input) return;
-  if (!lab.flags || lab.flags.length === 0) {
-    result.textContent = "No flags for this lab.";
-    result.className   = "flag-result";
+
+  if (!studentName) {
+    result.textContent = "Enter your name first.";
+    result.className   = "flag-result wrong";
     return;
   }
-  if (lab.flags.includes(input)) {
-    result.textContent = "✓ Correct!";
+
+  if (validFlags.has(input)) {
+    result.textContent = "✓ Correct! Add this to your Microsoft Form submission.";
     result.className   = "flag-result correct";
     log(`✓ Flag accepted: ${input}`, "ok");
   } else {
@@ -464,8 +545,7 @@ function initLabs() {
   const select = document.getElementById("lab-select");
   LAB_DATA.forEach((lab, i) => {
     const opt = document.createElement("option");
-    opt.value = i;
-    opt.text  = lab.title;
+    opt.value = i; opt.text = lab.title;
     select.appendChild(opt);
   });
   loadLab();
@@ -474,17 +554,21 @@ function initLabs() {
 function loadLab() {
   const index = parseInt(document.getElementById("lab-select").value);
   const lab   = LAB_DATA[index];
-  document.getElementById("instructions-body").innerHTML   = lab.instructions;
-  document.getElementById("lab-title-header").textContent  = lab.title;
-  document.getElementById("flag-input").value              = "";
-  document.getElementById("flag-result").textContent       = "";
-  document.getElementById("flag-result").className         = "flag-result";
-  document.getElementById("results-empty").textContent     = "Run a query to see results here.";
-  document.getElementById("results-empty").style.display   = "block";
-  document.getElementById("results-table").style.display   = "none";
-  document.getElementById("result-count").textContent      = "";
-  document.getElementById("query-info").textContent        = "No query run yet.";
+  document.getElementById("instructions-body").innerHTML  = lab.instructions;
+  document.getElementById("lab-title-header").textContent = lab.title;
+  document.getElementById("flag-input").value             = "";
+  document.getElementById("flag-result").textContent      = "";
+  document.getElementById("flag-result").className        = "flag-result";
+  document.getElementById("results-empty").textContent    = "Run a query to see results here.";
+  document.getElementById("results-empty").style.display  = "block";
+  document.getElementById("results-table").style.display  = "none";
+  document.getElementById("result-count").textContent     = "";
+  document.getElementById("query-info").textContent       = "No query run yet.";
+  document.getElementById("flag-display").innerHTML       = "";
+  document.getElementById("flag-pane-status").textContent = "—";
   log("Loaded: " + lab.title, "info");
+  // Regenerate flags for new lab if name already entered
+  if (studentName) generateFlags();
 }
 
 // ── COMPLETION MODAL ──────────────────────────────────────────────────────────
@@ -494,7 +578,7 @@ function showComplete() {
   const lab    = LAB_DATA[index];
   const isLast = index >= LAB_DATA.length - 1;
   document.getElementById("modal-text").textContent =
-    isLast ? (lab.finalText || "You have completed all labs. Submit your findings via the Microsoft Form.")
+    isLast ? (lab.finalText || "You have completed all labs. Submit your findings and flags via the Microsoft Form.")
            : (lab.completeText || "Well done! Move on to the next lab.");
   document.getElementById("complete-modal").classList.add("open");
 }
@@ -509,13 +593,12 @@ function confirmComplete() {
   }
 }
 
-// ── RESIZE HANDLE ─────────────────────────────────────────────────────────────
+// ── RESIZE ────────────────────────────────────────────────────────────────────
 
 (function() {
   const handle  = document.getElementById("resize-handle");
   const leftCol = document.getElementById("left-col");
-  let dragging  = false;
-  let startY    = 0;
+  let dragging  = false, startY = 0;
   handle.addEventListener("mousedown", e => {
     dragging = true; startY = e.clientY;
     document.body.style.userSelect = "none";
@@ -523,10 +606,10 @@ function confirmComplete() {
   });
   document.addEventListener("mousemove", e => {
     if (!dragging) return;
-    const dy      = e.clientY - startY;
-    const total   = leftCol.offsetHeight - 28;
-    const current = document.getElementById("instructions-pane").offsetHeight;
-    const newH    = Math.max(80, Math.min(total - 60, current + dy));
+    const dy    = e.clientY - startY;
+    const total = leftCol.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const newH  = Math.max(80, Math.min(total - 60, cur + dy));
     leftCol.style.gridTemplateRows = `${newH}px 28px ${total - newH}px`;
     startY = e.clientY;
   });
@@ -537,12 +620,11 @@ function confirmComplete() {
   });
 })();
 
-// ── KEYBOARD SHORTCUT ─────────────────────────────────────────────────────────
+// ── KEYBOARD ─────────────────────────────────────────────────────────────────
 
 document.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-    runQuery();
-    e.preventDefault();
+    runQuery(); e.preventDefault();
   }
 });
 
