@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School F — SQL Investigation Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #161616;
+  --panel:    #1f1f1f;
+  --panel2:   #272727;
+  --border:   #2e2e2e;
+  --border2:  #3a3a3a;
+  --accent:   #F0A500;
+  --accent2:  #c98b00;
+  --accent-dim:#3a2800;
+  --text:     #e0e0e0;
+  --text-dim: #888;
+  --text-dark:#555;
+  --green:    #4ec94e;
+  --red:      #f05050;
+  --blue:     #5ab4f0;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────────────── */
+.header {
+  height: 48px;
+  background: var(--panel);
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.header-left  { display: flex; align-items: center; gap: 12px; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.lab-selector {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+}
+.lab-selector:focus { border-color: var(--accent); }
+
+.btn {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-run     { background: #28a745; color: #fff; }
+.btn-run:hover { background: #218838; }
+.btn-complete { background: #9b59b6; color: #fff; }
+.btn-complete:hover { background: #7d3c98; }
+.btn-accent  { background: var(--accent); color: #161616; }
+.btn-accent:hover { background: var(--accent2); }
+.btn-ghost   { background: var(--panel2); color: var(--text); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: #333; }
+.btn-small   { padding: 4px 10px; font-size: 10px; }
+
+/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  height: calc(100vh - 48px);
+  width: 100%;
+}
+
+/* LEFT COLUMN */
+.left-col {
+  display: grid;
+  grid-template-rows: 1fr 28px auto;
+  border-right: 2px solid var(--border);
+  overflow: hidden;
+}
+
+.instructions-pane {
+  overflow-y: auto;
+  padding: 0;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+}
+
+.pane-header {
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 14px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.pane-header-accent {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.instructions-body {
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.instructions-body h2 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.instructions-body h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+}
+
+.instructions-body p { margin-bottom: 10px; color: #ccc; }
+
+.instructions-body code {
+  font-family: var(--mono);
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.instructions-body pre {
+  font-family: var(--mono);
+  background: #111;
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #d4d4d4;
+  overflow-x: auto;
+  margin: 8px 0 12px;
+  line-height: 1.6;
+}
+
+.instructions-body .task-box {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent2);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+.instructions-body .task-box strong {
+  color: var(--accent);
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.instructions-body ol, .instructions-body ul {
+  padding-left: 20px;
+  margin-bottom: 10px;
+  color: #ccc;
+}
+.instructions-body li { margin-bottom: 5px; }
+
+/* resize handle */
+.resize-handle {
+  height: 28px;
+  background: var(--panel2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+  user-select: none;
+  color: var(--text-dark);
+  font-size: 11px;
+  letter-spacing: 2px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.resize-handle:hover { background: #2a2a2a; color: var(--text-dim); }
+
+/* console */
+.console-pane {
+  display: flex;
+  flex-direction: column;
+  background: #0d0d0d;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 80px;
+}
+
+.console-output {
+  flex: 1;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #aaa;
+}
+
+.console-output .err  { color: var(--red); }
+.console-output .ok   { color: var(--green); }
+.console-output .info { color: var(--blue); }
+.console-output .warn { color: var(--accent); }
+
+/* RIGHT COLUMN */
+.right-col {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* SQL input */
+.sql-input-pane {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.sql-textarea {
+  background: #111;
+  color: #d4d4d4;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  border: none;
+  outline: none;
+  resize: none;
+  min-height: 90px;
+  max-height: 220px;
+  overflow-y: auto;
+  tab-size: 4;
+}
+
+.sql-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--panel2);
+  border-top: 1px solid var(--border);
+  gap: 8px;
+}
+
+.sql-hint {
+  font-size: 10px;
+  color: var(--text-dark);
+  font-family: var(--mono);
+}
+
+/* results */
+.results-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.results-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.results-table th {
+  background: var(--panel2);
+  color: var(--accent);
+  font-weight: 700;
+  padding: 7px 12px;
+  text-align: left;
+  border: 1px solid var(--border2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.results-table td {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.results-table tr:nth-child(even) td { background: #1a1a1a; }
+.results-table tr:hover td { background: var(--accent-dim); }
+
+.results-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dark);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.row-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  padding: 0 4px;
+}
+
+/* bottom row */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border);
+  min-height: 80px;
+  max-height: 120px;
+}
+
+/* flag pane */
+.flag-pane {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.flag-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  padding: 8px 12px;
+  gap: 6px;
+}
+
+.flag-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.flag-input {
+  flex: 1;
+  background: #111;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.flag-input:focus { border-color: var(--accent); }
+.flag-input::placeholder { color: var(--text-dark); }
+
+.flag-result {
+  font-family: var(--mono);
+  font-size: 11px;
+  min-height: 16px;
+  padding-left: 2px;
+}
+
+.flag-result.correct { color: var(--green); }
+.flag-result.wrong   { color: var(--red); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #444; }
+
+/* modal */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 32px 36px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.modal-emoji { font-size: 36px; text-align: center; margin-bottom: 14px; }
+.modal-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+.modal-actions { text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">⚑ School F — SQL Lab</div>
+    <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-run" onclick="runQuery()">▶ Run Query</button>
+    <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
+  </div>
+</div>
+
+<!-- ── WORKSPACE ───────────────────────────────────────────────────────── -->
+<div class="workspace">
+
+  <!-- LEFT COLUMN -->
+  <div class="left-col" id="left-col">
+
+    <!-- Instructions -->
+    <div class="instructions-pane" id="instructions-pane">
+      <div class="pane-header">
+        <span>Instructions</span>
+        <span class="pane-header-accent" id="lab-title-header">Lab 1</span>
+      </div>
+      <div class="instructions-body" id="instructions-body">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Resize handle -->
+    <div class="resize-handle" id="resize-handle" title="Drag to resize">
+      ··· drag to resize ···
+    </div>
+
+    <!-- Console -->
+    <div class="console-pane" id="console-pane">
+      <div class="pane-header">
+        <span>Console</span>
+        <span class="pane-header-accent" id="console-status">Ready</span>
+      </div>
+      <div class="console-output" id="console-output">
+        <span class="info">SQL Lab ready. Select a query and click Run.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+
+    <!-- SQL Input -->
+    <div class="sql-input-pane">
+      <div class="pane-header">
+        <span>SQL Query</span>
+        <span class="row-count" id="row-count"></span>
+      </div>
+      <textarea
+        id="sql-input"
+        class="sql-textarea"
+        spellcheck="false"
+        placeholder="-- Type your SQL query here&#10;SELECT * FROM students LIMIT 5"
+      ></textarea>
+      <div class="sql-toolbar">
+        <span class="sql-hint" id="sql-hint">Only SELECT and PRAGMA allowed</span>
+        <button class="btn btn-accent btn-small" onclick="runQuery()">▶ Run</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-pane">
+      <div class="pane-header">
+        <span>Query Results</span>
+        <span class="row-count" id="result-count"></span>
+      </div>
+      <div class="results-scroll" id="results-scroll">
+        <div class="results-empty" id="results-empty">
+          Run a query to see results here.
+        </div>
+        <table class="results-table" id="results-table" style="display:none;"></table>
+      </div>
+    </div>
+
+    <!-- Bottom row -->
+    <div class="bottom-row">
+
+      <!-- Console mirror (right side bottom — errors from query) -->
+      <!-- Flag pane takes bottom-left, console takes bottom-right -->
+      <!-- Actually per spec: bottom-left = console already in left col -->
+      <!-- bottom-right left half = nothing, right half = flag -->
+      <!-- Re-reading spec: bottom row spans full width, split 50/50 -->
+      <!-- Left half of bottom row mirrors left console, right = flag -->
+      <!-- We keep it simple: left half is spacer label, right is flag -->
+
+      <div class="flag-pane" style="border-right:1px solid var(--border); background: var(--bg);">
+        <div class="pane-header"><span>Query Info</span></div>
+        <div style="padding:8px 14px; font-family:var(--mono); font-size:11px; color:var(--text-dim); line-height:1.7;" id="query-info">
+          No query run yet.
+        </div>
+      </div>
+
+      <div class="flag-pane">
+        <div class="pane-header"><span>Flag Submission</span></div>
+        <div class="flag-inner">
+          <div class="flag-input-row">
+            <input
+              type="text"
+              class="flag-input"
+              id="flag-input"
+              placeholder="Faith{...}"
+              onkeydown="if(event.key==='Enter') checkFlag()"
+            />
+            <button class="btn btn-accent btn-small" onclick="checkFlag()">Submit</button>
+          </div>
+          <div class="flag-result" id="flag-result"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── COMPLETION MODAL ────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="complete-modal">
+  <div class="modal-box">
+    <div class="modal-emoji">🎉</div>
+    <p class="modal-text" id="modal-text"></p>
+    <div class="modal-actions">
+      <button class="btn btn-accent" onclick="confirmComplete()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ════════════════════════════════════════════════════════════════════════
+
+const WORKER_URL = "https://formativeassessment.xu-yangen.workers.dev";
+
+// ════════════════════════════════════════════════════════════════════════
+// LAB DATA
+// Edit the instructions HTML and flags per lab here
+// ════════════════════════════════════════════════════════════════════════
+
+const LAB_DATA = [
+  {
+    title: "Lab 1 — Getting Started",
+    flags: [],  // no flags this lab
+    instructions: `
+      <h2>Welcome to the SQL Investigation Lab</h2>
+      <p>You are going to explore a real database hosted in the cloud. No software to install — just type SQL and hit Run.</p>
+
+      <h3>Step 1 — Discover the tables</h3>
+      <p>You have not been given the schema. Start by running this query to see what tables exist:</p>
+      <pre>SELECT name FROM sqlite_master WHERE type='table';</pre>
+
+      <h3>Step 2 — Explore each table</h3>
+      <p>Once you know the table names, find out what columns each one has:</p>
+      <pre>PRAGMA table_info(students);</pre>
+      <p>Replace <code>students</code> with each table name you found.</p>
+
+      <h3>Step 3 — Look at the data</h3>
+      <p>Run a SELECT on each table to see what is inside:</p>
+      <pre>SELECT * FROM students LIMIT 10;</pre>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many tables does this database have? Write down all the table names and column names in your notes before moving to Lab 2.
+      </div>
+    `,
+    completeText: "Well done! You have discovered the database schema. Move on to Lab 2."
+  },
+  {
+    title: "Lab 2 — Basic Queries",
+    flags: [],
+    instructions: `
+      <h2>Lab 2 — Basic Queries</h2>
+      <p>Now that you know the schema, let us practice some fundamental SQL queries.</p>
+
+      <h3>SELECT with WHERE</h3>
+      <p>Filter rows using a condition:</p>
+      <pre>SELECT * FROM students WHERE gender = 'Girls';</pre>
+
+      <h3>ORDER BY</h3>
+      <p>Sort results by a column:</p>
+      <pre>SELECT * FROM results ORDER BY result_value ASC;</pre>
+
+      <h3>Counting rows</h3>
+      <pre>SELECT COUNT(*) FROM results WHERE eventID = 'E01';</pre>
+
+      <div class="task-box">
+        <strong>Section 1 Questions</strong>
+        Answer each of these using a SQL query. Write down your query AND the result.
+        <ol style="margin-top:8px;">
+          <li>How many students are in the database?</li>
+          <li>Which student has the lowest result_value in the entire results table?</li>
+          <li>List all Junior Girls students.</li>
+          <li>How many results were recorded for event E03?</li>
+        </ol>
+      </div>
+    `,
+    completeText: "Section 1 complete. Move on to Lab 3 for the investigation."
+  },
+  {
+    title: "Lab 3 — The Investigation",
+    flags: [],
+    instructions: `
+      <h2>Lab 3 — The Investigation</h2>
+      <p>School F held a swimming carnival. The data was entered by a volunteer who made several mistakes.</p>
+      <p>Your job is to find them.</p>
+
+      <h3>How to approach this</h3>
+      <ul>
+        <li>There are errors in this data. There may also be things that look unusual but turn out to be fine.</li>
+        <li>Write about <strong>anything you found</strong> — real errors, things you investigated and ruled out, or patterns that surprised you.</li>
+        <li>For each finding, include the query you used, what you found, and what you think it means.</li>
+      </ul>
+
+      <h3>A starting hint</h3>
+      <p>One of the tables in this database has only one column and no primary key. It may contain useful information.</p>
+
+      <h3>Session schedule</h3>
+      <p>For reference — the carnival ran across five sessions:</p>
+      <pre>Session 1:  8:00am –  9:00am
+Session 2:  9:30am – 10:30am
+Session 3: 11:00am – 12:00pm
+Session 4:  1:00pm –  2:00pm
+Session 5:  2:30pm –  3:30pm</pre>
+
+      <div class="task-box">
+        <strong>Section 2 — Open Investigation</strong>
+        Find as many data errors or unusual patterns as you can. For each one write:
+        <ol style="margin-top:8px;">
+          <li>The query you ran</li>
+          <li>What you found</li>
+          <li>Why you think it is an error (or why it turned out to be fine)</li>
+        </ol>
+        Submit your findings via the Microsoft Form when you are done.
+      </div>
+    `,
+    completeText: "Investigation complete. Submit your findings via the Microsoft Form link provided by Teacher Yang."
+  }
+];
+
+// ════════════════════════════════════════════════════════════════════════
+// QUERY ENGINE
+// ════════════════════════════════════════════════════════════════════════
+
+async function runQuery() {
+  const query = document.getElementById("sql-input").value.trim();
+  if (!query) return;
+
+  setConsoleStatus("Running...", "warn");
+  log("→ " + query, "info");
+
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+
+    const data = await resp.json();
+
+    if (data.success) {
+      renderTable(data.data);
+      const n = data.data.length;
+      setConsoleStatus("OK", "ok");
+      log(`✓ ${n} row${n !== 1 ? "s" : ""} returned.`, "ok");
+      document.getElementById("result-count").textContent = `${n} row${n !== 1 ? "s" : ""}`;
+      document.getElementById("query-info").innerHTML =
+        `<span style="color:var(--green)">✓ Success</span> &nbsp;·&nbsp; ${n} row${n !== 1 ? "s" : ""} returned`;
+    } else {
+      renderError(data.error);
+      setConsoleStatus("Error", "err");
+      log("✗ " + data.error, "err");
+      document.getElementById("query-info").innerHTML =
+        `<span style="color:var(--red)">✗ Error</span><br>${data.error}`;
+    }
+  } catch (err) {
+    renderError("Could not reach the server. Check your internet connection.");
+    setConsoleStatus("Offline", "err");
+    log("✗ Network error: " + err.message, "err");
+  }
+}
+
+function renderTable(rows) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+
+  if (!rows || rows.length === 0) {
+    empty.textContent = "Query returned no rows.";
+    empty.style.display = "block";
+    table.style.display = "none";
+    return;
+  }
+
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+
+  // Header
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  Object.keys(rows[0]).forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    Object.values(row).forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val === null ? "NULL" : val;
+      if (val === null) td.style.color = "var(--text-dark)";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function renderError(msg) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.innerHTML = `<span style="color:var(--red); font-family:var(--mono); font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  table.style.display = "none";
+  document.getElementById("result-count").textContent = "";
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// CONSOLE
+// ════════════════════════════════════════════════════════════════════════
+
+function log(msg, cls = "") {
+  const out = document.getElementById("console-output");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setConsoleStatus(text, cls) {
+  const el = document.getElementById("console-status");
+  el.textContent = text;
+  el.style.color = cls === "ok"   ? "var(--green)"
+                 : cls === "err"  ? "var(--red)"
+                 : cls === "warn" ? "var(--accent)"
+                 : "var(--blue)";
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// FLAG CHECKER
+// ════════════════════════════════════════════════════════════════════════
+
+function checkFlag() {
+  const index   = parseInt(document.getElementById("lab-select").value);
+  const lab     = LAB_DATA[index];
+  const input   = document.getElementById("flag-input").value.trim();
+  const result  = document.getElementById("flag-result");
+
+  if (!input) return;
+
+  if (!lab.flags || lab.flags.length === 0) {
+    result.textContent = "No flags for this lab.";
+    result.className   = "flag-result";
+    return;
+  }
+
+  if (lab.flags.includes(input)) {
+    result.textContent = "✓ Correct!";
+    result.className   = "flag-result correct";
+    log(`✓ Flag accepted: ${input}`, "ok");
+  } else {
+    result.textContent = "✗ Not quite. Keep investigating.";
+    result.className   = "flag-result wrong";
+    log(`✗ Flag rejected: ${input}`, "err");
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// LAB MANAGEMENT
+// ════════════════════════════════════════════════════════════════════════
+
+function initLabs() {
+  const select = document.getElementById("lab-select");
+  LAB_DATA.forEach((lab, i) => {
+    const opt   = document.createElement("option");
+    opt.value   = i;
+    opt.text    = lab.title;
+    select.appendChild(opt);
+  });
+  loadLab();
+}
+
+function loadLab() {
+  const index = parseInt(document.getElementById("lab-select").value);
+  const lab   = LAB_DATA[index];
+  document.getElementById("instructions-body").innerHTML = lab.instructions;
+  document.getElementById("lab-title-header").textContent = lab.title;
+  document.getElementById("flag-input").value  = "";
+  document.getElementById("flag-result").textContent = "";
+  document.getElementById("flag-result").className   = "flag-result";
+  document.getElementById("results-empty").textContent = "Run a query to see results here.";
+  document.getElementById("results-empty").style.display = "block";
+  document.getElementById("results-table").style.display = "none";
+  document.getElementById("result-count").textContent = "";
+  document.getElementById("query-info").textContent = "No query run yet.";
+  log("Loaded: " + lab.title, "info");
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// COMPLETION MODAL
+// ════════════════════════════════════════════════════════════════════════
+
+function showComplete() {
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const lab    = LAB_DATA[index];
+  const isLast = index >= LAB_DATA.length - 1;
+  document.getElementById("modal-text").textContent =
+    isLast ? (lab.finalText || "You have completed all labs. Submit your findings via the Microsoft Form.") 
+           : (lab.completeText || "Well done! Move on to the next lab.");
+  document.getElementById("complete-modal").classList.add("open");
+}
+
+function confirmComplete() {
+  document.getElementById("complete-modal").classList.remove("open");
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const isLast = index >= LAB_DATA.length - 1;
+  if (!isLast) {
+    document.getElementById("lab-select").value = index + 1;
+    loadLab();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// RESIZE HANDLE (drag instructions / console split)
+// ════════════════════════════════════════════════════════════════════════
+
+(function() {
+  const handle   = document.getElementById("resize-handle");
+  const leftCol  = document.getElementById("left-col");
+  let dragging   = false;
+  let startY     = 0;
+  let startRows  = "";
+
+  handle.addEventListener("mousedown", e => {
+    dragging  = true;
+    startY    = e.clientY;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor     = "ns-resize";
+  });
+
+  document.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    const dy      = e.clientY - startY;
+    const total   = leftCol.offsetHeight - 28; // minus handle
+    const current = document.getElementById("instructions-pane").offsetHeight;
+    const newH    = Math.max(80, Math.min(total - 60, current + dy));
+    const consoleH = total - newH;
+    leftCol.style.gridTemplateRows = `${newH}px 28px ${consoleH}px`;
+    startY = e.clientY;
+  });
+
+  document.addEventListener("mouseup", () => {
+    dragging = false;
+    document.body.style.userSelect = "";
+    document.body.style.cursor     = "";
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUT — Ctrl+Enter runs query
+// ════════════════════════════════════════════════════════════════════════
+
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    runQuery();
+    e.preventDefault();
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════════
+
+window.onload = initLabs;
+</script>
+</body>
+</html>
