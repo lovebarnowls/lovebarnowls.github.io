@@ -17,7 +17,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
 
-/* ── HEADER ── */
+/* HEADER */
 .header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
 .logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
 .lab-selector{background:var(--panel2);color:var(--text);border:1px solid var(--border2);padding:4px 10px;border-radius:4px;font-family:var(--sans);font-size:12px;cursor:pointer;outline:none;}
@@ -29,10 +29,10 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
 .btn-small{padding:4px 10px;font-size:10px;}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 .workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
 
-/* ── LEFT ── */
+/* LEFT */
 .left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
 .instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
 .pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
@@ -48,8 +48,8 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .instructions-body ol,.instructions-body ul{padding-left:20px;margin-bottom:10px;color:#ccc;}
 .instructions-body li{margin-bottom:5px;}
 
-/* ── FLAG QUESTIONS ── */
-.flag-questions{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+/* FLAG QUESTIONS */
+.flag-questions{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .fq-item{background:#111;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;transition:border-color 0.2s;}
 .fq-item.solved{border-color:var(--green);}
 .fq-label{font-size:12px;color:#ccc;margin-bottom:6px;line-height:1.5;}
@@ -58,22 +58,21 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .fq-input:focus{border-color:var(--accent);}
 .fq-input:disabled{opacity:0.5;cursor:not-allowed;}
 .fq-result{font-family:var(--mono);font-size:11px;margin-top:5px;min-height:14px;}
-.fq-result.correct{color:var(--green);}
-.fq-result.wrong{color:var(--red);}
+.fq-result.correct{color:var(--green);} .fq-result.wrong{color:var(--red);}
 .fq-flag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);border-radius:4px;padding:4px 8px;margin-top:5px;cursor:pointer;display:inline-block;transition:opacity 0.15s;word-break:break-all;}
 .fq-flag:hover{opacity:0.75;}
 .fq-flag::before{content:"📋 ";}
 
-/* ── RESIZE ── */
+/* RESIZE */
 .resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
 .resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
 
-/* ── CONSOLE ── */
+/* CONSOLE */
 .console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
 .console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
 .console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
 
-/* ── RIGHT ── */
+/* RIGHT */
 .right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
 .sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
 .sql-textarea-wrapper{position:relative;}
@@ -91,8 +90,8 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .results-table tr:hover td{background:var(--accent-dim);}
 .results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
 
-/* ── NAME MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:center;justify-content:center;}
+/* NAME MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:flex;align-items:center;justify-content:center;}
 .modal-overlay.hidden{display:none;}
 .modal-box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:36px 40px;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.7);}
 .modal-title{font-size:18px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
@@ -102,7 +101,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .modal-error{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px;}
 .modal-actions{text-align:center;}
 
-/* ── COMPLETE MODAL ── */
+/* COMPLETE MODAL */
 .complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;}
 .complete-overlay.open{display:flex;}
 .complete-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
@@ -115,11 +114,11 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </head>
 <body>
 
-<!-- ── NAME MODAL (shown on load, cannot be dismissed without a name) ── -->
+<!-- NAME MODAL -->
 <div class="modal-overlay" id="name-modal">
   <div class="modal-box">
     <div class="modal-title">⚑ School F SQL Lab</div>
-    <div class="modal-subtitle">Enter your first name to begin. This is used to generate your personalised flags and cannot be changed once set.</div>
+    <div class="modal-subtitle">Enter your first name to begin. This personalises your flags and cannot be changed once set.</div>
     <input type="text" class="modal-input" id="modal-name-input"
       placeholder="Your first name"
       onkeydown="if(event.key==='Enter') confirmName()" />
@@ -130,7 +129,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   </div>
 </div>
 
-<!-- ── COMPLETE MODAL ── -->
+<!-- COMPLETE MODAL -->
 <div class="complete-overlay" id="complete-modal">
   <div class="complete-box">
     <div class="complete-emoji">🎉</div>
@@ -141,7 +140,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   </div>
 </div>
 
-<!-- ── HEADER ── -->
+<!-- HEADER -->
 <div class="header">
   <div class="logo">⚑ School F — SQL Lab</div>
   <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
@@ -149,7 +148,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
 </div>
 
-<!-- ── WORKSPACE ── -->
+<!-- WORKSPACE -->
 <div class="workspace">
 
   <!-- LEFT -->
@@ -195,7 +194,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
         <span>Query Results</span>
         <span class="row-count" id="result-count"></span>
       </div>
-      <div class="results-scroll" id="results-scroll">
+      <div class="results-scroll">
         <div class="results-empty" id="results-empty">Run a query to see results here.</div>
         <table class="results-table" id="results-table" style="display:none;"></table>
       </div>
@@ -205,75 +204,32 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════════════════
-// CONFIG
-// ════════════════════════════════════════════════════════════════════════════
-const WORKER_URL = "https://formativeassessment.xu-yangen.workers.dev";
-const FLAG_SALT  = "Faith";
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const WORKER_URL  = "https://formativeassessment.xu-yangen.workers.dev";
+const FLAG_SALT   = "Faith";
 const FLAG_PREFIX = "FCSDE";
 
-// ════════════════════════════════════════════════════════════════════════════
-// CLIENT-SIDE MD5
-// Pure JS — no Worker needed for flag generation
-// ════════════════════════════════════════════════════════════════════════════
-function md5(str) {
-  function safeAdd(x,y){const l=(x&0xffff)+(y&0xffff);return(((x>>16)+(y>>16)+(l>>16))<<16)|(l&0xffff);}
-  function rol(n,c){return(n<<c)|(n>>>(32-c));}
-  function cmn(q,a,b,x,s,t){return safeAdd(rol(safeAdd(safeAdd(a,q),safeAdd(x,t)),s),b);}
-  function ff(a,b,c,d,x,s,t){return cmn((b&c)|((~b)&d),a,b,x,s,t);}
-  function gg(a,b,c,d,x,s,t){return cmn((b&d)|(c&(~d)),a,b,x,s,t);}
-  function hh(a,b,c,d,x,s,t){return cmn(b^c^d,a,b,x,s,t);}
-  function ii(a,b,c,d,x,s,t){return cmn(c^(b|(~d)),a,b,x,s,t);}
-  const bytes=[];
-  for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);if(c<128)bytes.push(c);else if(c<2048)bytes.push(192|(c>>6),128|(c&63));else bytes.push(224|(c>>12),128|((c>>6)&63),128|(c&63));}
-  const len8=bytes.length;
-  const len16=Math.ceil((len8+9)/4)*4/4;
-  const w=new Array(len16).fill(0);
-  for(let i=0;i<len8;i++)w[i>>2]|=bytes[i]<<((i%4)*8);
-  w[len8>>2]|=0x80<<((len8%4)*8);
-  w[len16-2]=len8*8;
-  let a=0x67452301,b=0xefcdab89,c=0x98badcfe,d=0x10325476;
-  for(let i=0;i<w.length;i+=16){
-    const[A,B,C,D]=[a,b,c,d];
-    a=ff(a,b,c,d,w[i],7,-680876936);b=ff(d,a,b,c,w[i+1],12,-389564586);c=ff(c,d,a,b,w[i+2],17,606105819);d=ff(b,c,d,a,w[i+3],22,-1044525330);
-    a=ff(a,b,c,d,w[i+4],7,-176418897);b=ff(d,a,b,c,w[i+5],12,1200080426);c=ff(c,d,a,b,w[i+6],17,-1473231341);d=ff(b,c,d,a,w[i+7],22,-45705983);
-    a=ff(a,b,c,d,w[i+8],7,1770035416);b=ff(d,a,b,c,w[i+9],12,-1958414417);c=ff(c,d,a,b,w[i+10],17,-42063);d=ff(b,c,d,a,w[i+11],22,-1990404162);
-    a=ff(a,b,c,d,w[i+12],7,1804603682);b=ff(d,a,b,c,w[i+13],12,-40341101);c=ff(c,d,a,b,w[i+14],17,-1502002290);d=ff(b,c,d,a,w[i+15],22,1236535329);
-    a=gg(a,b,c,d,w[i+1],5,-165796510);b=gg(d,a,b,c,w[i+6],9,-1069501632);c=gg(c,d,a,b,w[i+11],14,643717713);d=gg(b,c,d,a,w[i],20,-373897302);
-    a=gg(a,b,c,d,w[i+5],5,-701558691);b=gg(d,a,b,c,w[i+10],9,38016083);c=gg(c,d,a,b,w[i+15],14,-660478335);d=gg(b,c,d,a,w[i+4],20,-405537848);
-    a=gg(a,b,c,d,w[i+9],5,568446438);b=gg(d,a,b,c,w[i+14],9,-1019803690);c=gg(c,d,a,b,w[i+3],14,-187363961);d=gg(b,c,d,a,w[i+8],20,1163531501);
-    a=gg(a,b,c,d,w[i+13],5,-1444681467);b=gg(d,a,b,c,w[i+2],9,-51403784);c=gg(c,d,a,b,w[i+7],14,1735328473);d=gg(b,c,d,a,w[i+12],20,-1926607734);
-    a=hh(a,b,c,d,w[i+5],4,-378558);b=hh(d,a,b,c,w[i+8],11,-2022574463);c=hh(c,d,a,b,w[i+11],16,1839030562);d=hh(b,c,d,a,w[i+14],23,-35309556);
-    a=hh(a,b,c,d,w[i+1],4,-1530992060);b=hh(d,a,b,c,w[i+4],11,1272893353);c=hh(c,d,a,b,w[i+7],16,-155497632);d=hh(b,c,d,a,w[i+10],23,-1094730640);
-    a=hh(a,b,c,d,w[i+13],4,681279174);b=hh(d,a,b,c,w[i],11,-358537222);c=hh(c,d,a,b,w[i+3],16,-722521979);d=hh(b,c,d,a,w[i+6],23,76029189);
-    a=hh(a,b,c,d,w[i+9],4,-640364487);b=hh(d,a,b,c,w[i+12],11,-421815835);c=hh(c,d,a,b,w[i+15],16,530742520);d=hh(b,c,d,a,w[i+2],23,-995338651);
-    a=ii(a,b,c,d,w[i],6,-198630844);b=ii(d,a,b,c,w[i+7],10,1126891415);c=ii(c,d,a,b,w[i+14],15,-1416354905);d=ii(b,c,d,a,w[i+5],21,-57434055);
-    a=ii(a,b,c,d,w[i+12],6,1700485571);b=ii(d,a,b,c,w[i+3],10,-1894986606);c=ii(c,d,a,b,w[i+10],15,-1051523);d=ii(b,c,d,a,w[i+1],21,-2054922799);
-    a=ii(a,b,c,d,w[i+8],6,1873313359);b=ii(d,a,b,c,w[i+15],10,-30611744);c=ii(c,d,a,b,w[i+6],15,-1560198380);d=ii(b,c,d,a,w[i+13],21,1309151649);
-    a=ii(a,b,c,d,w[i+4],6,-145523070);b=ii(d,a,b,c,w[i+11],10,-1120210379);c=ii(c,d,a,b,w[i+2],15,718787259);d=ii(b,c,d,a,w[i+9],21,-343485551);
-    a=safeAdd(a,A);b=safeAdd(b,B);c=safeAdd(c,C);d=safeAdd(d,D);
-  }
-  function w2h(v){let s="";for(let i=0;i<4;i++)s+=((v>>((i*8)+4))&0xf).toString(16)+((v>>(i*8))&0xf).toString(16);return s;}
-  return w2h(a)+w2h(b)+w2h(c)+w2h(d);
+// ── SHA-256 FLAG GENERATION (Web Crypto API — built into every browser) ───────
+async function makeFlagSuffix(name, labId) {
+  const raw    = name.toLowerCase() + FLAG_SALT + labId;
+  const data   = new TextEncoder().encode(raw);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  const hex    = Array.from(new Uint8Array(buffer))
+                      .map(b => b.toString(16).padStart(2, "0"))
+                      .join("");
+  return hex.substring(0, 6);
 }
 
-function makeFlag(leet, labId) {
-  const suffix = md5(studentName.toLowerCase() + FLAG_SALT + labId).substring(0, 6);
+async function makeFlag(leet, labId) {
+  const suffix = await makeFlagSuffix(studentName, labId);
   return `${FLAG_PREFIX}{${leet}_${suffix}}`;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// LAB DATA
-// Each flag question:
-//   question: string shown to student
-//   leet:     static leet-speak part of the flag
-//   labId:    used in the hash — unique per lab
-//   answer:   correct answer (checked case-insensitively)
-// ════════════════════════════════════════════════════════════════════════════
+// ── LAB DATA ──────────────────────────────────────────────────────────────────
 const LAB_DATA = [
   {
     title: "Lab 1 — Getting Started",
-    db:    "formative",
+    db: "formative",
     instructions: `
       <h2>Welcome to the SQL Lab</h2>
       <p>You are going to explore a real database hosted in the cloud. No software to install — just type SQL and click Run.</p>
@@ -291,18 +247,13 @@ const LAB_DATA = [
       </div>
     `,
     questions: [
-      {
-        question: "How many tables does this database have?",
-        leet:     "t4bl35_f0und",
-        labId:    "SW1_Q1",
-        answer:   "4"
-      }
+      { question: "How many tables does this database have?", leet: "t4bl35_f0und", labId: "SW1_Q1", answer: "4" }
     ],
     completeText: "Well done! Move on to Lab 2."
   },
   {
     title: "Lab 2 — Basic Queries",
-    db:    "formative",
+    db: "formative",
     instructions: `
       <h2>Lab 2 — Basic Queries</h2>
       <p>Practice these fundamental SQL queries.</p>
@@ -324,24 +275,14 @@ const LAB_DATA = [
       </div>
     `,
     questions: [
-      {
-        question: "How many students are in the database?",
-        leet:     "5tud3nt5_c0unt3d",
-        labId:    "SW2_Q1",
-        answer:   "20"
-      },
-      {
-        question: "How many results were recorded for event E03?",
-        leet:     "3v3nt_qu3r13d",
-        labId:    "SW2_Q2",
-        answer:   "4"
-      }
+      { question: "How many students are in the database?", leet: "5tud3nt5_c0unt3d", labId: "SW2_Q1", answer: "20" },
+      { question: "How many results were recorded for event E03?", leet: "3v3nt_qu3r13d", labId: "SW2_Q2", answer: "4" }
     ],
     completeText: "Section 1 complete. Move on to Lab 3 for the investigation."
   },
   {
     title: "Lab 3 — The Investigation",
-    db:    "formative",
+    db: "formative",
     instructions: `
       <h2>Lab 3 — The Investigation</h2>
       <p>School F held a swimming carnival. The data was entered by a volunteer who made several mistakes. Your job is to find them.</p>
@@ -365,52 +306,24 @@ Session 5:  2:30pm –  3:30pm</pre>
       </div>
     `,
     questions: [
-      {
-        question: "One person recorded an impossible time. What is that result value?",
-        leet:     "t1m3_1s_wr0ng",
-        labId:    "SW3_Q1",
-        answer:   "0.1"
-      },
-      {
-        question: "One person competed in two events at the same time. What session number were both events in?",
-        leet:     "s3ss10n_cl4sh",
-        labId:    "SW3_Q2",
-        answer:   "5"
-      },
-      {
-        question: "One swimmer appears in the results but not in the students table. What is their studentID?",
-        leet:     "gh0st_sw1mm3r",
-        labId:    "SW3_Q3",
-        answer:   "xx"
-      },
-      {
-        question: "One event has points awarded incorrectly. What points value did the 1st place finisher incorrectly receive?",
-        leet:     "p01nts_wr0ng",
-        labId:    "SW3_Q4",
-        answer:   "3"
-      }
+      { question: "One person recorded an impossible time. What is that result value?", leet: "t1m3_1s_wr0ng", labId: "SW3_Q1", answer: "0.1" },
+      { question: "One person competed in two events at the same time. What session number were both events in?", leet: "s3ss10n_cl4sh", labId: "SW3_Q2", answer: "5" },
+      { question: "One swimmer appears in the results but not in the students table. What is their studentID?", leet: "gh0st_sw1mm3r", labId: "SW3_Q3", answer: "xx" },
+      { question: "One event has points awarded incorrectly. What points value did the 1st place finisher incorrectly receive?", leet: "p01nts_wr0ng", labId: "SW3_Q4", answer: "3" }
     ],
     completeText: "Investigation complete. Submit your findings and all flags via the Microsoft Form."
   }
 ];
 
-// ════════════════════════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════════════════════════
+// ── STATE ─────────────────────────────────────────────────────────────────────
 let studentName = "";
 
-// ════════════════════════════════════════════════════════════════════════════
-// NAME MODAL
-// ════════════════════════════════════════════════════════════════════════════
+// ── NAME MODAL ────────────────────────────────────────────────────────────────
 function confirmName() {
   const raw = document.getElementById("modal-name-input").value.trim();
   const err = document.getElementById("modal-error");
-  if (!raw) {
-    err.textContent = "Please enter your first name.";
-    return;
-  }
-  if (raw.length < 2) {
-    err.textContent = "Name must be at least 2 characters.";
+  if (!raw || raw.length < 2) {
+    err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
     return;
   }
   studentName = raw;
@@ -419,9 +332,7 @@ function confirmName() {
   log(`Welcome, ${raw}. Your flags will be personalised to your name.`, "ok");
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// QUERY ENGINE
-// ════════════════════════════════════════════════════════════════════════════
+// ── QUERY ENGINE ──────────────────────────────────────────────────────────────
 async function runQuery() {
   const index = parseInt(document.getElementById("lab-select").value);
   const lab   = LAB_DATA[index];
@@ -501,36 +412,31 @@ function renderError(msg) {
   document.getElementById("result-count").textContent = "";
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// FLAG QUESTIONS
-// ════════════════════════════════════════════════════════════════════════════
-function checkAnswer(itemEl, input, leet, labId, answer) {
+// ── FLAG QUESTIONS ────────────────────────────────────────────────────────────
+async function checkAnswer(itemEl, input, leet, labId, answer) {
   const submitted = input.value.trim().toLowerCase();
   const resultEl  = itemEl.querySelector(".fq-result");
-
   if (!submitted) return;
 
   if (submitted === answer.toLowerCase()) {
-    // Correct — generate and display the flag
-    const flag = makeFlag(leet, labId);
+    const flag = await makeFlag(leet, labId);
+
     resultEl.textContent = "✓ Correct!";
     resultEl.className   = "fq-result correct";
 
-    // Show the flag chip
     let flagEl = itemEl.querySelector(".fq-flag");
     if (!flagEl) {
-      flagEl = document.createElement("div");
+      flagEl           = document.createElement("div");
       flagEl.className = "fq-flag";
-      flagEl.title     = "Click to copy";
-      flagEl.onclick   = () => {
-        navigator.clipboard.writeText(flag).catch(() => {});
-        log(`Copied: ${flag}`, "ok");
-      };
+      flagEl.title     = "Click to copy to clipboard";
       itemEl.appendChild(flagEl);
     }
     flagEl.textContent = flag;
+    flagEl.onclick     = () => {
+      navigator.clipboard.writeText(flag).catch(() => {});
+      log(`Copied to clipboard: ${flag}`, "ok");
+    };
 
-    // Lock the input
     input.disabled = true;
     itemEl.classList.add("solved");
     log(`✓ Flag generated: ${flag}`, "ok");
@@ -561,9 +467,7 @@ function buildQuestions(questions) {
   `</div>`;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// LAB MANAGEMENT
-// ════════════════════════════════════════════════════════════════════════════
+// ── LAB MANAGEMENT ────────────────────────────────────────────────────────────
 function initLabs() {
   const select = document.getElementById("lab-select");
   LAB_DATA.forEach((lab, i) => {
@@ -587,9 +491,7 @@ function loadLab() {
   log("Loaded: " + lab.title, "info");
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// COMPLETION MODAL
-// ════════════════════════════════════════════════════════════════════════════
+// ── COMPLETION MODAL ──────────────────────────────────────────────────────────
 function showComplete() {
   const index  = parseInt(document.getElementById("lab-select").value);
   const lab    = LAB_DATA[index];
@@ -610,9 +512,7 @@ function confirmComplete() {
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// CONSOLE
-// ════════════════════════════════════════════════════════════════════════════
+// ── CONSOLE ───────────────────────────────────────────────────────────────────
 function log(msg, cls = "") {
   const out  = document.getElementById("console-output");
   const line = document.createElement("div");
@@ -628,21 +528,24 @@ function setConsoleStatus(text, cls) {
   el.style.color = cls==="ok" ? "var(--green)" : cls==="err" ? "var(--red)" : cls==="warn" ? "var(--accent)" : "var(--blue)";
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// RESIZE
-// ════════════════════════════════════════════════════════════════════════════
+// ── RESIZE ────────────────────────────────────────────────────────────────────
 (function(){
-  const handle=document.getElementById("resize-handle");
-  const col=document.getElementById("left-col");
-  let drag=false,sy=0;
-  handle.addEventListener("mousedown",e=>{drag=true;sy=e.clientY;document.body.style.userSelect="none";document.body.style.cursor="ns-resize";});
-  document.addEventListener("mousemove",e=>{if(!drag)return;const dy=e.clientY-sy;const total=col.offsetHeight-28;const cur=document.getElementById("instructions-pane").offsetHeight;const nh=Math.max(80,Math.min(total-60,cur+dy));col.style.gridTemplateRows=`${nh}px 28px ${total-nh}px`;sy=e.clientY;});
-  document.addEventListener("mouseup",()=>{drag=false;document.body.style.userSelect="";document.body.style.cursor="";});
+  const handle = document.getElementById("resize-handle");
+  const col    = document.getElementById("left-col");
+  let drag = false, sy = 0;
+  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", e => {
+    if (!drag) return;
+    const total = col.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    sy = e.clientY;
+  });
+  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
 })();
 
-// ════════════════════════════════════════════════════════════════════════════
-// KEYBOARD
-// ════════════════════════════════════════════════════════════════════════════
+// ── KEYBOARD ─────────────────────────────────────────────────────────────────
 document.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
 });
