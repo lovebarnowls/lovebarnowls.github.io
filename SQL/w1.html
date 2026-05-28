@@ -143,7 +143,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">⚑ Year 9 DT — Week 1</div>
+  <div class="logo">⚑ Year 9 DigiTech — Week 1</div>
   <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
   <div class="student-badge" id="student-badge">—</div>
   <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
@@ -325,7 +325,7 @@ const LAB_DATA = [
     ],
     instructions: `
       <h2>Lab 4 — Choosing Specific Columns</h2>
-      <p>Sometimes you do not need all the data. Instead of <code>*</code>, you can list the exact columns you want separated by commas.</p>
+      <p>Sometimes you do not need all the data. Instead of <code>*</code>, you can list the exact columns you want separated by commas.<br>For example, you could use SELECT title,year FROM songs; to show only title and year.</p>
 
       <h3>Example — just the title</h3>
       <pre onclick="copyToEditor(this)">SELECT title FROM songs<span class="copy-hint">click to copy to editor</span></pre>
