@@ -690,35 +690,42 @@ function buildQuestions(questions) {
   if (!questions || questions.length === 0) return "";
   return `<div class="flag-questions">` +
     questions.map((q, i) => {
+      const safeAnswer = q.answer ? q.answer.replace(/&/g, "&amp;").replace(/"/g, "&quot;") : "";
       if (q.type === "completion") {
         return `
-          <div class="fq-item" id="fq-${i}">
+          <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-type="completion">
             <div class="fq-label">${q.question}</div>
             <div class="fq-row">
-              <button class="btn btn-accent btn-small"
-                onclick="checkAnswer(document.getElementById('fq-${i}'), {value:'done',disabled:false}, '${q.leet}', '${q.labId}', null, 'completion')">
-                ✔ Mark Complete
-              </button>
+              <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">✔ Mark Complete</button>
             </div>
             <div class="fq-result"></div>
           </div>`;
       }
       return `
-        <div class="fq-item" id="fq-${i}">
+        <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-answer="${safeAnswer}" data-type="${q.type}">
           <div class="fq-label">${q.question}</div>
           <div class="fq-row">
             <input type="text" class="fq-input"
               placeholder="${q.type === 'query' ? 'Type your SQL query here' : 'Your answer'}"
-              onkeydown="if(event.key==='Enter') checkAnswer(document.getElementById('fq-${i}'), this, '${q.leet}', '${q.labId}', ${q.answer ? `'${q.answer.replace(/'/g, "\'")}'` : 'null'}, '${q.type}')" />
-            <button class="btn btn-accent btn-small"
-              onclick="checkAnswer(document.getElementById('fq-${i}'), this.previousElementSibling, '${q.leet}', '${q.labId}', ${q.answer ? `'${q.answer.replace(/'/g, "\'")}'` : 'null'}, '${q.type}')">
-              Check
-            </button>
+              onkeydown="if(event.key==='Enter') handleCheck(${i})" />
+            <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">Check</button>
           </div>
           <div class="fq-result"></div>
         </div>`;
     }).join("") +
   `</div>`;
+}
+
+function handleCheck(i) {
+  const itemEl  = document.getElementById("fq-" + i);
+  const type    = itemEl.dataset.type;
+  const leet    = itemEl.dataset.leet;
+  const labId   = itemEl.dataset.labid;
+  const answer  = itemEl.dataset.answer || null;
+  const input   = type === "completion"
+    ? { value: "done", disabled: false }
+    : itemEl.querySelector(".fq-input");
+  checkAnswer(itemEl, input, leet, labId, answer, type);
 }
 
 // ── LAB MANAGEMENT ────────────────────────────────────────────────────────────
