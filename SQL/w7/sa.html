@@ -1,86 +1,80 @@
-// ════════════════════════════════════════════════════════════════════════════
-// School F — Summative Assessment Worker
-// Handles DB_SA only. Change ASSESSMENT_OPEN to true to open student access.
-// ════════════════════════════════════════════════════════════════════════════
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA Test</title>
+<style>
+  body { background: #161616; color: #e0e0e0; font-family: monospace; padding: 20px; }
+  textarea { width: 100%; height: 80px; background: #111; color: #d4d4d4; border: 1px solid #444; padding: 10px; font-family: monospace; font-size: 13px; resize: vertical; }
+  button { background: #F0A500; color: #161616; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+  button:hover { background: #c98b00; }
+  #results { margin-top: 16px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th { background: #2D4A7A; color: #fff; padding: 6px 12px; text-align: left; border: 1px solid #333; }
+  td { padding: 6px 12px; border: 1px solid #333; }
+  tr:nth-child(even) td { background: #1a1a1a; }
+  .err { color: #f05050; }
+  .info { color: #5ab4f0; }
+</style>
+</head>
+<body>
 
-const ASSESSMENT_OPEN = false;  // ← flip to true when assessment window opens
+<h2 style="color:#F0A500;">SA Database — Test Interface</h2>
+<p style="color:#888; font-size:12px;">Worker: https://shiny-sea-e2f9.xu-yangen.workers.dev/</p>
 
-const cors = {
-  "Access-Control-Allow-Origin":  "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+<textarea id="query" placeholder="SELECT * FROM students LIMIT 5"></textarea>
+<br>
+<button onclick="runQuery()">▶ Run Query</button>
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...cors, "Content-Type": "application/json" }
-  });
+<div id="results"><p class="info">Enter a query and click Run.</p></div>
+
+<script>
+const WORKER = "https://shiny-sea-e2f9.xu-yangen.workers.dev/";
+
+async function runQuery() {
+  const query = document.getElementById("query").value.trim().replace(/;+$/, "");
+  const results = document.getElementById("results");
+  if (!query) return;
+
+  results.innerHTML = '<p class="info">Running...</p>';
+
+  try {
+    const resp = await fetch(WORKER, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      if (!data.data || data.data.length === 0) {
+        results.innerHTML = '<p class="info">Query returned no rows.</p>';
+        return;
+      }
+      const cols = Object.keys(data.data[0]);
+      let html = '<table><thead><tr>';
+      cols.forEach(c => html += `<th>${c}</th>`);
+      html += '</tr></thead><tbody>';
+      data.data.forEach(row => {
+        html += '<tr>';
+        cols.forEach(c => html += `<td>${row[c] === null ? 'NULL' : row[c]}</td>`);
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      html += `<p class="info" style="margin-top:8px;">${data.data.length} row(s) returned.</p>`;
+      results.innerHTML = html;
+    } else {
+      results.innerHTML = `<p class="err">✗ ${data.error}</p>`;
+    }
+  } catch (err) {
+    results.innerHTML = `<p class="err">✗ Network error: ${err.message}</p>`;
+  }
 }
 
-export default {
-  async fetch(request, env) {
-
-    if (request.method === "OPTIONS") return new Response(null, { headers: cors });
-    if (request.method !== "POST")   return json({ error: "POST requests only." }, 405);
-
-    // ── Assessment window ───────────────────────────────────────────────────
-    if (!ASSESSMENT_OPEN) {
-      return json({
-        error: "The assessment is not currently open. Contact Teacher Yang."
-      }, 403);
-    }
-
-    // ── Rate limiting ───────────────────────────────────────────────────────
-    const ip  = request.headers.get("CF-Connecting-IP") || "unknown";
-    const key = `ratelimit_${ip}`;
-    const cur = await env.RATE_LIMIT.get(key);
-
-    if (cur && parseInt(cur) >= 30) {
-      return json({ error: "Too many requests. Wait a minute and try again." }, 429);
-    }
-    await env.RATE_LIMIT.put(key, String(parseInt(cur || "0") + 1), { expirationTtl: 60 });
-
-    // ── Parse body ──────────────────────────────────────────────────────────
-    let query;
-    try {
-      const body = await request.json();
-      query = (body.query || "").trim().replace(/;+$/, "");
-    } catch {
-      return json({ error: "Invalid JSON body. Send { query }." }, 400);
-    }
-
-    if (!query) return json({ error: "No query provided." }, 400);
-
-    // ── Query validation ────────────────────────────────────────────────────
-    const upper = query.toUpperCase();
-
-    if (!upper.startsWith("SELECT") && !upper.startsWith("PRAGMA")) {
-      return json({ error: "Only SELECT and PRAGMA queries are allowed." }, 403);
-    }
-
-    if (query.includes(";")) {
-      return json({ error: "Semicolons are not allowed in queries." }, 403);
-    }
-
-    // ── Execute ─────────────────────────────────────────────────────────────
-    try {
-      const result = await env.DB_SA.prepare(query).all();
-      let rows = result.results;
-
-      // Filter Cloudflare internal tables from sqlite_master results
-      if (upper.includes("SQLITE_MASTER")) {
-        rows = rows.filter(row => {
-          const name = (row.name || row.tbl_name || "").toString();
-          return !name.startsWith("_cf_") && !name.startsWith("sqlite_");
-        });
-      }
-
-      return json({ success: true, data: rows });
-
-    } catch (error) {
-      return json({ success: false, error: error.message }, 400);
-    }
-
-  }
-};
+document.getElementById("query").addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runQuery();
+});
+</script>
+</body>
+</html>
