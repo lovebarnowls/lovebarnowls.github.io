@@ -354,6 +354,9 @@ const LAB_DATA = [
       <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM borrows WHERE borrow_date LIKE '2024-02%'<span class="copy-hint">click to copy to editor</span></pre>
 
       <p>Run this — you get the number of borrows that started with <code>2024-02</code>. The <code>LIKE</code> wildcard from last week is doing the heavy lifting here.</p>
+     <p>Alternatively, you could filter by date range instead of using LIKE. 
+For January 2024, that would look like:<br>
+<code>WHERE borrow_date >= '2024-01-01' AND borrow_date <= '2024-01-31'</code></p>
 
       <div class="task-box">
         <strong>Your task</strong>
