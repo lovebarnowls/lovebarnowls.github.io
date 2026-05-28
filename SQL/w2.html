@@ -214,6 +214,8 @@ function normaliseQuery(q) {
     .replace(/\s*<\s*/g, "<")
     .replace(/;+$/, "")
     .replace(/"/g, "'")
+    .replace(/\s*>=\s*/g, ">=")
+    .replace(/\s*<=\s*/g, "<=")
     .trim();
 }
 
