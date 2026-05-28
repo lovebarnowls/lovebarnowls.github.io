@@ -223,8 +223,12 @@ async function makeFlag(leet, labId) {
 function normaliseQuery(q) {
   return q.toLowerCase()
     .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s*=\s*/g, "=")
+    .replace(/\s*>\s*/g, ">")
+    .replace(/\s*<\s*/g, "<")
     .replace(/;+$/, "")
-    .replace(/"/g, "'")   // treat double quotes same as single
+    .replace(/"/g, "'")
     .trim();
 }
 
@@ -321,7 +325,7 @@ const LAB_DATA = [
   {
     title: "Lab 4 — Selecting Columns",
     questions: [
-      { question: "Write a query that returns only the artist and title columns from the songs table.", leet: "c0lumns_ch053n", labId: "W1_L4", answer: "SELECT artist, title FROM songs", type: "query" }
+      { question: "Write a query that returns only the artist and title columns from the songs table.", leet: "c0lumns_ch053n", labId: "W1_L4", answer: "select artist, title from songs", type: "query" }
     ],
     instructions: `
       <h2>Lab 4 — Choosing Specific Columns</h2>
@@ -343,7 +347,7 @@ const LAB_DATA = [
   {
     title: "Lab 5 — WHERE (text)",
     questions: [
-      { question: "Write a query that returns all columns for songs where the artist is Ed Sheeran.", leet: "wh3r3_cl4us3", labId: "W1_L5", answer: "SELECT * FROM songs WHERE artist = 'ed sheeran'", type: "query" }
+      { question: "Write a query that returns all columns for songs where the artist is Ed Sheeran.", leet: "wh3r3_cl4us3", labId: "W1_L5", answer: "select * from songs where artist = 'ed sheeran'", type: "query" }
     ],
     instructions: `
       <h2>Lab 5 — Filtering with WHERE</h2>
@@ -365,7 +369,7 @@ const LAB_DATA = [
   {
     title: "Lab 6 — Combining It All",
     questions: [
-      { question: "Write a query that returns only the title and artist for songs where peak_position = 1.", leet: "c0mb1n3d_qu3ry", labId: "W1_L6", answer: "SELECT title, artist FROM songs WHERE peak_position = 1", type: "query" }
+      { question: "Write a query that returns only the title and artist for songs where peak_position = 1.", leet: "c0mb1n3d_qu3ry", labId: "W1_L6", answer: "select title, artist from songs where peak_position = 1", type: "query" }
     ],
     instructions: `
       <h2>Lab 6 — Columns and Filters Together</h2>
