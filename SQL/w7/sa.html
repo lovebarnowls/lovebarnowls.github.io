@@ -1,0 +1,86 @@
+// ════════════════════════════════════════════════════════════════════════════
+// School F — Summative Assessment Worker
+// Handles DB_SA only. Change ASSESSMENT_OPEN to true to open student access.
+// ════════════════════════════════════════════════════════════════════════════
+
+const ASSESSMENT_OPEN = false;  // ← flip to true when assessment window opens
+
+const cors = {
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" }
+  });
+}
+
+export default {
+  async fetch(request, env) {
+
+    if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+    if (request.method !== "POST")   return json({ error: "POST requests only." }, 405);
+
+    // ── Assessment window ───────────────────────────────────────────────────
+    if (!ASSESSMENT_OPEN) {
+      return json({
+        error: "The assessment is not currently open. Contact Teacher Yang."
+      }, 403);
+    }
+
+    // ── Rate limiting ───────────────────────────────────────────────────────
+    const ip  = request.headers.get("CF-Connecting-IP") || "unknown";
+    const key = `ratelimit_${ip}`;
+    const cur = await env.RATE_LIMIT.get(key);
+
+    if (cur && parseInt(cur) >= 30) {
+      return json({ error: "Too many requests. Wait a minute and try again." }, 429);
+    }
+    await env.RATE_LIMIT.put(key, String(parseInt(cur || "0") + 1), { expirationTtl: 60 });
+
+    // ── Parse body ──────────────────────────────────────────────────────────
+    let query;
+    try {
+      const body = await request.json();
+      query = (body.query || "").trim().replace(/;+$/, "");
+    } catch {
+      return json({ error: "Invalid JSON body. Send { query }." }, 400);
+    }
+
+    if (!query) return json({ error: "No query provided." }, 400);
+
+    // ── Query validation ────────────────────────────────────────────────────
+    const upper = query.toUpperCase();
+
+    if (!upper.startsWith("SELECT") && !upper.startsWith("PRAGMA")) {
+      return json({ error: "Only SELECT and PRAGMA queries are allowed." }, 403);
+    }
+
+    if (query.includes(";")) {
+      return json({ error: "Semicolons are not allowed in queries." }, 403);
+    }
+
+    // ── Execute ─────────────────────────────────────────────────────────────
+    try {
+      const result = await env.DB_SA.prepare(query).all();
+      let rows = result.results;
+
+      // Filter Cloudflare internal tables from sqlite_master results
+      if (upper.includes("SQLITE_MASTER")) {
+        rows = rows.filter(row => {
+          const name = (row.name || row.tbl_name || "").toString();
+          return !name.startsWith("_cf_") && !name.startsWith("sqlite_");
+        });
+      }
+
+      return json({ success: true, data: rows });
+
+    } catch (error) {
+      return json({ success: false, error: error.message }, 400);
+    }
+
+  }
+};
