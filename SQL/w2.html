@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 9 Digital Technologies — Week 2 SQL Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#161616; --panel:#1f1f1f; --panel2:#272727;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#F0A500; --accent2:#c98b00; --accent-dim:#3a2800;
+  --text:#e0e0e0; --text-dim:#888; --text-dark:#444;
+  --green:#4ec94e; --red:#f05050; --blue:#5ab4f0;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+
+.header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.lab-selector{background:var(--panel2);color:var(--text);border:1px solid var(--border2);padding:4px 10px;border-radius:4px;font-family:var(--sans);font-size:12px;cursor:pointer;outline:none;}
+.lab-selector:focus{border-color:var(--accent);}
+.student-badge{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);padding:3px 10px;border-radius:4px;white-space:nowrap;}
+.btn{border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;transition:background 0.15s,transform 0.1s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-complete{background:#9b59b6;color:#fff;} .btn-complete:hover{background:#7d3c98;}
+.btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
+.btn-small{padding:4px 10px;font-size:10px;}
+
+.workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
+
+.left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
+.instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
+.pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
+.pane-accent{color:var(--accent);font-size:10px;font-weight:600;}
+.instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;overflow-y:auto;flex:1;}
+.instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
+.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
+.instructions-body p{margin-bottom:10px;color:#ccc;}
+.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
+.instructions-body pre{font-family:var(--mono);background:#111;border:1px solid var(--border2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:4px;font-size:12px;color:#d4d4d4;overflow-x:auto;margin:8px 0 12px;line-height:1.6;cursor:pointer;transition:border-color 0.15s;}
+.instructions-body pre:hover{border-color:var(--accent);}
+.instructions-body pre .copy-hint{display:block;font-size:10px;color:var(--text-dark);margin-top:6px;}
+.instructions-body .task-box{background:var(--accent-dim);border:1px solid var(--accent2);border-radius:6px;padding:10px 14px;margin:10px 0;}
+.instructions-body .task-box strong{color:var(--accent);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body ol,.instructions-body ul{padding-left:20px;margin-bottom:10px;color:#ccc;}
+.instructions-body li{margin-bottom:5px;}
+.instructions-body .note{background:#1a1a2e;border:1px solid #2e2e4a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aab4d4;}
+.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4aab4;}
+
+.flag-questions{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.fq-item{background:#111;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;transition:border-color 0.2s;}
+.fq-item.solved{border-color:var(--green);}
+.fq-label{font-size:12px;color:#ccc;margin-bottom:6px;line-height:1.5;}
+.fq-row{display:flex;gap:6px;align-items:center;}
+.fq-input{flex:1;background:var(--panel2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 10px;outline:none;transition:border-color 0.15s;}
+.fq-input:focus{border-color:var(--accent);}
+.fq-input:disabled{opacity:0.5;cursor:not-allowed;}
+.fq-result{font-family:var(--mono);font-size:11px;margin-top:5px;min-height:14px;}
+.fq-result.correct{color:var(--green);} .fq-result.wrong{color:var(--red);}
+.fq-flag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);border-radius:4px;padding:4px 8px;margin-top:5px;cursor:pointer;display:inline-block;transition:opacity 0.15s;word-break:break-all;}
+.fq-flag:hover{opacity:0.75;}
+.fq-flag::before{content:"📋 ";}
+
+.resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
+.resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
+
+.console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
+.console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
+.console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
+
+.right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
+.sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
+.sql-textarea-wrapper{position:relative;}
+.sql-textarea{width:100%;background:#111;color:#d4d4d4;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px 36px 12px 14px;border:none;outline:none;resize:none;min-height:90px;max-height:220px;overflow-y:auto;tab-size:4;display:block;}
+.sql-semicolon{position:absolute;bottom:8px;right:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);opacity:0.4;pointer-events:none;line-height:1;user-select:none;}
+.sql-toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--panel2);border-top:1px solid var(--border);gap:8px;}
+.sql-hint{font-size:10px;color:var(--text-dark);font-family:var(--mono);}
+.row-count{font-size:10px;color:var(--text-dim);font-family:var(--mono);padding:0 4px;}
+.results-pane{display:flex;flex-direction:column;overflow:hidden;}
+.results-scroll{flex:1;overflow:auto;padding:10px;}
+.results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.results-table th{background:var(--panel2);color:var(--accent);font-weight:700;padding:7px 12px;text-align:left;border:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.results-table td{padding:6px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap;}
+.results-table tr:nth-child(even) td{background:#1a1a1a;}
+.results-table tr:hover td{background:var(--accent-dim);}
+.results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:36px 40px;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.7);}
+.modal-title{font-size:18px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.modal-subtitle{font-size:13px;color:#aaa;margin-bottom:24px;line-height:1.6;}
+.modal-input{width:100%;background:#111;border:2px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:15px;padding:10px 14px;outline:none;transition:border-color 0.15s;margin-bottom:16px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-error{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px;}
+.modal-actions{text-align:center;}
+
+.complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;}
+.complete-overlay.open{display:flex;}
+.complete-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+.complete-emoji{font-size:36px;text-align:center;margin-bottom:14px;}
+.complete-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:24px;white-space:pre-wrap;}
+.complete-actions{text-align:center;}
+
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="name-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚑ Year 9 Digital Technologies</div>
+    <div class="modal-subtitle">Enter your first name to begin. This personalises your flags and cannot be changed once set.</div>
+    <input type="text" class="modal-input" id="modal-name-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" />
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-accent" onclick="confirmName()">Begin Lab ▶</button>
+    </div>
+  </div>
+</div>
+
+<div class="complete-overlay" id="complete-modal">
+  <div class="complete-box">
+    <div class="complete-emoji">🎉</div>
+    <p class="complete-text" id="complete-text"></p>
+    <div class="complete-actions">
+      <button class="btn btn-accent" onclick="confirmComplete()">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">⚑ Year 9 DigiTech — Week 2</div>
+  <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+  <div class="student-badge" id="student-badge">—</div>
+  <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
+</div>
+
+<div class="workspace">
+  <div class="left-col" id="left-col">
+    <div class="instructions-pane" id="instructions-pane">
+      <div class="pane-header">
+        <span>Instructions</span>
+        <span class="pane-accent" id="lab-title-header"></span>
+      </div>
+      <div class="instructions-body" id="instructions-body"></div>
+    </div>
+    <div class="resize-handle" id="resize-handle">··· drag to resize ···</div>
+    <div class="console-pane">
+      <div class="pane-header">
+        <span>Console</span>
+        <span class="pane-accent" id="console-status">Ready</span>
+      </div>
+      <div class="console-output" id="console-output"><span class="info">SQL Lab ready.</span></div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="sql-input-pane">
+      <div class="pane-header">
+        <span>SQL Query</span>
+        <span class="row-count" id="row-count"></span>
+      </div>
+      <div class="sql-textarea-wrapper">
+        <textarea id="sql-input" class="sql-textarea" spellcheck="false"
+          placeholder="-- Type or paste your SQL query here"></textarea>
+        <span class="sql-semicolon">;</span>
+      </div>
+      <div class="sql-toolbar">
+        <span class="sql-hint">Ctrl+Enter to run &nbsp;·&nbsp; semicolons added automatically</span>
+        <button class="btn btn-accent btn-small" onclick="runQuery()">▶ Run</button>
+      </div>
+    </div>
+    <div class="results-pane">
+      <div class="pane-header">
+        <span>Query Results</span>
+        <span class="row-count" id="result-count"></span>
+      </div>
+      <div class="results-scroll">
+        <div class="results-empty" id="results-empty">Run a query to see results here.</div>
+        <table class="results-table" id="results-table" style="display:none;"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL  = "https://formativeassessment.xu-yangen.workers.dev";
+const DB_NAME     = "w2";
+const FLAG_SALT   = "Faith";
+const FLAG_PREFIX = "FCSDE";
+
+async function makeFlagSuffix(name, labId) {
+  const raw    = name.toLowerCase() + FLAG_SALT + labId;
+  const data   = new TextEncoder().encode(raw);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  const hex    = Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return hex.substring(0, 6);
+}
+
+async function makeFlag(leet, labId) {
+  const suffix = await makeFlagSuffix(studentName, labId);
+  return `${FLAG_PREFIX}{${leet}_${suffix}}`;
+}
+
+function normaliseQuery(q) {
+  return q.toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s*=\s*/g, "=")
+    .replace(/\s*>\s*/g, ">")
+    .replace(/\s*<\s*/g, "<")
+    .replace(/;+$/, "")
+    .replace(/"/g, "'")
+    .trim();
+}
+
+const LAB_DATA = [
+
+  // ── INTRODUCTION ────────────────────────────────────────────────────────────
+  {
+    title: "Introduction",
+    questions: [],
+    instructions: `
+      <h2>Week 2 — Sorting, Filtering and Identity</h2>
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:14px 16px;margin-bottom:14px;color:#bbb;font-size:13px;line-height:1.8;">
+        [PLACEHOLDER — to be written by Teacher Yang. Introduce the week's dataset: World Cup all-time top scorers and their clubs. Mention that this week we learn to sort results, limit how many rows we see, remove duplicates, and use fuzzy searching.]
+      </div>
+      <div class="note">
+        This week's database has two tables — <code>scorers</code> and <code>clubs</code>. You will explore both. All queries work the same way as last week: type in the editor on the right and press <strong>Ctrl+Enter</strong> or click <strong>▶ Run</strong>.
+      </div>
+      <p>Use the lab selector above to move through the activities.</p>
+    `,
+    completeText: "Ready to start. Move on to Lab 1."
+  },
+
+  // ── LAB 1 — Schema Discovery ─────────────────────────────────────────────────
+  {
+    title: "Lab 1 — Schema Discovery",
+    questions: [
+      { question: "How many tables does this database have?", leet: "5ch3m4_tw0", labId: "W2_L1", answer: "2", type: "value" }
+    ],
+    instructions: `
+      <h2>Lab 1 — Discovering the Schema</h2>
+      <p>Same as last week — before touching any data, ask the database what tables exist.</p>
+
+      <h3>Find all tables</h3>
+      <pre onclick="copyToEditor(this)">SELECT name FROM sqlite_master WHERE type='table'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>This week there is more than one table. Look at the results carefully.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run the query above. How many tables does this database have? Type the number below to unlock your flag.
+      </div>
+    `
+  },
+
+  // ── LAB 2 — Table Structure ───────────────────────────────────────────────────
+  {
+    title: "Lab 2 — Table Structure",
+    questions: [
+      { question: "Run PRAGMA table_info on both tables and note the columns. Click Complete when done.", leet: "t4bl3s_m4pp3d", labId: "W2_L2", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Lab 2 — Mapping Both Tables</h2>
+      <p>There are two tables this week. Use <code>PRAGMA table_info</code> on each one to see what columns they contain.</p>
+
+      <h3>Inspect the scorers table</h3>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(scorers)<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Inspect the clubs table</h3>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(clubs)<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run both queries and write the column names in your notes. Notice that both tables have a <code>scorerID</code> column — this is how they are connected to each other. We will come back to that later in the year.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run both queries above and note down the columns for each table. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── LAB 3 — SELECT * ─────────────────────────────────────────────────────────
+  {
+    title: "Lab 3 — SELECT *",
+    questions: [
+      { question: "Run SELECT * on both tables and explore the data. Click Complete when done.", leet: "d4t4_3xpl0r3d", labId: "W2_L3", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Lab 3 — Exploring the Data</h2>
+      <p>Before sorting or filtering, always look at the raw data first. Retrieve everything from both tables.</p>
+
+      <h3>All scorers</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>All clubs</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM clubs<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Look through both result sets. You will notice something interesting in the <code>scorers</code> table — two players share the name <strong>Ronaldo</strong>. We will investigate that properly in Lab 7.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run both queries and explore the data. How many scorers are there? How many club records? Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── LAB 4 — ORDER BY numbers ──────────────────────────────────────────────────
+  {
+    title: "Lab 4 — ORDER BY (numbers)",
+    questions: [
+      { question: "Write a query that returns all columns from scorers, ordered by goals from highest to lowest.", leet: "0rd3r_unl0ck3d", labId: "W2_L4", answer: "select * from scorers order by goals desc", type: "query" }
+    ],
+    instructions: `
+      <h2>Lab 4 — Sorting Results with ORDER BY</h2>
+      <p>By default, a database returns rows in no guaranteed order. <code>ORDER BY</code> lets you sort the results by any column.</p>
+      <ul>
+        <li><code>ASC</code> — ascending: smallest to largest, A to Z (this is the default)</li>
+        <li><code>DESC</code> — descending: largest to smallest, Z to A</li>
+      </ul>
+
+      <h3>Practice — order by tournaments, lowest first</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers ORDER BY tournaments ASC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this. The player with the fewest tournaments appears first. Now try changing <code>ASC</code> to <code>DESC</code> and run it again — the order flips.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns from the <code>scorers</code> table, ordered by <strong>goals</strong> from highest to lowest. Type your query below to unlock your flag.
+      </div>
+    `
+  },
+
+  // ── LAB 5 — ORDER BY text ─────────────────────────────────────────────────────
+  {
+    title: "Lab 5 — ORDER BY (text)",
+    questions: [
+      { question: "Write a query that returns all columns from scorers, ordered by country alphabetically (A to Z).", leet: "4lph4_0rd3r", labId: "W2_L5", answer: "select * from scorers order by country asc", type: "query" }
+    ],
+    instructions: `
+      <h2>Lab 5 — Sorting Text Alphabetically</h2>
+      <p><code>ORDER BY</code> works on text columns too — it sorts them alphabetically. <code>ASC</code> goes A to Z, <code>DESC</code> goes Z to A.</p>
+
+      <h3>Practice — order by player name, Z to A</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers ORDER BY name DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — you should see names starting with T at the top. Now write your own version for country.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns from <code>scorers</code>, ordered by <strong>country</strong> alphabetically from A to Z. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB 6 — LIMIT ─────────────────────────────────────────────────────────────
+  {
+    title: "Lab 6 — LIMIT",
+    questions: [
+      { question: "Write a query that returns the top 3 scorers by goals (highest first).", leet: "l1m1t_s3t", labId: "W2_L6", answer: "select * from scorers order by goals desc limit 3", type: "query" }
+    ],
+    instructions: `
+      <h2>Lab 6 — Limiting Results with LIMIT</h2>
+      <p><code>LIMIT</code> caps how many rows the database returns. It always goes at the very end of a query.</p>
+      <p>This might seem trivial with 15 rows, but real-world databases can have millions of rows. Accidentally retrieving a million rows crashes browsers, freezes applications, and costs money on cloud databases. <code>LIMIT</code> is a safety net and a precision tool.</p>
+
+      <h3>Practice — just the first 5 rows</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers ORDER BY name ASC LIMIT 5<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — you get exactly 5 rows. Combined with <code>ORDER BY</code>, it becomes a "top N" query.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns the <strong>top 3 scorers by goals</strong>, highest first. Combine <code>ORDER BY</code> and <code>LIMIT</code>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB 7 — The Ronaldo Problem ───────────────────────────────────────────────
+  {
+    title: "Lab 7 — The Ronaldo Problem",
+    questions: [
+      { question: "Run: SELECT name FROM scorers WHERE name = 'Ronaldo' — how many rows come back?", leet: "tw0_r0n4ld0s", labId: "W2_L7", answer: "2", type: "value" }
+    ],
+    instructions: `
+      <h2>Lab 7 — The Ronaldo Problem</h2>
+      <p>You spotted two Ronaldos in Lab 3. Let us investigate why this is a problem — and how databases solve it.</p>
+
+      <h3>Step 1 — search by name</h3>
+      <pre onclick="copyToEditor(this)">SELECT name FROM scorers WHERE name = 'Ronaldo'<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this. Two rows come back. If you wanted to retrieve <em>one specific Ronaldo</em>, you cannot do it by name alone.</p>
+
+      <h3>Step 2 — use the primary key</h3>
+      <pre onclick="copyToEditor(this)">SELECT scorerID, name, country, goals FROM scorers WHERE name = 'Ronaldo'<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this. Now you can see their <code>scorerID</code> values — <code>F02</code> is the Brazilian Ronaldo (R9), <code>F12</code> is the Portuguese Ronaldo (CR7). Every row has a unique ID even when names collide.</p>
+
+      <div class="warn-box">
+        This is exactly why databases use <strong>primary keys</strong> rather than names. Real examples: two customers named John Smith, two students at the same school, two products with identical descriptions. The ID column is guaranteed unique — the name column is not.
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run the first query above. How many rows are returned when you search for the name <strong>Ronaldo</strong>? Type the number below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 1 — ORDER BY with WHERE ──────────────────────────────────────────
+  {
+    title: "LabExt1 — ORDER BY with WHERE",
+    questions: [
+      { question: "Write a query that returns all columns for German scorers, ordered by goals from highest to lowest.", leet: "3xt_wh3r3_0rd3r", labId: "W2_E1", answer: "select * from scorers where country = 'germany' order by goals desc", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt1 — Combining WHERE and ORDER BY</h2>
+      <p>You can filter <em>and</em> sort in the same query. The order of clauses matters:</p>
+      <ol>
+        <li><code>SELECT</code> — what columns</li>
+        <li><code>FROM</code> — which table</li>
+        <li><code>WHERE</code> — which rows</li>
+        <li><code>ORDER BY</code> — in what order</li>
+      </ol>
+
+      <h3>Practice — South American scorers, oldest first</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers WHERE country = 'Brazil' ORDER BY first_wc ASC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — only Brazilian scorers, sorted by when they first appeared at a World Cup.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns for <strong>German</strong> scorers, ordered by <strong>goals</strong> from highest to lowest. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 2 — ORDER BY two columns ─────────────────────────────────────────
+  {
+    title: "LabExt2 — ORDER BY two columns",
+    questions: [
+      { question: "Write a query that returns all columns from scorers, ordered by country A to Z, then by goals highest to lowest within each country.", leet: "3xt_dbl_0rd3r", labId: "W2_E2", answer: "select * from scorers order by country asc, goals desc", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt2 — Sorting by Multiple Columns</h2>
+      <p>You can sort by more than one column by separating them with a comma. The database sorts by the first column first — when two rows tie on that column, it uses the second column to break the tie.</p>
+
+      <h3>Practice — sort by tournaments, then goals as a tiebreaker</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers ORDER BY tournaments ASC, goals DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this. Players with fewer tournaments appear first. Among players with the same tournament count, the one with more goals appears first.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns from <code>scorers</code>, ordered by <strong>country A to Z</strong>, then by <strong>goals highest to lowest</strong> within each country. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 3 — DISTINCT ─────────────────────────────────────────────────────
+  {
+    title: "LabExt3 — DISTINCT",
+    questions: [
+      { question: "Run SELECT DISTINCT country FROM scorers — how many unique countries appear?", leet: "3xt_d1st1nct", labId: "W2_E3", answer: "8", type: "value" }
+    ],
+    instructions: `
+      <h2>LabExt3 — Removing Duplicates with DISTINCT</h2>
+      <p>If you run <code>SELECT country FROM scorers</code>, Germany appears five times because there are five German scorers. <code>DISTINCT</code> collapses duplicates so each value appears only once.</p>
+
+      <h3>Without DISTINCT — repeats included</h3>
+      <pre onclick="copyToEditor(this)">SELECT country FROM scorers<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>With DISTINCT — each country once only</h3>
+      <pre onclick="copyToEditor(this)">SELECT DISTINCT country FROM scorers<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run both and compare. The second result is much shorter.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run the <code>DISTINCT</code> query above. How many <strong>unique countries</strong> appear in the scorers table? Type the number below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 4 — DISTINCT + ORDER BY ──────────────────────────────────────────
+  {
+    title: "LabExt4 — DISTINCT + ORDER BY",
+    questions: [
+      { question: "Write a query that returns each country exactly once, ordered alphabetically.", leet: "3xt_d1st_0rd3r", labId: "W2_E4", answer: "select distinct country from scorers order by country asc", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt4 — DISTINCT and ORDER BY Together</h2>
+      <p><code>DISTINCT</code> and <code>ORDER BY</code> combine naturally. <code>DISTINCT</code> comes right after <code>SELECT</code>, then <code>ORDER BY</code> comes at the end as usual.</p>
+
+      <h3>Practice — distinct names, Z to A</h3>
+      <pre onclick="copyToEditor(this)">SELECT DISTINCT name FROM scorers ORDER BY name DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — unique names only, in reverse alphabetical order.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns each <strong>country exactly once</strong>, ordered <strong>alphabetically A to Z</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 5 — Primary Keys deeper ──────────────────────────────────────────
+  {
+    title: "LabExt5 — Primary Keys",
+    questions: [
+      { question: "Use the scorerID column to retrieve only the Portuguese Ronaldo (CR7). His ID is F12. Write the query.", leet: "3xt_pk_s0lv3d", labId: "W2_E5", answer: "select * from scorers where scorerid = 'f12'", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt5 — Solving the Ronaldo Problem</h2>
+      <p>In Lab 7 you saw that searching by name returns two Ronaldos. The solution is to use the <code>scorerID</code> primary key instead — it is guaranteed to be unique.</p>
+
+      <h3>Retrieve the Brazilian Ronaldo (R9) — ID is F02</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers WHERE scorerID = 'F02'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — exactly one row. No ambiguity. Now do the same for CR7.</p>
+
+      <div class="note">
+        The two Ronaldos are among the greatest footballers of all time — but from a database perspective they are just two rows that happen to share a name. The primary key is what makes them uniquely identifiable. This same principle applies everywhere: tax file numbers, student IDs, passport numbers — all exist because names alone are not reliable identifiers.
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that retrieves <strong>all columns</strong> for the <strong>Portuguese Ronaldo</strong> using his <code>scorerID</code> of <strong>F12</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 6 — LIKE / Wildcards ─────────────────────────────────────────────
+  {
+    title: "LabExt6 — LIKE / Wildcards",
+    questions: [
+      { question: "Write a query that returns all columns for scorers whose country name contains the letter 'a' (anywhere in the name).", leet: "3xt_w1ldcard", labId: "W2_E6", answer: "select * from scorers where country like '%a%'", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt6 — Fuzzy Searching with LIKE</h2>
+      <p>The <code>=</code> operator requires an exact match. <code>LIKE</code> allows pattern matching using two special wildcard characters:</p>
+      <ul>
+        <li><code>%</code> — matches <em>any number</em> of characters (including zero)</li>
+        <li><code>_</code> — matches <em>exactly one</em> character</li>
+      </ul>
+
+      <h3>Practice — names starting with 'G'</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers WHERE name LIKE 'G%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Practice — names ending in 'r'</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers WHERE name LIKE '%r'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Practice — both Ronaldos at once</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM scorers WHERE name LIKE 'R%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run that last one — it catches both Ronaldos and Rahn. <code>LIKE</code> is case-insensitive in SQLite so <code>'r%'</code> works too.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns for scorers whose <strong>country name contains the letter 'a'</strong> anywhere in the name. Use <code>%a%</code> as your pattern. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 7 — Putting It Together ───────────────────────────────────────────
+  {
+    title: "LabExt7 — Putting It Together",
+    questions: [
+      { question: "Write a query that returns name, country and goals for scorers whose country contains 'a', ordered by goals highest to lowest, showing only the top 5.", leet: "3xt_full_w2", labId: "W2_E7", answer: "select name, country, goals from scorers where country like '%a%' order by goals desc limit 5", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt7 — The Full Toolkit</h2>
+      <p>Combine everything from this week into a single query: choose specific columns, filter with <code>LIKE</code>, sort with <code>ORDER BY</code>, and cap the results with <code>LIMIT</code>.</p>
+
+      <p>The full clause order is:</p>
+      <ol>
+        <li><code>SELECT</code> columns</li>
+        <li><code>FROM</code> table</li>
+        <li><code>WHERE</code> condition</li>
+        <li><code>ORDER BY</code> column direction</li>
+        <li><code>LIMIT</code> number</li>
+      </ol>
+
+      <h3>Example — top 3 German scorers by goals, name and goals only</h3>
+      <pre onclick="copyToEditor(this)">SELECT name, goals FROM scorers WHERE country = 'Germany' ORDER BY goals DESC LIMIT 3<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — three columns, filtered, sorted, capped. Now write your own version using <code>LIKE</code>.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns <strong>name</strong>, <strong>country</strong>, and <strong>goals</strong> for scorers whose country <strong>contains the letter 'a'</strong>, ordered by <strong>goals highest to lowest</strong>, showing only the <strong>top 5</strong>. Type your query below.
+      </div>
+    `
+  }
+
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let studentName = "";
+
+// ── NAME MODAL ─────────────────────────────────────────────────────────────────
+function confirmName() {
+  const raw = document.getElementById("modal-name-input").value.trim();
+  const err = document.getElementById("modal-error");
+  if (!raw || raw.length < 2) {
+    err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+    return;
+  }
+  studentName = raw;
+  document.getElementById("name-modal").classList.add("hidden");
+  document.getElementById("student-badge").textContent = "👤 " + raw;
+  log(`Welcome, ${raw}.`, "ok");
+}
+
+// ── COPY TO EDITOR ─────────────────────────────────────────────────────────────
+function copyToEditor(el) {
+  const lines = el.innerText.split("\n");
+  const query = lines.filter(l => !l.includes("click to copy")).join("\n").trim();
+  document.getElementById("sql-input").value = query;
+  document.getElementById("sql-input").focus();
+  log("Copied to editor.", "info");
+}
+
+// ── QUERY ENGINE ───────────────────────────────────────────────────────────────
+async function runQuery() {
+  let query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
+  if (!query) return;
+  setConsoleStatus("Running...", "warn");
+  log("→ " + query, "info");
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, db: DB_NAME })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      renderTable(data.data);
+      const n = data.data.length;
+      setConsoleStatus("OK", "ok");
+      log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
+      document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
+    } else {
+      renderError(data.error);
+      setConsoleStatus("Error", "err");
+      log("✗ " + data.error, "err");
+    }
+  } catch(err) {
+    renderError("Could not reach the server.");
+    setConsoleStatus("Offline", "err");
+    log("✗ " + err.message, "err");
+  }
+}
+
+function renderTable(rows) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  if (!rows || rows.length === 0) {
+    empty.textContent = "Query returned no rows.";
+    empty.style.display = "block";
+    table.style.display = "none";
+    return;
+  }
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  Object.keys(rows[0]).forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    Object.values(row).forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val === null ? "NULL" : val;
+      if (val === null) td.style.color = "var(--text-dark)";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function renderError(msg) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  table.style.display = "none";
+  document.getElementById("result-count").textContent = "";
+}
+
+// ── FLAG QUESTIONS ─────────────────────────────────────────────────────────────
+async function checkAnswer(itemEl, input, leet, labId, answer, type) {
+  const submitted = input.value.trim();
+  const resultEl  = itemEl.querySelector(".fq-result");
+  if (!submitted) return;
+
+  let correct = false;
+  if (type === "completion") {
+    correct = true;
+  } else if (type === "value") {
+    correct = submitted.toLowerCase() === answer.toLowerCase();
+  } else if (type === "query") {
+    correct = normaliseQuery(submitted) === normaliseQuery(answer);
+  }
+
+  if (correct) {
+    const flag = await makeFlag(leet, labId);
+    resultEl.textContent = "✓ Correct!";
+    resultEl.className   = "fq-result correct";
+    let flagEl = itemEl.querySelector(".fq-flag");
+    if (!flagEl) {
+      flagEl = document.createElement("div");
+      flagEl.className = "fq-flag";
+      flagEl.title = "Click to copy";
+      itemEl.appendChild(flagEl);
+    }
+    flagEl.textContent = flag;
+    flagEl.onclick = () => {
+      navigator.clipboard.writeText(flag).catch(()=>{});
+      log(`Copied: ${flag}`, "ok");
+    };
+    input.disabled = true;
+    itemEl.classList.add("solved");
+    log(`✓ Flag generated: ${flag}`, "ok");
+  } else {
+    resultEl.textContent = "✗ Not quite — check your query and try again.";
+    resultEl.className   = "fq-result wrong";
+    log(`✗ Wrong answer: "${submitted}"`, "err");
+  }
+}
+
+function buildQuestions(questions) {
+  if (!questions || questions.length === 0) return "";
+  return `<div class="flag-questions">` +
+    questions.map((q, i) => {
+      const safeAnswer = q.answer ? q.answer.replace(/&/g, "&amp;").replace(/"/g, "&quot;") : "";
+      if (q.type === "completion") {
+        return `
+          <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-type="completion">
+            <div class="fq-label">${q.question}</div>
+            <div class="fq-row">
+              <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">✔ Mark Complete</button>
+            </div>
+            <div class="fq-result"></div>
+          </div>`;
+      }
+      return `
+        <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-answer="${safeAnswer}" data-type="${q.type}">
+          <div class="fq-label">${q.question}</div>
+          <div class="fq-row">
+            <input type="text" class="fq-input"
+              placeholder="${q.type === 'query' ? 'Type your SQL query here' : 'Your answer'}"
+              onkeydown="if(event.key==='Enter') handleCheck(${i})" />
+            <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">Check</button>
+          </div>
+          <div class="fq-result"></div>
+        </div>`;
+    }).join("") +
+  `</div>`;
+}
+
+function handleCheck(i) {
+  const itemEl = document.getElementById("fq-" + i);
+  const type   = itemEl.dataset.type;
+  const leet   = itemEl.dataset.leet;
+  const labId  = itemEl.dataset.labid;
+  const answer = itemEl.dataset.answer || null;
+  const input  = type === "completion"
+    ? { value: "done", disabled: false }
+    : itemEl.querySelector(".fq-input");
+  checkAnswer(itemEl, input, leet, labId, answer, type);
+}
+
+// ── LAB MANAGEMENT ─────────────────────────────────────────────────────────────
+function initLabs() {
+  const select = document.getElementById("lab-select");
+  LAB_DATA.forEach((lab, i) => {
+    const opt = document.createElement("option");
+    opt.value = i; opt.text = lab.title;
+    select.appendChild(opt);
+  });
+  loadLab();
+}
+
+function loadLab() {
+  const index = parseInt(document.getElementById("lab-select").value);
+  const lab   = LAB_DATA[index];
+  document.getElementById("lab-title-header").textContent = lab.title;
+  document.getElementById("instructions-body").innerHTML  =
+    lab.instructions + buildQuestions(lab.questions);
+  document.getElementById("results-empty").textContent    = "Run a query to see results here.";
+  document.getElementById("results-empty").style.display  = "block";
+  document.getElementById("results-table").style.display  = "none";
+  document.getElementById("result-count").textContent     = "";
+  log("Loaded: " + lab.title, "info");
+}
+
+// ── COMPLETION MODAL ───────────────────────────────────────────────────────────
+function showComplete() {
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const lab    = LAB_DATA[index];
+  const isLast = index >= LAB_DATA.length - 1;
+  document.getElementById("complete-text").textContent =
+    isLast ? "You have completed all Week 2 labs. Submit your flags via the Microsoft Form."
+           : (lab.completeText || "Well done! Move on to the next lab.");
+  document.getElementById("complete-modal").classList.add("open");
+}
+
+function confirmComplete() {
+  document.getElementById("complete-modal").classList.remove("open");
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const isLast = index >= LAB_DATA.length - 1;
+  if (!isLast) {
+    document.getElementById("lab-select").value = index + 1;
+    loadLab();
+  }
+}
+
+// ── CONSOLE ────────────────────────────────────────────────────────────────────
+function log(msg, cls="") {
+  const out  = document.getElementById("console-output");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setConsoleStatus(text, cls) {
+  const el = document.getElementById("console-status");
+  el.textContent = text;
+  el.style.color = cls==="ok"?"var(--green)":cls==="err"?"var(--red)":cls==="warn"?"var(--accent)":"var(--blue)";
+}
+
+// ── RESIZE ─────────────────────────────────────────────────────────────────────
+(function(){
+  const handle = document.getElementById("resize-handle");
+  const col    = document.getElementById("left-col");
+  let drag=false, sy=0;
+  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", e => {
+    if (!drag) return;
+    const total = col.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    sy = e.clientY;
+  });
+  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
+})();
+
+// ── KEYBOARD ───────────────────────────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
+});
+
+window.onload = initLabs;
+</script>
+</body>
+</html>
