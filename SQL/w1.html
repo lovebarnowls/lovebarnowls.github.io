@@ -709,9 +709,9 @@ function buildQuestions(questions) {
           <div class="fq-row">
             <input type="text" class="fq-input"
               placeholder="${q.type === 'query' ? 'Type your SQL query here' : 'Your answer'}"
-              onkeydown="if(event.key==='Enter') checkAnswer(document.getElementById('fq-${i}'), this, '${q.leet}', '${q.labId}', ${q.answer ? `'${q.answer}'` : 'null'}, '${q.type}')" />
+              onkeydown="if(event.key==='Enter') checkAnswer(document.getElementById('fq-${i}'), this, '${q.leet}', '${q.labId}', ${q.answer ? `'${q.answer.replace(/'/g, "\'")}'` : 'null'}, '${q.type}')" />
             <button class="btn btn-accent btn-small"
-              onclick="checkAnswer(document.getElementById('fq-${i}'), this.previousElementSibling, '${q.leet}', '${q.labId}', ${q.answer ? `'${q.answer}'` : 'null'}, '${q.type}')">
+              onclick="checkAnswer(document.getElementById('fq-${i}'), this.previousElementSibling, '${q.leet}', '${q.labId}', ${q.answer ? `'${q.answer.replace(/'/g, "\'")}'` : 'null'}, '${q.type}')">
               Check
             </button>
           </div>
