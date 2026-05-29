@@ -306,32 +306,27 @@ const LAB_DATA = [
   {
     title: "Lab 4 — INSERT",
     questions: [
-      { question: "After running both INSERTs, what is the product_name of the item you added to the products table?", leet: "1ns3rt_d0n3", labId: "W4_L4", answer: "Vegemite 220g", type: "value" }
-    ],
+  { question: "Return here once you have successfully inserted a car into the page below. Click Complete to continue.", leet: "1ns3rt_d0n3", labId: "W4_L4", answer: null, type: "completion" }
+],
     instructions: `
-      <h2>Lab 4 — Adding New Data with INSERT</h2>
-      <p><code>INSERT INTO</code> adds a new row to a table. The values must be listed in the same order as the columns, and text values go inside single quotes.</p>
-      <p>The syntax is:</p>
-      <pre>INSERT INTO table_name VALUES ('value1', 'value2', ...)</pre>
+      <h2>Lab 4 — INSERT: Adding New Data</h2>
+<p>Databases are not static. New data is added all the time — when you create an account on a website, when a new product is listed in an online store, when a student enrols at a school. All of that happens via the <code>INSERT</code> command.</p>
 
-      <h3>Step 1 — insert a new customer</h3>
-      <pre onclick="copyToEditor(this)">INSERT INTO customers VALUES ('C16', 'Taylor', 'Jordan', 'QLD', 'active')<span class="copy-hint">click to copy to editor</span></pre>
-      <p>Copy this into the editor and click Run. The console will confirm the insert. Then verify it worked:</p>
-      <pre onclick="copyToEditor(this)">SELECT * FROM customers WHERE customerID = 'C16'<span class="copy-hint">click to copy to editor</span></pre>
+<p>The basic syntax looks like this:</p>
+<pre>INSERT INTO table_name VALUES ('value1', 'value2', value3)</pre>
+<p>Text values go inside single quotes. Numbers do not.</p>
 
-      <h3>Step 2 — insert a new product</h3>
-      <pre onclick="copyToEditor(this)">INSERT INTO products VALUES ('P21', 'Vegemite 220g', 'Pantry', 4.60)<span class="copy-hint">click to copy to editor</span></pre>
-      <p>Notice that the price <code>4.60</code> has no quotes — it is a number, not text. Verify it:</p>
-      <pre onclick="copyToEditor(this)">SELECT * FROM products WHERE productID = 'P21'<span class="copy-hint">click to copy to editor</span></pre>
+<div class="warn-box">
+  <strong>Note:</strong> For security reasons, INSERT access cannot be granted in this lab environment. All queries here are read-only.
+</div>
 
-      <div class="warn-box">
-        <strong>Note:</strong> This database is read-only for stability — your inserts are simulated locally and will not persist after you reload the page. In a real database with write access, these rows would be saved permanently.
-      </div>
+<p>A separate sandbox has been set up where INSERT is fully enabled. Head there now, follow the guided activity, and add at least one car to the database.</p>
 
-      <div class="task-box">
-        <strong>Your task</strong>
-        Run both INSERT statements and verify each one with a SELECT. What is the <strong>product_name</strong> of the item you added to the products table? Type it below to unlock your flag.
-      </div>
+<div class="task-box">
+  <strong>Your task</strong>
+  Open the INSERT sandbox via the link below. Complete the guided activity, then return here and click Complete to move on.<br><br>
+  <a href="https://lovebarnowls.github.com/SQL/w4insert.html" target="_blank" style="color:var(--accent);font-family:var(--mono);font-size:12px;">lovebarnowls.github.com/SQL/w4insert.html ↗</a>
+</div>
     `
   },
 
