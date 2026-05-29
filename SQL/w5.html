@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 9 Digital Technologies — Week 5 Formative Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#161616; --panel:#1f1f1f; --panel2:#272727;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#F0A500; --accent2:#c98b00; --accent-dim:#3a2800;
+  --text:#e0e0e0; --text-dim:#888; --text-dark:#444;
+  --green:#4ec94e; --red:#f05050; --blue:#5ab4f0;
+  --purple:#b07fdd; --purple-dim:#2a1a3a;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+
+.header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.lab-selector{background:var(--panel2);color:var(--text);border:1px solid var(--border2);padding:4px 10px;border-radius:4px;font-family:var(--sans);font-size:12px;cursor:pointer;outline:none;}
+.lab-selector:focus{border-color:var(--accent);}
+.student-badge{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);padding:3px 10px;border-radius:4px;white-space:nowrap;}
+.btn{border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;transition:background 0.15s,transform 0.1s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-complete{background:#9b59b6;color:#fff;} .btn-complete:hover{background:#7d3c98;}
+.btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
+.btn-small{padding:4px 10px;font-size:10px;}
+
+.workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
+
+.left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
+.instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
+.pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
+.pane-accent{color:var(--accent);font-size:10px;font-weight:600;}
+.instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;overflow-y:auto;flex:1;}
+.instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
+.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
+.instructions-body p{margin-bottom:10px;color:#ccc;}
+.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
+.instructions-body pre{font-family:var(--mono);background:#111;border:1px solid var(--border2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:4px;font-size:12px;color:#d4d4d4;overflow-x:auto;margin:8px 0 12px;line-height:1.6;cursor:pointer;transition:border-color 0.15s;}
+.instructions-body pre:hover{border-color:var(--accent);}
+.instructions-body pre .copy-hint{display:block;font-size:10px;color:var(--text-dark);margin-top:6px;}
+.instructions-body .task-box{background:var(--accent-dim);border:1px solid var(--accent2);border-radius:6px;padding:10px 14px;margin:10px 0;}
+.instructions-body .task-box strong{color:var(--accent);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body ol,.instructions-body ul{padding-left:20px;margin-bottom:10px;color:#ccc;}
+.instructions-body li{margin-bottom:5px;}
+.instructions-body .note{background:#1a1a2e;border:1px solid #2e2e4a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aab4d4;}
+.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4aab4;}
+.instructions-body .anomaly-box{background:#1a1a1a;border:1px solid var(--purple);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4c4e8;}
+.instructions-body .anomaly-box strong{color:var(--purple);}
+.instructions-body .sample-box{background:#101a10;border:1px solid #2a4a2a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aad4aa;font-style:italic;}
+.instructions-body .sample-box strong{color:#4ec94e;display:block;margin-bottom:4px;font-style:normal;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body .boss-box{background:#1a0a0a;border:2px solid #c0392b;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#e8b4b4;}
+.instructions-body .boss-box strong{color:#e74c3c;display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body .submit-box{background:#0a0a1a;border:2px solid var(--blue);border-radius:6px;padding:12px 16px;margin:14px 0;font-size:13px;color:#aac8e8;line-height:1.8;}
+.instructions-body .submit-box strong{color:var(--blue);display:block;margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+
+.flag-questions{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.fq-item{background:#111;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;transition:border-color 0.2s;}
+.fq-item.solved{border-color:var(--green);}
+.fq-label{font-size:12px;color:#ccc;margin-bottom:6px;line-height:1.5;}
+.fq-row{display:flex;gap:6px;align-items:center;}
+.fq-input{flex:1;background:var(--panel2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 10px;outline:none;transition:border-color 0.15s;}
+.fq-input:focus{border-color:var(--accent);}
+.fq-input:disabled{opacity:0.5;cursor:not-allowed;}
+.fq-result{font-family:var(--mono);font-size:11px;margin-top:5px;min-height:14px;}
+.fq-result.correct{color:var(--green);} .fq-result.wrong{color:var(--red);}
+.fq-flag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);border-radius:4px;padding:4px 8px;margin-top:5px;cursor:pointer;display:inline-block;transition:opacity 0.15s;word-break:break-all;}
+.fq-flag:hover{opacity:0.75;}
+.fq-flag::before{content:"📋 ";}
+
+.resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
+.resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
+
+.console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
+.console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
+.console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
+
+.right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
+.sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
+.sql-textarea-wrapper{position:relative;}
+.sql-textarea{width:100%;background:#111;color:#d4d4d4;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px 36px 12px 14px;border:none;outline:none;resize:none;min-height:90px;max-height:220px;overflow-y:auto;tab-size:4;display:block;}
+.sql-semicolon{position:absolute;bottom:8px;right:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);opacity:0.4;pointer-events:none;line-height:1;user-select:none;}
+.sql-toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--panel2);border-top:1px solid var(--border);gap:8px;}
+.sql-hint{font-size:10px;color:var(--text-dark);font-family:var(--mono);}
+.row-count{font-size:10px;color:var(--text-dim);font-family:var(--mono);padding:0 4px;}
+.results-pane{display:flex;flex-direction:column;overflow:hidden;}
+.results-scroll{flex:1;overflow:auto;padding:10px;}
+.results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.results-table th{background:var(--panel2);color:var(--accent);font-weight:700;padding:7px 12px;text-align:left;border:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.results-table td{padding:6px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap;}
+.results-table tr:nth-child(even) td{background:#1a1a1a;}
+.results-table tr:hover td{background:var(--accent-dim);}
+.results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:36px 40px;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.7);}
+.modal-title{font-size:18px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.modal-subtitle{font-size:13px;color:#aaa;margin-bottom:24px;line-height:1.6;}
+.modal-input{width:100%;background:#111;border:2px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:15px;padding:10px 14px;outline:none;transition:border-color 0.15s;margin-bottom:16px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-error{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px;}
+.modal-actions{text-align:center;}
+
+.complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;}
+.complete-overlay.open{display:flex;}
+.complete-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+.complete-emoji{font-size:36px;text-align:center;margin-bottom:14px;}
+.complete-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:24px;white-space:pre-wrap;}
+.complete-actions{text-align:center;}
+
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="name-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚑ Year 9 Digital Technologies</div>
+    <div class="modal-subtitle">Enter your first name to begin. This personalises your flags and cannot be changed once set.</div>
+    <input type="text" class="modal-input" id="modal-name-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" />
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-accent" onclick="confirmName()">Begin ▶</button>
+    </div>
+  </div>
+</div>
+
+<div class="complete-overlay" id="complete-modal">
+  <div class="complete-box">
+    <div class="complete-emoji">🎉</div>
+    <p class="complete-text" id="complete-text"></p>
+    <div class="complete-actions">
+      <button class="btn btn-accent" onclick="confirmComplete()">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">⚑ Year 9 DigiTech — Week 5 Formative</div>
+  <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+  <div class="student-badge" id="student-badge">—</div>
+  <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
+</div>
+
+<div class="workspace">
+  <div class="left-col" id="left-col">
+    <div class="instructions-pane" id="instructions-pane">
+      <div class="pane-header">
+        <span>Instructions</span>
+        <span class="pane-accent" id="lab-title-header"></span>
+      </div>
+      <div class="instructions-body" id="instructions-body"></div>
+    </div>
+    <div class="resize-handle" id="resize-handle">··· drag to resize ···</div>
+    <div class="console-pane">
+      <div class="pane-header">
+        <span>Console</span>
+        <span class="pane-accent" id="console-status">Ready</span>
+      </div>
+      <div class="console-output" id="console-output"><span class="info">SQL Lab ready.</span></div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="sql-input-pane">
+      <div class="pane-header">
+        <span>SQL Query</span>
+        <span class="row-count" id="row-count"></span>
+      </div>
+      <div class="sql-textarea-wrapper">
+        <textarea id="sql-input" class="sql-textarea" spellcheck="false"
+          placeholder="-- Type or paste your SQL query here"></textarea>
+        <span class="sql-semicolon">;</span>
+      </div>
+      <div class="sql-toolbar">
+        <span class="sql-hint">Ctrl+Enter to run &nbsp;·&nbsp; semicolons added automatically</span>
+        <button class="btn btn-accent btn-small" onclick="runQuery()">▶ Run</button>
+      </div>
+    </div>
+    <div class="results-pane">
+      <div class="pane-header">
+        <span>Query Results</span>
+        <span class="row-count" id="result-count"></span>
+      </div>
+      <div class="results-scroll">
+        <div class="results-empty" id="results-empty">Run a query to see results here.</div>
+        <table class="results-table" id="results-table" style="display:none;"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL  = "https://formativeassessment.xu-yangen.workers.dev";
+const DB_NAME     = "w5";
+const FLAG_SALT   = "Faith";
+const FLAG_PREFIX = "FCSDE";
+
+async function makeFlagSuffix(name, labId) {
+  const raw    = name.toLowerCase() + FLAG_SALT + labId;
+  const data   = new TextEncoder().encode(raw);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  const hex    = Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return hex.substring(0, 6);
+}
+
+async function makeFlag(leet, labId) {
+  const suffix = await makeFlagSuffix(studentName, labId);
+  return `${FLAG_PREFIX}{${leet}_${suffix}}`;
+}
+
+function normaliseQuery(q) {
+  return q.toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s*=\s*/g, "=")
+    .replace(/\s*>\s*/g, ">")
+    .replace(/\s*<\s*/g, "<")
+    .replace(/;+$/, "")
+    .replace(/"/g, "'")
+    .trim();
+}
+
+const LAB_DATA = [
+
+  // ── INTRODUCTION ─────────────────────────────────────────────────────────────
+  {
+    title: "Introduction",
+    questions: [],
+    instructions: `
+      <h2>Week 5 — Formative Assessment</h2>
+      <p>This week is different. There are no step-by-step labs. Instead, you are a <strong style="color:var(--accent)">data detective</strong>.</p>
+      <p>The database this week contains results from a school swimming carnival. It looks clean. It is not entirely clean. Your job is to investigate it and write up what you find.</p>
+
+      <div class="note">
+        This database has four tables — <code>students</code>, <code>events</code>, <code>results</code>, and one more that you may or may not discover on your own. Start with the schema, then explore the data before you form any conclusions.
+      </div>
+
+      <h3>What you are looking for</h3>
+      <p>There are at least <strong style="color:var(--accent)">three confirmed anomalies</strong> — things in the data that are impossible, inconsistent, or suspicious. There may be more. There are also things that are simply <em>interesting</em> — not wrong, just worth noting in a report.</p>
+
+      <h3>How you will be graded</h3>
+      <p>You are <strong style="color:var(--accent)">not</strong> graded on how many anomalies you find. You are graded on the <strong style="color:var(--accent)">quality of your explanation</strong>. A student who finds two anomalies and explains them clearly will score higher than a student who lists five things without explaining why they matter.</p>
+
+      <div class="anomaly-box">
+        <strong>What a good finding looks like</strong>
+        A good finding names the specific record (table, row, or ID), describes what is wrong or unusual, and suggests what might have caused it. "Something looks weird in results" is not a finding. "Result R001 shows a time of 0.1 seconds for the 50m Freestyle, which is physically impossible for a human swimmer and is likely a data entry error" is a finding.
+      </div>
+
+      <h3>How to submit</h3>
+      <p>Use the SQL editor on the right to investigate. Write your findings in your own words. When you are done, <strong style="color:var(--accent)">copy and paste your written findings into the Microsoft Teams assignment sheet</strong>. Your teacher will also reinforce this in Teams.</p>
+
+      <p>Use the section selector above to move through the guided anomaly sections and the revision labs. All sections are available from the start.</p>
+    `,
+    completeText: "Ready to investigate. Move on to Schema Discovery."
+  },
+
+  // ── SCHEMA DISCOVERY ─────────────────────────────────────────────────────────
+  {
+    title: "Schema — Discover the Tables",
+    questions: [
+      { question: "How many tables does this database have? Type the number to confirm.", leet: "5ch3m4_w5", labId: "W5_S1", answer: "4", type: "value" }
+    ],
+    instructions: `
+      <h2>Schema Discovery</h2>
+      <p>Same first step as always — ask the database what it contains before you touch anything else.</p>
+
+      <h3>Find all tables</h3>
+      <pre onclick="copyToEditor(this)">SELECT name FROM sqlite_master WHERE type='table'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this. Count the tables. One of them you have not seen before — that is intentional. You are not required to investigate it for the formative assessment, but curious detectives might want to.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many tables does this database have? Type the number below to confirm you have found them all.
+      </div>
+    `
+  },
+
+  // ── TABLE STRUCTURE ───────────────────────────────────────────────────────────
+  {
+    title: "Schema — Map the Columns",
+    questions: [
+      { question: "Run PRAGMA table_info on all tables and note the columns. Click Complete when done.", leet: "m4p_c0lumns_w5", labId: "W5_S2", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Map the Columns</h2>
+      <p>Before you can spot something wrong, you need to know what <em>right</em> looks like. Run PRAGMA on each table and note the column names and types.</p>
+
+      <h3>Students</h3>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(students)<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Events</h3>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(events)<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Results</h3>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(results)<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Pay attention to the <code>results</code> table columns. Each result has a <code>result_value</code>, a <code>unit</code>, a <code>place</code>, and a <code>points</code> column. These four columns are where most of the interesting things happen.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run PRAGMA on all tables and write the column names in your notes. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── EXPLORE THE DATA ─────────────────────────────────────────────────────────
+  {
+    title: "Explore — SELECT * All Tables",
+    questions: [
+      { question: "Explore all tables with SELECT *. Click Complete when done.", leet: "3xpl0r3_w5", labId: "W5_S3", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Explore the Raw Data</h2>
+      <p>Before drawing any conclusions, look at everything. A good detective reads the whole file before circling anything in red.</p>
+
+      <h3>Students</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM students<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Events</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM events<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Results</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM results<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Scroll through the results table carefully. You are looking for anything that feels unusual — a number that seems wrong, a name that appears unexpectedly, or a pattern that is suddenly broken.</p>
+
+      <div class="note">
+        You do not need to identify anything yet. This is just your first read-through. Investigators do not jump to conclusions on the first pass.
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run all three queries and read the data carefully. Make notes on anything that catches your eye. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── INTERESTING DATA ─────────────────────────────────────────────────────────
+  {
+    title: "Interesting Data",
+    questions: [
+      { question: "Explore and note interesting findings. Click Complete when done.", leet: "1nt3r3st1ng_w5", labId: "W5_S4", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Interesting Data — Not Every Finding Is an Anomaly</h2>
+      <p>A good data report does not just list errors. It also notes things that are surprising, notable, or worth a second look — even if they turn out to be perfectly valid.</p>
+      <p>Here are two examples of the <em>kind of writing</em> a good report includes. These are models for the <em>style</em> — you will fill in the actual names and details yourself.</p>
+
+      <div class="sample-box">
+        <strong>Sample finding — standout performer</strong>
+        "Student AA (Apollo Apricot) placed first in three separate events — the 100m Freestyle, the 50m Butterfly, and the 200m Freestyle — accumulating 30 points. While this is not an anomaly, it is a notable finding. It may be worth verifying that one athlete competing in three events across different sessions is consistent with carnival rules."
+      </div>
+
+      <div class="sample-box">
+        <strong>Sample finding — limited participation</strong>
+        "Several students (such as [student names here]) only appear in one event each in the results table. This is not necessarily wrong — not every student competes in multiple events — but it is worth noting as part of a complete data summary."
+      </div>
+
+      <h3>Useful queries for exploring participation</h3>
+      <pre onclick="copyToEditor(this)">SELECT studentID, COUNT(*) FROM results GROUP BY studentID ORDER BY COUNT(*) DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <pre onclick="copyToEditor(this)">SELECT studentID, COUNT(*) FROM results GROUP BY studentID ORDER BY COUNT(*) ASC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run the queries above. Find at least one interesting observation that is not an anomaly and write it up in your own words using the sample style above. Fill in the actual student names — do not copy the placeholder text. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── ANOMALY 1 ─────────────────────────────────────────────────────────────────
+  {
+    title: "Anomaly 1 — Competition Times",
+    questions: [
+      { question: "Describe Anomaly 1 in your own words. What is wrong, which record is affected, and what likely caused it? Click Complete when done.", leet: "4n0m4ly_1_w5", labId: "W5_A1", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Anomaly 1 — Something Is Very Fast</h2>
+      <p>Swimming events record completion times. Human beings, even elite Olympic swimmers, cannot complete a 50m race in under 20 seconds.</p>
+      <p>Look carefully at the <code>result_value</code> column in the results table. Do all of the times look physically plausible?</p>
+
+      <h3>A useful starting point</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM results ORDER BY result_value ASC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <div class="anomaly-box">
+        <strong>Hint</strong>
+        Sort the results by time from fastest to slowest. The top of that list should tell you something immediately.
+      </div>
+
+      <p>Once you have found it, write it up. A complete finding names the resultID, the event, the studentID, the actual value recorded, and explains why it is impossible.</p>
+
+      <div class="sample-box">
+        <strong>Example structure</strong>
+        "Result [ID] shows a time of [value] seconds for the [event]. This is physically impossible because [reason]. The most likely explanation is [cause]."
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Find the impossible time, write up your finding, and copy it to your assignment sheet. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── ANOMALY 2 ─────────────────────────────────────────────────────────────────
+  {
+    title: "Anomaly 2 — The Student Roll",
+    questions: [
+      { question: "Describe Anomaly 2 in your own words. Which studentID is the problem, and what does it mean? Click Complete when done.", leet: "4n0m4ly_2_w5", labId: "W5_A2", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Anomaly 2 — Who Is That?</h2>
+      <p>Every result in the results table should belong to a student who exists in the students table. If a studentID appears in results but not in students, that is a problem.</p>
+      <p>Check whether every studentID in the results table can also be found in the students table.</p>
+
+      <h3>Step 1 — list every unique studentID in results</h3>
+      <pre onclick="copyToEditor(this)">SELECT DISTINCT studentID FROM results ORDER BY studentID<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Step 2 — list every studentID in students</h3>
+      <pre onclick="copyToEditor(this)">SELECT studentID FROM students ORDER BY studentID<span class="copy-hint">click to copy to editor</span></pre>
+
+      <div class="anomaly-box">
+        <strong>Hint</strong>
+        Compare the two lists side by side. Is there a studentID in the results list that does not appear in the students list?
+      </div>
+
+      <p>Once you have found it, write it up clearly. Name the studentID, state which result record it appears in, and explain what this might mean for the data.</p>
+
+      <div class="sample-box">
+        <strong>Example structure</strong>
+        "StudentID [XX] appears in the results table (result [ID], event [ID]) but does not exist in the students table. This may indicate [possible cause]."
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Find the ghost studentID, write up your finding, and copy it to your assignment sheet. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── ANOMALY 3 ─────────────────────────────────────────────────────────────────
+  {
+    title: "Anomaly 3 — Two Places at Once",
+    questions: [
+      { question: "Describe Anomaly 3 in your own words. Which student, which events, and why is it impossible? Click Complete when done.", leet: "4n0m4ly_3_w5", labId: "W5_A3", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Anomaly 3 — Can a Person Be in Two Places at Once?</h2>
+      <p>Each event is assigned to a <code>session</code> number. Two events in the same session run at the same time. A single student cannot physically compete in two events that share a session number.</p>
+      <p>Find a student who has results in two events that are both in the same session.</p>
+
+      <h3>Step 1 — find a student with multiple results</h3>
+      <pre onclick="copyToEditor(this)">SELECT studentID, COUNT(*) FROM results GROUP BY studentID ORDER BY COUNT(*) DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Step 2 — look up that student's specific events</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM results WHERE studentID = 'AA'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Step 3 — check the session numbers for those events</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM events WHERE eventID = 'E09' OR eventID = 'E11'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <div class="anomaly-box">
+        <strong>Hint</strong>
+        Start with the student who has the most results. Look up their events. Then check the session column in the events table. If two of their events share a session number, that is your anomaly.
+      </div>
+
+      <div class="sample-box">
+        <strong>Example structure</strong>
+        "Student [ID] has results recorded in both event [ID] and event [ID]. According to the events table, both of these events are in session [number], meaning they run at the same time. It is physically impossible for one student to compete in both. This is likely [cause]."
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Find the session clash, write up your finding, and copy it to your assignment sheet. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── ANOMALY 4 TEASER ──────────────────────────────────────────────────────────
+  {
+    title: "Anomaly 4 — Hidden Boss",
+    questions: [
+      { question: "You have made it this far. There is a fourth anomaly. No hints. Good luck.", leet: "h1dd3n_b055_w5", labId: "W5_A4", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Anomaly 4</h2>
+      <p>You have found three anomalies. There is a fourth.</p>
+
+      <div class="boss-box">
+        <strong>No hints</strong>
+        Look at everything. All of the tables. All of the columns. All of the values. The answer is in the data. No further guidance will be given here.
+      </div>
+
+      <p>If you find it, write it up using the same format as the previous anomalies — name the record, explain what is wrong, and suggest a cause.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Investigate freely. If you find Anomaly 4, add it to your assignment sheet. Click Complete whether or not you find it — this section is a bonus.
+      </div>
+    `
+  },
+
+  // ── SUBMISSION REMINDER ───────────────────────────────────────────────────────
+  {
+    title: "Submit Your Findings",
+    questions: [],
+    instructions: `
+      <h2>Submitting Your Findings</h2>
+      <p>You have completed the investigation section. Before you move on to the revision labs, make sure your findings are ready to submit.</p>
+
+      <div class="submit-box">
+        <strong>Submission checklist</strong>
+        Copy and paste the following into your Microsoft Teams assignment sheet:
+        <ul style="margin-top:8px;padding-left:20px;line-height:2;">
+          <li>At least one <strong>interesting data observation</strong> (not an anomaly — just notable)</li>
+          <li><strong>Anomaly 1</strong> — the impossible time, with the record ID, value, and explanation</li>
+          <li><strong>Anomaly 2</strong> — the ghost student, with the studentID and what it implies</li>
+          <li><strong>Anomaly 3</strong> — the session clash, with both event IDs and the session number</li>
+          <li><strong>Anomaly 4</strong> (bonus) — if you found it, include it</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        Your flags from the revision labs below are submitted separately via the Microsoft Form, the same way as previous weeks.
+      </div>
+
+      <p>Once you have submitted your findings, continue to the revision labs below for your flag-based revision tasks.</p>
+    `,
+    completeText: "Findings submitted. Move on to the revision labs."
+  },
+
+  // ── REVLAB A — LIKE on event names ────────────────────────────────────────────
+  {
+    title: "RevLab A — Freestyle Events",
+    questions: [
+      { question: "How many events have 'Freestyle' in their name? Use COUNT(*) and LIKE.", leet: "r3v_fr33styl3", labId: "W5_RA", answer: "4", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab A — Searching Event Names</h2>
+      <p>Revision of <code>LIKE</code>. The events table has an <code>event_name</code> column. Use <code>LIKE</code> to filter it, and <code>COUNT(*)</code> to count the matches.</p>
+
+      <h3>Practice — events containing 'Backstroke'</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM events WHERE event_name LIKE '%Backstroke%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this to see the pattern. Now adapt it for Freestyle and count the results.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many events have <strong>Freestyle</strong> in their name? Use <code>COUNT(*)</code> with <code>LIKE</code>. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB B — LIKE on student last names ─────────────────────────────────────
+  {
+    title: "RevLab B — Berry Last Names",
+    questions: [
+      { question: "How many students have a last name ending in 'berry'? Use COUNT(*) and LIKE.", leet: "r3v_b3rry", labId: "W5_RB", answer: "3", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab B — Filtering Last Names</h2>
+      <p>Revision of <code>LIKE</code> with a suffix pattern. The students table has a <code>last_name</code> column. The <code>%</code> wildcard matches anything that comes <em>before</em> the pattern you specify.</p>
+
+      <h3>Practice — last names starting with 'A'</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM students WHERE last_name LIKE 'A%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this to see a prefix pattern. Now flip the wildcard to the front to match a suffix.</p>
+
+      <div class="note">
+        The pattern <code>'%berry'</code> matches any last name that ends with the letters b-e-r-r-y, regardless of what comes before.
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many students have a last name ending in <strong>berry</strong>? Use <code>COUNT(*)</code> with <code>LIKE '%berry'</code>. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB C — LIKE with WHERE multi-condition ────────────────────────────────
+  {
+    title: "RevLab C — Junior Backstroke",
+    questions: [
+      { question: "Write a query that returns all events whose name contains 'Backstroke' AND whose category contains 'Junior'.", leet: "r3v_jun10r_back", labId: "W5_RC", answer: "select * from events where event_name like '%backstroke%' and category like '%junior%'", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab C — Combining LIKE with AND</h2>
+      <p>Revision of combining two <code>LIKE</code> conditions with <code>AND</code>. Both conditions must be true for a row to appear in the results.</p>
+
+      <h3>Practice — Senior Freestyle events</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM events WHERE event_name LIKE '%Freestyle%' AND category LIKE '%Senior%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this to confirm the pattern works. Now adapt it for Backstroke and Junior.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all events whose name contains <strong>Backstroke</strong> AND whose category contains <strong>Junior</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB D — COUNT with LIKE ────────────────────────────────────────────────
+  {
+    title: "RevLab D — How Many 50m Events?",
+    questions: [
+      { question: "How many events have '50m' in their name? Use COUNT(*) and LIKE.", leet: "r3v_50m_c0unt", labId: "W5_RD", answer: "8", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab D — Counting with LIKE</h2>
+      <p>Revision of <code>COUNT(*)</code> combined with <code>LIKE</code>. This is the same pattern as the first LIKE labs, applied to a distance prefix.</p>
+
+      <h3>Practice — events with '100m' in the name</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM events WHERE event_name LIKE '%100m%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this first to see what comes back. Now adapt it for 50m events and use COUNT instead of SELECT *.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many events have <strong>50m</strong> in their name? Use <code>COUNT(*)</code> with <code>LIKE</code>. Type the number below.
+      </div>
+    `
+  }
+
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let studentName = "";
+
+function confirmName() {
+  const raw = document.getElementById("modal-name-input").value.trim();
+  const err = document.getElementById("modal-error");
+  if (!raw || raw.length < 2) {
+    err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+    return;
+  }
+  studentName = raw;
+  document.getElementById("name-modal").classList.add("hidden");
+  document.getElementById("student-badge").textContent = "👤 " + raw;
+  log(`Welcome, ${raw}.`, "ok");
+}
+
+function copyToEditor(el) {
+  const lines = el.innerText.split("\n");
+  const query = lines.filter(l => !l.includes("click to copy")).join("\n").trim();
+  document.getElementById("sql-input").value = query;
+  document.getElementById("sql-input").focus();
+  log("Copied to editor.", "info");
+}
+
+async function runQuery() {
+  let query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
+  if (!query) return;
+  setConsoleStatus("Running...", "warn");
+  log("→ " + query, "info");
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, db: DB_NAME })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      renderTable(data.data);
+      const n = data.data.length;
+      setConsoleStatus("OK", "ok");
+      log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
+      document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
+    } else {
+      renderError(data.error);
+      setConsoleStatus("Error", "err");
+      log("✗ " + data.error, "err");
+    }
+  } catch(err) {
+    renderError("Could not reach the server.");
+    setConsoleStatus("Offline", "err");
+    log("✗ " + err.message, "err");
+  }
+}
+
+function renderTable(rows) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  if (!rows || rows.length === 0) {
+    empty.textContent = "Query returned no rows.";
+    empty.style.display = "block";
+    table.style.display = "none";
+    return;
+  }
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  Object.keys(rows[0]).forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    Object.values(row).forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val === null ? "NULL" : val;
+      if (val === null) td.style.color = "var(--text-dark)";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function renderError(msg) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  table.style.display = "none";
+  document.getElementById("result-count").textContent = "";
+}
+
+async function checkAnswer(itemEl, input, leet, labId, answer, type) {
+  const submitted = input.value.trim();
+  const resultEl  = itemEl.querySelector(".fq-result");
+  if (!submitted) return;
+
+  let correct = false;
+  if (type === "completion") {
+    correct = true;
+  } else if (type === "value") {
+    correct = submitted.toLowerCase() === answer.toLowerCase();
+  } else if (type === "query") {
+    correct = normaliseQuery(submitted) === normaliseQuery(answer);
+  }
+
+  if (correct) {
+    const flag = await makeFlag(leet, labId);
+    resultEl.textContent = "✓ Correct!";
+    resultEl.className   = "fq-result correct";
+    let flagEl = itemEl.querySelector(".fq-flag");
+    if (!flagEl) {
+      flagEl = document.createElement("div");
+      flagEl.className = "fq-flag";
+      flagEl.title = "Click to copy";
+      itemEl.appendChild(flagEl);
+    }
+    flagEl.textContent = flag;
+    flagEl.onclick = () => {
+      navigator.clipboard.writeText(flag).catch(()=>{});
+      log(`Copied: ${flag}`, "ok");
+    };
+    input.disabled = true;
+    itemEl.classList.add("solved");
+    log(`✓ Flag generated: ${flag}`, "ok");
+  } else {
+    resultEl.textContent = "✗ Not quite — check your answer and try again.";
+    resultEl.className   = "fq-result wrong";
+    log(`✗ Wrong answer: "${submitted}"`, "err");
+  }
+}
+
+function buildQuestions(questions) {
+  if (!questions || questions.length === 0) return "";
+  return `<div class="flag-questions">` +
+    questions.map((q, i) => {
+      const safeAnswer = q.answer ? q.answer.replace(/&/g, "&amp;").replace(/"/g, "&quot;") : "";
+      if (q.type === "completion") {
+        return `
+          <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-type="completion">
+            <div class="fq-label">${q.question}</div>
+            <div class="fq-row">
+              <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">✔ Mark Complete</button>
+            </div>
+            <div class="fq-result"></div>
+          </div>`;
+      }
+      return `
+        <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-answer="${safeAnswer}" data-type="${q.type}">
+          <div class="fq-label">${q.question}</div>
+          <div class="fq-row">
+            <input type="text" class="fq-input"
+              placeholder="${q.type === 'query' ? 'Type your SQL query here' : 'Your answer'}"
+              onkeydown="if(event.key==='Enter') handleCheck(${i})" />
+            <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">Check</button>
+          </div>
+          <div class="fq-result"></div>
+        </div>`;
+    }).join("") +
+  `</div>`;
+}
+
+function handleCheck(i) {
+  const itemEl = document.getElementById("fq-" + i);
+  const type   = itemEl.dataset.type;
+  const leet   = itemEl.dataset.leet;
+  const labId  = itemEl.dataset.labid;
+  const answer = itemEl.dataset.answer || null;
+  const input  = type === "completion"
+    ? { value: "done", disabled: false }
+    : itemEl.querySelector(".fq-input");
+  checkAnswer(itemEl, input, leet, labId, answer, type);
+}
+
+function initLabs() {
+  const select = document.getElementById("lab-select");
+  LAB_DATA.forEach((lab, i) => {
+    const opt = document.createElement("option");
+    opt.value = i; opt.text = lab.title;
+    select.appendChild(opt);
+  });
+  loadLab();
+}
+
+function loadLab() {
+  const index = parseInt(document.getElementById("lab-select").value);
+  const lab   = LAB_DATA[index];
+  document.getElementById("lab-title-header").textContent = lab.title;
+  document.getElementById("instructions-body").innerHTML  =
+    lab.instructions + buildQuestions(lab.questions);
+  document.getElementById("results-empty").textContent    = "Run a query to see results here.";
+  document.getElementById("results-empty").style.display  = "block";
+  document.getElementById("results-table").style.display  = "none";
+  document.getElementById("result-count").textContent     = "";
+  log("Loaded: " + lab.title, "info");
+}
+
+function showComplete() {
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const lab    = LAB_DATA[index];
+  const isLast = index >= LAB_DATA.length - 1;
+  document.getElementById("complete-text").textContent =
+    isLast ? "You have completed all Week 5 tasks. Submit your written findings via the Teams assignment sheet, and your flags via the Microsoft Form."
+           : (lab.completeText || "Well done! Move on to the next section.");
+  document.getElementById("complete-modal").classList.add("open");
+}
+
+function confirmComplete() {
+  document.getElementById("complete-modal").classList.remove("open");
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const isLast = index >= LAB_DATA.length - 1;
+  if (!isLast) {
+    document.getElementById("lab-select").value = index + 1;
+    loadLab();
+  }
+}
+
+function log(msg, cls="") {
+  const out  = document.getElementById("console-output");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setConsoleStatus(text, cls) {
+  const el = document.getElementById("console-status");
+  el.textContent = text;
+  el.style.color = cls==="ok"?"var(--green)":cls==="err"?"var(--red)":cls==="warn"?"var(--accent)":"var(--blue)";
+}
+
+(function(){
+  const handle = document.getElementById("resize-handle");
+  const col    = document.getElementById("left-col");
+  let drag=false, sy=0;
+  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", e => {
+    if (!drag) return;
+    const total = col.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    sy = e.clientY;
+  });
+  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
+})();
+
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
+});
+
+window.onload = initLabs;
+</script>
+</body>
+</html>
