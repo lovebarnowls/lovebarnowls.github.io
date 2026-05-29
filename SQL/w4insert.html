@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 9 Digital Technologies — Week 4 INSERT Sandbox</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#161616; --panel:#1f1f1f; --panel2:#272727;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#F0A500; --accent2:#c98b00; --accent-dim:#3a2800;
+  --text:#e0e0e0; --text-dim:#888; --text-dark:#444;
+  --green:#4ec94e; --red:#f05050; --blue:#5ab4f0;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+
+.header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.badge{font-family:var(--mono);font-size:11px;color:var(--blue);background:#0a1a2a;border:1px solid #1a3a5a;padding:3px 10px;border-radius:4px;white-space:nowrap;margin-left:auto;}
+.btn{border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;transition:background 0.15s,transform 0.1s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
+.btn-danger{background:#c0392b;color:#fff;} .btn-danger:hover{background:#a93226;}
+.btn-small{padding:4px 10px;font-size:10px;}
+
+.workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
+
+.left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
+.instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
+.pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
+.pane-accent{color:var(--accent);font-size:10px;font-weight:600;}
+.pane-blue{color:var(--blue);font-size:10px;font-weight:600;}
+.instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;overflow-y:auto;flex:1;}
+.instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
+.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
+.instructions-body p{margin-bottom:10px;color:#ccc;}
+.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
+.instructions-body pre{font-family:var(--mono);background:#111;border:1px solid var(--border2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:4px;font-size:12px;color:#d4d4d4;overflow-x:auto;margin:8px 0 12px;line-height:1.6;cursor:pointer;transition:border-color 0.15s;}
+.instructions-body pre:hover{border-color:var(--accent);}
+.instructions-body pre .copy-hint{display:block;font-size:10px;color:var(--text-dark);margin-top:6px;}
+.instructions-body .task-box{background:var(--accent-dim);border:1px solid var(--accent2);border-radius:6px;padding:10px 14px;margin:10px 0;}
+.instructions-body .task-box strong{color:var(--accent);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body ol,.instructions-body ul{padding-left:20px;margin-bottom:10px;color:#ccc;}
+.instructions-body li{margin-bottom:5px;}
+.instructions-body .note{background:#1a1a2e;border:1px solid #2e2e4a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aab4d4;}
+.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4aab4;}
+.instructions-body .free-box{background:#0a1a0a;border:1px solid #2a4a2a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aad4aa;}
+.instructions-body .free-box strong{color:var(--green);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+
+.resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
+.resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
+
+.console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
+.console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
+.console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
+
+.right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
+.sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
+.sql-textarea-wrapper{position:relative;}
+.sql-textarea{width:100%;background:#111;color:#d4d4d4;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px 36px 12px 14px;border:none;outline:none;resize:none;min-height:90px;max-height:220px;overflow-y:auto;tab-size:4;display:block;}
+.sql-semicolon{position:absolute;bottom:8px;right:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);opacity:0.4;pointer-events:none;line-height:1;user-select:none;}
+.sql-toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--panel2);border-top:1px solid var(--border);gap:8px;}
+.sql-hint{font-size:10px;color:var(--text-dark);font-family:var(--mono);}
+.row-count{font-size:10px;color:var(--text-dim);font-family:var(--mono);padding:0 4px;}
+.results-pane{display:flex;flex-direction:column;overflow:hidden;}
+.results-scroll{flex:1;overflow:auto;padding:10px;}
+.results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.results-table th{background:var(--panel2);color:var(--accent);font-weight:700;padding:7px 12px;text-align:left;border:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.results-table td{padding:6px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap;}
+.results-table tr:nth-child(even) td{background:#1a1a1a;}
+.results-table tr:hover td{background:var(--accent-dim);}
+.results-table td.new-row{color:var(--green);}
+.results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
+
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">⚑ Year 9 DigiTech — Week 4 INSERT Sandbox</div>
+  <div class="badge" id="row-badge">Loading database…</div>
+  <button class="btn btn-danger btn-small" onclick="resetDB()" style="margin-left:8px;">↺ Reset Database</button>
+</div>
+
+<div class="workspace">
+  <div class="left-col" id="left-col">
+    <div class="instructions-pane">
+      <div class="pane-header">
+        <span>Instructions</span>
+        <span class="pane-accent">INSERT Sandbox</span>
+      </div>
+      <div class="instructions-body">
+        <h2>INSERT — Adding New Data</h2>
+        <p>This is a live database running entirely in your browser. Every INSERT you run actually changes the data — and you can verify it immediately with a SELECT. If things get messy, hit the <strong style="color:var(--red)">Reset Database</strong> button in the top right to start fresh.</p>
+
+        <div class="note">
+          This database has one table called <code>cars</code> with four columns: <code>car_id</code> (a number), <code>make</code> (the brand), <code>model</code> (the specific model), and <code>year</code> (the year it was made).
+        </div>
+
+        <h3>The INSERT syntax</h3>
+        <p>To add a new row, you list the values in the same order as the columns. Numbers go in without quotes. Text goes in with single quotes.</p>
+        <pre>INSERT INTO cars VALUES (car_id, 'make', 'model', year)</pre>
+
+        <h3>Step 1 — look at what is already there</h3>
+        <pre onclick="copyToEditor(this)">SELECT * FROM cars ORDER BY make, year<span class="copy-hint">click to copy to editor</span></pre>
+        <p>Run this first. There are 36 cars already in the database. Take note of the highest <code>car_id</code> — your new rows need IDs that do not already exist.</p>
+
+        <h3>Step 2 — guided example</h3>
+        <p>Add the Chaparral 2J, a famous suction-fan race car from 1970. It was so effective at generating downforce that it was banned after one season.</p>
+        <pre onclick="copyToEditor(this)">INSERT INTO cars VALUES (37, 'Chaparral', '2J', 1970)<span class="copy-hint">click to copy to editor</span></pre>
+        <p>Run this, then verify it was added:</p>
+        <pre onclick="copyToEditor(this)">SELECT * FROM cars WHERE make = 'Chaparral'<span class="copy-hint">click to copy to editor</span></pre>
+
+        <h3>Step 3 — your turn</h3>
+        <p>Add the following cars one at a time. Choose your own <code>car_id</code> numbers — just make sure each one is unique.</p>
+        <ul>
+          <li>Pagani Zonda F — 2005</li>
+          <li>Saleen S7 — 2000</li>
+          <li>Gumpert Apollo Enraged — 2012</li>
+          <li>Mazda 787B — 1991</li>
+        </ul>
+
+        <div class="task-box">
+          <strong>After inserting all four</strong>
+          Run <code>SELECT COUNT(*) FROM cars</code> — you should have 41 rows. Then try <code>SELECT * FROM cars ORDER BY year ASC</code> to see the full list from oldest to newest. Where does the Mazda 787B land?
+        </div>
+
+        <h3>Step 4 — free exploration</h3>
+
+        <div class="free-box">
+          <strong>Open sandbox</strong>
+          Add any car you like. Your own car, your dream car, a car from a game. Make up a fictional make and model. Try inserting a duplicate ID and see what error you get. Try leaving out a value. Try inserting a year as text instead of a number and see whether SQLite complains. This is your database — experiment.
+        </div>
+
+        <h3>Useful queries to run as you go</h3>
+        <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM cars<span class="copy-hint">click to copy to editor</span></pre>
+        <pre onclick="copyToEditor(this)">SELECT DISTINCT make FROM cars ORDER BY make<span class="copy-hint">click to copy to editor</span></pre>
+        <pre onclick="copyToEditor(this)">SELECT make, COUNT(*) FROM cars GROUP BY make ORDER BY COUNT(*) DESC<span class="copy-hint">click to copy to editor</span></pre>
+        <pre onclick="copyToEditor(this)">SELECT * FROM cars ORDER BY year ASC<span class="copy-hint">click to copy to editor</span></pre>
+        <pre onclick="copyToEditor(this)">SELECT * FROM cars WHERE year > 2000 ORDER BY year DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+        <div class="warn-box">
+          Your changes exist only in this browser tab. Refreshing the page or hitting Reset will wipe everything back to the original 36 cars. That is intentional — no permanent damage possible.
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle" id="resize-handle">··· drag to resize ···</div>
+    <div class="console-pane">
+      <div class="pane-header">
+        <span>Console</span>
+        <span class="pane-accent" id="console-status">Loading…</span>
+      </div>
+      <div class="console-output" id="console-output"><span class="info">Initialising database…</span></div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="sql-input-pane">
+      <div class="pane-header">
+        <span>SQL Query</span>
+        <span class="row-count" id="result-count"></span>
+      </div>
+      <div class="sql-textarea-wrapper">
+        <textarea id="sql-input" class="sql-textarea" spellcheck="false"
+          placeholder="-- Type your SQL here. INSERT, SELECT, and more all work."></textarea>
+        <span class="sql-semicolon">;</span>
+      </div>
+      <div class="sql-toolbar">
+        <span class="sql-hint">Ctrl+Enter to run &nbsp;·&nbsp; INSERT and SELECT both work here</span>
+        <button class="btn btn-accent btn-small" onclick="runQuery()">▶ Run</button>
+      </div>
+    </div>
+    <div class="results-pane">
+      <div class="pane-header">
+        <span>Query Results</span>
+        <span class="row-count" id="result-count-2"></span>
+      </div>
+      <div class="results-scroll">
+        <div class="results-empty" id="results-empty">Run a query to see results here.</div>
+        <table class="results-table" id="results-table" style="display:none;"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.min.js"></script>
+<script>
+const SEED_SQL = `
+CREATE TABLE cars (
+  car_id INTEGER PRIMARY KEY,
+  make   TEXT NOT NULL,
+  model  TEXT NOT NULL,
+  year   INTEGER NOT NULL
+);
+
+INSERT INTO cars VALUES (1,  'Toyota',     'Camry',           2022);
+INSERT INTO cars VALUES (2,  'Toyota',     'RAV4',            2023);
+INSERT INTO cars VALUES (3,  'Toyota',     'Kluger',          2021);
+INSERT INTO cars VALUES (4,  'Toyota',     'Corolla',         2020);
+INSERT INTO cars VALUES (5,  'Toyota',     'HiLux',           2023);
+INSERT INTO cars VALUES (6,  'Toyota',     'AE86',            1983);
+INSERT INTO cars VALUES (7,  'Mazda',      'Mazda3',          2022);
+INSERT INTO cars VALUES (8,  'Mazda',      'CX-5',            2023);
+INSERT INTO cars VALUES (9,  'Mazda',      'MX-5',            2021);
+INSERT INTO cars VALUES (10, 'Honda',      'Civic',           2022);
+INSERT INTO cars VALUES (11, 'Honda',      'CR-V',            2023);
+INSERT INTO cars VALUES (12, 'Honda',      'Jazz',            2020);
+INSERT INTO cars VALUES (13, 'Nissan',     'Skyline',         2001);
+INSERT INTO cars VALUES (14, 'Nissan',     'Patrol',          2022);
+INSERT INTO cars VALUES (15, 'Nissan',     'Nismo S',         2023);
+INSERT INTO cars VALUES (16, 'Ford',       'Mustang',         2022);
+INSERT INTO cars VALUES (17, 'Ford',       'Ranger',          2023);
+INSERT INTO cars VALUES (18, 'Ford',       'Everest',         2022);
+INSERT INTO cars VALUES (19, 'Holden',     'Commodore',       2017);
+INSERT INTO cars VALUES (20, 'Holden',     'Colorado',        2018);
+INSERT INTO cars VALUES (21, 'Holden',     'Captiva',         2016);
+INSERT INTO cars VALUES (22, 'Hyundai',    'Tucson',          2023);
+INSERT INTO cars VALUES (23, 'Hyundai',    'i30',             2022);
+INSERT INTO cars VALUES (24, 'Hyundai',    'Santa Fe',        2023);
+INSERT INTO cars VALUES (25, 'Kia',        'Sportage',        2023);
+INSERT INTO cars VALUES (26, 'Kia',        'Carnival',        2022);
+INSERT INTO cars VALUES (27, 'Kia',        'Stinger',         2021);
+INSERT INTO cars VALUES (28, 'Subaru',     'Outback',         2022);
+INSERT INTO cars VALUES (29, 'Subaru',     'Forester',        2023);
+INSERT INTO cars VALUES (30, 'Subaru',     'WRX',             2022);
+INSERT INTO cars VALUES (31, 'Mitsubishi', 'Lancer',          2014);
+INSERT INTO cars VALUES (32, 'Mitsubishi', 'Eclipse',         2011);
+INSERT INTO cars VALUES (33, 'Mitsubishi', 'Outlander',       2023);
+INSERT INTO cars VALUES (34, 'Mitsubishi', 'Pajero',          2021);
+INSERT INTO cars VALUES (35, 'Chaparral',  '2E',              1966);
+INSERT INTO cars VALUES (36, 'Mazda',      '787B',            1991);
+`;
+
+let db = null;
+let SQL = null;
+
+async function initDB() {
+  try {
+    SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+    });
+    db = new SQL.Database();
+    db.run(SEED_SQL);
+    updateBadge();
+    setConsoleStatus("Ready", "ok");
+    log("Database ready. 36 cars loaded.", "ok");
+  } catch(e) {
+    setConsoleStatus("Error", "err");
+    log("Failed to initialise database: " + e.message, "err");
+  }
+}
+
+function resetDB() {
+  if (!SQL) return;
+  db = new SQL.Database();
+  db.run(SEED_SQL);
+  updateBadge();
+  clearResults();
+  log("Database reset to original 36 cars.", "warn");
+  setConsoleStatus("Reset", "warn");
+}
+
+function updateBadge() {
+  try {
+    const res = db.exec("SELECT COUNT(*) FROM cars");
+    const n = res[0].values[0][0];
+    document.getElementById("row-badge").textContent = `${n} cars in database`;
+  } catch(e) {}
+}
+
+function runQuery() {
+  if (!db) { log("Database not ready yet.", "err"); return; }
+  const raw = document.getElementById("sql-input").value.trim();
+  if (!raw) return;
+
+  const query = raw.replace(/;+$/, "").trim();
+  log("→ " + query, "info");
+  setConsoleStatus("Running…", "warn");
+
+  try {
+    const isSelect = /^\s*(select|pragma)/i.test(query);
+
+    if (isSelect) {
+      const results = db.exec(query);
+      if (!results || results.length === 0) {
+        showEmpty("Query returned no rows.");
+        setConsoleStatus("OK", "ok");
+        log("✓ 0 rows returned.", "ok");
+        document.getElementById("result-count").textContent = "";
+        document.getElementById("result-count-2").textContent = "";
+      } else {
+        const {columns, values} = results[0];
+        renderTable(columns, values, false);
+        const n = values.length;
+        setConsoleStatus("OK", "ok");
+        log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
+        document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
+        document.getElementById("result-count-2").textContent = `${n} row${n!==1?"s":""}`;
+      }
+    } else {
+      db.run(query);
+      const isInsert = /^\s*insert/i.test(query);
+
+      if (isInsert) {
+        const idMatch = query.match(/values\s*\(\s*(\d+)/i);
+        if (idMatch) {
+          const newId = parseInt(idMatch[1]);
+          try {
+            const check = db.exec(`SELECT * FROM cars WHERE car_id = ${newId}`);
+            if (check && check.length > 0) {
+              const {columns, values} = check[0];
+              renderTable(columns, values, true);
+              document.getElementById("result-count-2").textContent = "1 row inserted";
+            }
+          } catch(e2) {}
+        }
+        log("✓ Row inserted successfully.", "ok");
+        setConsoleStatus("Inserted", "ok");
+      } else {
+        showEmpty("Statement executed.");
+        log("✓ Statement executed.", "ok");
+        setConsoleStatus("OK", "ok");
+        document.getElementById("result-count-2").textContent = "";
+      }
+      updateBadge();
+    }
+  } catch(e) {
+    showError(e.message);
+    setConsoleStatus("Error", "err");
+    log("✗ " + e.message, "err");
+  }
+}
+
+function renderTable(columns, values, highlight) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  columns.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  values.forEach(row => {
+    const tr = document.createElement("tr");
+    row.forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val === null ? "NULL" : val;
+      if (val === null) td.style.color = "var(--text-dark)";
+      if (highlight) td.classList.add("new-row");
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function showEmpty(msg) {
+  document.getElementById("results-empty").textContent = msg;
+  document.getElementById("results-empty").style.display = "block";
+  document.getElementById("results-table").style.display = "none";
+}
+
+function showError(msg) {
+  const empty = document.getElementById("results-empty");
+  empty.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  document.getElementById("results-table").style.display = "none";
+  document.getElementById("result-count").textContent = "";
+  document.getElementById("result-count-2").textContent = "";
+}
+
+function clearResults() {
+  showEmpty("Run a query to see results here.");
+  document.getElementById("result-count").textContent = "";
+  document.getElementById("result-count-2").textContent = "";
+}
+
+function copyToEditor(el) {
+  const lines = el.innerText.split("\n");
+  const query = lines.filter(l => !l.includes("click to copy")).join("\n").trim();
+  document.getElementById("sql-input").value = query;
+  document.getElementById("sql-input").focus();
+  log("Copied to editor.", "info");
+}
+
+function log(msg, cls="") {
+  const out  = document.getElementById("console-output");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setConsoleStatus(text, cls) {
+  const el = document.getElementById("console-status");
+  el.textContent = text;
+  el.style.color = cls==="ok"?"var(--green)":cls==="err"?"var(--red)":cls==="warn"?"var(--accent)":"var(--blue)";
+}
+
+(function(){
+  const handle = document.getElementById("resize-handle");
+  const col    = document.getElementById("left-col");
+  let drag=false, sy=0;
+  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", e => {
+    if (!drag) return;
+    const total = col.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    sy = e.clientY;
+  });
+  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
+})();
+
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
+});
+
+initDB();
+</script>
+</body>
+</html>
