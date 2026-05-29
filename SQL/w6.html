@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 9 Digital Technologies — Week 6 SQL Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#161616; --panel:#1f1f1f; --panel2:#272727;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#F0A500; --accent2:#c98b00; --accent-dim:#3a2800;
+  --text:#e0e0e0; --text-dim:#888; --text-dark:#444;
+  --green:#4ec94e; --red:#f05050; --blue:#5ab4f0;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+
+.header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.student-badge{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);padding:3px 10px;border-radius:4px;white-space:nowrap;}
+.btn{border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;transition:background 0.15s,transform 0.1s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-complete{background:#9b59b6;color:#fff;} .btn-complete:hover{background:#7d3c98;}
+.btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
+.btn-small{padding:4px 10px;font-size:10px;}
+
+.workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
+
+.left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
+.instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
+.pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
+.pane-accent{color:var(--accent);font-size:10px;font-weight:600;}
+.instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;overflow-y:auto;flex:1;}
+.instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
+.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
+.instructions-body p{margin-bottom:10px;color:#ccc;}
+.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
+.instructions-body .note{background:#1a1a2e;border:1px solid #2e2e4a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aab4d4;}
+.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4aab4;}
+
+.flag-questions{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.fq-item{background:#111;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;transition:border-color 0.2s;}
+.fq-item.solved{border-color:var(--green);}
+.fq-num{font-family:var(--mono);font-size:10px;color:var(--text-dark);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+.fq-label{font-size:12px;color:#ccc;margin-bottom:6px;line-height:1.5;}
+.fq-checker-note{font-size:10px;color:var(--text-dark);font-family:var(--mono);margin-bottom:6px;font-style:italic;}
+.fq-row{display:flex;gap:6px;align-items:center;}
+.fq-input{flex:1;background:var(--panel2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 10px;outline:none;transition:border-color 0.15s;}
+.fq-input:focus{border-color:var(--accent);}
+.fq-input:disabled{opacity:0.5;cursor:not-allowed;}
+.fq-result{font-family:var(--mono);font-size:11px;margin-top:5px;min-height:14px;}
+.fq-result.correct{color:var(--green);} .fq-result.wrong{color:var(--red);}
+.fq-flag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);border-radius:4px;padding:4px 8px;margin-top:5px;cursor:pointer;display:inline-block;transition:opacity 0.15s;word-break:break-all;}
+.fq-flag:hover{opacity:0.75;}
+.fq-flag::before{content:"📋 ";}
+
+.resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
+.resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
+
+.console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
+.console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
+.console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
+
+.right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
+.sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
+.sql-textarea-wrapper{position:relative;}
+.sql-textarea{width:100%;background:#111;color:#d4d4d4;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px 36px 12px 14px;border:none;outline:none;resize:none;min-height:90px;max-height:220px;overflow-y:auto;tab-size:4;display:block;}
+.sql-semicolon{position:absolute;bottom:8px;right:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);opacity:0.4;pointer-events:none;line-height:1;user-select:none;}
+.sql-toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--panel2);border-top:1px solid var(--border);gap:8px;}
+.sql-hint{font-size:10px;color:var(--text-dark);font-family:var(--mono);}
+.row-count{font-size:10px;color:var(--text-dim);font-family:var(--mono);padding:0 4px;}
+.results-pane{display:flex;flex-direction:column;overflow:hidden;}
+.results-scroll{flex:1;overflow:auto;padding:10px;}
+.results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.results-table th{background:var(--panel2);color:var(--accent);font-weight:700;padding:7px 12px;text-align:left;border:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.results-table td{padding:6px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap;}
+.results-table tr:nth-child(even) td{background:#1a1a1a;}
+.results-table tr:hover td{background:var(--accent-dim);}
+.results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:36px 40px;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.7);}
+.modal-title{font-size:18px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.modal-subtitle{font-size:13px;color:#aaa;margin-bottom:24px;line-height:1.6;}
+.modal-input{width:100%;background:#111;border:2px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:15px;padding:10px 14px;outline:none;transition:border-color 0.15s;margin-bottom:16px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-error{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px;}
+.modal-actions{text-align:center;}
+
+.complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;}
+.complete-overlay.open{display:flex;}
+.complete-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+.complete-emoji{font-size:36px;text-align:center;margin-bottom:14px;}
+.complete-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:24px;}
+.complete-actions{text-align:center;}
+
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="name-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚑ Year 9 Digital Technologies</div>
+    <div class="modal-subtitle">Enter your first name to begin. This personalises your flags and cannot be changed once set.</div>
+    <input type="text" class="modal-input" id="modal-name-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" />
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-actions"><button class="btn btn-accent" onclick="confirmName()">Begin Lab ▶</button></div>
+  </div>
+</div>
+
+<div class="complete-overlay" id="complete-modal">
+  <div class="complete-box">
+    <div class="complete-emoji">🎉</div>
+    <p class="complete-text" id="complete-text"></p>
+    <div class="complete-actions"><button class="btn btn-accent" onclick="document.getElementById('complete-modal').classList.remove('open')">OK</button></div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">⚑ Year 9 DigiTech — Week 6</div>
+  <div class="student-badge" id="student-badge">—</div>
+  <button class="btn btn-complete" onclick="showComplete()" style="margin-left:8px;">✔ Complete</button>
+</div>
+
+<div class="workspace">
+  <div class="left-col" id="left-col">
+    <div class="instructions-pane">
+      <div class="pane-header">
+        <span>Questions</span>
+        <span class="pane-accent" id="progress-label">0 / 15 solved</span>
+      </div>
+      <div class="instructions-body">
+        <h2>Week 6 — Revision</h2>
+        <p>This week's database is a classical music collection — composers and their most famous pieces, including how many times each piece has been played.</p>
+        <p>There are no step-by-step instructions this week. Each question below asks you to write the SQL query that answers it. Use the editor on the right to test your queries, then type or paste them into the answer box to check.</p>
+        <div class="warn-box">
+          The auto-checker compares your query against one accepted correct answer. There are often multiple valid ways to write the same query — if yours is marked wrong but returns the correct result, check with your teacher. Copy your flag either way.
+        </div>
+        <div class="flag-questions" id="question-bank"></div>
+      </div>
+    </div>
+    <div class="resize-handle" id="resize-handle">··· drag to resize ···</div>
+    <div class="console-pane">
+      <div class="pane-header">
+        <span>Console</span>
+        <span class="pane-accent" id="console-status">Ready</span>
+      </div>
+      <div class="console-output" id="console-output"><span class="info">SQL Lab ready.</span></div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="sql-input-pane">
+      <div class="pane-header">
+        <span>SQL Query</span>
+        <span class="row-count" id="row-count"></span>
+      </div>
+      <div class="sql-textarea-wrapper">
+        <textarea id="sql-input" class="sql-textarea" spellcheck="false"
+          placeholder="-- Test your queries here before submitting them"></textarea>
+        <span class="sql-semicolon">;</span>
+      </div>
+      <div class="sql-toolbar">
+        <span class="sql-hint">Ctrl+Enter to run &nbsp;·&nbsp; semicolons added automatically</span>
+        <button class="btn btn-accent btn-small" onclick="runQuery()">▶ Run</button>
+      </div>
+    </div>
+    <div class="results-pane">
+      <div class="pane-header">
+        <span>Query Results</span>
+        <span class="row-count" id="result-count"></span>
+      </div>
+      <div class="results-scroll">
+        <div class="results-empty" id="results-empty">Run a query to see results here.</div>
+        <table class="results-table" id="results-table" style="display:none;"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL  = "https://formativeassessment.xu-yangen.workers.dev";
+const DB_NAME     = "w6";
+const FLAG_SALT   = "Faith";
+const FLAG_PREFIX = "FCSDE";
+
+async function makeFlagSuffix(name, labId) {
+  const raw    = name.toLowerCase() + FLAG_SALT + labId;
+  const data   = new TextEncoder().encode(raw);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  const hex    = Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return hex.substring(0, 6);
+}
+async function makeFlag(leet, labId) {
+  const suffix = await makeFlagSuffix(studentName, labId);
+  return `${FLAG_PREFIX}{${leet}_${suffix}}`;
+}
+
+function normaliseQuery(q) {
+  return q.toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s*=\s*/g, "=")
+    .replace(/\s*>\s*/g, ">")
+    .replace(/\s*<\s*/g, "<")
+    .replace(/\s*>=\s*/g, ">=")
+    .replace(/\s*<=\s*/g, "<=")
+    .replace(/;+$/, "")
+    .replace(/"/g, "'")
+    .trim();
+}
+
+const QUESTIONS = [
+  {
+    num: 1,
+    label: "What is the SQL query to find out what tables exist in this database?",
+    leet: "5ch3m4_t4bl35",
+    labId: "W6_Q01",
+    answer: "select name from sqlite_master where type='table'",
+    note: true
+  },
+  {
+    num: 2,
+    label: "What is the SQL query to see the column names and types of the composers table?",
+    leet: "5ch3m4_c0mp",
+    labId: "W6_Q02",
+    answer: "pragma table_info(composers)",
+    note: true
+  },
+  {
+    num: 3,
+    label: "What is the SQL query to see the column names and types of the pieces table?",
+    leet: "5ch3m4_p13c35",
+    labId: "W6_Q03",
+    answer: "pragma table_info(pieces)",
+    note: true
+  },
+  {
+    num: 4,
+    label: "Write a query that returns all composers from the Baroque era.",
+    leet: "b4r0qu3_3r4",
+    labId: "W6_Q04",
+    answer: "select * from composers where era='baroque'",
+    note: true
+  },
+  {
+    num: 5,
+    label: "Write a query that counts how many pieces have a play_count over 30000.",
+    leet: "pl4y_c0unt_h1gh",
+    labId: "W6_Q05",
+    answer: "select count(*) from pieces where play_count > 30000",
+    note: true
+  },
+  {
+    num: 6,
+    label: "Write a query that returns all pieces ordered by play_count from highest to lowest.",
+    leet: "0rd3r_pl4y",
+    labId: "W6_Q06",
+    answer: "select * from pieces order by play_count desc",
+    note: true
+  },
+  {
+    num: 7,
+    label: "Write a query that returns only the title of the single most-played piece.",
+    leet: "t0p_p13c3",
+    labId: "W6_Q07",
+    answer: "select title from pieces order by play_count desc limit 1",
+    note: true
+  },
+  {
+    num: 8,
+    label: "Write a query that counts how many pieces each composerID has, using the pieces table.",
+    leet: "p13c35_p3r_c0mp",
+    labId: "W6_Q08",
+    answer: "select composerid,count(*) from pieces group by composerid",
+    note: true
+  },
+  {
+    num: 9,
+    label: "Write a query that counts how many composers belong to each era, ordered by count highest to lowest.",
+    leet: "3r4_c0unt",
+    labId: "W6_Q09",
+    answer: "select era,count(*) from composers group by era order by count(*) desc",
+    note: true
+  },
+  {
+    num: 10,
+    label: "Write a query that counts how many pieces have a type of 'Solo'.",
+    leet: "s0l0_c0unt",
+    labId: "W6_Q10",
+    answer: "select count(*) from pieces where type='solo'",
+    note: true
+  },
+  {
+    num: 11,
+    label: "Write a query that returns all composers whose name contains 'fr' anywhere. (How many results do you get?)",
+    leet: "fr_l1k3",
+    labId: "W6_Q11",
+    answer: "select * from composers where name like '%fr%'",
+    note: true
+  },
+  {
+    num: 12,
+    label: "Write a JOIN query that returns each piece title alongside the composer's name.",
+    leet: "j01n_t1tl3_n4m3",
+    labId: "W6_Q12",
+    answer: "select pieces.title,composers.name from pieces join composers on pieces.composerid=composers.composerid",
+    note: true
+  },
+  {
+    num: 13,
+    label: "Write a JOIN query that returns composer name and piece title for Choral pieces only.",
+    leet: "j01n_ch0r4l",
+    labId: "W6_Q13",
+    answer: "select composers.name,pieces.title from pieces join composers on pieces.composerid=composers.composerid where pieces.type='choral'",
+    note: true
+  },
+  {
+    num: 14,
+    label: "Write a JOIN query that returns composer name and their total play_count across all pieces, ordered highest to lowest. Which composer has the most plays overall?",
+    leet: "j01n_t0t4l_pl4y",
+    labId: "W6_Q14",
+    answer: "select composers.name,sum(pieces.play_count) from pieces join composers on pieces.composerid=composers.composerid group by composers.composerid order by sum(pieces.play_count) desc",
+    note: true
+  },
+  {
+    num: 15,
+    label: "Write a JOIN query that returns composer name and how many pieces they have, ordered by piece count highest to lowest.",
+    leet: "j01n_p13c3_c0unt",
+    labId: "W6_Q15",
+    answer: "select composers.name,count(*) from pieces join composers on pieces.composerid=composers.composerid group by composers.composerid order by count(*) desc",
+    note: true
+  }
+];
+
+let studentName = "";
+let solvedCount = 0;
+
+function confirmName() {
+  const raw = document.getElementById("modal-name-input").value.trim();
+  const err = document.getElementById("modal-error");
+  if (!raw || raw.length < 2) {
+    err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+    return;
+  }
+  studentName = raw;
+  document.getElementById("name-modal").classList.add("hidden");
+  document.getElementById("student-badge").textContent = "👤 " + raw;
+  log(`Welcome, ${raw}.`, "ok");
+}
+
+function buildQuestions() {
+  const bank = document.getElementById("question-bank");
+  bank.innerHTML = QUESTIONS.map((q, i) => `
+    <div class="fq-item" id="fq-${i}">
+      <div class="fq-num">Question ${q.num} of ${QUESTIONS.length}</div>
+      <div class="fq-label">${q.label}</div>
+      ${q.note ? `<div class="fq-checker-note">The checker accepts one valid form — alternatives may also be correct. Check with your teacher if unsure.</div>` : ""}
+      <div class="fq-row">
+        <input type="text" class="fq-input" placeholder="Type your SQL query here"
+          onkeydown="if(event.key==='Enter') handleCheck(${i})" />
+        <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">Check</button>
+      </div>
+      <div class="fq-result"></div>
+    </div>
+  `).join("");
+}
+
+async function handleCheck(i) {
+  const q       = QUESTIONS[i];
+  const itemEl  = document.getElementById("fq-" + i);
+  const input   = itemEl.querySelector(".fq-input");
+  const resultEl= itemEl.querySelector(".fq-result");
+  const submitted = input.value.trim();
+  if (!submitted) return;
+
+  const correct = normaliseQuery(submitted) === normaliseQuery(q.answer);
+
+  if (correct) {
+    const flag = await makeFlag(q.leet, q.labId);
+    resultEl.textContent = "✓ Correct!";
+    resultEl.className   = "fq-result correct";
+    let flagEl = itemEl.querySelector(".fq-flag");
+    if (!flagEl) {
+      flagEl = document.createElement("div");
+      flagEl.className = "fq-flag";
+      flagEl.title = "Click to copy";
+      itemEl.appendChild(flagEl);
+      itemEl.classList.add("solved");
+      solvedCount++;
+      updateProgress();
+    }
+    flagEl.textContent = flag;
+    flagEl.onclick = () => {
+      navigator.clipboard.writeText(flag).catch(()=>{});
+      log(`Copied: ${flag}`, "ok");
+    };
+    input.disabled = true;
+    log(`✓ Q${q.num} correct. Flag generated.`, "ok");
+  } else {
+    resultEl.textContent = "✗ Not quite — check your query and try again. If your results look right, check with your teacher.";
+    resultEl.className   = "fq-result wrong";
+    log(`✗ Q${q.num}: query did not match accepted answer.`, "err");
+  }
+}
+
+function updateProgress() {
+  document.getElementById("progress-label").textContent = `${solvedCount} / ${QUESTIONS.length} solved`;
+}
+
+async function runQuery() {
+  let query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
+  if (!query) return;
+  setConsoleStatus("Running…", "warn");
+  log("→ " + query, "info");
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, db: DB_NAME })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      renderTable(data.data);
+      const n = data.data.length;
+      setConsoleStatus("OK", "ok");
+      log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
+      document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
+    } else {
+      renderError(data.error);
+      setConsoleStatus("Error", "err");
+      log("✗ " + data.error, "err");
+    }
+  } catch(e) {
+    renderError("Could not reach the server.");
+    setConsoleStatus("Offline", "err");
+    log("✗ " + e.message, "err");
+  }
+}
+
+function renderTable(rows) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  if (!rows || rows.length === 0) {
+    empty.textContent = "Query returned no rows.";
+    empty.style.display = "block";
+    table.style.display = "none";
+    return;
+  }
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  Object.keys(rows[0]).forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    Object.values(row).forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val === null ? "NULL" : val;
+      if (val === null) td.style.color = "var(--text-dark)";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function renderError(msg) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  table.style.display = "none";
+  document.getElementById("result-count").textContent = "";
+}
+
+function showComplete() {
+  const all = solvedCount >= QUESTIONS.length;
+  document.getElementById("complete-text").textContent = all
+    ? "You have answered all 15 questions. Submit your flags via the Microsoft Form."
+    : `You have solved ${solvedCount} of ${QUESTIONS.length} questions so far. Submit your flags via the Microsoft Form when you are ready.`;
+  document.getElementById("complete-modal").classList.add("open");
+}
+
+function log(msg, cls="") {
+  const out  = document.getElementById("console-output");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setConsoleStatus(text, cls) {
+  const el = document.getElementById("console-status");
+  el.textContent = text;
+  el.style.color = cls==="ok"?"var(--green)":cls==="err"?"var(--red)":cls==="warn"?"var(--accent)":"var(--blue)";
+}
+
+(function(){
+  const handle = document.getElementById("resize-handle");
+  const col    = document.getElementById("left-col");
+  let drag=false, sy=0;
+  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", e => {
+    if (!drag) return;
+    const total = col.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    sy = e.clientY;
+  });
+  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
+})();
+
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
+});
+
+window.onload = () => { buildQuestions(); };
+</script>
+</body>
+</html>
