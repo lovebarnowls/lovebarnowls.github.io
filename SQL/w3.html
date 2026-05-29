@@ -214,8 +214,6 @@ function normaliseQuery(q) {
     .replace(/\s*<\s*/g, "<")
     .replace(/;+$/, "")
     .replace(/"/g, "'")
-    .replace(/\s*>=\s*/g, ">=")
-    .replace(/\s*<=\s*/g, "<=")
     .trim();
 }
 
@@ -290,23 +288,26 @@ const LAB_DATA = [
   {
     title: "Lab 3 — SELECT *",
     questions: [
-      { question: "How many books does this library have?", leet: "l1br4ry_0p3n", labId: "W3_L3", answer: "18", type: "value" }
+      { question: "Explore all three tables with SELECT *. Click Complete when done.", leet: "l1br4ry_0p3n", labId: "W3_L3", answer: null, type: "completion" }
     ],
     instructions: `
-      <h2>Lab 3 — Meet the Collection</h2>
-      <p>This library has some very distinguished taste in literature. Run the query below and take a moment to read the titles carefully.</p>
+      <h2>Lab 3 — Exploring the Library</h2>
+      <p>Before counting anything, look at the raw data in all three tables.</p>
 
-      <h3>The full catalogue</h3>
+      <h3>Members</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM members<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Books</h3>
       <pre onclick="copyToEditor(this)">SELECT * FROM books<span class="copy-hint">click to copy to editor</span></pre>
 
-      <p>Yes. These are all real entries in this database. Lord of the Fries is shelved under Fiction.</p>
+      <h3>Borrows</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM borrows<span class="copy-hint">click to copy to editor</span></pre>
 
-      <p>While you are here, also take a look at the members:</p>
-      <pre onclick="copyToEditor(this)">SELECT * FROM members<span class="copy-hint">click to copy to editor</span></pre>
+      <p>The books table contains some <em>very distinguished</em> literary works. Take a moment to appreciate them.</p>
 
       <div class="task-box">
         <strong>Your task</strong>
-        How many books does this library have? Type the number below to unlock your flag.
+        Run all three queries. Note how many members, books, and borrow records there are. Click Complete when done.
       </div>
     `
   },
@@ -315,21 +316,24 @@ const LAB_DATA = [
   {
     title: "Lab 4 — COUNT",
     questions: [
-      { question: "How many books are in the library? Use COUNT(*) to find out.", leet: "c0unt_unl0ck3d", labId: "W3_L4", answer: "18", type: "value" }
+      { question: "How many borrow records are in the borrows table? Use COUNT(*) to find out.", leet: "c0unt_unl0ck3d", labId: "W3_L4", answer: "40", type: "value" }
     ],
     instructions: `
       <h2>Lab 4 — Counting Rows with COUNT</h2>
-      <p><code>COUNT(*)</code> counts how many rows exist in a table. The <code>*</code> means "count every row". The result is always a single number.</p>
-      <p>You already know there are 18 books from Lab 3 — but now you are going to let the database count for you instead of counting manually. That matters a lot when tables have thousands of rows.</p>
+      <p><code>COUNT(*)</code> counts how many rows exist in a table — or how many rows match a condition. It is one of the most useful tools in SQL.</p>
+      <p>The <code>*</code> inside COUNT means "count every row". The result is always a single number.</p>
+
+      <h3>Practice — how many books are in the library?</h3>
+      <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM books<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — you get a single row with a single number. Now try it on the borrows table.</p>
 
       <h3>Practice — how many members are there?</h3>
       <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM members<span class="copy-hint">click to copy to editor</span></pre>
 
-      <p>Run this — a single row with a single number. Now do the same for books.</p>
-
       <div class="task-box">
         <strong>Your task</strong>
-        Write a <code>COUNT(*)</code> query on the <strong>books</strong> table. Type the number below to unlock your flag.
+        Write a <code>COUNT(*)</code> query on the <strong>borrows</strong> table. How many borrow records are there in total? Type the number below to unlock your flag.
       </div>
     `
   },
@@ -338,20 +342,20 @@ const LAB_DATA = [
   {
     title: "Lab 5 — COUNT with WHERE",
     questions: [
-      { question: "How many Fiction books are in the library?", leet: "c0unt_wh3r3", labId: "W3_L5", answer: "10", type: "value" }
+      { question: "How many borrows happened in January 2024? Use COUNT(*) with a WHERE clause.", leet: "c0unt_wh3r3", labId: "W3_L5", answer: "23", type: "value" }
     ],
     instructions: `
       <h2>Lab 5 — Counting a Subset</h2>
       <p>You can combine <code>COUNT(*)</code> with <code>WHERE</code> to count only the rows that match a condition — not all of them.</p>
 
-      <h3>Practice — how many Non-Fiction books are there?</h3>
-      <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM books WHERE genre = 'Non-Fiction'<span class="copy-hint">click to copy to editor</span></pre>
+      <h3>Practice — count borrows from February</h3>
+      <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM borrows WHERE borrow_date LIKE '2024-02%'<span class="copy-hint">click to copy to editor</span></pre>
 
-      <p>Run this — you get a count of only the Non-Fiction titles. The Art of Wok is in there somewhere. Now try Fiction.</p>
+      <p>Run this — you get the number of borrows that started with <code>2024-02</code>. The <code>LIKE</code> wildcard from last week is doing the heavy lifting here.</p>
 
       <div class="task-box">
         <strong>Your task</strong>
-        Write a query that counts how many <strong>Fiction</strong> books are in the library. Type the number below.
+        Write a query that counts how many borrows happened in <strong>January 2024</strong>. Dates in this table are stored as text in the format <code>YYYY-MM-DD</code>, so January dates all start with <code>2024-01</code>. Type the number below.
       </div>
     `
   },
@@ -360,28 +364,30 @@ const LAB_DATA = [
   {
     title: "Lab 6 — GROUP BY",
     questions: [
-      { question: "Write a query that counts how many books exist in each genre.", leet: "gr0up_by_unl0ck3d", labId: "W3_L6", answer: "select genre, count(*) from books group by genre", type: "query" }
+      { question: "Write a query that counts how many times each memberID appears in the borrows table, grouped by memberID.", leet: "gr0up_by_unl0ck3d", labId: "W3_L6", answer: "select memberid, count(*) from borrows group by memberid", type: "query" }
     ],
     instructions: `
       <h2>Lab 6 — Grouping Results with GROUP BY</h2>
       <p><code>GROUP BY</code> is the most important concept this week. Instead of counting <em>all</em> rows, it splits the table into groups — one per unique value in a column — and counts each group separately.</p>
-      <p>This is not an easy concept — but once it clicks, you will start seeing it everywhere. Spotify counting how many times you have played each artist, YouTube ranking videos by view count, a leaderboard in any game you have ever played — all of these require GROUP BY under the hood.</p>
 
-      <h3>Practice — count books per author</h3>
-      <pre onclick="copyToEditor(this)">SELECT author, COUNT(*) FROM books GROUP BY author<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Think of it like sorting a pile of library cards by member, then counting each person's stack.</p>
 
-      <p>Run this. Each row in the result represents one author, and the count tells you how many books they have in the library. Notice that the result has one row <em>per group</em>, not one row per book.</p>
+      <h3>Practice — count borrows per bookID</h3>
+      <pre onclick="copyToEditor(this)">SELECT bookID, COUNT(*) FROM borrows GROUP BY bookID<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this. Each row in the result represents one book, and the count tells you how many times it was borrowed. Notice: the result has one row <em>per group</em>, not one row per borrow.</p>
 
       <div class="warn-box">
-        <strong>Important rule:</strong> every column in your SELECT must either be the grouped column, or wrapped in an aggregation function like COUNT. You cannot SELECT a column that is not in the GROUP BY — the database would not know which row's value to show.
+        <strong>Important rule:</strong> every column in your SELECT must either be the grouped column, or wrapped in an aggregation function like COUNT. You cannot SELECT a column that is not in the GROUP BY without aggregating it — the database would not know which row's value to show.
       </div>
 
       <div class="task-box">
         <strong>Your task</strong>
-        Write a query that counts how many books exist in each <strong>genre</strong>. Which genre has the most books? Type your query below to unlock your flag.
+        Write a query that counts how many borrows each <strong>memberID</strong> has. Use <code>SELECT memberID, COUNT(*) FROM borrows GROUP BY memberID</code>. Type your query below to unlock your flag.
       </div>
     `
   },
+
   // ── LAB 7 — GROUP BY + ORDER BY ───────────────────────────────────────────────
   {
     title: "Lab 7 — GROUP BY + ORDER BY",
@@ -405,6 +411,234 @@ const LAB_DATA = [
       </div>
     `
   },
+
+
+  // ── REVLAB 1 — ORDER BY on books ─────────────────────────────────────────────
+  {
+    title: "RevLab1 — Oldest Book",
+    questions: [
+      { question: "Write a query that returns all columns from books, ordered by year_published from oldest to newest.", leet: "r3v_0rd3r_b00k5", labId: "W3_R1", answer: "select * from books order by year_published asc", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab1 — Ordering the Collection</h2>
+      <p>Revision from Week 2. Use <code>ORDER BY</code> to sort the books table by publication year.</p>
+      <p>Which book is at the very top? It was published a very long time ago.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns from <code>books</code>, ordered by <strong>year_published</strong> from oldest to newest. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 2 — WHERE + comparison on books ────────────────────────────────────
+  {
+    title: "RevLab2 — Recent Books",
+    questions: [
+      { question: "How many books in the library were published after the year 2000?", leet: "r3v_wh3r3_y34r", labId: "W3_R2", answer: "5", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab2 — Filtering by Year</h2>
+      <p>Revision from Week 1 and 2. Use <code>WHERE</code> with a comparison operator to filter books by publication year, then <code>COUNT</code> to count the results.</p>
+
+      <h3>Practice — books published before 1900</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM books WHERE year_published < 1900<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — you get the older titles. Now try the opposite direction with COUNT.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many books were published <strong>after the year 2000</strong>? Use <code>COUNT(*)</code> with a WHERE clause. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 3 — LIKE on books ───────────────────────────────────────────────────
+  {
+    title: "RevLab3 — Title Search",
+    questions: [
+      { question: "How many book titles contain the word 'the' anywhere in them? (Hint: LIKE is case-insensitive in SQLite — it catches 'The', 'the', and even 'the' hiding inside longer words.)", leet: "r3v_l1k3_t1tl3", labId: "W3_R3", answer: "11", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab3 — Wildcard Searching</h2>
+      <p>Revision from Week 2. Use <code>LIKE '%the%'</code> to find titles containing the letters T-H-E anywhere.</p>
+      <p>This one has a trap. SQLite's LIKE is case-insensitive, so it matches <strong>The</strong>, <strong>the</strong>, and also the letters T-H-E hiding inside longer words. Try to predict the count before you run it.</p>
+
+      <h3>Practice — titles containing 'and'</h3>
+      <pre onclick="copyToEditor(this)">SELECT title FROM books WHERE title LIKE '%and%'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this and check — notice anything unexpected in the matches?</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Use <code>COUNT(*)</code> and <code>LIKE</code> to count how many book titles contain <strong>'the'</strong> anywhere. Were any matches surprising? Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 4 — ORDER BY on members ────────────────────────────────────────────
+  {
+    title: "RevLab4 — Member List",
+    questions: [
+      { question: "Write a query that returns only the name and membership_type columns from members, ordered alphabetically by name.", leet: "r3v_m3mb3r_l1st", labId: "W3_R4", answer: "select name, membership_type from members order by name asc", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab4 — Selecting Columns and Sorting</h2>
+      <p>Revision from Weeks 1 and 2. Combine specific column selection with alphabetical ordering on the <code>members</code> table.</p>
+
+      <div class="note">
+        The members table has a single <code>name</code> column — it stores the full name as one value. Ordering by it sorts alphabetically by first name.
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns only <strong>name</strong> and <strong>membership_type</strong> from <code>members</code>, ordered alphabetically by name A to Z. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 5 — WHERE on members ────────────────────────────────────────────────
+  {
+    title: "RevLab5 — Premium Members",
+    questions: [
+      { question: "How many Premium members does the library have?", leet: "r3v_pr3m1um", labId: "W3_R5", answer: "4", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab5 — Filtering the Members Table</h2>
+      <p>Revision from Week 1. Use <code>WHERE</code> to filter the members table, then <code>COUNT</code> to count the matches.</p>
+
+      <h3>Practice — Standard members</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM members WHERE membership_type = 'Standard'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this first. How many Standard members are there? Now do the same for Premium.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many <strong>Premium</strong> members does the library have? Use <code>COUNT(*)</code> with a WHERE clause. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 6 — GROUP BY on borrows ────────────────────────────────────────────
+  {
+    title: "RevLab6 — Borrow Leaderboard",
+    questions: [
+      { question: "Write a query that counts borrows per bookID from the borrows table, ordered by count highest to lowest.", leet: "r3v_b00k_l34d3r", labId: "W3_R6", answer: "select bookid, count(*) from borrows group by bookid order by count(*) desc", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab6 — Most Borrowed Books</h2>
+      <p>Revision from this week. Use <code>GROUP BY</code> and <code>ORDER BY COUNT(*)</code> together to build a popularity ranking for the books table.</p>
+      <p>Six books are tied at the top — all borrowed 3 times. Notice that the IDs alone make it hard to know which books they are. That is a limitation you will fix next lesson.</p>
+
+      <h3>Reminder — GROUP BY + ORDER BY pattern</h3>
+      <pre onclick="copyToEditor(this)">SELECT memberID, COUNT(*) FROM borrows GROUP BY memberID ORDER BY COUNT(*) DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this as a reminder of the pattern, then adapt it for books.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that counts borrows per <strong>bookID</strong>, ordered by count <strong>highest to lowest</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 7 — COUNT with WHERE on borrows ────────────────────────────────────
+  {
+    title: "RevLab7 — Fiction Borrows",
+    questions: [
+      { question: "How many times have Fiction books been borrowed in total? (Hint: you will need to know the Fiction bookIDs from the books table first.)", leet: "r3v_f1ct10n_brws", labId: "W3_R7", answer: "24", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab7 — Cross-Table Thinking</h2>
+      <p>This question requires information from two tables — but you only have the skills to query one at a time right now.</p>
+      <p>The approach: first look up which bookIDs are Fiction, then use that list in a WHERE clause on the borrows table.</p>
+
+      <h3>Step 1 — find the Fiction bookIDs</h3>
+      <pre onclick="copyToEditor(this)">SELECT bookID FROM books WHERE genre = 'Fiction'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Step 2 — count borrows for those bookIDs using OR</h3>
+      <pre onclick="copyToEditor(this)">SELECT COUNT(*) FROM borrows WHERE bookID = 'B01' OR bookID = 'B02'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>That second query would take a very long time with 10 Fiction books. This is exactly the problem that <code>JOIN</code> solves next lesson — connecting the two tables automatically so you never have to do this manually again.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Find the total number of times Fiction books have been borrowed. Use whichever approach you like. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 8 — COUNT with WHERE on borrows ────────────────────────────────────
+  {
+    title: "RevLab8 — February Activity",
+    questions: [
+      { question: "How many borrows did member M01 make in February 2024?", leet: "r3v_f3b_m01", labId: "W3_R8", answer: "2", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab8 — Combining Two Conditions</h2>
+      <p>Revision from Weeks 1 and 2. Use <code>WHERE</code> with two conditions joined by <code>AND</code> to narrow down the borrows table to a specific member in a specific month.</p>
+
+      <h3>Practice — all borrows by M03</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM borrows WHERE memberID = 'M03'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this first to see what a single-member filter looks like. Now add a date condition using AND and LIKE.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many borrows did member <strong>M01</strong> make in <strong>February 2024</strong>? Use COUNT(*) with WHERE and AND. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 9 — ORDER BY + LIMIT ───────────────────────────────────────────────
+  {
+    title: "RevLab9 — Most Recent Return",
+    questions: [
+      { question: "Write a query that returns the single most recent borrow record — the one with the latest borrow_date.", leet: "r3v_r3c3nt_brw", labId: "W3_R9", answer: "select * from borrows order by borrow_date desc limit 1", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab9 — ORDER BY and LIMIT Together</h2>
+      <p>Revision from Week 2. Use <code>ORDER BY</code> and <code>LIMIT</code> together to retrieve just the top row after sorting.</p>
+      <p>Because dates are stored as text in <code>YYYY-MM-DD</code> format, alphabetical ordering and chronological ordering are the same thing — the latest date sorts last alphabetically.</p>
+
+      <h3>Practice — five oldest borrows</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM borrows ORDER BY borrow_date ASC LIMIT 5<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — the earliest borrows appear first. Now flip the direction and cap it at 1.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns the <strong>single most recent borrow record</strong> — one row only. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 10 — Full toolkit on books ─────────────────────────────────────────
+  {
+    title: "RevLab10 — Non-Fiction Shelf",
+    questions: [
+      { question: "Write a query that returns title and year_published for Non-Fiction books only, ordered by year_published newest to oldest.", leet: "r3v_n0nf1ct10n", labId: "W3_R10", answer: "select title, year_published from books where genre = 'non-fiction' order by year_published desc", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab10 — Putting It All Together</h2>
+      <p>Final revision lab. Combine specific column selection, WHERE filtering, and ORDER BY sorting in a single query on the <code>books</code> table.</p>
+      <p>The Non-Fiction shelf includes some very different publication dates — from a contemporary psychology book all the way back to a text that predates most of civilisation.</p>
+
+      <h3>Reminder — the clause order</h3>
+      <ol>
+        <li><code>SELECT</code> — which columns</li>
+        <li><code>FROM</code> — which table</li>
+        <li><code>WHERE</code> — which rows</li>
+        <li><code>ORDER BY</code> — in what order</li>
+      </ol>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns <strong>title</strong> and <strong>year_published</strong> for <strong>Non-Fiction</strong> books only, ordered by year <strong>newest to oldest</strong>. Type your query below.
+      </div>
+    `
+  },
+
 
   // ── LAB EXT 1 — COUNT DISTINCT ────────────────────────────────────────────────
   {
