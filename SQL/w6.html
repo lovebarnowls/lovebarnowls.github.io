@@ -16,7 +16,6 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
-
 .header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
 .logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
 .student-badge{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);padding:3px 10px;border-radius:4px;white-space:nowrap;}
@@ -25,21 +24,16 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .btn-complete{background:#9b59b6;color:#fff;} .btn-complete:hover{background:#7d3c98;}
 .btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
 .btn-small{padding:4px 10px;font-size:10px;}
-
 .workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
-
 .left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
 .instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
 .pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
 .pane-accent{color:var(--accent);font-size:10px;font-weight:600;}
 .instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;overflow-y:auto;flex:1;}
 .instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
-.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
 .instructions-body p{margin-bottom:10px;color:#ccc;}
-.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
-.instructions-body .note{background:#1a1a2e;border:1px solid #2e2e4a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aab4d4;}
-.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4aab4;}
-
+.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0 14px;font-size:12px;color:#d4aab4;}
+.section-divider{margin:18px 0 10px;padding:6px 10px;background:var(--panel2);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1.2px;}
 .flag-questions{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .fq-item{background:#111;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;transition:border-color 0.2s;}
 .fq-item.solved{border-color:var(--green);}
@@ -55,14 +49,11 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .fq-flag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);border-radius:4px;padding:4px 8px;margin-top:5px;cursor:pointer;display:inline-block;transition:opacity 0.15s;word-break:break-all;}
 .fq-flag:hover{opacity:0.75;}
 .fq-flag::before{content:"📋 ";}
-
 .resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
 .resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
-
 .console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
 .console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
 .console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
-
 .right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
 .sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
 .sql-textarea-wrapper{position:relative;}
@@ -79,7 +70,6 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .results-table tr:nth-child(even) td{background:#1a1a1a;}
 .results-table tr:hover td{background:var(--accent-dim);}
 .results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
-
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:flex;align-items:center;justify-content:center;}
 .modal-overlay.hidden{display:none;}
 .modal-box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:36px 40px;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.7);}
@@ -89,14 +79,12 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .modal-input:focus{border-color:var(--accent);}
 .modal-error{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px;}
 .modal-actions{text-align:center;}
-
 .complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;}
 .complete-overlay.open{display:flex;}
 .complete-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
 .complete-emoji{font-size:36px;text-align:center;margin-bottom:14px;}
 .complete-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:24px;}
 .complete-actions{text-align:center;}
-
 ::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
 </style>
 </head>
@@ -131,12 +119,13 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
     <div class="instructions-pane">
       <div class="pane-header">
         <span>Questions</span>
-        <span class="pane-accent" id="progress-label">0 / 15 solved</span>
+        <span class="pane-accent" id="progress-label">0 / 30 solved</span>
       </div>
       <div class="instructions-body">
         <h2>Week 6 — Revision</h2>
         <p>This week's database is a classical music collection — composers and their most famous pieces, including how many times each piece has been played.</p>
-        <p>There are no step-by-step instructions this week. Each question below asks you to write the SQL query that answers it. Use the editor on the right to test your queries, then type or paste them into the answer box to check.</p>
+        <p>There are no step-by-step instructions this week. Each question asks you to write the SQL query that answers it. Use the editor on the right to test your queries, then type or paste them into the answer box to check.</p>
+        <p>These 30 questions are revision for your assignment next week. They are spread across all three lessons this week — do not panic if you have only answered a handful by the end of the first lesson, that is completely normal. If you do power through them all early, come and see your teacher for extension questions. That said, getting every question correct is not the point — focus on understanding why a query works, not just whether the checker turns green. The editor on the right is a full sandbox — use it to ask your own questions of the data, explore things that interest you, and get comfortable navigating a database you have never seen before.</p>
         <div class="warn-box">
           The auto-checker compares your query against one accepted correct answer. There are often multiple valid ways to write the same query — if yours is marked wrong but returns the correct result, check with your teacher. Copy your flag either way.
         </div>
@@ -214,126 +203,91 @@ function normaliseQuery(q) {
     .trim();
 }
 
-const QUESTIONS = [
+const SECTIONS = [
   {
-    num: 1,
-    label: "What is the SQL query to find out what tables exist in this database?",
-    leet: "5ch3m4_t4bl35",
-    labId: "W6_Q01",
-    answer: "select name from sqlite_master where type='table'",
-    note: true
+    label: "SELECT *",
+    questions: [
+      { label: "Return all rows from the composers table.", leet: "s3l3ct_c0mp", labId: "W6_Q01", answer: "select * from composers" },
+      { label: "Return all rows from the pieces table.", leet: "s3l3ct_p13c3", labId: "W6_Q02", answer: "select * from pieces" }
+    ]
   },
   {
-    num: 2,
-    label: "What is the SQL query to see the column names and types of the composers table?",
-    leet: "5ch3m4_c0mp",
-    labId: "W6_Q02",
-    answer: "pragma table_info(composers)",
-    note: true
+    label: "SELECT specific columns",
+    questions: [
+      { label: "Return only the name and nationality columns from the composers table.", leet: "s3l3ct_n4m3_n4t", labId: "W6_Q03", answer: "select name,nationality from composers" },
+      { label: "Return only the title and year_composed columns from the pieces table.", leet: "s3l3ct_t1tl3_yr", labId: "W6_Q04", answer: "select title,year_composed from pieces" },
+      { label: "Return only the title and play_count columns from the pieces table.", leet: "s3l3ct_t1tl3_pl", labId: "W6_Q05", answer: "select title,play_count from pieces" }
+    ]
   },
   {
-    num: 3,
-    label: "What is the SQL query to see the column names and types of the pieces table?",
-    leet: "5ch3m4_p13c35",
-    labId: "W6_Q03",
-    answer: "pragma table_info(pieces)",
-    note: true
+    label: "WHERE",
+    questions: [
+      { label: "Return all composers who are German.", leet: "wh3r3_g3rm4n", labId: "W6_Q06", answer: "select * from composers where nationality='german'" },
+      { label: "Return all pieces whose type is Symphony.", leet: "wh3r3_symph", labId: "W6_Q07", answer: "select * from pieces where type='symphony'" },
+      { label: "Return all pieces composed before the year 1800.", leet: "wh3r3_b3f_1800", labId: "W6_Q08", answer: "select * from pieces where year_composed < 1800" },
+      { label: "Return all pieces with a play_count greater than 25000.", leet: "wh3r3_pl4y_25k", labId: "W6_Q09", answer: "select * from pieces where play_count > 25000" }
+    ]
   },
   {
-    num: 4,
-    label: "Write a query that returns all composers from the Baroque era.",
-    leet: "b4r0qu3_3r4",
-    labId: "W6_Q04",
-    answer: "select * from composers where era='baroque'",
-    note: true
+    label: "ORDER BY",
+    questions: [
+      { label: "Return all composers ordered alphabetically by name A to Z.", leet: "0rd3r_n4m3_4sc", labId: "W6_Q10", answer: "select * from composers order by name asc" },
+      { label: "Return all pieces ordered by year_composed from oldest to newest.", leet: "0rd3r_yr_4sc", labId: "W6_Q11", answer: "select * from pieces order by year_composed asc" },
+      { label: "Return all pieces ordered by play_count from highest to lowest.", leet: "0rd3r_pl4y_d3sc", labId: "W6_Q12", answer: "select * from pieces order by play_count desc" }
+    ]
   },
   {
-    num: 5,
-    label: "Write a query that counts how many pieces have a play_count over 30000.",
-    leet: "pl4y_c0unt_h1gh",
-    labId: "W6_Q05",
-    answer: "select count(*) from pieces where play_count > 30000",
-    note: true
+    label: "LIMIT",
+    questions: [
+      { label: "Return the 5 most recently composed pieces.", leet: "l1m1t_r3c3nt5", labId: "W6_Q13", answer: "select * from pieces order by year_composed desc limit 5" },
+      { label: "Return the single piece with the lowest play_count.", leet: "l1m1t_l0w3st", labId: "W6_Q14", answer: "select * from pieces order by play_count asc limit 1" }
+    ]
   },
   {
-    num: 6,
-    label: "Write a query that returns all pieces ordered by play_count from highest to lowest.",
-    leet: "0rd3r_pl4y",
-    labId: "W6_Q06",
-    answer: "select * from pieces order by play_count desc",
-    note: true
+    label: "COUNT",
+    questions: [
+      { label: "How many composers are in the database?", leet: "c0unt_c0mp", labId: "W6_Q15", answer: "select count(*) from composers" },
+      { label: "How many pieces are of type Concerto?", leet: "c0unt_c0nc3rt0", labId: "W6_Q16", answer: "select count(*) from pieces where type='concerto'" },
+      { label: "How many pieces were composed after the year 1850?", leet: "c0unt_4ft3r1850", labId: "W6_Q17", answer: "select count(*) from pieces where year_composed > 1850" }
+    ]
   },
   {
-    num: 7,
-    label: "Write a query that returns only the title of the single most-played piece.",
-    leet: "t0p_p13c3",
-    labId: "W6_Q07",
-    answer: "select title from pieces order by play_count desc limit 1",
-    note: true
+    label: "DISTINCT",
+    questions: [
+      { label: "Return a list of all unique piece types in the pieces table.", leet: "d1st_typ3s", labId: "W6_Q18", answer: "select distinct type from pieces" },
+      { label: "Return a list of all unique nationalities in the composers table.", leet: "d1st_n4t10n", labId: "W6_Q19", answer: "select distinct nationality from composers" }
+    ]
   },
   {
-    num: 8,
-    label: "Write a query that counts how many pieces each composerID has, using the pieces table.",
-    leet: "p13c35_p3r_c0mp",
-    labId: "W6_Q08",
-    answer: "select composerid,count(*) from pieces group by composerid",
-    note: true
+    label: "LIKE",
+    questions: [
+      { label: "Return all composers whose name contains 'fr' anywhere. How many results do you get?", leet: "l1k3_fr", labId: "W6_Q20", answer: "select * from composers where name like '%fr%'" },
+      { label: "Return all pieces whose title contains the word 'Symphony'.", leet: "l1k3_symph_t1tl", labId: "W6_Q21", answer: "select * from pieces where title like '%symphony%'" },
+      { label: "Return all composers whose nationality ends in 'an'.", leet: "l1k3_3nds_4n", labId: "W6_Q22", answer: "select * from composers where nationality like '%an'" }
+    ]
   },
   {
-    num: 9,
-    label: "Write a query that counts how many composers belong to each era, ordered by count highest to lowest.",
-    leet: "3r4_c0unt",
-    labId: "W6_Q09",
-    answer: "select era,count(*) from composers group by era order by count(*) desc",
-    note: true
+    label: "GROUP BY",
+    questions: [
+      { label: "Count how many pieces each composerID has. Use the pieces table only.", leet: "grp_p13c3s_cmp", labId: "W6_Q23", answer: "select composerid,count(*) from pieces group by composerid" },
+      { label: "Count how many composers belong to each era.", leet: "grp_3r4_c0unt", labId: "W6_Q24", answer: "select era,count(*) from composers group by era" },
+      { label: "Count how many pieces belong to each type.", leet: "grp_typ3_c0unt", labId: "W6_Q25", answer: "select type,count(*) from pieces group by type" },
+      { label: "Find the total play_count for each piece type.", leet: "grp_typ3_pl4y", labId: "W6_Q26", answer: "select type,sum(play_count) from pieces group by type" }
+    ]
   },
   {
-    num: 10,
-    label: "Write a query that counts how many pieces have a type of 'Solo'.",
-    leet: "s0l0_c0unt",
-    labId: "W6_Q10",
-    answer: "select count(*) from pieces where type='solo'",
-    note: true
+    label: "HAVING",
+    questions: [
+      { label: "Show only piece types that have more than 3 pieces in the database.", leet: "h4v1ng_typ3_3", labId: "W6_Q27", answer: "select type,count(*) from pieces group by type having count(*) > 3" },
+      { label: "Show only composerIDs that have more than 2 pieces in the pieces table.", leet: "h4v1ng_cmp_2", labId: "W6_Q28", answer: "select composerid,count(*) from pieces group by composerid having count(*) > 2" }
+    ]
   },
   {
-    num: 11,
-    label: "Write a query that returns all composers whose name contains 'fr' anywhere. (How many results do you get?)",
-    leet: "fr_l1k3",
-    labId: "W6_Q11",
-    answer: "select * from composers where name like '%fr%'",
-    note: true
-  },
-  {
-    num: 12,
-    label: "Write a JOIN query that returns each piece title alongside the composer's name.",
-    leet: "j01n_t1tl3_n4m3",
-    labId: "W6_Q12",
-    answer: "select pieces.title,composers.name from pieces join composers on pieces.composerid=composers.composerid",
-    note: true
-  },
-  {
-    num: 13,
-    label: "Write a JOIN query that returns composer name and piece title for Choral pieces only.",
-    leet: "j01n_ch0r4l",
-    labId: "W6_Q13",
-    answer: "select composers.name,pieces.title from pieces join composers on pieces.composerid=composers.composerid where pieces.type='choral'",
-    note: true
-  },
-  {
-    num: 14,
-    label: "Write a JOIN query that returns composer name and their total play_count across all pieces, ordered highest to lowest. Which composer has the most plays overall?",
-    leet: "j01n_t0t4l_pl4y",
-    labId: "W6_Q14",
-    answer: "select composers.name,sum(pieces.play_count) from pieces join composers on pieces.composerid=composers.composerid group by composers.composerid order by sum(pieces.play_count) desc",
-    note: true
-  },
-  {
-    num: 15,
-    label: "Write a JOIN query that returns composer name and how many pieces they have, ordered by piece count highest to lowest.",
-    leet: "j01n_p13c3_c0unt",
-    labId: "W6_Q15",
-    answer: "select composers.name,count(*) from pieces join composers on pieces.composerid=composers.composerid group by composers.composerid order by count(*) desc",
-    note: true
+    label: "JOIN",
+    questions: [
+      { label: "Write a JOIN query that returns each piece title alongside the composer's name.", leet: "j01n_t1tl3_nm", labId: "W6_Q29", answer: "select pieces.title,composers.name from pieces join composers on pieces.composerid=composers.composerid" },
+      { label: "Write a JOIN query that returns composer name and piece title for all Solo pieces only.", leet: "j01n_s0l0", labId: "W6_Q30", answer: "select composers.name,pieces.title from pieces join composers on pieces.composerid=composers.composerid where pieces.type='solo'" }
+    ]
   }
 ];
 
@@ -350,41 +304,49 @@ function confirmName() {
   studentName = raw;
   document.getElementById("name-modal").classList.add("hidden");
   document.getElementById("student-badge").textContent = "👤 " + raw;
-  log(`Welcome, ${raw}.`, "ok");
+  log("Welcome, " + raw + ".", "ok");
 }
 
 function buildQuestions() {
   const bank = document.getElementById("question-bank");
-  bank.innerHTML = QUESTIONS.map((q, i) => `
-    <div class="fq-item" id="fq-${i}">
-      <div class="fq-num">Question ${q.num} of ${QUESTIONS.length}</div>
-      <div class="fq-label">${q.label}</div>
-      ${q.note ? `<div class="fq-checker-note">The checker accepts one valid form — alternatives may also be correct. Check with your teacher if unsure.</div>` : ""}
-      <div class="fq-row">
-        <input type="text" class="fq-input" placeholder="Type your SQL query here"
-          onkeydown="if(event.key==='Enter') handleCheck(${i})" />
-        <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">Check</button>
-      </div>
-      <div class="fq-result"></div>
-    </div>
-  `).join("");
+  let globalIndex = 0;
+  let html = "";
+  SECTIONS.forEach(function(section) {
+    html += '<div class="section-divider">' + section.label + '</div>';
+    section.questions.forEach(function(q) {
+      var i = globalIndex++;
+      html += '<div class="fq-item" id="fq-' + i + '">' +
+        '<div class="fq-num">Question ' + (i + 1) + ' of 30</div>' +
+        '<div class="fq-label">' + q.label + '</div>' +
+        '<div class="fq-checker-note">The checker accepts one valid form — alternatives may also be correct. Check with your teacher if unsure.</div>' +
+        '<div class="fq-row">' +
+        '<input type="text" class="fq-input" placeholder="Type your SQL query here" onkeydown="if(event.key===\'Enter\') handleCheck(' + i + ')" />' +
+        '<button class="btn btn-accent btn-small" onclick="handleCheck(' + i + ')">Check</button>' +
+        '</div>' +
+        '<div class="fq-result"></div>' +
+        '</div>';
+    });
+  });
+  bank.innerHTML = html;
+  window.FLAT_QUESTIONS = [];
+  SECTIONS.forEach(function(section) {
+    section.questions.forEach(function(q) { window.FLAT_QUESTIONS.push(q); });
+  });
 }
 
 async function handleCheck(i) {
-  const q       = QUESTIONS[i];
-  const itemEl  = document.getElementById("fq-" + i);
-  const input   = itemEl.querySelector(".fq-input");
-  const resultEl= itemEl.querySelector(".fq-result");
-  const submitted = input.value.trim();
+  var q        = window.FLAT_QUESTIONS[i];
+  var itemEl   = document.getElementById("fq-" + i);
+  var input    = itemEl.querySelector(".fq-input");
+  var resultEl = itemEl.querySelector(".fq-result");
+  var submitted = input.value.trim();
   if (!submitted) return;
-
-  const correct = normaliseQuery(submitted) === normaliseQuery(q.answer);
-
+  var correct = normaliseQuery(submitted) === normaliseQuery(q.answer);
   if (correct) {
-    const flag = await makeFlag(q.leet, q.labId);
+    var flag = await makeFlag(q.leet, q.labId);
     resultEl.textContent = "✓ Correct!";
     resultEl.className   = "fq-result correct";
-    let flagEl = itemEl.querySelector(".fq-flag");
+    var flagEl = itemEl.querySelector(".fq-flag");
     if (!flagEl) {
       flagEl = document.createElement("div");
       flagEl.className = "fq-flag";
@@ -392,44 +354,40 @@ async function handleCheck(i) {
       itemEl.appendChild(flagEl);
       itemEl.classList.add("solved");
       solvedCount++;
-      updateProgress();
+      document.getElementById("progress-label").textContent = solvedCount + " / 30 solved";
     }
     flagEl.textContent = flag;
-    flagEl.onclick = () => {
-      navigator.clipboard.writeText(flag).catch(()=>{});
-      log(`Copied: ${flag}`, "ok");
+    flagEl.onclick = function() {
+      navigator.clipboard.writeText(flag).catch(function(){});
+      log("Copied: " + flag, "ok");
     };
     input.disabled = true;
-    log(`✓ Q${q.num} correct. Flag generated.`, "ok");
+    log("✓ Q" + (i+1) + " correct. Flag generated.", "ok");
   } else {
     resultEl.textContent = "✗ Not quite — check your query and try again. If your results look right, check with your teacher.";
     resultEl.className   = "fq-result wrong";
-    log(`✗ Q${q.num}: query did not match accepted answer.`, "err");
+    log("✗ Q" + (i+1) + ": query did not match accepted answer.", "err");
   }
 }
 
-function updateProgress() {
-  document.getElementById("progress-label").textContent = `${solvedCount} / ${QUESTIONS.length} solved`;
-}
-
 async function runQuery() {
-  let query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
+  var query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
   if (!query) return;
   setConsoleStatus("Running…", "warn");
   log("→ " + query, "info");
   try {
-    const resp = await fetch(WORKER_URL, {
+    var resp = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, db: DB_NAME })
+      body: JSON.stringify({ query: query, db: DB_NAME })
     });
-    const data = await resp.json();
+    var data = await resp.json();
     if (data.success) {
       renderTable(data.data);
-      const n = data.data.length;
+      var n = data.data.length;
       setConsoleStatus("OK", "ok");
-      log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
-      document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
+      log("✓ " + n + " row" + (n!==1?"s":"") + " returned.", "ok");
+      document.getElementById("result-count").textContent = n + " row" + (n!==1?"s":"");
     } else {
       renderError(data.error);
       setConsoleStatus("Error", "err");
@@ -443,8 +401,8 @@ async function runQuery() {
 }
 
 function renderTable(rows) {
-  const empty = document.getElementById("results-empty");
-  const table = document.getElementById("results-table");
+  var empty = document.getElementById("results-empty");
+  var table = document.getElementById("results-table");
   if (!rows || rows.length === 0) {
     empty.textContent = "Query returned no rows.";
     empty.style.display = "block";
@@ -454,19 +412,19 @@ function renderTable(rows) {
   empty.style.display = "none";
   table.style.display = "table";
   table.innerHTML = "";
-  const thead = document.createElement("thead");
-  const hrow  = document.createElement("tr");
-  Object.keys(rows[0]).forEach(col => {
-    const th = document.createElement("th");
+  var thead = document.createElement("thead");
+  var hrow  = document.createElement("tr");
+  Object.keys(rows[0]).forEach(function(col) {
+    var th = document.createElement("th");
     th.textContent = col;
     hrow.appendChild(th);
   });
   thead.appendChild(hrow); table.appendChild(thead);
-  const tbody = document.createElement("tbody");
-  rows.forEach(row => {
-    const tr = document.createElement("tr");
-    Object.values(row).forEach(val => {
-      const td = document.createElement("td");
+  var tbody = document.createElement("tbody");
+  rows.forEach(function(row) {
+    var tr = document.createElement("tr");
+    Object.values(row).forEach(function(val) {
+      var td = document.createElement("td");
       td.textContent = val === null ? "NULL" : val;
       if (val === null) td.style.color = "var(--text-dark)";
       tr.appendChild(td);
@@ -477,25 +435,24 @@ function renderTable(rows) {
 }
 
 function renderError(msg) {
-  const empty = document.getElementById("results-empty");
-  const table = document.getElementById("results-table");
-  empty.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  var empty = document.getElementById("results-empty");
+  var table = document.getElementById("results-table");
+  empty.innerHTML = '<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ' + msg + '</span>';
   empty.style.display = "block";
   table.style.display = "none";
   document.getElementById("result-count").textContent = "";
 }
 
 function showComplete() {
-  const all = solvedCount >= QUESTIONS.length;
-  document.getElementById("complete-text").textContent = all
-    ? "You have answered all 15 questions. Submit your flags via the Microsoft Form."
-    : `You have solved ${solvedCount} of ${QUESTIONS.length} questions so far. Submit your flags via the Microsoft Form when you are ready.`;
+  document.getElementById("complete-text").textContent = solvedCount >= 30
+    ? "You have answered all 30 questions. Submit your flags via the Microsoft Form."
+    : "You have solved " + solvedCount + " of 30 questions so far. Submit your flags via the Microsoft Form when you are ready — and remember, there is no expectation to finish all 30 in one lesson.";
   document.getElementById("complete-modal").classList.add("open");
 }
 
-function log(msg, cls="") {
-  const out  = document.getElementById("console-output");
-  const line = document.createElement("div");
+function log(msg, cls) {
+  var out  = document.getElementById("console-output");
+  var line = document.createElement("div");
   if (cls) line.className = cls;
   line.textContent = msg;
   out.appendChild(line);
@@ -503,32 +460,32 @@ function log(msg, cls="") {
 }
 
 function setConsoleStatus(text, cls) {
-  const el = document.getElementById("console-status");
+  var el = document.getElementById("console-status");
   el.textContent = text;
   el.style.color = cls==="ok"?"var(--green)":cls==="err"?"var(--red)":cls==="warn"?"var(--accent)":"var(--blue)";
 }
 
 (function(){
-  const handle = document.getElementById("resize-handle");
-  const col    = document.getElementById("left-col");
-  let drag=false, sy=0;
-  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
-  document.addEventListener("mousemove", e => {
+  var handle = document.getElementById("resize-handle");
+  var col    = document.getElementById("left-col");
+  var drag=false, sy=0;
+  handle.addEventListener("mousedown", function(e) { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", function(e) {
     if (!drag) return;
-    const total = col.offsetHeight - 28;
-    const cur   = document.getElementById("instructions-pane").offsetHeight;
-    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
-    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    var total = col.offsetHeight - 28;
+    var cur   = document.getElementById("instructions-pane").offsetHeight;
+    var nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = nh + "px 28px " + (total - nh) + "px";
     sy = e.clientY;
   });
-  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
+  document.addEventListener("mouseup", function() { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
 })();
 
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", function(e) {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
 });
 
-window.onload = () => { buildQuestions(); };
+window.onload = function() { buildQuestions(); };
 </script>
 </body>
 </html>
