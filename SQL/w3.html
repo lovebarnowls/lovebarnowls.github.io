@@ -374,13 +374,17 @@ For January 2024, that would look like:<br>
     instructions: `
       <h2>Lab 6 — Grouping Results with GROUP BY</h2>
       <p><code>GROUP BY</code> is the most important concept this week. Instead of counting <em>all</em> rows, it splits the table into groups — one per unique value in a column — and counts each group separately.</p>
+    <p>This is not an easy concept — but once it clicks, you will start seeing it 
+everywhere. Spotify counting how many times you have played each artist, 
+YouTube ranking videos by view count, a leaderboard in any game you have 
+ever played — all of these require GROUP BY under the hood.</p> all require GROUP BY </p>
 
-      <p>Think of it like sorting a pile of library cards by member, then counting each person's stack.</p>
+  
 
       <h3>Practice — count borrows per bookID</h3>
       <pre onclick="copyToEditor(this)">SELECT bookID, COUNT(*) FROM borrows GROUP BY bookID<span class="copy-hint">click to copy to editor</span></pre>
 
-      <p>Run this. Each row in the result represents one book, and the count tells you how many times it was borrowed. Notice: the result has one row <em>per group</em>, not one row per borrow.</p>
+      <p>Run this. Each row in the result represents one book, and the count tells you how many times it was borrowed. Notice: the result has one row <em>per group</em>, not one row per borrow.<br><i>While we are using bookIDs, you could just as easily imagine this to be number of times a person played a song on a music app</i></p>
 
       <div class="warn-box">
         <strong>Important rule:</strong> every column in your SELECT must either be the grouped column, or wrapped in an aggregation function like COUNT. You cannot SELECT a column that is not in the GROUP BY without aggregating it — the database would not know which row's value to show.
