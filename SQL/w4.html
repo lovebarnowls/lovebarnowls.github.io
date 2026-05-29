@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 9 Digital Technologies — Week 4 SQL Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#161616; --panel:#1f1f1f; --panel2:#272727;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#F0A500; --accent2:#c98b00; --accent-dim:#3a2800;
+  --text:#e0e0e0; --text-dim:#888; --text-dark:#444;
+  --green:#4ec94e; --red:#f05050; --blue:#5ab4f0;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+.header{height:48px;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.logo{font-weight:800;font-size:13px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.lab-selector{background:var(--panel2);color:var(--text);border:1px solid var(--border2);padding:4px 10px;border-radius:4px;font-family:var(--sans);font-size:12px;cursor:pointer;outline:none;}
+.lab-selector:focus{border-color:var(--accent);}
+.student-badge{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);padding:3px 10px;border-radius:4px;white-space:nowrap;}
+.btn{border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;transition:background 0.15s,transform 0.1s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-complete{background:#9b59b6;color:#fff;} .btn-complete:hover{background:#7d3c98;}
+.btn-accent{background:var(--accent);color:#161616;} .btn-accent:hover{background:var(--accent2);}
+.btn-small{padding:4px 10px;font-size:10px;}
+.workspace{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 48px);width:100%;}
+.left-col{display:grid;grid-template-rows:1fr 28px auto;border-right:2px solid var(--border);overflow:hidden;}
+.instructions-pane{overflow:hidden;background:var(--panel);display:flex;flex-direction:column;}
+.pane-header{background:var(--panel2);border-bottom:1px solid var(--border);padding:0 14px;height:28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;}
+.pane-accent{color:var(--accent);font-size:10px;font-weight:600;}
+.instructions-body{padding:16px 18px;font-size:13px;line-height:1.75;overflow-y:auto;flex:1;}
+.instructions-body h2{font-size:15px;font-weight:800;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;}
+.instructions-body h3{font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.8px;border-left:3px solid var(--accent);padding-left:8px;}
+.instructions-body p{margin-bottom:10px;color:#ccc;}
+.instructions-body code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:12px;color:var(--accent);}
+.instructions-body pre{font-family:var(--mono);background:#111;border:1px solid var(--border2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:4px;font-size:12px;color:#d4d4d4;overflow-x:auto;margin:8px 0 12px;line-height:1.6;cursor:pointer;transition:border-color 0.15s;}
+.instructions-body pre:hover{border-color:var(--accent);}
+.instructions-body pre .copy-hint{display:block;font-size:10px;color:var(--text-dark);margin-top:6px;}
+.instructions-body .task-box{background:var(--accent-dim);border:1px solid var(--accent2);border-radius:6px;padding:10px 14px;margin:10px 0;}
+.instructions-body .task-box strong{color:var(--accent);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;}
+.instructions-body ol,.instructions-body ul{padding-left:20px;margin-bottom:10px;color:#ccc;}
+.instructions-body li{margin-bottom:5px;}
+.instructions-body .note{background:#1a1a2e;border:1px solid #2e2e4a;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#aab4d4;}
+.instructions-body .warn-box{background:#1a1212;border:1px solid #4a2e2e;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#d4aab4;}
+.flag-questions{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.fq-item{background:#111;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;transition:border-color 0.2s;}
+.fq-item.solved{border-color:var(--green);}
+.fq-label{font-size:12px;color:#ccc;margin-bottom:6px;line-height:1.5;}
+.fq-row{display:flex;gap:6px;align-items:center;}
+.fq-input{flex:1;background:var(--panel2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 10px;outline:none;transition:border-color 0.15s;}
+.fq-input:focus{border-color:var(--accent);}
+.fq-input:disabled{opacity:0.5;cursor:not-allowed;}
+.fq-result{font-family:var(--mono);font-size:11px;margin-top:5px;min-height:14px;}
+.fq-result.correct{color:var(--green);} .fq-result.wrong{color:var(--red);}
+.fq-flag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent2);border-radius:4px;padding:4px 8px;margin-top:5px;cursor:pointer;display:inline-block;transition:opacity 0.15s;word-break:break-all;}
+.fq-flag:hover{opacity:0.75;}
+.fq-flag::before{content:"📋 ";}
+.resize-handle{height:28px;background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:ns-resize;user-select:none;color:var(--text-dark);font-size:11px;letter-spacing:2px;transition:background 0.15s;flex-shrink:0;}
+.resize-handle:hover{background:#2a2a2a;color:var(--text-dim);}
+.console-pane{display:flex;flex-direction:column;background:#0d0d0d;border-top:1px solid var(--border);overflow:hidden;min-height:80px;}
+.console-output{flex:1;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.6;overflow-y:auto;white-space:pre-wrap;color:#aaa;}
+.console-output .err{color:var(--red);} .console-output .ok{color:var(--green);} .console-output .info{color:var(--blue);} .console-output .warn{color:var(--accent);}
+.right-col{display:grid;grid-template-rows:auto 1fr;overflow:hidden;background:var(--bg);}
+.sql-input-pane{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--panel);}
+.sql-textarea-wrapper{position:relative;}
+.sql-textarea{width:100%;background:#111;color:#d4d4d4;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px 36px 12px 14px;border:none;outline:none;resize:none;min-height:90px;max-height:220px;overflow-y:auto;tab-size:4;display:block;}
+.sql-semicolon{position:absolute;bottom:8px;right:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);opacity:0.4;pointer-events:none;line-height:1;user-select:none;}
+.sql-toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--panel2);border-top:1px solid var(--border);gap:8px;}
+.sql-hint{font-size:10px;color:var(--text-dark);font-family:var(--mono);}
+.row-count{font-size:10px;color:var(--text-dim);font-family:var(--mono);padding:0 4px;}
+.results-pane{display:flex;flex-direction:column;overflow:hidden;}
+.results-scroll{flex:1;overflow:auto;padding:10px;}
+.results-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.results-table th{background:var(--panel2);color:var(--accent);font-weight:700;padding:7px 12px;text-align:left;border:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.results-table td{padding:6px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap;}
+.results-table tr:nth-child(even) td{background:#1a1a1a;}
+.results-table tr:hover td{background:var(--accent-dim);}
+.results-empty{padding:24px;text-align:center;color:var(--text-dark);font-family:var(--mono);font-size:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:36px 40px;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.7);}
+.modal-title{font-size:18px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.modal-subtitle{font-size:13px;color:#aaa;margin-bottom:24px;line-height:1.6;}
+.modal-input{width:100%;background:#111;border:2px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:15px;padding:10px 14px;outline:none;transition:border-color 0.15s;margin-bottom:16px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-error{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px;}
+.modal-actions{text-align:center;}
+.complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;}
+.complete-overlay.open{display:flex;}
+.complete-box{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:32px 36px;max-width:460px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+.complete-emoji{font-size:36px;text-align:center;margin-bottom:14px;}
+.complete-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:24px;white-space:pre-wrap;}
+.complete-actions{text-align:center;}
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#444;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="name-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚑ Year 9 Digital Technologies</div>
+    <div class="modal-subtitle">Enter your first name to begin. This personalises your flags and cannot be changed once set.</div>
+    <input type="text" class="modal-input" id="modal-name-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" />
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-actions"><button class="btn btn-accent" onclick="confirmName()">Begin Lab ▶</button></div>
+  </div>
+</div>
+
+<div class="complete-overlay" id="complete-modal">
+  <div class="complete-box">
+    <div class="complete-emoji">🎉</div>
+    <p class="complete-text" id="complete-text"></p>
+    <div class="complete-actions"><button class="btn btn-accent" onclick="confirmComplete()">OK</button></div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">⚑ Year 9 DigiTech — Week 4</div>
+  <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+  <div class="student-badge" id="student-badge">—</div>
+  <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
+</div>
+
+<div class="workspace">
+  <div class="left-col" id="left-col">
+    <div class="instructions-pane" id="instructions-pane">
+      <div class="pane-header">
+        <span>Instructions</span>
+        <span class="pane-accent" id="lab-title-header"></span>
+      </div>
+      <div class="instructions-body" id="instructions-body"></div>
+    </div>
+    <div class="resize-handle" id="resize-handle">··· drag to resize ···</div>
+    <div class="console-pane">
+      <div class="pane-header">
+        <span>Console</span>
+        <span class="pane-accent" id="console-status">Ready</span>
+      </div>
+      <div class="console-output" id="console-output"><span class="info">SQL Lab ready.</span></div>
+    </div>
+  </div>
+  <div class="right-col">
+    <div class="sql-input-pane">
+      <div class="pane-header">
+        <span>SQL Query</span>
+        <span class="row-count" id="row-count"></span>
+      </div>
+      <div class="sql-textarea-wrapper">
+        <textarea id="sql-input" class="sql-textarea" spellcheck="false" placeholder="-- Type or paste your SQL query here"></textarea>
+        <span class="sql-semicolon">;</span>
+      </div>
+      <div class="sql-toolbar">
+        <span class="sql-hint">Ctrl+Enter to run &nbsp;·&nbsp; semicolons added automatically</span>
+        <button class="btn btn-accent btn-small" onclick="runQuery()">▶ Run</button>
+      </div>
+    </div>
+    <div class="results-pane">
+      <div class="pane-header">
+        <span>Query Results</span>
+        <span class="row-count" id="result-count"></span>
+      </div>
+      <div class="results-scroll">
+        <div class="results-empty" id="results-empty">Run a query to see results here.</div>
+        <table class="results-table" id="results-table" style="display:none;"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL  = "https://formativeassessment.xu-yangen.workers.dev";
+const DB_NAME     = "w4";
+const FLAG_SALT   = "Faith";
+const FLAG_PREFIX = "FCSDE";
+
+async function makeFlagSuffix(name, labId) {
+  const raw    = name.toLowerCase() + FLAG_SALT + labId;
+  const data   = new TextEncoder().encode(raw);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  const hex    = Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return hex.substring(0, 6);
+}
+async function makeFlag(leet, labId) {
+  const suffix = await makeFlagSuffix(studentName, labId);
+  return `${FLAG_PREFIX}{${leet}_${suffix}}`;
+}
+
+function normaliseQuery(q) {
+  return q.toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s*=\s*/g, "=")
+    .replace(/\s*>\s*/g, ">")
+    .replace(/\s*<\s*/g, "<")
+    .replace(/\s*>=\s*/g, ">=")
+    .replace(/\s*<=\s*/g, "<=")
+    .replace(/;+$/, "")
+    .replace(/"/g, "'")
+    .trim();
+}
+
+// ── FAKE INSERT ENGINE ─────────────────────────────────────────────────────────
+// Intercepts INSERT statements client-side and renders a fake result table
+// so students experience the INSERT workflow without needing write access.
+const FAKE_INSERTS = {
+  "insert into customers values ('c16','taylor','jordan','qld','active')": {
+    columns: ["customerID","first_name","last_name","region","account_status"],
+    row:     ["C16","Taylor","Jordan","QLD","active"],
+    message: "1 row inserted into customers."
+  },
+  "insert into products values ('p21','vegemite 220g','pantry',4.60)": {
+    columns: ["productID","product_name","category","unit_price"],
+    row:     ["P21","Vegemite 220g","Pantry","4.60"],
+    message: "1 row inserted into products."
+  }
+};
+
+function detectFakeInsert(query) {
+  const normalised = query.toLowerCase().replace(/\s+/g, " ").replace(/;+$/, "").trim();
+  return FAKE_INSERTS[normalised] || null;
+}
+
+const LAB_DATA = [
+
+  // ── INTRODUCTION ────────────────────────────────────────────────────────────
+  {
+    title: "Introduction",
+    questions: [],
+    instructions: `
+      <h2>Week 4 — JOIN and Revision</h2>
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:14px 16px;margin-bottom:14px;color:#bbb;font-size:13px;line-height:1.8;">
+        [PLACEHOLDER — to be written by Teacher Yang. Introduce the week's dataset: an online grocery store with customers, products, orders, and order line items. This week introduces JOIN to connect tables, plus INSERT to add new data. The RevLabs are revision of all prior weeks on fresh data.]
+      </div>
+      <div class="note">
+        This week has four tables — <code>customers</code>, <code>products</code>, <code>orders</code>, and <code>order_items</code>. The normal labs cover schema discovery and INSERT. The RevLabs revise everything from Weeks 1–3 on fresh data. The extension labs introduce JOIN.
+      </div>
+      <p>Use the lab selector above to move through the activities.</p>
+    `,
+    completeText: "Ready to start. Move on to Lab 1."
+  },
+
+  // ── LAB 1 — Schema Discovery ─────────────────────────────────────────────────
+  {
+    title: "Lab 1 — Schema Discovery",
+    questions: [
+      { question: "How many tables does this database have?", leet: "5ch3m4_f0ur", labId: "W4_L1", answer: "4", type: "value" }
+    ],
+    instructions: `
+      <h2>Lab 1 — Discovering the Schema</h2>
+      <p>Same first step every week.</p>
+      <pre onclick="copyToEditor(this)">SELECT name FROM sqlite_master WHERE type='table'<span class="copy-hint">click to copy to editor</span></pre>
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many tables does this database have? Type the number below.
+      </div>
+    `
+  },
+
+  // ── LAB 2 — Table Structure ───────────────────────────────────────────────────
+  {
+    title: "Lab 2 — Table Structure",
+    questions: [
+      { question: "Run PRAGMA table_info on all four tables. Click Complete when done.", leet: "f0ur_t4bl3s", labId: "W4_L2", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Lab 2 — Mapping All Four Tables</h2>
+      <p>Use <code>PRAGMA table_info</code> on each table. Pay attention to which columns appear in more than one table — those are the links that JOIN will use later.</p>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(customers)<span class="copy-hint">click to copy to editor</span></pre>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(products)<span class="copy-hint">click to copy to editor</span></pre>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(orders)<span class="copy-hint">click to copy to editor</span></pre>
+      <pre onclick="copyToEditor(this)">PRAGMA table_info(order_items)<span class="copy-hint">click to copy to editor</span></pre>
+      <div class="note">
+        Notice: <code>orders</code> has a <code>customerID</code> column that matches <code>customers</code>. <code>order_items</code> has both <code>orderID</code> and <code>productID</code> linking to the other tables. These shared columns are the joins waiting to happen.
+      </div>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run all four PRAGMA queries. Write down the column names for each table. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── LAB 3 — SELECT * ─────────────────────────────────────────────────────────
+  {
+    title: "Lab 3 — SELECT *",
+    questions: [
+      { question: "Explore all four tables with SELECT *. Click Complete when done.", leet: "gr0c3ry_0p3n", labId: "W4_L3", answer: null, type: "completion" }
+    ],
+    instructions: `
+      <h2>Lab 3 — Exploring the Store</h2>
+      <p>Before anything else, browse the raw data. Pay attention to how <code>order_items</code> only stores IDs — no names, no prices. That is intentional design. The actual names and prices live in <code>products</code>. JOIN is what brings them together.</p>
+      <pre onclick="copyToEditor(this)">SELECT * FROM customers<span class="copy-hint">click to copy to editor</span></pre>
+      <pre onclick="copyToEditor(this)">SELECT * FROM products<span class="copy-hint">click to copy to editor</span></pre>
+      <pre onclick="copyToEditor(this)">SELECT * FROM orders<span class="copy-hint">click to copy to editor</span></pre>
+      <pre onclick="copyToEditor(this)">SELECT * FROM order_items<span class="copy-hint">click to copy to editor</span></pre>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run all four queries. Note the table sizes and the ID-only columns in order_items. Click Complete when done.
+      </div>
+    `
+  },
+
+  // ── LAB 4 — INSERT (simulated) ────────────────────────────────────────────────
+  {
+    title: "Lab 4 — INSERT",
+    questions: [
+      { question: "After running both INSERTs, what is the product_name of the item you added to the products table?", leet: "1ns3rt_d0n3", labId: "W4_L4", answer: "Vegemite 220g", type: "value" }
+    ],
+    instructions: `
+      <h2>Lab 4 — Adding New Data with INSERT</h2>
+      <p><code>INSERT INTO</code> adds a new row to a table. The values must be listed in the same order as the columns, and text values go inside single quotes.</p>
+      <p>The syntax is:</p>
+      <pre>INSERT INTO table_name VALUES ('value1', 'value2', ...)</pre>
+
+      <h3>Step 1 — insert a new customer</h3>
+      <pre onclick="copyToEditor(this)">INSERT INTO customers VALUES ('C16', 'Taylor', 'Jordan', 'QLD', 'active')<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Copy this into the editor and click Run. The console will confirm the insert. Then verify it worked:</p>
+      <pre onclick="copyToEditor(this)">SELECT * FROM customers WHERE customerID = 'C16'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <h3>Step 2 — insert a new product</h3>
+      <pre onclick="copyToEditor(this)">INSERT INTO products VALUES ('P21', 'Vegemite 220g', 'Pantry', 4.60)<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Notice that the price <code>4.60</code> has no quotes — it is a number, not text. Verify it:</p>
+      <pre onclick="copyToEditor(this)">SELECT * FROM products WHERE productID = 'P21'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <div class="warn-box">
+        <strong>Note:</strong> This database is read-only for stability — your inserts are simulated locally and will not persist after you reload the page. In a real database with write access, these rows would be saved permanently.
+      </div>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Run both INSERT statements and verify each one with a SELECT. What is the <strong>product_name</strong> of the item you added to the products table? Type it below to unlock your flag.
+      </div>
+    `
+  },
+
+  // ── REVLAB 1 — WHERE on customers ────────────────────────────────────────────
+  {
+    title: "RevLab1 — QLD Customers",
+    questions: [
+      { question: "How many customers are from QLD?", leet: "r3v_qld_c0unt", labId: "W4_R1", answer: "4", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab1 — Filtering by Region</h2>
+      <p>Revision: Week 1 WHERE clause. Filter the customers table to a specific region.</p>
+      <pre onclick="copyToEditor(this)">SELECT * FROM customers WHERE region = 'NSW'<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this as a reminder. NSW has 4 customers. Now do the same for QLD.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many customers are from <strong>QLD</strong>? Use COUNT(*) with WHERE. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 2 — WHERE on orders ────────────────────────────────────────────────
+  {
+    title: "RevLab2 — Delivered Orders",
+    questions: [
+      { question: "How many orders have a delivery_status of 'delivered'?", leet: "r3v_d3l1v3r3d", labId: "W4_R2", answer: "22", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab2 — Filtering Orders by Status</h2>
+      <p>Revision: Week 1 WHERE with text matching. The orders table has three possible delivery statuses — delivered, pending, and cancelled.</p>
+      <pre onclick="copyToEditor(this)">SELECT DISTINCT delivery_status FROM orders<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this first to confirm the three values, then count the delivered ones.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many orders have a <code>delivery_status</code> of <strong>delivered</strong>? Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 3 — WHERE on orders (cancelled) ────────────────────────────────────
+  {
+    title: "RevLab3 — Cancelled Orders",
+    questions: [
+      { question: "Write a query that returns all columns for cancelled orders only.", leet: "r3v_c4nc3ll3d", labId: "W4_R3", answer: "select * from orders where delivery_status = 'cancelled'", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab3 — Finding Cancelled Orders</h2>
+      <p>Revision: Week 1 WHERE. There are only two cancelled orders in the dataset — both are worth looking at. One belongs to an inactive customer.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns for orders where <code>delivery_status</code> is <strong>cancelled</strong>. Note the customerIDs — can you cross-reference them against the customers table manually? Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 4 — WHERE + comparison + ORDER BY on products ─────────────────────
+  {
+    title: "RevLab4 — Budget Products",
+    questions: [
+      { question: "How many products have a unit_price under $4.00?", leet: "r3v_ch34p_pr0d", labId: "W4_R4", answer: "8", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab4 — Filtering by Price</h2>
+      <p>Revision: Week 2 comparison operators. Filter products by unit_price using a less-than comparison.</p>
+      <pre onclick="copyToEditor(this)">SELECT * FROM products WHERE unit_price < 4.00 ORDER BY unit_price ASC<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this to see what is available under $4. The cheapest item might surprise you.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many products have a <code>unit_price</code> <strong>under $4.00</strong>? Use COUNT(*) with WHERE. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 5 — WHERE on products (category) ──────────────────────────────────
+  {
+    title: "RevLab5 — Bakery Range",
+    questions: [
+      { question: "Write a query that returns all columns for Bakery products, ordered by unit_price highest to lowest.", leet: "r3v_b4k3ry", labId: "W4_R5", answer: "select * from products where category = 'bakery' order by unit_price desc", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab5 — Browsing a Category</h2>
+      <p>Revision: Week 1 WHERE + Week 2 ORDER BY. Combine filtering by category and sorting by price.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns all columns for <strong>Bakery</strong> products, ordered by <code>unit_price</code> <strong>highest to lowest</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 6 — WHERE + LIKE on orders ────────────────────────────────────────
+  {
+    title: "RevLab6 — March Orders",
+    questions: [
+      { question: "How many orders were placed in March 2024?", leet: "r3v_m4rch_0rd3r", labId: "W4_R6", answer: "28", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab6 — Filtering by Date</h2>
+      <p>Revision: Week 2 LIKE wildcard on dates stored as text. All March 2024 dates start with <code>2024-03</code>.</p>
+      <pre onclick="copyToEditor(this)">SELECT * FROM orders WHERE order_date LIKE '2024-04%'<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this to see April orders first — there are only 2. Then do the same for March.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many orders were placed in <strong>March 2024</strong>? Use COUNT(*) and LIKE. Type the number below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 7 — GROUP BY on orders ────────────────────────────────────────────
+  {
+    title: "RevLab7 — Orders per Customer",
+    questions: [
+      { question: "Write a query that counts orders per customerID, ordered by count highest to lowest.", leet: "r3v_0rd_p3r_cust", labId: "W4_R7", answer: "select customerid, count(*) from orders group by customerid order by count(*) desc", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab7 — Order Leaderboard</h2>
+      <p>Revision: Week 3 GROUP BY + ORDER BY. Count how many orders each customer has placed.</p>
+      <p>Notice that the result only shows customerIDs — not names. That is the limitation JOIN solves in the extension labs today.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that counts orders per <strong>customerID</strong>, ordered by count <strong>highest to lowest</strong>. Which customerID placed the most orders? Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 8 — HAVING on orders ────────────────────────────────────────────────
+  {
+    title: "RevLab8 — Active Customers",
+    questions: [
+      { question: "Write a query that returns only customerIDs who have placed more than 2 orders.", leet: "r3v_h4v1ng_0rd3r", labId: "W4_R8", answer: "select customerid, count(*) from orders group by customerid having count(*) > 2", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab8 — Filtering Groups with HAVING</h2>
+      <p>Revision: Week 3 HAVING. Use GROUP BY and HAVING together to find only the customers with significant order history.</p>
+      <p>Three customers qualify. Again — only IDs, no names. That frustration is intentional.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns <strong>customerIDs with more than 2 orders</strong>. Use GROUP BY and HAVING. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 9 — ORDER BY + LIMIT on products ───────────────────────────────────
+  {
+    title: "RevLab9 — Premium Products",
+    questions: [
+      { question: "Write a query that returns the top 5 most expensive products, showing all columns.", leet: "r3v_t0p5_pr1c3", labId: "W4_R9", answer: "select * from products order by unit_price desc limit 5", type: "query" }
+    ],
+    instructions: `
+      <h2>RevLab9 — Top N with ORDER BY and LIMIT</h2>
+      <p>Revision: Week 2 ORDER BY + LIMIT. Retrieve the five most expensive items in the store.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns the <strong>top 5 most expensive products</strong>, all columns, highest price first. Type your query below.
+      </div>
+    `
+  },
+
+  // ── REVLAB 10 — DISTINCT + ORDER BY on customers ──────────────────────────────
+  {
+    title: "RevLab10 — Store Regions",
+    questions: [
+      { question: "How many distinct regions does this store deliver to?", leet: "r3v_r3g10ns", labId: "W4_R10", answer: "5", type: "value" }
+    ],
+    instructions: `
+      <h2>RevLab10 — Unique Regions</h2>
+      <p>Revision: Week 2 DISTINCT. Find every unique value in the region column without duplicates.</p>
+      <pre onclick="copyToEditor(this)">SELECT DISTINCT region FROM customers ORDER BY region ASC<span class="copy-hint">click to copy to editor</span></pre>
+      <p>Run this — a clean alphabetical list of delivery regions. Now count them.</p>
+      <div class="task-box">
+        <strong>Your task</strong>
+        How many <strong>distinct regions</strong> does the store serve? Use COUNT(DISTINCT region) or count the list yourself. Type the number below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 1 — Basic JOIN (orders + customers) ───────────────────────────────
+  {
+    title: "LabExt1 — First JOIN",
+    questions: [
+      { question: "Write a JOIN query that returns orderID, first_name, last_name and delivery_status for all orders.", leet: "j01n_unl0ck3d", labId: "W4_E1", answer: "select orders.orderid, customers.first_name, customers.last_name, orders.delivery_status from orders join customers on orders.customerid = customers.customerid", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt1 — Your First JOIN</h2>
+      <p>JOIN combines rows from two tables by matching a shared column. The result looks like one big table with columns from both.</p>
+      <p>The syntax is:</p>
+      <pre>SELECT columns
+FROM table_one
+JOIN table_two ON table_one.shared_column = table_two.shared_column</pre>
+
+      <p>The <code>ON</code> clause tells the database which columns to match. For orders and customers, the shared column is <code>customerID</code>.</p>
+
+      <h3>Why you need table prefixes</h3>
+      <p>Both tables have a <code>customerID</code> column. When you SELECT from a joined result, you must specify which table each column comes from using <code>table_name.column_name</code> — otherwise the database does not know which one you mean.</p>
+
+      <h3>Practice — join orders to customers, see all columns</h3>
+      <pre onclick="copyToEditor(this)">SELECT * FROM orders JOIN customers ON orders.customerID = customers.customerID<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this. Every order now has the full customer record attached. Notice the customerID column appears twice — once from each table. That is normal.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query that returns <strong>orderID</strong>, <strong>first_name</strong>, <strong>last_name</strong>, and <strong>delivery_status</strong> for all orders. Use table prefixes for column names. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 2 — JOIN + WHERE ──────────────────────────────────────────────────
+  {
+    title: "LabExt2 — JOIN with WHERE",
+    questions: [
+      { question: "Write a JOIN query that returns orderID, first_name, last_name and order_date for orders from QLD customers only.", leet: "j01n_wh3r3", labId: "W4_E2", answer: "select orders.orderid, customers.first_name, customers.last_name, orders.order_date from orders join customers on orders.customerid = customers.customerid where customers.region = 'qld'", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt2 — Filtering a JOIN Result</h2>
+      <p>You can add a <code>WHERE</code> clause to a JOIN query exactly as you would with a regular query. The WHERE filters the combined result after the join has happened.</p>
+
+      <h3>Practice — cancelled orders with customer names</h3>
+      <pre onclick="copyToEditor(this)">SELECT orders.orderID, customers.first_name, customers.last_name, orders.delivery_status
+FROM orders
+JOIN customers ON orders.customerID = customers.customerID
+WHERE orders.delivery_status = 'cancelled'<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — you can now see whose orders were cancelled by name, not just by ID. Previously you had to look up customerIDs manually. This is what JOIN is for.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a JOIN query that returns <strong>orderID</strong>, <strong>first_name</strong>, <strong>last_name</strong>, and <strong>order_date</strong> for orders from <strong>QLD</strong> customers only. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 3 — JOIN + ORDER BY ───────────────────────────────────────────────
+  {
+    title: "LabExt3 — JOIN with ORDER BY",
+    questions: [
+      { question: "Write a JOIN query that returns orderID, first_name, last_name and order_date for all orders, sorted by order_date newest to oldest.", leet: "j01n_0rd3r3d", labId: "W4_E3", answer: "select orders.orderid, customers.first_name, customers.last_name, orders.order_date from orders join customers on orders.customerid = customers.customerid order by orders.order_date desc", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt3 — Sorting a JOIN Result</h2>
+      <p>ORDER BY works on JOIN results the same way it does on single-table queries. Use table prefixes when the column name could be ambiguous.</p>
+
+      <h3>Practice — orders sorted by customer last name</h3>
+      <pre onclick="copyToEditor(this)">SELECT orders.orderID, customers.first_name, customers.last_name, orders.order_date
+FROM orders
+JOIN customers ON orders.customerID = customers.customerID
+ORDER BY customers.last_name ASC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — orders sorted alphabetically by customer surname. Now sort by date instead.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a JOIN query returning <strong>orderID</strong>, <strong>first_name</strong>, <strong>last_name</strong>, and <strong>order_date</strong> for all orders, sorted by <strong>order_date newest to oldest</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 4 — Three-table JOIN ──────────────────────────────────────────────
+  {
+    title: "LabExt4 — Three-Table JOIN",
+    questions: [
+      { question: "Write a query joining order_items, orders and customers to return itemID, first_name, last_name and productID for all order items.", leet: "thr33_t4bl3_j01n", labId: "W4_E4", answer: "select order_items.itemid, customers.first_name, customers.last_name, order_items.productid from order_items join orders on order_items.orderid = orders.orderid join customers on orders.customerid = customers.customerid", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt4 — Joining Three Tables</h2>
+      <p>You can chain multiple JOINs together. Each additional JOIN adds another table to the result. The order matters — you can only join a table once a column connecting it is already available.</p>
+
+      <pre>SELECT columns
+FROM table_one
+JOIN table_two ON table_one.id = table_two.id
+JOIN table_three ON table_two.id = table_three.id</pre>
+
+      <h3>Practice — order items with order dates</h3>
+      <pre onclick="copyToEditor(this)">SELECT order_items.itemID, order_items.productID, order_items.quantity, orders.order_date
+FROM order_items
+JOIN orders ON order_items.orderID = orders.orderID<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — each line item now has the order date attached. Now extend it to also include the customer name by adding a second JOIN.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a query joining <strong>order_items → orders → customers</strong> that returns <strong>itemID</strong>, <strong>first_name</strong>, <strong>last_name</strong>, and <strong>productID</strong>. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 5 — Four-table JOIN ───────────────────────────────────────────────
+  {
+    title: "LabExt5 — Four-Table JOIN",
+    questions: [
+      { question: "Write a query joining all four tables to return first_name, last_name, product_name and quantity for all order items.", leet: "f0ur_t4bl3_j01n", labId: "W4_E5", answer: "select customers.first_name, customers.last_name, products.product_name, order_items.quantity from order_items join orders on order_items.orderid = orders.orderid join customers on orders.customerid = customers.customerid join products on order_items.productid = products.productid", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt5 — The Full Picture</h2>
+      <p>The complete chain joins all four tables: <code>order_items</code> is the central table that links to <code>orders</code> (via orderID), which links to <code>customers</code> (via customerID), and <code>order_items</code> also links directly to <code>products</code> (via productID).</p>
+
+      <pre>order_items → orders → customers
+order_items → products</pre>
+
+      <h3>Practice — all four tables, all columns</h3>
+      <pre onclick="copyToEditor(this)">SELECT *
+FROM order_items
+JOIN orders ON order_items.orderID = orders.orderID
+JOIN customers ON orders.customerID = customers.customerID
+JOIN products ON order_items.productID = products.productID<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — 87 rows, fully expanded. Every line item now shows the customer's name, the product name, the date, the price — everything. This is the payoff of the whole schema design. Now select just the columns that matter.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a four-table JOIN query returning <strong>first_name</strong>, <strong>last_name</strong>, <strong>product_name</strong>, and <strong>quantity</strong> only. Type your query below.
+      </div>
+    `
+  },
+
+  // ── LAB EXT 6 — Four-table JOIN + GROUP BY + ORDER BY ─────────────────────────
+  {
+    title: "LabExt6 — The Full Toolkit",
+    questions: [
+      { question: "Write a query using all four tables that returns first_name, last_name and the total quantity of items ordered per customer, ordered highest to lowest.", leet: "f0ur_j01n_gr0up", labId: "W4_E6", answer: "select customers.first_name, customers.last_name, sum(order_items.quantity) from order_items join orders on order_items.orderid = orders.orderid join customers on orders.customerid = customers.customerid join products on order_items.productid = products.productid group by customers.customerid order by sum(order_items.quantity) desc", type: "query" }
+    ],
+    instructions: `
+      <h2>LabExt6 — JOIN Meets GROUP BY</h2>
+      <p>Everything together: a four-table JOIN feeding into GROUP BY and ORDER BY. This is the kind of query that powers real dashboards — "which customers are buying the most?"</p>
+
+      <p>The full clause order still applies:</p>
+      <ol>
+        <li><code>SELECT</code> — columns and aggregations</li>
+        <li><code>FROM</code> — starting table</li>
+        <li><code>JOIN</code> — additional tables (as many as needed)</li>
+        <li><code>WHERE</code> — filter rows (optional)</li>
+        <li><code>GROUP BY</code> — form groups</li>
+        <li><code>HAVING</code> — filter groups (optional)</li>
+        <li><code>ORDER BY</code> — sort result</li>
+        <li><code>LIMIT</code> — cap rows (optional)</li>
+      </ol>
+
+      <h3>Practice — total items per product, with product name</h3>
+      <pre onclick="copyToEditor(this)">SELECT products.product_name, SUM(order_items.quantity)
+FROM order_items
+JOIN products ON order_items.productID = products.productID
+GROUP BY products.productID
+ORDER BY SUM(order_items.quantity) DESC<span class="copy-hint">click to copy to editor</span></pre>
+
+      <p>Run this — a product popularity ranking by total quantity sold, with real product names instead of IDs. Full Cream Milk and Sourdough Loaf lead the store. Now do the same for customers across all four tables.</p>
+
+      <div class="task-box">
+        <strong>Your task</strong>
+        Write a four-table JOIN query that returns <strong>first_name</strong>, <strong>last_name</strong>, and the <strong>total quantity</strong> of items ordered per customer, ordered <strong>highest to lowest</strong>. Use <code>SUM(order_items.quantity)</code> and <code>GROUP BY customers.customerID</code>. Type your query below.
+      </div>
+    `
+  }
+
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let studentName = "";
+
+function confirmName() {
+  const raw = document.getElementById("modal-name-input").value.trim();
+  const err = document.getElementById("modal-error");
+  if (!raw || raw.length < 2) {
+    err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+    return;
+  }
+  studentName = raw;
+  document.getElementById("name-modal").classList.add("hidden");
+  document.getElementById("student-badge").textContent = "👤 " + raw;
+  log(`Welcome, ${raw}.`, "ok");
+}
+
+function copyToEditor(el) {
+  const lines = el.innerText.split("\n");
+  const query = lines.filter(l => !l.includes("click to copy")).join("\n").trim();
+  document.getElementById("sql-input").value = query;
+  document.getElementById("sql-input").focus();
+  log("Copied to editor.", "info");
+}
+
+async function runQuery() {
+  let query = document.getElementById("sql-input").value.trim().replace(/;+$/, "");
+  if (!query) return;
+
+  // Check for fake INSERT first
+  const fakeInsert = detectFakeInsert(query);
+  if (fakeInsert) {
+    setConsoleStatus("OK", "ok");
+    log(`✓ ${fakeInsert.message}`, "ok");
+    renderFakeInsert(fakeInsert);
+    return;
+  }
+
+  setConsoleStatus("Running...", "warn");
+  log("→ " + query, "info");
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, db: DB_NAME })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      renderTable(data.data);
+      const n = data.data.length;
+      setConsoleStatus("OK", "ok");
+      log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
+      document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
+    } else {
+      renderError(data.error);
+      setConsoleStatus("Error", "err");
+      log("✗ " + data.error, "err");
+    }
+  } catch(err) {
+    renderError("Could not reach the server.");
+    setConsoleStatus("Offline", "err");
+    log("✗ " + err.message, "err");
+  }
+}
+
+function renderFakeInsert(fakeInsert) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  fakeInsert.columns.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  const tr = document.createElement("tr");
+  fakeInsert.row.forEach(val => {
+    const td = document.createElement("td");
+    td.textContent = val;
+    td.style.color = "var(--green)";
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr); table.appendChild(tbody);
+  document.getElementById("result-count").textContent = "1 row inserted";
+}
+
+function renderTable(rows) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  if (!rows || rows.length === 0) {
+    empty.textContent = "Query returned no rows.";
+    empty.style.display = "block";
+    table.style.display = "none";
+    return;
+  }
+  empty.style.display = "none";
+  table.style.display = "table";
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const hrow  = document.createElement("tr");
+  Object.keys(rows[0]).forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    Object.values(row).forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val === null ? "NULL" : val;
+      if (val === null) td.style.color = "var(--text-dark)";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function renderError(msg) {
+  const empty = document.getElementById("results-empty");
+  const table = document.getElementById("results-table");
+  empty.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">✗ ${msg}</span>`;
+  empty.style.display = "block";
+  table.style.display = "none";
+  document.getElementById("result-count").textContent = "";
+}
+
+async function checkAnswer(itemEl, input, leet, labId, answer, type) {
+  const submitted = input.value.trim();
+  const resultEl  = itemEl.querySelector(".fq-result");
+  if (!submitted) return;
+  let correct = false;
+  if (type === "completion") {
+    correct = true;
+  } else if (type === "value") {
+    correct = submitted.toLowerCase() === answer.toLowerCase();
+  } else if (type === "query") {
+    correct = normaliseQuery(submitted) === normaliseQuery(answer);
+  }
+  if (correct) {
+    const flag = await makeFlag(leet, labId);
+    resultEl.textContent = "✓ Correct!";
+    resultEl.className   = "fq-result correct";
+    let flagEl = itemEl.querySelector(".fq-flag");
+    if (!flagEl) {
+      flagEl = document.createElement("div");
+      flagEl.className = "fq-flag";
+      flagEl.title = "Click to copy";
+      itemEl.appendChild(flagEl);
+    }
+    flagEl.textContent = flag;
+    flagEl.onclick = () => {
+      navigator.clipboard.writeText(flag).catch(()=>{});
+      log(`Copied: ${flag}`, "ok");
+    };
+    input.disabled = true;
+    itemEl.classList.add("solved");
+    log(`✓ Flag generated: ${flag}`, "ok");
+  } else {
+    resultEl.textContent = "✗ Not quite — check your query and try again.";
+    resultEl.className   = "fq-result wrong";
+    log(`✗ Wrong answer: "${submitted}"`, "err");
+  }
+}
+
+function buildQuestions(questions) {
+  if (!questions || questions.length === 0) return "";
+  return `<div class="flag-questions">` +
+    questions.map((q, i) => {
+      const safeAnswer = q.answer ? q.answer.replace(/&/g, "&amp;").replace(/"/g, "&quot;") : "";
+      if (q.type === "completion") {
+        return `
+          <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-type="completion">
+            <div class="fq-label">${q.question}</div>
+            <div class="fq-row">
+              <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">✔ Mark Complete</button>
+            </div>
+            <div class="fq-result"></div>
+          </div>`;
+      }
+      return `
+        <div class="fq-item" id="fq-${i}" data-leet="${q.leet}" data-labid="${q.labId}" data-answer="${safeAnswer}" data-type="${q.type}">
+          <div class="fq-label">${q.question}</div>
+          <div class="fq-row">
+            <input type="text" class="fq-input"
+              placeholder="${q.type === 'query' ? 'Type your SQL query here' : 'Your answer'}"
+              onkeydown="if(event.key==='Enter') handleCheck(${i})" />
+            <button class="btn btn-accent btn-small" onclick="handleCheck(${i})">Check</button>
+          </div>
+          <div class="fq-result"></div>
+        </div>`;
+    }).join("") +
+  `</div>`;
+}
+
+function handleCheck(i) {
+  const itemEl = document.getElementById("fq-" + i);
+  const type   = itemEl.dataset.type;
+  const leet   = itemEl.dataset.leet;
+  const labId  = itemEl.dataset.labid;
+  const answer = itemEl.dataset.answer || null;
+  const input  = type === "completion"
+    ? { value: "done", disabled: false }
+    : itemEl.querySelector(".fq-input");
+  checkAnswer(itemEl, input, leet, labId, answer, type);
+}
+
+function initLabs() {
+  const select = document.getElementById("lab-select");
+  LAB_DATA.forEach((lab, i) => {
+    const opt = document.createElement("option");
+    opt.value = i; opt.text = lab.title;
+    select.appendChild(opt);
+  });
+  loadLab();
+}
+
+function loadLab() {
+  const index = parseInt(document.getElementById("lab-select").value);
+  const lab   = LAB_DATA[index];
+  document.getElementById("lab-title-header").textContent = lab.title;
+  document.getElementById("instructions-body").innerHTML  =
+    lab.instructions + buildQuestions(lab.questions);
+  document.getElementById("results-empty").textContent    = "Run a query to see results here.";
+  document.getElementById("results-empty").style.display  = "block";
+  document.getElementById("results-table").style.display  = "none";
+  document.getElementById("result-count").textContent     = "";
+  log("Loaded: " + lab.title, "info");
+}
+
+function showComplete() {
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const lab    = LAB_DATA[index];
+  const isLast = index >= LAB_DATA.length - 1;
+  document.getElementById("complete-text").textContent =
+    isLast ? "You have completed all Week 4 labs. Submit your flags via the Microsoft Form."
+           : (lab.completeText || "Well done! Move on to the next lab.");
+  document.getElementById("complete-modal").classList.add("open");
+}
+
+function confirmComplete() {
+  document.getElementById("complete-modal").classList.remove("open");
+  const index  = parseInt(document.getElementById("lab-select").value);
+  const isLast = index >= LAB_DATA.length - 1;
+  if (!isLast) {
+    document.getElementById("lab-select").value = index + 1;
+    loadLab();
+  }
+}
+
+function log(msg, cls="") {
+  const out  = document.getElementById("console-output");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setConsoleStatus(text, cls) {
+  const el = document.getElementById("console-status");
+  el.textContent = text;
+  el.style.color = cls==="ok"?"var(--green)":cls==="err"?"var(--red)":cls==="warn"?"var(--accent)":"var(--blue)";
+}
+
+(function(){
+  const handle = document.getElementById("resize-handle");
+  const col    = document.getElementById("left-col");
+  let drag=false, sy=0;
+  handle.addEventListener("mousedown", e => { drag=true; sy=e.clientY; document.body.style.userSelect="none"; document.body.style.cursor="ns-resize"; });
+  document.addEventListener("mousemove", e => {
+    if (!drag) return;
+    const total = col.offsetHeight - 28;
+    const cur   = document.getElementById("instructions-pane").offsetHeight;
+    const nh    = Math.max(80, Math.min(total - 60, cur + (e.clientY - sy)));
+    col.style.gridTemplateRows = `${nh}px 28px ${total - nh}px`;
+    sy = e.clientY;
+  });
+  document.addEventListener("mouseup", () => { drag=false; document.body.style.userSelect=""; document.body.style.cursor=""; });
+})();
+
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { runQuery(); e.preventDefault(); }
+});
+
+window.onload = initLabs;
+</script>
+</body>
+</html>
