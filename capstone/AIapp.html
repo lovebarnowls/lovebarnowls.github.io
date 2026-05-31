@@ -2,9 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V4.3 Security Sentinel IDE</title>
+    <title>Yang's V4.4 AI app IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+.name-modal-overlay.hidden { display:none; }
+.name-modal-box { background:#252526; border:2px solid #4EC9B0; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+.name-modal-title { font-size:16px; font-weight:800; color:#4EC9B0; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+.name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+.name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+.name-modal-input:focus { border-color:#4EC9B0; }
+.name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+.name-modal-btn { background:#4EC9B0; color:#1e1e1e; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+.name-modal-btn:hover { background:#3ab89f; }
+
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         header { background: #1f1f1f; padding: 15px 25px; border-bottom: 2px solid #ce3c3c; display: flex; justify-content: space-between; align-items: center; }
         .main { display: flex; flex: 1; overflow: hidden; }
@@ -27,14 +38,23 @@
     </style>
 </head>
 <body>
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title"> Mr Yang's AI App IDE</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your code submissions will be logged for one week to help your teacher support your learning.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
 
 <header>
-    <div><strong>SECURITY SENTINEL</strong> | v4.3 [Groq Proxy Build]</div>
+    <div><strong>AI App</strong> | v4.3 [Groq Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
 <div class="controls">
-    <button onclick="runAudit()">▶ EXECUTE AUDIT</button>
+    <button onclick="runAudit()">▶ EXECUTE</button>
     <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
     <div style="font-size: 11px; color: #666; margin-left: auto;">Proxy: hfproxy.xu-yangen.workers.dev</div>
 </div>
@@ -53,7 +73,7 @@ import asyncio
 # 2. Loop through the passwords in target_data.txt.
 # 3. Construct a 'messages' list for the LLM.
 # 4. Call js_send_to_llm(messages, TEMP) to get a response.
-# 
+# This is currently a password audit app, but you can change it to a different app later
 # CAVEATS: 
 # - The AI responses are set to be SHORT. 
 # - The entire class is sharing ONE free tier API key.
@@ -118,6 +138,19 @@ correcthorsebatterystaple
 </div>
 
 <script>
+    let studentName = "";
+
+function confirmName() {
+    const raw = document.getElementById("name-modal-input").value.trim();
+    const err = document.getElementById("name-modal-error");
+    if (!raw || raw.length < 2) {
+        err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+        return;
+    }
+    studentName = raw;
+    document.getElementById("name-modal").classList.add("hidden");
+}
+
     const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 
     // JS Bridge: Sends raw messages array to the Worker
