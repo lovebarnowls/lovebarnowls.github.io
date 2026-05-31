@@ -112,10 +112,10 @@ faithful.speed(0)
 # A spirograph is made by repeating a shape over and over,
 # turning slightly each time.
 
-# This is a kind of recursion — each loop uses a value that
-# was changed by the previous loop.
-# x = x + 5 is the simplest form of recursion: the new value
-# of x depends on the old value of x.
+# This is iteration — a for loop runs the same steps repeatedly.
+# What makes it interesting is that angle updates each iteration.
+# angle = angle + 10 means each loop starts from where the last one left off.
+# We call this an accumulating variable.
 
 # The code below draws 36 squares, turning 10 degrees each time.
 
@@ -145,7 +145,7 @@ for i in range(36):
         faithful.right(90)
     angle = angle + 10
 faithful.hideturtle()`,
-        completeText: `Each loop used the updated value of angle — that is recursion at work.
+        completeText: `Each loop used the updated value of angle — that is an accumulating variable at work.
 The pattern changes completely just by tweaking one number. Click OK.`
     },
 
@@ -158,13 +158,13 @@ faithful = turtle.Turtle()
 faithful.speed(0)
 
 # What if the shape also gets smaller with each loop?
-# We can make both the angle AND the size recurse.
+# We can make both the angle AND the size accumulate.
 
 # size = size - 3 means every triangle is 3 pixels smaller
 # than the one before it.
 
-# Each loop depends on the results of the previous loop —
-# that is the core idea of recursion.
+# Both variables update each iteration —
+# the loop drives the change, not the variable calling itself.
 
 size = 120
 angle = 0
@@ -197,7 +197,7 @@ for i in range(30):
     angle = angle + 12
     size = size - 3
 faithful.hideturtle()`,
-        completeText: `Two variables recursing at once — angle and size.
+        completeText: `Two accumulating variables — angle and size — both updating each iteration.
 The pattern spirals inward because each triangle is smaller AND rotated. Click OK.`
     },
 
@@ -214,7 +214,7 @@ faithful.speed(0)
 # The middle two control green. The last two control blue.
 # Each pair goes from 00 (none) to FF (full).
 
-# We can recurse the colour too!
+# We can update the colour each iteration too!
 # red_val starts at 50 and increases by 7 each loop.
 # int() converts it to a whole number.
 # hex() converts it to hexadecimal, like 0x3f.
@@ -263,8 +263,8 @@ for i in range(36):
     if red_val > 255:
         red_val = 50
 faithful.hideturtle()`,
-        completeText: `The colour is now recursing alongside the shape.
-Three values — angle, size, and red_val — all updating each loop. Click OK.`
+        completeText: `The colour now accumulates alongside the shape.
+Three variables — angle, size, and red_val — all updating each iteration. Click OK.`
     },
 
     {
@@ -278,13 +278,13 @@ faithful.speed(0)
 # You have learned:
 #   - Rotating shapes using angle = angle + n
 #   - Shrinking or growing shapes using size = size - n
-#   - Recursing hex colour values
+#   - Updating hex colour values each iteration
 #   - Using pencolor(), pensize(), begin_fill(), end_fill()
 
 # Your challenge: create your own spirograph artwork.
 # Rules:
-#   1. You must use at least TWO variables that recurse (e.g. angle and size).
-#   2. You must use at least ONE colour that changes each loop.
+#   1. You must use at least TWO variables that accumulate (e.g. angle and size).
+#   2. You must use at least ONE colour that updates each loop.
 #   3. You must use pensize() somewhere.
 #   4. Your pattern must look clearly different from the examples.
 
