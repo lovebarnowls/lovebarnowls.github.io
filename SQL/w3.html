@@ -880,7 +880,7 @@ async function runQuery() {
       setConsoleStatus("OK", "ok");
       log(`✓ ${n} row${n!==1?"s":""} returned.`, "ok");
       document.getElementById("result-count").textContent = `${n} row${n!==1?"s":""}`;
-      // Log submission for teacher review
+     // Log submission for teacher review
       fetch(`${WORKER_URL}/log-submission`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -908,7 +908,6 @@ async function runQuery() {
           originUrl: location.href,
         }),
       });
-    }
     }
   } catch(err) {
     renderError("Could not reach the server.");
