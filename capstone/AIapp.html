@@ -15,6 +15,22 @@
 .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
 .name-modal-btn { background:#4EC9B0; color:#1e1e1e; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
 .name-modal-btn:hover { background:#3ab89f; }
+.btn-submit { background:#e74c3c; color:white; }
+.btn-submit:hover { background:#c0392b; }
+.btn-submit:disabled { background:#555; color:#888; cursor:not-allowed; }
+.submit-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1500; display:none; align-items:center; justify-content:center; }
+.submit-modal-overlay.open { display:flex; }
+.submit-modal-box { background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:420px; width:90%; border:1px solid #4EC9B0; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+.submit-modal-box h2 { font-size:14px; color:#4EC9B0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+.submit-modal-box p { font-size:13px; color:#aaa; margin-bottom:14px; line-height:1.6; }
+.submit-modal-box textarea { width:100%; background:#1e1e1e; border:1px solid #444; border-radius:4px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:12px; padding:8px 10px; resize:vertical; min-height:72px; outline:none; margin-bottom:14px; box-sizing:border-box; }
+.submit-modal-box textarea:focus { border-color:#4EC9B0; }
+.submit-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+.btn-cancel { background:#3e3e3e; color:#d4d4d4; border:1px solid #555; }
+.submit-cooldown { font-size:11px; color:#f0a500; margin-top:8px; min-height:16px; }
+
+.editor-wrap { display:flex; flex:1; overflow:hidden; border-bottom:2px solid var(--border); background:var(--bg-dark); }
+.line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas','Courier New',monospace; font-size:14px; line-height:1.5; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         header { background: #1f1f1f; padding: 15px 25px; border-bottom: 2px solid #ce3c3c; display: flex; justify-content: space-between; align-items: center; }
@@ -40,13 +56,27 @@
 <body>
 <div class="name-modal-overlay" id="name-modal">
   <div class="name-modal-box">
-    <div class="name-modal-title"> Mr Yang's AI App IDE</div>
+    <div class="name-modal-title">Faithful AI App Lab</div>
     <div class="name-modal-subtitle">Enter your first name to begin. Your code submissions will be logged for one week to help your teacher support your learning.</div>
     <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
     <div class="name-modal-error" id="name-modal-error"></div>
     <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
   </div>
 </div>
+
+<div class="submit-modal-overlay" id="submit-modal">
+  <div class="submit-modal-box">
+    <h2>📤 Submit for Review</h2>
+    <p>Your code will be sent to your teacher. Add a note if you have a specific question.</p>
+    <textarea id="submit-note" placeholder="Optional: what do you want your teacher to look at? (e.g. line 7 is not working)"></textarea>
+    <div class="submit-modal-actions">
+      <button class="btn-cancel" onclick="closeSubmitModal()">Cancel</button>
+      <button style="background:#4EC9B0;color:#1e1e1e;" onclick="sendSubmission()">Send ▶</button>
+    </div>
+    <div class="submit-cooldown" id="submit-cooldown"></div>
+  </div>
+</div>
+
 
 <header>
     <div><strong>AI App</strong> | v4.3 [Groq Proxy Build]</div>
@@ -55,6 +85,7 @@
 
 <div class="controls">
     <button onclick="runAudit()">▶ EXECUTE</button>
+    <button class="btn-submit" id="btn-submit" onclick="openSubmitModal()">🙋 Submit for Review</button>
     <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
     <div style="font-size: 11px; color: #666; margin-left: auto;">Proxy: hfproxy.xu-yangen.workers.dev</div>
 </div>
@@ -138,7 +169,9 @@ correcthorsebatterystaple
 </div>
 
 <script>
-    let studentName = "";
+    Change const PROJECT
+
+let studentName = "";
 
 function confirmName() {
     const raw = document.getElementById("name-modal-input").value.trim();
@@ -150,6 +183,103 @@ function confirmName() {
     studentName = raw;
     document.getElementById("name-modal").classList.add("hidden");
 }
+
+const REVIEW_WORKER = "https://teacher-python-review.xu-yangen.workers.dev";
+const PROJECT = "capstone"; // change to "pygame" or "capstone" or "ctf" per lab
+
+let submitCooldownUntil = 0;
+
+function openSubmitModal() {
+    const now = Date.now();
+    document.getElementById("submit-note").value = "";
+    document.getElementById("submit-cooldown").textContent =
+        now < submitCooldownUntil
+        ? "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s before submitting again."
+        : "";
+    document.getElementById("submit-modal").classList.add("open");
+}
+
+function closeSubmitModal() {
+    document.getElementById("submit-modal").classList.remove("open");
+}
+
+async function sendSubmission() {
+    const now = Date.now();
+    if (now < submitCooldownUntil) {
+        document.getElementById("submit-cooldown").textContent =
+            "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s.";
+        return;
+    }
+    const code = document.getElementById("code-editor")
+               ? document.getElementById("code-editor").value
+               : document.getElementById("code-input").value;
+    const note     = document.getElementById("submit-note").value.trim();
+    const labLabel = typeof LAB_DATA !== "undefined"
+               ? LAB_DATA[parseInt(document.getElementById("lab-select").value)].title
+               : document.title;
+    document.getElementById("submit-cooldown").textContent = "Sending…";
+    try {
+        const resp = await fetch(REVIEW_WORKER + "/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                firstName: studentName || "Student",
+                code:      code,
+                labId:     labLabel,
+                project:   PROJECT,
+                note:      note,
+            }),
+        });
+        const data = await resp.json();
+        if (data.success) {
+            submitCooldownUntil = Date.now() + 60000;
+            startCooldownTimer();
+            closeSubmitModal();
+        } else {
+            document.getElementById("submit-cooldown").textContent = "Error: " + data.error;
+        }
+    } catch (err) {
+        document.getElementById("submit-cooldown").textContent = "Could not reach server.";
+    }
+}
+
+function startCooldownTimer() {
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    const interval = setInterval(function() {
+        const remaining = Math.ceil((submitCooldownUntil - Date.now()) / 1000);
+        if (remaining <= 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.textContent = "🙋 Submit for Review";
+        } else {
+            btn.textContent = "🙋 Submit (" + remaining + "s)";
+        }
+    }, 1000);
+}
+function updateLineNumbers() {
+    const textarea = document.getElementById("code-input");
+    const lineNums = document.getElementById("line-numbers");
+    const lines = textarea.value.split("\n").length;
+    lineNums.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+    syncScroll();
+}
+
+function syncScroll() {
+    document.getElementById("line-numbers").scrollTop = document.getElementById("code-input").scrollTop;
+}
+
+function handleTab(e) {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const ta = e.target;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + 4;
+    updateLineNumbers();
+}
+
 
     const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 
