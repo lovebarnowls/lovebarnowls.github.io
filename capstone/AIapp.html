@@ -2,73 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's V4.4 AI app IDE</title>
+    <title>Yang's V4.4 AI App IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
+        /* ── Modals ── */
         .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
-.name-modal-overlay.hidden { display:none; }
-.name-modal-box { background:#252526; border:2px solid #4EC9B0; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
-.name-modal-title { font-size:16px; font-weight:800; color:#4EC9B0; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
-.name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
-.name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
-.name-modal-input:focus { border-color:#4EC9B0; }
-.name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
-.name-modal-btn { background:#4EC9B0; color:#1e1e1e; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
-.name-modal-btn:hover { background:#3ab89f; }
-.btn-submit { background:#e74c3c; color:white; }
-.btn-submit:hover { background:#c0392b; }
-.btn-submit:disabled { background:#555; color:#888; cursor:not-allowed; }
-.submit-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1500; display:none; align-items:center; justify-content:center; }
-.submit-modal-overlay.open { display:flex; }
-.submit-modal-box { background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:420px; width:90%; border:1px solid #4EC9B0; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
-.submit-modal-box h2 { font-size:14px; color:#4EC9B0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
-.submit-modal-box p { font-size:13px; color:#aaa; margin-bottom:14px; line-height:1.6; }
-.submit-modal-box textarea { width:100%; background:#1e1e1e; border:1px solid #444; border-radius:4px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:12px; padding:8px 10px; resize:vertical; min-height:72px; outline:none; margin-bottom:14px; box-sizing:border-box; }
-.submit-modal-box textarea:focus { border-color:#4EC9B0; }
-.submit-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
-.btn-cancel { background:#3e3e3e; color:#d4d4d4; border:1px solid #555; }
-.submit-cooldown { font-size:11px; color:#f0a500; margin-top:8px; min-height:16px; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #4EC9B0; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#4EC9B0; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#4EC9B0; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#4EC9B0; color:#1e1e1e; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#3ab89f; }
 
-.editor-wrap { display:flex; flex:1; overflow:hidden; border-bottom:2px solid var(--border); background:var(--bg-dark); }
-.line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas','Courier New',monospace; font-size:14px; line-height:1.5; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        .btn-submit { background:#e74c3c; color:white; }
+        .btn-submit:hover { background:#c0392b; }
+        .btn-submit:disabled { background:#555; color:#888; cursor:not-allowed; }
+        .submit-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .submit-modal-overlay.open { display:flex; }
+        .submit-modal-box { background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:420px; width:90%; border:1px solid #4EC9B0; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .submit-modal-box h2 { font-size:14px; color:#4EC9B0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+        .submit-modal-box p { font-size:13px; color:#aaa; margin-bottom:14px; line-height:1.6; }
+        .submit-modal-box textarea { width:100%; background:#1e1e1e; border:1px solid #444; border-radius:4px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:12px; padding:8px 10px; resize:vertical; min-height:72px; outline:none; margin-bottom:14px; box-sizing:border-box; }
+        .submit-modal-box textarea:focus { border-color:#4EC9B0; }
+        .submit-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+        .btn-cancel { background:#3e3e3e; color:#d4d4d4; border:1px solid #555; }
+        .submit-cooldown { font-size:11px; color:#f0a500; margin-top:8px; min-height:16px; }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #1f1f1f; padding: 15px 25px; border-bottom: 2px solid #ce3c3c; display: flex; justify-content: space-between; align-items: center; }
-        .main { display: flex; flex: 1; overflow: hidden; }
-        .column { display: flex; flex-direction: column; height: 100%; }
-        #editor-col { flex: 3; border-right: 1px solid #333; }
-        #data-col { flex: 2; background: #181818; }
-        
-        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Courier New', monospace; padding: 15px; border: none; font-size: 14px; outline: none; line-height: 1.5; resize: none; }
-        .label { background: #2d2d2d; padding: 8px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; }
-        
-        #output { flex: 0.4; background: #000; color: #00ff00; padding: 15px; font-family: 'Consolas', monospace; overflow-y: auto; border-top: 2px solid #333; font-size: 13px; white-space: pre-wrap; }
-        
-        .controls { padding: 10px; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; align-items: center; }
-        button { background: #ce3c3c; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: background 0.2s; }
-        button:hover { background: #ff4d4d; }
-        button.secondary { background: #444; }
-        button.secondary:hover { background: #555; }
-        
-        .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #333; color: #888; margin-left: 10px; }
+        /* ── Line number editor ── */
+        .editor-wrap { display:flex; flex:1; overflow:hidden; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas','Courier New',monospace; font-size:14px; line-height:1.5; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+
+        /* ── App shell ── */
+        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:#121212; color:#e0e0e0; margin:0; display:flex; flex-direction:column; height:100vh; }
+        header { background:#1f1f1f; padding:15px 25px; border-bottom:2px solid #ce3c3c; display:flex; justify-content:space-between; align-items:center; }
+        .main { display:flex; flex:1; overflow:hidden; }
+        .column { display:flex; flex-direction:column; height:100%; }
+        #editor-col { flex:3; border-right:1px solid #333; }
+        #data-col { flex:2; background:#181818; }
+
+        textarea { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas','Courier New',monospace; padding:15px; border:none; font-size:14px; outline:none; line-height:1.5; resize:none; tab-size:4; }
+        .label { background:#2d2d2d; padding:8px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; }
+
+        #output { flex:0.4; background:#000; color:#00ff00; padding:15px; font-family:'Consolas',monospace; overflow-y:auto; border-top:2px solid #333; font-size:13px; white-space:pre-wrap; }
+
+        .controls { padding:10px; background:#252525; border-bottom:1px solid #333; display:flex; gap:10px; align-items:center; }
+        button { background:#ce3c3c; color:white; border:none; padding:8px 20px; cursor:pointer; border-radius:4px; font-weight:bold; transition:background 0.2s; }
+        button:hover { background:#ff4d4d; }
+        button.secondary { background:#444; }
+        button.secondary:hover { background:#555; }
+
+        .status-tag { font-size:10px; padding:2px 6px; border-radius:3px; background:#333; color:#888; margin-left:10px; }
     </style>
 </head>
 <body>
+
+<!-- Name modal -->
 <div class="name-modal-overlay" id="name-modal">
   <div class="name-modal-box">
-    <div class="name-modal-title">Faithful AI App Lab</div>
-    <div class="name-modal-subtitle">Enter your first name to begin. Your code submissions will be logged for one week to help your teacher support your learning.</div>
+    <div class="name-modal-title">🤖 Faithful AI App Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your code submissions will be logged for one week to help Teacher Yang support your learning.</div>
     <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
     <div class="name-modal-error" id="name-modal-error"></div>
     <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
   </div>
 </div>
 
+<!-- Submit modal -->
 <div class="submit-modal-overlay" id="submit-modal">
   <div class="submit-modal-box">
     <h2>📤 Submit for Review</h2>
-    <p>Your code will be sent to your teacher. Add a note if you have a specific question.</p>
-    <textarea id="submit-note" placeholder="Optional: what do you want your teacher to look at? (e.g. line 7 is not working)"></textarea>
+    <p>Your code will be sent to Teacher Yang. Add a note if you have a specific question.</p>
+    <textarea id="submit-note" placeholder="Optional: what do you want Teacher Yang to look at? (e.g. line 7 is not working)"></textarea>
     <div class="submit-modal-actions">
       <button class="btn-cancel" onclick="closeSubmitModal()">Cancel</button>
       <button style="background:#4EC9B0;color:#1e1e1e;" onclick="sendSubmission()">Send ▶</button>
@@ -77,24 +84,25 @@
   </div>
 </div>
 
-
 <header>
-    <div><strong>AI App</strong> | v4.3 [Groq Proxy Build]</div>
+    <div><strong>AI App IDE</strong> | v4.4 [Groq Proxy Build]</div>
     <div id="engine-status" class="status-tag">ENGINE OFFLINE</div>
 </header>
 
 <div class="controls">
-    <button onclick="runAudit()">▶ EXECUTE</button>
+    <button onclick="runAudit()">▶ Execute</button>
     <button class="btn-submit" id="btn-submit" onclick="openSubmitModal()">🙋 Submit for Review</button>
     <button class="secondary" onclick="clearOutput()">🗑 Clear Log</button>
-    <div style="font-size: 11px; color: #666; margin-left: auto;">Proxy: hfproxy.xu-yangen.workers.dev</div>
+    <div style="font-size:11px; color:#666; margin-left:auto;">Proxy: hfproxy.xu-yangen.workers.dev</div>
 </div>
 
 <div class="main">
     <div class="column" id="editor-col">
-        <div class="label">main.py (Student Logic)</div>
-        <textarea id="code-editor">
-import json
+        <div class="label">main.py — edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)">import json
 import asyncio
 
 # -------------------------------------------------------
@@ -104,9 +112,11 @@ import asyncio
 # 2. Loop through the passwords in target_data.txt.
 # 3. Construct a 'messages' list for the LLM.
 # 4. Call js_send_to_llm(messages, TEMP) to get a response.
-# This is currently a password audit app, but you can change it to a different app later
-# CAVEATS: 
-# - The AI responses are set to be SHORT. 
+#
+# This is currently a password audit app — you can change it to anything later.
+#
+# CAVEATS:
+# - The AI responses are set to be SHORT.
 # - The entire class is sharing ONE free tier API key.
 # - Keep requests reasonable!
 # -------------------------------------------------------
@@ -114,7 +124,7 @@ import asyncio
 TEMP = 0.1 # 1.0=creative, 0.1=strict
 
 SYSTEM_PROMPT = """
-You are a cybersecurity expert. 
+You are a cybersecurity expert.
 Analyze the password provided by the user.
 Answer with exactly one word: SECURE or INSECURE.
 """
@@ -124,8 +134,6 @@ async def check_password(password):
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": f"Is '{password}' secure?"}
     ]
-    
-    # Pass the TEMP variable to the JS bridge
     response = await js_send_to_llm(json.dumps(messages), TEMP)
     return response
 
@@ -151,203 +159,190 @@ async def main():
     print("-" * 40)
     print("✅ Audit Cycle Complete.")
 
-asyncio.ensure_future(main())
-        </textarea>
+asyncio.ensure_future(main())</textarea>
+        </div>
         <div id="output">System Booting...</div>
     </div>
 
     <div class="column" id="data-col">
         <div class="label">target_data.txt (Data Source)</div>
-        <textarea id="data-input">
-Password123!
+        <textarea id="data-input">Password123!
 admin_user_2026
 qwerty
 Tr0ub4dor&3
-correcthorsebatterystaple
-        </textarea>
+correcthorsebatterystaple</textarea>
     </div>
 </div>
 
 <script>
-    Change const PROJECT
+    // ── Name modal ────────────────────────────────────────────────────────────
+    let studentName = "";
 
-let studentName = "";
-
-function confirmName() {
-    const raw = document.getElementById("name-modal-input").value.trim();
-    const err = document.getElementById("name-modal-error");
-    if (!raw || raw.length < 2) {
-        err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
-        return;
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
     }
-    studentName = raw;
-    document.getElementById("name-modal").classList.add("hidden");
-}
 
-const REVIEW_WORKER = "https://teacher-python-review.xu-yangen.workers.dev";
-const PROJECT = "capstone"; // change to "pygame" or "capstone" or "ctf" per lab
+    // ── Submit for review ─────────────────────────────────────────────────────
+    const REVIEW_WORKER = "https://teacher-python-review.xu-yangen.workers.dev";
+    const PROJECT = "capstone";
 
-let submitCooldownUntil = 0;
+    let submitCooldownUntil = 0;
 
-function openSubmitModal() {
-    const now = Date.now();
-    document.getElementById("submit-note").value = "";
-    document.getElementById("submit-cooldown").textContent =
-        now < submitCooldownUntil
-        ? "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s before submitting again."
-        : "";
-    document.getElementById("submit-modal").classList.add("open");
-}
-
-function closeSubmitModal() {
-    document.getElementById("submit-modal").classList.remove("open");
-}
-
-async function sendSubmission() {
-    const now = Date.now();
-    if (now < submitCooldownUntil) {
+    function openSubmitModal() {
+        const now = Date.now();
+        document.getElementById("submit-note").value = "";
         document.getElementById("submit-cooldown").textContent =
-            "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s.";
-        return;
+            now < submitCooldownUntil
+            ? "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s before submitting again."
+            : "";
+        document.getElementById("submit-modal").classList.add("open");
     }
-    const code = document.getElementById("code-editor")
-               ? document.getElementById("code-editor").value
-               : document.getElementById("code-input").value;
-    const note     = document.getElementById("submit-note").value.trim();
-    const labLabel = typeof LAB_DATA !== "undefined"
-               ? LAB_DATA[parseInt(document.getElementById("lab-select").value)].title
-               : document.title;
-    document.getElementById("submit-cooldown").textContent = "Sending…";
-    try {
-        const resp = await fetch(REVIEW_WORKER + "/submit", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                firstName: studentName || "Student",
-                code:      code,
-                labId:     labLabel,
-                project:   PROJECT,
-                note:      note,
-            }),
-        });
-        const data = await resp.json();
-        if (data.success) {
-            submitCooldownUntil = Date.now() + 60000;
-            startCooldownTimer();
-            closeSubmitModal();
-        } else {
-            document.getElementById("submit-cooldown").textContent = "Error: " + data.error;
-        }
-    } catch (err) {
-        document.getElementById("submit-cooldown").textContent = "Could not reach server.";
+
+    function closeSubmitModal() {
+        document.getElementById("submit-modal").classList.remove("open");
     }
-}
 
-function startCooldownTimer() {
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    const interval = setInterval(function() {
-        const remaining = Math.ceil((submitCooldownUntil - Date.now()) / 1000);
-        if (remaining <= 0) {
-            clearInterval(interval);
-            btn.disabled = false;
-            btn.textContent = "🙋 Submit for Review";
-        } else {
-            btn.textContent = "🙋 Submit (" + remaining + "s)";
+    async function sendSubmission() {
+        const now = Date.now();
+        if (now < submitCooldownUntil) {
+            document.getElementById("submit-cooldown").textContent =
+                "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s.";
+            return;
         }
-    }, 1000);
-}
-function updateLineNumbers() {
-    const textarea = document.getElementById("code-input");
-    const lineNums = document.getElementById("line-numbers");
-    const lines = textarea.value.split("\n").length;
-    lineNums.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
-    syncScroll();
-}
+        const code     = document.getElementById("code-editor").value;
+        const note     = document.getElementById("submit-note").value.trim();
+        const labLabel = document.title;
+        document.getElementById("submit-cooldown").textContent = "Sending…";
+        try {
+            const resp = await fetch(REVIEW_WORKER + "/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    firstName: studentName || "Student",
+                    code:      code,
+                    labId:     labLabel,
+                    project:   PROJECT,
+                    note:      note,
+                }),
+            });
+            const data = await resp.json();
+            if (data.success) {
+                submitCooldownUntil = Date.now() + 60000;
+                startCooldownTimer();
+                closeSubmitModal();
+            } else {
+                document.getElementById("submit-cooldown").textContent = "Error: " + data.error;
+            }
+        } catch (err) {
+            document.getElementById("submit-cooldown").textContent = "Could not reach server.";
+        }
+    }
 
-function syncScroll() {
-    document.getElementById("line-numbers").scrollTop = document.getElementById("code-input").scrollTop;
-}
+    function startCooldownTimer() {
+        const btn = document.getElementById("btn-submit");
+        btn.disabled = true;
+        const interval = setInterval(function() {
+            const remaining = Math.ceil((submitCooldownUntil - Date.now()) / 1000);
+            if (remaining <= 0) {
+                clearInterval(interval);
+                btn.disabled = false;
+                btn.textContent = "🙋 Submit for Review";
+            } else {
+                btn.textContent = "🙋 Submit (" + remaining + "s)";
+            }
+        }, 1000);
+    }
 
-function handleTab(e) {
-    if (e.key !== "Tab") return;
-    e.preventDefault();
-    const ta = e.target;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
-    ta.selectionStart = ta.selectionEnd = start + 4;
-    updateLineNumbers();
-}
+    // ── Line numbers ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const textarea = document.getElementById("code-editor");
+        const lineNums = document.getElementById("line-numbers");
+        const lines    = textarea.value.split("\n").length;
+        lineNums.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
 
+    function syncScroll() {
+        document.getElementById("line-numbers").scrollTop =
+            document.getElementById("code-editor").scrollTop;
+    }
 
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── LLM bridge ───────────────────────────────────────────────────────────
     const MODEL_ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 
-    // JS Bridge: Sends raw messages array to the Worker
     async function js_send_to_llm(messages_json_string, temperature = 0.1) {
         try {
             const messages = JSON.parse(messages_json_string);
-            
-            const payload = {
-                messages: messages,
-                model: "llama-3.1-8b-instant",
-                max_tokens: 88,
+            const payload  = {
+                messages:    messages,
+                model:       "llama-3.1-8b-instant",
+                max_tokens:  88,
                 temperature: temperature
             };
-
             const response = await fetch(MODEL_ENDPOINT, {
-                method: "POST",
+                method:  "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body:    JSON.stringify(payload)
             });
-
             if (!response.ok) {
                 const err = await response.json();
                 throw new Error(err.error?.message || "API Request Failed");
             }
-
             const data = await response.json();
             return data.choices[0].message.content.trim();
-
         } catch (err) {
             return `🔌 Error: ${err.message}`;
         }
     }
 
-    // -------------------------------------------------------
-    // PYODIDE SETUP
-    // -------------------------------------------------------
+    // ── Pyodide ───────────────────────────────────────────────────────────────
     let pyodide;
 
     async function init() {
-        const output = document.getElementById('output');
-        const status = document.getElementById('engine-status');
+        const output = document.getElementById("output");
+        const status = document.getElementById("engine-status");
         try {
             pyodide = await loadPyodide();
             pyodide.globals.set("js_send_to_llm", js_send_to_llm);
-            output.innerHTML = "✅ SOC Engine Online. Ready to Audit.";
+            output.innerHTML = "✅ Engine Online. Ready.";
             status.innerHTML = "ENGINE READY";
             status.style.color = "#00ff00";
         } catch (err) {
             output.innerHTML = `❌ Init Error: ${err}`;
         }
+        updateLineNumbers();
     }
 
     async function runAudit() {
-        const output = document.getElementById('output');
-        const code = document.getElementById('code-editor').value;
-        const data = document.getElementById('data-input').value;
-
+        const output = document.getElementById("output");
+        const code   = document.getElementById("code-editor").value;
+        const data   = document.getElementById("data-input").value;
         output.innerHTML = "";
-        pyodide.FS.writeFile('target_data.txt', data);
-
+        pyodide.FS.writeFile("target_data.txt", data);
         pyodide.setStdout({
             batched: (msg) => {
                 output.innerHTML += msg + "<br>";
-                output.scrollTop = output.scrollHeight;
+                output.scrollTop  = output.scrollHeight;
             }
         });
-
         try {
             await pyodide.runPythonAsync(code);
         } catch (err) {
@@ -355,7 +350,9 @@ function handleTab(e) {
         }
     }
 
-    function clearOutput() { document.getElementById('output').innerHTML = "Log cleared."; }
+    function clearOutput() {
+        document.getElementById("output").innerHTML = "Log cleared.";
+    }
 
     init();
 </script>
