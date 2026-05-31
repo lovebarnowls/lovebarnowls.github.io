@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W7L1 Yang's Faithful Spirograph Lab</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+    <style>
+        :root { --bg-dark:#1e1e1e; --bg-panel:#252526; --border:#333; --accent:#4EC9B0; --text:#d4d4d4; }
+        body,html { margin:0; padding:0; height:100%; font-family:'Segoe UI',sans-serif; overflow:hidden; background:var(--bg-dark); color:var(--text); }
+
+        .header { height:50px; background:var(--bg-panel); display:flex; align-items:center; padding:0 20px; justify-content:space-between; border-bottom:1px solid var(--border); }
+        .logo { font-weight:bold; color:var(--accent); letter-spacing:1px; display:flex; align-items:center; gap:15px; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; }
+        .controls { display:flex; gap:10px; align-items:center; }
+        button { border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; transition:0.2s; text-transform:uppercase; }
+        .btn-run  { background:#28a745; color:white; } .btn-run:hover  { background:#218838; }
+        .btn-save { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
+        .btn-complete { background:#9b59b6; color:white; } .btn-complete:hover { background:#7d3c98; }
+        .toggle-anim { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
+
+        .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
+
+        .left-col { width:50%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
+        .panel-header { background:#2d2d2d; padding:0 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; height:30px; display:flex; align-items:center; justify-content:space-between; }
+        .btn-view-toggle { background:#4EC9B0; color:#1e1e1e; border:none; padding:3px 10px; border-radius:3px; cursor:pointer; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+        .btn-view-toggle:hover { background:#3ab89f; }
+
+        #code-view { display:flex; flex-direction:column; flex-grow:1; overflow:hidden; }
+        #code-input { flex:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; border-bottom:2px solid var(--border); }
+        #console-wrapper { height:30%; display:flex; flex-direction:column; flex-shrink:0; }
+        #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
+
+        #target-view { display:none; flex-grow:1; background:#fff; position:relative; overflow:hidden; }
+
+        .right-col { width:50%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
+        #my-canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
+
+        #compare-overlay { position:absolute; top:0; left:0; width:100%; height:100%; display:none; pointer-events:none; opacity:0.5; z-index:10; }
+
+        .btn-compare { background:#f0a500; color:#1e1e1e; user-select:none; }
+        .btn-compare:hover { background:#d4900a; }
+        .btn-compare:active { background:#b87a08; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">
+        Yang's Faithful Spirograph Lab
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="controls">
+        <label class="toggle-anim"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
+        <button class="btn-run"     onclick="runPython()">▶ Run</button>
+        <button class="btn-compare" id="btn-compare"
+                onmousedown="showOverlay()" onmouseup="hideOverlay()"
+                ontouchstart="showOverlay()" ontouchend="hideOverlay()">
+            👁 Hold to Compare
+        </button>
+        <button class="btn-save" onclick="downloadScript()">📤 Export Code</button>
+        <button class="btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</div>
+
+<div class="main-container">
+
+    <div class="left-col">
+        <div class="panel-header">
+            <span id="panel-label">Python Code</span>
+            <button class="btn-view-toggle" onclick="toggleView()">👁 View Target</button>
+        </div>
+
+        <div id="code-view">
+            <textarea id="code-input" spellcheck="false"></textarea>
+            <div id="console-wrapper">
+                <div class="panel-header" style="justify-content:flex-start;">Console Output</div>
+                <pre id="console-output">Ready...</pre>
+            </div>
+        </div>
+
+        <div id="target-view"></div>
+    </div>
+
+    <div class="right-col">
+        <div class="panel-header" style="justify-content:flex-start;">Your Output</div>
+        <div id="my-canvas-wrapper">
+            <div id="my-canvas"></div>
+            <div id="compare-overlay"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ================================================================
+// LAB DATA
+// ================================================================
+var LAB_DATA = [
+    {
+        id: 1,
+        title: "Lab 1: Rotating Squares",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# A spirograph is made by repeating a shape over and over,
+# turning slightly each time.
+
+# This is a kind of recursion — each loop uses a value that
+# was changed by the previous loop.
+# x = x + 5 is the simplest form of recursion: the new value
+# of x depends on the old value of x.
+
+# The code below draws 36 squares, turning 10 degrees each time.
+
+angle = 0
+
+for i in range(36):
+    faithful.setheading(angle)
+    for side in range(4):
+        faithful.forward(100)
+        faithful.right(90)
+    angle = angle + 10
+
+# Try changing 36 to 18. What happens?
+# Try changing angle + 10 to angle + 5.
+# Try changing the square side length from 100 to 80.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+angle = 0
+for i in range(36):
+    faithful.setheading(angle)
+    for side in range(4):
+        faithful.forward(100)
+        faithful.right(90)
+    angle = angle + 10
+faithful.hideturtle()`,
+        completeText: `Each loop used the updated value of angle — that is recursion at work.
+The pattern changes completely just by tweaking one number. Click OK.`
+    },
+
+    {
+        id: 2,
+        title: "Lab 2: Shrinking Triangles",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# What if the shape also gets smaller with each loop?
+# We can make both the angle AND the size recurse.
+
+# size = size - 3 means every triangle is 3 pixels smaller
+# than the one before it.
+
+# Each loop depends on the results of the previous loop —
+# that is the core idea of recursion.
+
+size = 120
+angle = 0
+
+for i in range(30):
+    faithful.setheading(angle)
+    for side in range(3):
+        faithful.forward(size)
+        faithful.right(120)
+    angle = angle + 12
+    size = size - 3
+
+# Try changing size - 3 to size - 2. What changes?
+# Try starting size at 150 instead of 120.
+# What happens if you change range(30) to range(40)?
+# Bonus: what would happen if size ever reached 0 or went negative?
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+size = 120
+angle = 0
+for i in range(30):
+    faithful.setheading(angle)
+    for side in range(3):
+        faithful.forward(size)
+        faithful.right(120)
+    angle = angle + 12
+    size = size - 3
+faithful.hideturtle()`,
+        completeText: `Two variables recursing at once — angle and size.
+The pattern spirals inward because each triangle is smaller AND rotated. Click OK.`
+    },
+
+    {
+        id: 3,
+        title: "Lab 3: Colour Spirograph",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# Hex colour codes look like "#FF0000" (red) or "#0000FF" (blue).
+# The first two characters after # control red.
+# The middle two control green. The last two control blue.
+# Each pair goes from 00 (none) to FF (full).
+
+# We can recurse the colour too!
+# red_val starts at 50 and increases by 7 each loop.
+# int() converts it to a whole number.
+# hex() converts it to hexadecimal, like 0x3f.
+# The [2:] removes the "0x" prefix so we get just "3f".
+# zfill(2) makes sure it is always two characters, e.g. "0a" not "a".
+
+red_val = 50
+angle = 0
+size = 110
+
+for i in range(36):
+    red_hex = hex(int(red_val))[2:].zfill(2)
+    colour = "#" + red_hex + "44" + "aa"
+    faithful.pencolor(colour)
+    faithful.setheading(angle)
+    for side in range(4):
+        faithful.forward(size)
+        faithful.right(90)
+    angle = angle + 10
+    red_val = red_val + 5
+    if red_val > 255:
+        red_val = 50
+
+# Try changing the fixed green "44" to a variable too.
+# Try making blue_val recurse downward (blue_val = blue_val - 4).
+# Try changing the shape inside to a triangle (range(3), right(120)).
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+red_val = 50
+angle = 0
+size = 110
+for i in range(36):
+    red_hex = hex(int(red_val))[2:].zfill(2)
+    colour = "#" + red_hex + "44" + "aa"
+    faithful.pencolor(colour)
+    faithful.setheading(angle)
+    for side in range(4):
+        faithful.forward(size)
+        faithful.right(90)
+    angle = angle + 10
+    red_val = red_val + 5
+    if red_val > 255:
+        red_val = 50
+faithful.hideturtle()`,
+        completeText: `The colour is now recursing alongside the shape.
+Three values — angle, size, and red_val — all updating each loop. Click OK.`
+    },
+
+    {
+        id: 4,
+        title: "Lab 4: Free Challenge",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# You have learned:
+#   - Rotating shapes using angle = angle + n
+#   - Shrinking or growing shapes using size = size - n
+#   - Recursing hex colour values
+#   - Using pencolor(), pensize(), begin_fill(), end_fill()
+
+# Your challenge: create your own spirograph artwork.
+# Rules:
+#   1. You must use at least TWO variables that recurse (e.g. angle and size).
+#   2. You must use at least ONE colour that changes each loop.
+#   3. You must use pensize() somewhere.
+#   4. Your pattern must look clearly different from the examples.
+
+# Some ideas to get you started:
+#   - Circles instead of polygons: faithful.circle(size)
+#   - A pentagon (5 sides, exterior angle 72 degrees)
+#   - Fill colour that recurses alongside pen colour
+#   - pensize that grows: pen = pen + 0.1
+
+# There is no target for this lab — it is your design.
+# Click Complete when you are happy with your artwork.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+size = 20
+angle = 0
+pen_width = 1
+blue_val = 80
+for i in range(45):
+    blue_hex = hex(int(blue_val))[2:].zfill(2)
+    colour = "#22" + blue_hex + "aa"
+    faithful.pencolor(colour)
+    faithful.pensize(pen_width)
+    faithful.setheading(angle)
+    faithful.circle(size)
+    angle = angle + 8
+    size = size + 3
+    pen_width = pen_width + 0.05
+    blue_val = blue_val + 4
+    if blue_val > 255:
+        blue_val = 80
+faithful.hideturtle()`,
+        finalText: `Well done — you have completed Week 7 Lesson 1.
+Your spirograph is your own recursive artwork. Keep experimenting!`
+    }
+];
+
+// ================================================================
+// VIEW TOGGLE
+// ================================================================
+var showingTarget = false;
+
+function toggleView() {
+    showingTarget = !showingTarget;
+    var codeView   = document.getElementById("code-view");
+    var targetView = document.getElementById("target-view");
+    var label      = document.getElementById("panel-label");
+    var btn        = document.querySelector(".btn-view-toggle");
+    if (showingTarget) {
+        codeView.style.display   = "none";
+        targetView.style.display = "block";
+        label.textContent        = "Target";
+        btn.textContent          = "✏ Edit Code";
+    } else {
+        codeView.style.display   = "flex";
+        targetView.style.display = "none";
+        label.textContent        = "Python Code";
+        btn.textContent          = "👁 View Target";
+    }
+}
+
+// ================================================================
+// BLINK COMPARATOR
+// ================================================================
+function showOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.innerHTML = "";
+    overlay.style.display = "block";
+
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    overlay.style.width  = w + "px";
+    overlay.style.height = h + "px";
+
+    skulptRun(instantWrap(lab.solutionCode), "compare-overlay", w, h, false, null);
+}
+
+function hideOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.style.display = "none";
+    overlay.innerHTML     = "";
+}
+
+// ================================================================
+// SKULPT HELPERS
+// ================================================================
+function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+        throw "File not found: '" + x + "'";
+    return Sk.builtinFiles["files"][x];
+}
+
+function outf(text) {
+    var el = document.getElementById("console-output");
+    el.innerHTML += text;
+    el.scrollTop = el.scrollHeight;
+}
+
+function instantWrap(code) {
+    return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
+}
+
+var renderQueue = Promise.resolve();
+
+function skulptRun(code, divId, width, height, animated, outputFn) {
+    renderQueue = renderQueue.then(function() {
+        return new Promise(function(resolve) {
+            Sk.configure({ output: outputFn || function(){}, read: builtinRead, __future__: Sk.python3 });
+            Sk.TurtleGraphics = { target: divId, width: width, height: height, animate: animated };
+            Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, code, true);
+            }).then(resolve, function(err) {
+                if (outputFn) outputFn("\n<span style='color:#ff5555'>Error: " + err.toString() + "</span>");
+                resolve();
+            });
+        });
+    });
+    return renderQueue;
+}
+
+// ================================================================
+// RUN STUDENT CODE
+// ================================================================
+function runPython() {
+    var code    = document.getElementById("code-input").value;
+    var instant = document.getElementById("skip-anim").checked;
+    var wrapper = document.getElementById("my-canvas-wrapper");
+
+    document.getElementById("console-output").innerHTML = "";
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
+
+    var finalCode = instant ? instantWrap(code) : code;
+    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf);
+}
+
+// ================================================================
+// RENDER TARGET
+// ================================================================
+function renderTarget(solutionCode) {
+    var targetView = document.getElementById("target-view");
+    targetView.innerHTML = "";
+
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    targetView.style.width  = w + "px";
+    targetView.style.height = h + "px";
+
+    skulptRun(instantWrap(solutionCode), "target-view", w, h, false, null);
+}
+
+// ================================================================
+// LAB MANAGEMENT
+// ================================================================
+function initLabs() {
+    var select = document.getElementById("lab-select");
+    LAB_DATA.forEach(function(lab, i) {
+        var opt = document.createElement("option");
+        opt.value = i; opt.text = lab.title;
+        select.appendChild(opt);
+    });
+    loadLab();
+}
+
+function loadLab() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    document.getElementById("code-input").value         = lab.code;
+    document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
+    if (showingTarget) toggleView();
+    requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
+}
+
+// ================================================================
+// DOWNLOAD
+// ================================================================
+function downloadScript() {
+    var blob = new Blob([document.getElementById("code-input").value], { type:"text/plain" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "my_turtle_program.txt";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ================================================================
+// COMPLETION MODAL
+// ================================================================
+function showComplete() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var isLast = index >= LAB_DATA.length - 1;
+    var text  = isLast ? (lab.finalText || "Congratulations — you have completed all labs!")
+                       : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+    document.getElementById("complete-modal-text").textContent = text;
+    document.getElementById("complete-modal").style.display = "flex";
+}
+
+function confirmComplete() {
+    document.getElementById("complete-modal").style.display = "none";
+    var index = parseInt(document.getElementById("lab-select").value);
+    var isLast = index >= LAB_DATA.length - 1;
+    if (!isLast) {
+        document.getElementById("lab-select").value = index + 1;
+        loadLab();
+    }
+}
+
+window.onload = initLabs;
+</script>
+
+<!-- Completion modal -->
+<div id="complete-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:480px; width:90%; border:1px solid #444; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="font-size:32px; text-align:center; margin-bottom:16px;">🎉</div>
+        <p id="complete-modal-text" style="font-size:15px; line-height:1.7; margin:0 0 24px; white-space:pre-wrap;"></p>
+        <div style="text-align:center;">
+            <button onclick="confirmComplete()" style="background:#4EC9B0; color:#1e1e1e; border:none; padding:10px 32px; border-radius:5px; font-size:14px; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px;">OK</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
