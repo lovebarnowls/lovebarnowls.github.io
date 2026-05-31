@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W7L2 Yang's Faithful Fractal Lab</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+    <style>
+        :root { --bg-dark:#1e1e1e; --bg-panel:#252526; --border:#333; --accent:#4EC9B0; --text:#d4d4d4; }
+        body,html { margin:0; padding:0; height:100%; font-family:'Segoe UI',sans-serif; overflow:hidden; background:var(--bg-dark); color:var(--text); }
+
+        .header { height:50px; background:var(--bg-panel); display:flex; align-items:center; padding:0 20px; justify-content:space-between; border-bottom:1px solid var(--border); }
+        .logo { font-weight:bold; color:var(--accent); letter-spacing:1px; display:flex; align-items:center; gap:15px; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; }
+        .controls { display:flex; gap:10px; align-items:center; }
+        button { border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; transition:0.2s; text-transform:uppercase; }
+        .btn-run  { background:#28a745; color:white; } .btn-run:hover  { background:#218838; }
+        .btn-save { background:#3e3e3e; color:white; border:1px solid #555; } .btn-save:hover { background:#505050; }
+        .btn-complete { background:#9b59b6; color:white; } .btn-complete:hover { background:#7d3c98; }
+        .toggle-anim { font-size:12px; display:flex; align-items:center; gap:5px; color:#ccc; cursor:pointer; user-select:none; background:#333; padding:4px 8px; border-radius:4px; }
+
+        .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
+
+        .left-col { width:50%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
+        .panel-header { background:#2d2d2d; padding:0 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; height:30px; display:flex; align-items:center; justify-content:space-between; }
+        .btn-view-toggle { background:#4EC9B0; color:#1e1e1e; border:none; padding:3px 10px; border-radius:3px; cursor:pointer; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+        .btn-view-toggle:hover { background:#3ab89f; }
+
+        #code-view { display:flex; flex-direction:column; flex-grow:1; overflow:hidden; }
+        #code-input { flex:1; background:var(--bg-dark); color:#d4d4d4; padding:15px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; border-bottom:2px solid var(--border); }
+        #console-wrapper { height:30%; display:flex; flex-direction:column; flex-shrink:0; }
+        #console-output { flex-grow:1; background:#000; color:#00ff00; padding:10px; font-family:'Consolas',monospace; font-size:12px; overflow-y:auto; margin:0; white-space:pre-wrap; }
+
+        #target-view { display:none; flex-grow:1; background:#fff; position:relative; overflow:hidden; }
+
+        .right-col { width:50%; height:100%; display:flex; flex-direction:column; background:#fff; position:relative; }
+        #my-canvas-wrapper { flex-grow:1; overflow:hidden; background:#fff; position:relative; }
+
+        #compare-overlay { position:absolute; top:0; left:0; width:100%; height:100%; display:none; pointer-events:none; opacity:0.5; z-index:10; }
+
+        .btn-compare { background:#f0a500; color:#1e1e1e; user-select:none; }
+        .btn-compare:hover { background:#d4900a; }
+        .btn-compare:active { background:#b87a08; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">
+        Yang's Faithful Fractal Lab
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="controls">
+        <label class="toggle-anim"><input type="checkbox" id="skip-anim"> ⚡ Instant</label>
+        <button class="btn-run"     onclick="runPython()">▶ Run</button>
+        <button class="btn-compare" id="btn-compare"
+                onmousedown="showOverlay()" onmouseup="hideOverlay()"
+                ontouchstart="showOverlay()" ontouchend="hideOverlay()">
+            👁 Hold to Compare
+        </button>
+        <button class="btn-save" onclick="downloadScript()">📤 Export Code</button>
+        <button class="btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</div>
+
+<div class="main-container">
+
+    <div class="left-col">
+        <div class="panel-header">
+            <span id="panel-label">Python Code</span>
+            <button class="btn-view-toggle" onclick="toggleView()">👁 View Target</button>
+        </div>
+
+        <div id="code-view">
+            <textarea id="code-input" spellcheck="false"></textarea>
+            <div id="console-wrapper">
+                <div class="panel-header" style="justify-content:flex-start;">Console Output</div>
+                <pre id="console-output">Ready...</pre>
+            </div>
+        </div>
+
+        <div id="target-view"></div>
+    </div>
+
+    <div class="right-col">
+        <div class="panel-header" style="justify-content:flex-start;">Your Output</div>
+        <div id="my-canvas-wrapper">
+            <div id="my-canvas"></div>
+            <div id="compare-overlay"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ================================================================
+// LAB DATA
+// ================================================================
+var LAB_DATA = [
+    {
+        id: 1,
+        title: "Lab 1: Spiral Lines",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# A fractal is a pattern that looks similar at every scale.
+# The simplest fractal in turtle graphics is a spiral.
+
+# Here, length grows a little each step — that is recursion.
+# Each line segment depends on the previous one.
+
+# True fractals in mathematics go on forever.
+# Ours stop when the loop ends — but the idea is the same.
+
+length = 5
+angle = 91
+
+for i in range(200):
+    faithful.forward(length)
+    faithful.right(angle)
+    length = length + 1.5
+
+# Try changing angle to 89. What shape do you get?
+# Try changing angle to 120. What happens?
+# Try changing length + 1.5 to length + 0.5.
+# Try starting length at 1 instead of 5.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+length = 5
+angle = 91
+for i in range(200):
+    faithful.forward(length)
+    faithful.right(angle)
+    length = length + 1.5
+faithful.hideturtle()`,
+        completeText: `A spiral is the simplest fractal — each step builds on the last.
+Changing the angle by just 1 or 2 degrees produces a completely different shape. Click OK.`
+    },
+
+    {
+        id: 2,
+        title: "Lab 2: Branching Tree",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# A tree branches by moving forward, turning, drawing a shorter branch,
+# coming back, turning the other way, drawing another shorter branch,
+# and returning to where it started.
+
+# This uses a function — draw_branch — that calls itself
+# with a smaller length each time.
+# A function that calls itself is called recursion in computer science.
+# Python keeps track of where each call came from so it can return correctly.
+
+# The base case (if length < 10) stops the recursion.
+# Without a base case, the function would call itself forever.
+
+def draw_branch(length):
+    if length < 10:
+        return
+    faithful.forward(length)
+    faithful.left(30)
+    draw_branch(length - 20)
+    faithful.right(60)
+    draw_branch(length - 20)
+    faithful.left(30)
+    faithful.backward(length)
+
+faithful.setheading(90)
+faithful.penup()
+faithful.goto(0, -150)
+faithful.pendown()
+draw_branch(100)
+
+# Try changing length - 20 to length - 15. The tree gets fuller.
+# Try changing the left(30) and right(60) angles.
+# Try changing the base case from 10 to 20. The tree gets simpler.
+# Try changing faithful.setheading(90) to 60. The tree leans.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+def draw_branch(length):
+    if length < 10:
+        return
+    faithful.forward(length)
+    faithful.left(30)
+    draw_branch(length - 20)
+    faithful.right(60)
+    draw_branch(length - 20)
+    faithful.left(30)
+    faithful.backward(length)
+faithful.setheading(90)
+faithful.penup()
+faithful.goto(0, -150)
+faithful.pendown()
+draw_branch(100)
+faithful.hideturtle()`,
+        completeText: `This is true recursion — a function that calls itself.
+The tree draws itself by repeatedly asking: am I short enough to stop yet? Click OK.`
+    },
+
+    {
+        id: 3,
+        title: "Lab 3: Snowflake",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# A Koch snowflake is a fractal built by replacing every straight line
+# with a bent one — four shorter segments instead of one.
+# Do this enough times and the edge becomes infinitely jagged.
+
+# Our version uses a function that recurses:
+# if depth reaches 0, just draw a straight line.
+# Otherwise, split the line into four bent pieces and recurse on each.
+
+def koch(length, depth):
+    if depth == 0:
+        faithful.forward(length)
+        return
+    length = length / 3
+    koch(length, depth - 1)
+    faithful.left(60)
+    koch(length, depth - 1)
+    faithful.right(120)
+    koch(length, depth - 1)
+    faithful.left(60)
+    koch(length, depth - 1)
+
+def snowflake(size, depth):
+    for side in range(3):
+        koch(size, depth)
+        faithful.right(120)
+
+faithful.penup()
+faithful.goto(-150, 100)
+faithful.pendown()
+snowflake(300, 3)
+
+# Try changing depth from 3 to 2. The snowflake gets simpler.
+# Try changing depth to 4. It gets much more detailed (and slower!).
+# Try changing the starting position to (-100, 80) with size 200.
+# Bonus: what is the base case here? Why is it needed?
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+def koch(length, depth):
+    if depth == 0:
+        faithful.forward(length)
+        return
+    length = length / 3
+    koch(length, depth - 1)
+    faithful.left(60)
+    koch(length, depth - 1)
+    faithful.right(120)
+    koch(length, depth - 1)
+    faithful.left(60)
+    koch(length, depth - 1)
+def snowflake(size, depth):
+    for side in range(3):
+        koch(size, depth)
+        faithful.right(120)
+faithful.penup()
+faithful.goto(-150, 100)
+faithful.pendown()
+snowflake(300, 3)
+faithful.hideturtle()`,
+        completeText: `The Koch snowflake is one of the most famous fractals in mathematics.
+Each edge calls itself four times — that is 4 to the power of depth total calls. Click OK.`
+    },
+
+    {
+        id: 4,
+        title: "Lab 4: Nested Shapes",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# Nested shapes are fractals too — a shape inside a shape inside a shape.
+# The key is that each inner shape is smaller by a fixed ratio.
+# That ratio recursing inward is what makes it fractal-like.
+
+# Below are three separate sketches. Run each one by commenting
+# out the other two (add a # at the start of each line).
+
+# --- Sketch A: Nested squares ---
+size = 200
+for i in range(20):
+    for side in range(4):
+        faithful.forward(size)
+        faithful.right(90)
+    faithful.penup()
+    faithful.forward(10)
+    faithful.right(10)
+    faithful.pendown()
+    size = size - 10
+
+# --- Sketch B: Nested triangles (comment out Sketch A first) ---
+# size = 200
+# for i in range(20):
+#     for side in range(3):
+#         faithful.forward(size)
+#         faithful.right(120)
+#     faithful.penup()
+#     faithful.forward(8)
+#     faithful.right(6)
+#     faithful.pendown()
+#     size = size - 8
+
+# --- Sketch C: Nested circles (comment out the others first) ---
+# radius = 150
+# for i in range(15):
+#     faithful.circle(radius)
+#     faithful.penup()
+#     faithful.forward(10)
+#     faithful.pendown()
+#     radius = radius - 10
+
+# Try all three. Which one looks most fractal-like to you?
+# Try changing the step amounts (the - 10, - 8, - 10).
+# Try adding a colour change each loop using pencolor().
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+size = 200
+for i in range(20):
+    for side in range(4):
+        faithful.forward(size)
+        faithful.right(90)
+    faithful.penup()
+    faithful.forward(10)
+    faithful.right(10)
+    faithful.pendown()
+    size = size - 10
+faithful.hideturtle()`,
+        completeText: `Three fractal families — squares, triangles, circles — all built the same way.
+The only difference is how many sides the inner loop uses. Click OK.`
+    },
+
+    {
+        id: 5,
+        title: "Lab 5: Star Burst",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# A star burst draws lines outward from the centre,
+# each one a little longer than the last.
+# The angle between each line recurses too.
+
+# This produces a sunburst or compass-rose pattern.
+
+length = 20
+angle = 0
+step = 7
+
+for i in range(51):
+    faithful.setheading(angle)
+    faithful.forward(length)
+    faithful.backward(length)
+    angle = angle + step
+    length = length + 2
+
+# Try changing step from 7 to 13. What changes?
+# Try changing step to 5. The burst gets denser.
+# Try changing length + 2 to length + 4.
+# Bonus: try making step recurse too: step = step + 0.1
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+length = 20
+angle = 0
+step = 7
+for i in range(51):
+    faithful.setheading(angle)
+    faithful.forward(length)
+    faithful.backward(length)
+    angle = angle + step
+    length = length + 2
+faithful.hideturtle()`,
+        completeText: `A star burst is a spiral in disguise — each spoke is just a line that grows outward.
+When step does not divide evenly into 360, the spokes never overlap. Click OK.`
+    },
+
+    {
+        id: 6,
+        title: "Lab 6: Galaxy Swirl",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# A galaxy swirl combines three recursing variables:
+# length, angle, and colour.
+# The result looks like a spiral arm of a galaxy.
+
+# We recurse both the green and blue channels of the hex colour
+# to create a shift from teal through to violet.
+
+length = 2
+angle = 0
+turn = 29
+green_val = 200
+blue_val = 50
+
+for i in range(150):
+    green_hex = hex(int(green_val))[2:].zfill(2)
+    blue_hex  = hex(int(blue_val))[2:].zfill(2)
+    colour = "#22" + green_hex + blue_hex
+    faithful.pencolor(colour)
+    faithful.setheading(angle)
+    faithful.forward(length)
+    angle  = angle  + turn
+    length = length + 0.8
+    green_val = green_val - 1.2
+    blue_val  = blue_val  + 1.3
+    if green_val < 30:
+        green_val = 200
+    if blue_val > 255:
+        blue_val = 50
+
+# Try changing turn from 29 to 31. The arms shift direction.
+# Try swapping which channel decreases and which increases.
+# Try adding a red_val that recurses alongside green and blue.
+# Try changing length + 0.8 to length + 1.5 for a looser spiral.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+length = 2
+angle = 0
+turn = 29
+green_val = 200
+blue_val = 50
+for i in range(150):
+    green_hex = hex(int(green_val))[2:].zfill(2)
+    blue_hex  = hex(int(blue_val))[2:].zfill(2)
+    colour = "#22" + green_hex + blue_hex
+    faithful.pencolor(colour)
+    faithful.setheading(angle)
+    faithful.forward(length)
+    angle  = angle  + turn
+    length = length + 0.8
+    green_val = green_val - 1.2
+    blue_val  = blue_val  + 1.3
+    if green_val < 30:
+        green_val = 200
+    if blue_val > 255:
+        blue_val = 50
+faithful.hideturtle()`,
+        completeText: `Three colour channels recursing together create a smooth colour journey.
+This is exactly how real colour gradients work in graphic design software. Click OK.`
+    },
+
+    {
+        id: 7,
+        title: "Lab 7: Free Challenge",
+        code: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+
+# You have learned:
+#   - Spiral lines (length recursing)
+#   - Branching trees (a function calling itself)
+#   - Snowflakes (recursive depth parameter)
+#   - Nested shapes (size recursing inward)
+#   - Star bursts (angle step recursing)
+#   - Galaxy swirls (multiple colour channels recursing)
+
+# Your challenge: create your own fractal artwork.
+# Rules:
+#   1. You must use at least TWO variables that recurse.
+#   2. You must use begin_fill() and end_fill() somewhere.
+#   3. The FILL colour must recurse — it should change each loop
+#      using the hex recursion technique from Lab 6.
+#   4. Your pattern must look clearly different from all six examples.
+
+# Hints:
+#   - begin_fill() goes before drawing a shape.
+#   - end_fill() goes after.
+#   - fillcolor("#rrggbb") sets the fill — recurse this like pencolor.
+#   - A filled rotating triangle with recursing fill colour is a great start.
+#   - Try combining a fractal structure (e.g. nested) with filled shapes.
+
+# There is no target for this lab — it is your design.
+# Click Complete when you are happy with your artwork.
+
+print('Program complete')`,
+        solutionCode: `import turtle
+turtle.hideturtle()
+faithful = turtle.Turtle()
+faithful.speed(0)
+size = 160
+angle = 0
+red_val = 80
+blue_val = 200
+for i in range(24):
+    red_hex  = hex(int(red_val))[2:].zfill(2)
+    blue_hex = hex(int(blue_val))[2:].zfill(2)
+    fill_col = "#" + red_hex + "33" + blue_hex
+    faithful.fillcolor(fill_col)
+    faithful.pencolor(fill_col)
+    faithful.setheading(angle)
+    faithful.begin_fill()
+    for side in range(3):
+        faithful.forward(size)
+        faithful.right(120)
+    faithful.end_fill()
+    angle   = angle   + 15
+    size    = size    - 5
+    red_val = red_val + 7
+    blue_val = blue_val - 7
+    if red_val  > 255: red_val  = 80
+    if blue_val < 30:  blue_val = 200
+faithful.hideturtle()`,
+        finalText: `Well done — you have completed Week 7 Lesson 2.
+You have now written true recursive functions, hex colour recursion, and fractal geometry. Keep creating!`
+    }
+];
+
+// ================================================================
+// VIEW TOGGLE
+// ================================================================
+var showingTarget = false;
+
+function toggleView() {
+    showingTarget = !showingTarget;
+    var codeView   = document.getElementById("code-view");
+    var targetView = document.getElementById("target-view");
+    var label      = document.getElementById("panel-label");
+    var btn        = document.querySelector(".btn-view-toggle");
+    if (showingTarget) {
+        codeView.style.display   = "none";
+        targetView.style.display = "block";
+        label.textContent        = "Target";
+        btn.textContent          = "✏ Edit Code";
+    } else {
+        codeView.style.display   = "flex";
+        targetView.style.display = "none";
+        label.textContent        = "Python Code";
+        btn.textContent          = "👁 View Target";
+    }
+}
+
+// ================================================================
+// BLINK COMPARATOR
+// ================================================================
+function showOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.innerHTML = "";
+    overlay.style.display = "block";
+
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    overlay.style.width  = w + "px";
+    overlay.style.height = h + "px";
+
+    skulptRun(instantWrap(lab.solutionCode), "compare-overlay", w, h, false, null);
+}
+
+function hideOverlay() {
+    var overlay = document.getElementById("compare-overlay");
+    overlay.style.display = "none";
+    overlay.innerHTML     = "";
+}
+
+// ================================================================
+// SKULPT HELPERS
+// ================================================================
+function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+        throw "File not found: '" + x + "'";
+    return Sk.builtinFiles["files"][x];
+}
+
+function outf(text) {
+    var el = document.getElementById("console-output");
+    el.innerHTML += text;
+    el.scrollTop = el.scrollHeight;
+}
+
+function instantWrap(code) {
+    return "import turtle\nturtle.speed(0)\nturtle.tracer(0,0)\n" + code + "\nturtle.update()";
+}
+
+var renderQueue = Promise.resolve();
+
+function skulptRun(code, divId, width, height, animated, outputFn) {
+    renderQueue = renderQueue.then(function() {
+        return new Promise(function(resolve) {
+            Sk.configure({ output: outputFn || function(){}, read: builtinRead, __future__: Sk.python3 });
+            Sk.TurtleGraphics = { target: divId, width: width, height: height, animate: animated };
+            Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, code, true);
+            }).then(resolve, function(err) {
+                if (outputFn) outputFn("\n<span style='color:#ff5555'>Error: " + err.toString() + "</span>");
+                resolve();
+            });
+        });
+    });
+    return renderQueue;
+}
+
+// ================================================================
+// RUN STUDENT CODE
+// ================================================================
+function runPython() {
+    var code    = document.getElementById("code-input").value;
+    var instant = document.getElementById("skip-anim").checked;
+    var wrapper = document.getElementById("my-canvas-wrapper");
+
+    document.getElementById("console-output").innerHTML = "";
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
+
+    var finalCode = instant ? instantWrap(code) : code;
+    skulptRun(finalCode, "my-canvas", wrapper.offsetWidth, wrapper.offsetHeight, !instant, outf);
+}
+
+// ================================================================
+// RENDER TARGET
+// ================================================================
+function renderTarget(solutionCode) {
+    var targetView = document.getElementById("target-view");
+    targetView.innerHTML = "";
+
+    var wrapper = document.getElementById("my-canvas-wrapper");
+    var w = wrapper.offsetWidth;
+    var h = wrapper.offsetHeight;
+
+    targetView.style.width  = w + "px";
+    targetView.style.height = h + "px";
+
+    skulptRun(instantWrap(solutionCode), "target-view", w, h, false, null);
+}
+
+// ================================================================
+// LAB MANAGEMENT
+// ================================================================
+function initLabs() {
+    var select = document.getElementById("lab-select");
+    LAB_DATA.forEach(function(lab, i) {
+        var opt = document.createElement("option");
+        opt.value = i; opt.text = lab.title;
+        select.appendChild(opt);
+    });
+    loadLab();
+}
+
+function loadLab() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    document.getElementById("code-input").value         = lab.code;
+    document.getElementById("console-output").innerHTML = "Loaded: " + lab.title;
+    document.getElementById("my-canvas").innerHTML      = "";
+    hideOverlay();
+    if (showingTarget) toggleView();
+    requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
+}
+
+// ================================================================
+// DOWNLOAD
+// ================================================================
+function downloadScript() {
+    var blob = new Blob([document.getElementById("code-input").value], { type:"text/plain" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "my_turtle_program.txt";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ================================================================
+// COMPLETION MODAL
+// ================================================================
+function showComplete() {
+    var index = parseInt(document.getElementById("lab-select").value);
+    var lab   = LAB_DATA[index];
+    var isLast = index >= LAB_DATA.length - 1;
+    var text  = isLast ? (lab.finalText || "Congratulations — you have completed all labs!")
+                       : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+    document.getElementById("complete-modal-text").textContent = text;
+    document.getElementById("complete-modal").style.display = "flex";
+}
+
+function confirmComplete() {
+    document.getElementById("complete-modal").style.display = "none";
+    var index = parseInt(document.getElementById("lab-select").value);
+    var isLast = index >= LAB_DATA.length - 1;
+    if (!isLast) {
+        document.getElementById("lab-select").value = index + 1;
+        loadLab();
+    }
+}
+
+window.onload = initLabs;
+</script>
+
+<!-- Completion modal -->
+<div id="complete-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:480px; width:90%; border:1px solid #444; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="font-size:32px; text-align:center; margin-bottom:16px;">🎉</div>
+        <p id="complete-modal-text" style="font-size:15px; line-height:1.7; margin:0 0 24px; white-space:pre-wrap;"></p>
+        <div style="text-align:center;">
+            <button onclick="confirmComplete()" style="background:#4EC9B0; color:#1e1e1e; border:none; padding:10px 32px; border-radius:5px; font-size:14px; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px;">OK</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
