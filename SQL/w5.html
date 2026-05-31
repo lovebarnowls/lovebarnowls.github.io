@@ -686,6 +686,18 @@ async function runQuery() {
       renderError(data.error);
       setConsoleStatus("Error", "err");
       log("✗ " + data.error, "err");
+      // Log failed queries too — useful for diagnosing student mistakes
+      fetch(`${WORKER_URL}/log-submission`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: studentName,
+          sqlQuery:  query,
+          flag:      "ERROR: " + data.error,
+          labNumber: DB_NAME,
+          originUrl: location.href,
+        }),
+      });
     }
   } catch(err) {
     renderError("Could not reach the server.");
