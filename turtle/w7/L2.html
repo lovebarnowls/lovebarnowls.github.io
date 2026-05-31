@@ -112,8 +112,11 @@ faithful.speed(0)
 # A fractal is a pattern that looks similar at every scale.
 # The simplest fractal in turtle graphics is a spiral.
 
-# Here, length grows a little each step — that is recursion.
-# Each line segment depends on the previous one.
+# This spiral uses iteration — a for loop — with an accumulating variable.
+# length grows a little each step, so each segment is slightly longer
+# than the one before it.
+# This is the same technique as W7L1, applied to a fractal shape.
+# In the next lab we will meet true recursion for the first time.
 
 # True fractals in mathematics go on forever.
 # Ours stop when the loop ends — but the idea is the same.
@@ -143,8 +146,9 @@ for i in range(200):
     faithful.right(angle)
     length = length + 1.5
 faithful.hideturtle()`,
-        completeText: `A spiral is the simplest fractal — each step builds on the last.
-Changing the angle by just 1 or 2 degrees produces a completely different shape. Click OK.`
+        completeText: `A spiral built with iteration and one accumulating variable — length.
+Changing the angle by just 1 or 2 degrees produces a completely different shape.
+Next up: true recursion. Click OK.`
     },
 
     {
@@ -155,17 +159,24 @@ turtle.hideturtle()
 faithful = turtle.Turtle()
 faithful.speed(0)
 
+# Until now, all our patterns used iteration — a for loop running
+# the same steps a fixed number of times.
+# Recursion is different. In recursion, a FUNCTION calls ITSELF.
+
 # A tree branches by moving forward, turning, drawing a shorter branch,
 # coming back, turning the other way, drawing another shorter branch,
 # and returning to where it started.
+# Each branch does exactly the same thing — just smaller.
+# That is why a function calling itself makes sense here.
 
 # This uses a function — draw_branch — that calls itself
 # with a smaller length each time.
-# A function that calls itself is called recursion in computer science.
 # Python keeps track of where each call came from so it can return correctly.
+# This is called the call stack.
 
-# The base case (if length < 10) stops the recursion.
-# Without a base case, the function would call itself forever.
+# Every recursive function needs a BASE CASE — a condition that
+# stops it from calling itself forever.
+# Here the base case is: if length < 10, stop.
 
 def draw_branch(length):
     if length < 10:
@@ -297,8 +308,8 @@ faithful = turtle.Turtle()
 faithful.speed(0)
 
 # Nested shapes are fractals too — a shape inside a shape inside a shape.
-# The key is that each inner shape is smaller by a fixed ratio.
-# That ratio recursing inward is what makes it fractal-like.
+# The key is that each inner shape is smaller by a fixed amount each iteration.
+# Size is an accumulating variable that decreases each loop.
 
 # Below are three separate sketches. Run each one by commenting
 # out the other two (add a # at the start of each line).
@@ -370,7 +381,7 @@ faithful.speed(0)
 
 # A star burst draws lines outward from the centre,
 # each one a little longer than the last.
-# The angle between each line recurses too.
+# Both length and angle are accumulating variables — they update each iteration.
 
 # This produces a sunburst or compass-rose pattern.
 
@@ -388,7 +399,7 @@ for i in range(51):
 # Try changing step from 7 to 13. What changes?
 # Try changing step to 5. The burst gets denser.
 # Try changing length + 2 to length + 4.
-# Bonus: try making step recurse too: step = step + 0.1
+# Bonus: try making step accumulate too: step = step + 0.1
 
 print('Program complete')`,
         solutionCode: `import turtle
@@ -417,12 +428,12 @@ turtle.hideturtle()
 faithful = turtle.Turtle()
 faithful.speed(0)
 
-# A galaxy swirl combines three recursing variables:
+# A galaxy swirl combines three accumulating variables:
 # length, angle, and colour.
 # The result looks like a spiral arm of a galaxy.
 
-# We recurse both the green and blue channels of the hex colour
-# to create a shift from teal through to violet.
+# Both the green and blue channels update each iteration
+# to create a colour shift from teal through to violet.
 
 length = 2
 angle = 0
@@ -448,7 +459,7 @@ for i in range(150):
 
 # Try changing turn from 29 to 31. The arms shift direction.
 # Try swapping which channel decreases and which increases.
-# Try adding a red_val that recurses alongside green and blue.
+# Try adding a red_val that accumulates alongside green and blue.
 # Try changing length + 0.8 to length + 1.5 for a looser spiral.
 
 print('Program complete')`,
@@ -477,7 +488,7 @@ for i in range(150):
     if blue_val > 255:
         blue_val = 50
 faithful.hideturtle()`,
-        completeText: `Three colour channels recursing together create a smooth colour journey.
+        completeText: `Three colour channels accumulating together create a smooth colour journey.
 This is exactly how real colour gradients work in graphic design software. Click OK.`
     },
 
@@ -490,26 +501,25 @@ faithful = turtle.Turtle()
 faithful.speed(0)
 
 # You have learned:
-#   - Spiral lines (length recursing)
-#   - Branching trees (a function calling itself)
+#   - Spiral lines (length accumulating each iteration)
+#   - Branching trees (a function calling itself — true recursion)
 #   - Snowflakes (recursive depth parameter)
-#   - Nested shapes (size recursing inward)
-#   - Star bursts (angle step recursing)
-#   - Galaxy swirls (multiple colour channels recursing)
+#   - Nested shapes (size accumulating inward)
+#   - Star bursts (angle and length accumulating)
+#   - Galaxy swirls (multiple colour channels accumulating)
 
 # Your challenge: create your own fractal artwork.
 # Rules:
-#   1. You must use at least TWO variables that recurse.
+#   1. You must use at least TWO variables that accumulate each loop.
 #   2. You must use begin_fill() and end_fill() somewhere.
-#   3. The FILL colour must recurse — it should change each loop
-#      using the hex recursion technique from Lab 6.
+#   3. The FILL colour must update each loop using the hex technique from Lab 6.
 #   4. Your pattern must look clearly different from all six examples.
 
 # Hints:
 #   - begin_fill() goes before drawing a shape.
 #   - end_fill() goes after.
-#   - fillcolor("#rrggbb") sets the fill — recurse this like pencolor.
-#   - A filled rotating triangle with recursing fill colour is a great start.
+#   - fillcolor("#rrggbb") sets the fill — update this like pencolor each loop.
+#   - A filled rotating triangle with an accumulating fill colour is a great start.
 #   - Try combining a fractal structure (e.g. nested) with filled shapes.
 
 # There is no target for this lab — it is your design.
@@ -544,7 +554,7 @@ for i in range(24):
     if blue_val < 30:  blue_val = 200
 faithful.hideturtle()`,
         finalText: `Well done — you have completed Week 7 Lesson 2.
-You have now written true recursive functions, hex colour recursion, and fractal geometry. Keep creating!`
+You have now written true recursive functions, accumulating colour variables, and fractal geometry. Keep creating!`
     }
 ];
 
