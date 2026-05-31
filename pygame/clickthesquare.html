@@ -2,170 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yang's Click the square Game IDE</title>
+    <title>Yang's Click the Square Game IDE</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
-        body { background: #1e1e1e; color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
 
-        header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
-        h1 { margin: 0; font-size: 18px; color: #ce3c3c; }
+        .submit-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .submit-modal-overlay.open { display:flex; }
+        .submit-modal-box { background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:420px; width:90%; border:1px solid #ce3c3c; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .submit-modal-box h2 { font-size:14px; color:#ce3c3c; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+        .submit-modal-box p { font-size:13px; color:#aaa; margin-bottom:14px; line-height:1.6; }
+        .submit-modal-box textarea { width:100%; background:#1e1e1e; border:1px solid #444; border-radius:4px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:12px; padding:8px 10px; resize:vertical; min-height:72px; outline:none; margin-bottom:14px; box-sizing:border-box; }
+        .submit-modal-box textarea:focus { border-color:#ce3c3c; }
+        .submit-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+        .btn-cancel { background:#3e3e3e; color:#d4d4d4; border:1px solid #555; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; }
+        .btn-send { background:#ce3c3c; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; }
+        .btn-send:hover { background:#ff4d4d; }
+        .submit-cooldown { font-size:11px; color:#f0a500; margin-top:8px; min-height:16px; }
 
-        /* LAYOUT GRID */
-        .container { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; /* Split screen 50/50 horizontally */
-            grid-template-rows: 1fr;
-            flex: 1; 
-            overflow: hidden; 
-        }
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
-        /* Left Side: Editor */
-        .editor-pane  { 
-            display: flex; 
-            flex-direction: column; 
-            border-right: 1px solid #333; 
-            min-width: 0; 
-        }
+        header { background:#252526; padding:10px 20px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; height:50px; flex-shrink:0; }
+        h1 { margin:0; font-size:18px; color:#ce3c3c; }
+        .header-controls { display:flex; gap:8px; align-items:center; }
 
-        /* Right Side Wrapper */
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            min-height: 0; /* Critical for nested flex scrolling */
-        }
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; }
 
-        /* Top Right: Game */
-        .game-pane    { 
-            flex: 2; 
-            display: flex; 
-            flex-direction: column; 
-            background: #252526; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 60px 10px 10px 10px; /* Top padding increased to clear header */
-            border-bottom: 1px solid #333;
-            position: relative;
-            min-height: 0;
-        }
+        /* ── EDITOR PANE ────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; }
 
-        /* Bottom Right: Console */
-        .console-pane { 
-            flex: 1; /* Takes up 1/3 of the vertical space on the right */
-            display: flex; 
-            flex-direction: column; 
-            background: #111; 
-            min-height: 0; /* Critical for scrolling */
-            overflow: hidden;
-        }
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
 
-        .pane-header { background: #2d2d2d; padding: 5px 15px; font-size: 11px; text-transform: uppercase; color: #aaa; border-bottom: 1px solid #333; font-weight: bold; flex-shrink: 0; }
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:60px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
 
-        textarea { flex: 1; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; padding: 15px; border: none; font-size: 13px; line-height: 1.6; resize: none; outline: none; tab-size: 4; }
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
 
-        /* Canvas styling */
-        canvas { 
-            border: 2px solid #444; 
-            background: #000; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.5); 
-            cursor: crosshair; 
-            display: block; 
-            max-width: 100%;
-            max-height: 100%; /* Fit within pane */
-            object-fit: contain;
-        }
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; }
 
-        .controls { 
-            margin-top: 10px; 
-            display: flex; 
-            gap: 10px; 
-            align-items: center; 
-            width: 100%;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
 
-        /* File Upload Styling */
-        .file-upload-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            background: #2a2a2a;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px dashed #444;
-        }
-        .file-list {
-            font-size: 11px;
-            color: #888;
-            max-height: 40px;
-            overflow-y: auto;
-            text-align: center;
-            width: 100%;
-        }
-        .file-item { color: #4daafc; margin-right: 5px; }
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:10px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
 
-        button { background: #ce3c3c; color: white; border: none; padding: 8px 18px; cursor: pointer; border-radius: 3px; font-weight: bold; font-size: 13px; }
-        button:hover:not(:disabled) { background: #ff4d4d; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        button.stop { background: #444; }
-        button.stop:hover:not(:disabled) { background: #666; }
-        
-        /* Custom File Input Button */
-        input[type="file"] { display: none; }
-        .custom-file-btn {
-            background: #333; color: #ccc; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; border: 1px solid #555;
-        }
-        .custom-file-btn:hover { background: #444; color: white; }
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .btn-submit-hdr { background:#e74c3c; color:white; font-size:12px; padding:6px 12px; }
+        .btn-submit-hdr:hover:not(:disabled) { background:#c0392b; }
 
-        #console-output { flex: 1; background: #000; color: #0f0; font-family: 'Consolas', monospace; padding: 10px; font-size: 12px; overflow-y: auto; white-space: pre-wrap; }
-        .log-error { color: #ff4d4d; }
-        .log-sys   { color: #888; }
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
 
-        #loading-screen { position: fixed; inset: 0; background: #1e1e1e; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; }
-        .progress-bar  { width: 300px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: #ce3c3c; width: 0%; transition: width 0.3s; }
-        #loading-text  { color: #aaa; font-size: 13px; }
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
 
-        /* RESPONSIVE DESIGN: Stack columns on smaller screens */
-        @media (max-width: 1000px) {
-            .container {
-                grid-template-columns: 1fr; /* Single column */
-                grid-template-rows: 1fr 1fr; /* Split height 50/50 */
-                overflow-y: auto; /* Allow page scroll if needed */
-            }
-            .editor-pane {
-                border-right: none;
-                border-bottom: 1px solid #333;
-                height: 50vh; /* Force half height */
-            }
-            .right-column {
-                height: 50vh; /* Force half height */
-            }
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
         }
     </style>
 </head>
 <body>
 
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 Yang's Pygame IDE</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your code submissions will be logged for one week to help your teacher support your learning.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="submit-modal-overlay" id="submit-modal">
+  <div class="submit-modal-box">
+    <h2>📤 Submit for Review</h2>
+    <p>Your code will be sent to Teacher Yang. Add a note if you have a specific question.</p>
+    <textarea id="submit-note" placeholder="Optional: what do you want Teacher Yang to look at? (e.g. line 7 is not working)"></textarea>
+    <div class="submit-modal-actions">
+      <button class="btn-cancel" onclick="closeSubmitModal()">Cancel</button>
+      <button class="btn-send"   onclick="sendSubmission()">Send ▶</button>
+    </div>
+    <div class="submit-cooldown" id="submit-cooldown"></div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
 <div id="loading-screen">
-    <h2 style="color:#ce3c3c; margin:0;">🎮 Yang's Game IDE - Click the square</h2>
+    <h2 style="color:#ce3c3c; margin:0;">🎮 Yang's Game IDE — Click the Square</h2>
     <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
     <div id="loading-text">Loading Python...</div>
 </div>
 
 <header>
-    <h1>Yang's Game IDE - Click the square</h1>
-    <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+    <h1>Yang's Game IDE — Click the Square</h1>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <button class="btn-submit-hdr" id="btn-submit" onclick="openSubmitModal()">🙋 Submit for Review</button>
+    </div>
 </header>
 
 <div class="container">
 
-    <!-- LEFT COLUMN: CODE -->
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
     <div class="editor-pane">
         <div class="pane-header">main.py — edit here</div>
-        <textarea id="code-editor" spellcheck="false">
-import pygame
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)">import pygame
 import asyncio
 import os
 
@@ -190,14 +164,11 @@ async def main():
     game_running = True
 
     pygame.init()
-    # Set screen size (matches the canvas below)
     screen = pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Yang's Game")
 
-    # Load an image if it exists, otherwise use a rectangle
     player_img = None
     
-    # Check if the file the student typed actually exists
     if os.path.exists(IMAGE_FILENAME):
         try:
             player_img = pygame.image.load(IMAGE_FILENAME).convert_alpha()
@@ -211,7 +182,7 @@ async def main():
         print("Using fallback square.")
 
     x, y = 375, 275
-    color = (0, 200, 80) # Default Green
+    color = (0, 200, 80)
 
     print("Game started!")
     print("- Use Arrow Keys to move.")
@@ -221,18 +192,14 @@ async def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_running = False
-            
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     game_running = False
-            
-            # MOUSE CLICK LOGIC RESTORED HERE
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = event.pos
-                # Check if click is inside the player square
                 if x <= mx <= x + SIZE and y <= my <= y + SIZE:
                     print("Got me!")
-                    color = (200, 50, 50) # Change to Red
+                    color = (200, 50, 50)
                 else:
                     print("Missed!")
 
@@ -242,17 +209,14 @@ async def main():
         if keys[pygame.K_UP]:    y -= SPEED
         if keys[pygame.K_DOWN]:  y += SPEED
 
-        # Keep player on screen
         x = max(0, min(800 - SIZE, x))
         y = max(0, min(600 - SIZE, y))
 
-        # Draw
         screen.fill((30, 30, 30))
         
         if player_img:
             screen.blit(player_img, (x, y))
         else:
-            # If no image, draw the colored square
             pygame.draw.rect(screen, color, (x, y, SIZE, SIZE))
 
         pygame.display.flip()
@@ -261,49 +225,151 @@ async def main():
     pygame.quit()
     print("Game ended.")
 
-await main()
-        </textarea>
+await main()</textarea>
+        </div>
     </div>
 
-    <!-- RIGHT COLUMN WRAPPER -->
+    <!-- RIGHT COLUMN -->
     <div class="right-column">
-        
-        <!-- TOP RIGHT: GAME SCREEN -->
         <div class="game-pane">
             <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
-            
-            <!-- Increased Canvas Size -->
             <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
-            
             <div class="controls">
                 <button id="run-btn"  onclick="runGame()"  disabled>▶ Run Game</button>
                 <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
-                
                 <div class="file-upload-wrapper">
                     <label class="custom-file-btn">
                         📂 Upload Assets
-                        <!-- 'multiple' attribute allows selecting many files at once -->
                         <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
                     </label>
                     <div id="file-list-display" class="file-list">No files uploaded</div>
                 </div>
             </div>
         </div>
-
-        <!-- BOTTOM RIGHT: CONSOLE -->
         <div class="console-pane">
             <div class="pane-header">Console Output</div>
             <div id="console-output"></div>
         </div>
-
     </div>
 
 </div>
 
 <script>
-    let pyodide = null;
-    let isRunning = false;
-    let uploadedFiles = []; // Track uploaded files
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── SUBMIT FOR REVIEW ─────────────────────────────────────────────────────
+    const REVIEW_WORKER = "https://teacher-python-review.xu-yangen.workers.dev";
+    const PROJECT       = "pygame";
+
+    let submitCooldownUntil = 0;
+
+    function openSubmitModal() {
+        const now = Date.now();
+        document.getElementById("submit-note").value = "";
+        document.getElementById("submit-cooldown").textContent =
+            now < submitCooldownUntil
+            ? "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s before submitting again."
+            : "";
+        document.getElementById("submit-modal").classList.add("open");
+    }
+
+    function closeSubmitModal() {
+        document.getElementById("submit-modal").classList.remove("open");
+    }
+
+    async function sendSubmission() {
+        const now = Date.now();
+        if (now < submitCooldownUntil) {
+            document.getElementById("submit-cooldown").textContent =
+                "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s.";
+            return;
+        }
+        const code = document.getElementById("code-editor").value;
+        const note = document.getElementById("submit-note").value.trim();
+        document.getElementById("submit-cooldown").textContent = "Sending…";
+        try {
+            const resp = await fetch(REVIEW_WORKER + "/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    firstName: studentName || "Student",
+                    code:      code,
+                    labId:     document.title,
+                    project:   PROJECT,
+                    note:      note,
+                }),
+            });
+            const data = await resp.json();
+            if (data.success) {
+                submitCooldownUntil = Date.now() + 60000;
+                startCooldownTimer();
+                closeSubmitModal();
+                log("Submitted for Teacher Yang's review.", "log-sys");
+            } else {
+                document.getElementById("submit-cooldown").textContent = "Error: " + data.error;
+            }
+        } catch (err) {
+            document.getElementById("submit-cooldown").textContent = "Could not reach server.";
+        }
+    }
+
+    function startCooldownTimer() {
+        const btn = document.getElementById("btn-submit");
+        btn.disabled = true;
+        const interval = setInterval(function() {
+            const remaining = Math.ceil((submitCooldownUntil - Date.now()) / 1000);
+            if (remaining <= 0) {
+                clearInterval(interval);
+                btn.disabled = false;
+                btn.textContent = "🙋 Submit for Review";
+            } else {
+                btn.textContent = "🙋 Submit (" + remaining + "s)";
+            }
+        }, 1000);
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta   = document.getElementById("code-editor");
+        const ln   = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        const ta = document.getElementById("code-editor");
+        const ln = document.getElementById("line-numbers");
+        ln.scrollTop = ta.scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide      = null;
+    let isRunning    = false;
+    let uploadedFiles = [];
 
     function log(msg, cls = '') {
         const out = document.getElementById('console-output');
@@ -320,11 +386,9 @@ await main()
 
     function updateFileList() {
         const listDiv = document.getElementById('file-list-display');
-        if (uploadedFiles.length === 0) {
-            listDiv.innerHTML = "No files uploaded";
-        } else {
-            listDiv.innerHTML = uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
-        }
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
     }
 
     async function init() {
@@ -351,6 +415,7 @@ await main()
             document.getElementById('run-btn').disabled = false;
             setStatus('Ready');
             log('Engine ready. Hit Run.', 'log-sys');
+            updateLineNumbers();
 
         } catch (err) {
             document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
@@ -358,53 +423,36 @@ await main()
         }
     }
 
-    // Handle Multiple File Uploads
     async function handleImageUpload(input) {
         if (!pyodide || !input.files) return;
-        
         const files = Array.from(input.files);
-        if(files.length === 0) return;
-
+        if (files.length === 0) return;
         log(`Processing ${files.length} file(s)...`, 'log-sys');
-        
         for (const file of files) {
             const reader = new FileReader();
-            
-            // We need to wrap FileReader in a promise to await it inside the loop
             await new Promise((resolve) => {
                 reader.onload = function(e) {
                     const data = new Uint8Array(e.target.result);
-                    // Write to Pyodide filesystem
                     try {
                         pyodide.FS.writeFile(file.name, data);
-                        if (!uploadedFiles.includes(file.name)) {
-                            uploadedFiles.push(file.name);
-                        }
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
                         log(`Uploaded: ${file.name}`, 'log-sys');
                     } catch(err) {
                         log(`Failed to save ${file.name}: ${err}`, 'log-error');
                     }
                     resolve();
                 };
-                reader.onerror = () => {
-                    log(`Error reading ${file.name}`, 'log-error');
-                    resolve();
-                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
                 reader.readAsArrayBuffer(file);
             });
         }
-        
         updateFileList();
-        
-        // Reset input so same file can be selected again if needed
-        input.value = ''; 
+        input.value = '';
     }
 
     async function stopGame() {
         if (!pyodide) return;
-        try {
-            await pyodide.runPythonAsync("game_running = False");
-        } catch(e) {}
+        try { await pyodide.runPythonAsync("game_running = False"); } catch(e) {}
         isRunning = false;
         document.getElementById('run-btn').disabled  = false;
         document.getElementById('stop-btn').disabled = true;
@@ -414,25 +462,15 @@ await main()
 
     async function runGame() {
         if (!pyodide) return;
-
-        // If something is running, stop it and wait for the loop to exit
-        if (isRunning) {
-            await stopGame();
-            await new Promise(r => setTimeout(r, 200));
-        }
-
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
         document.getElementById('console-output').innerHTML = '';
         log('Starting...', 'log-sys');
-
         document.getElementById('run-btn').disabled  = true;
         document.getElementById('stop-btn').disabled = false;
         isRunning = true;
         setStatus('Running');
-
         document.getElementById('canvas').focus();
-
         const code = document.getElementById('code-editor').value;
-
         try {
             await pyodide.runPythonAsync(code);
         } catch (err) {
