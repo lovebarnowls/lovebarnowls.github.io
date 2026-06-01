@@ -10,6 +10,39 @@
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
 
     <style>
+        
+.name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+.name-modal-overlay.hidden { display:none; }
+.name-modal-box { background:#252526; border:2px solid #4EC9B0; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+.name-modal-title { font-size:16px; font-weight:800; color:#4EC9B0; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+.name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+.name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+.name-modal-input:focus { border-color:#4EC9B0; }
+.name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+.name-modal-btn { background:#4EC9B0; color:#1e1e1e; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+.name-modal-btn:hover { background:#3ab89f; }
+
+.submit-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1500; display:none; align-items:center; justify-content:center; }
+.submit-modal-overlay.open { display:flex; }
+.submit-modal-box { background:#252526; color:#d4d4d4; padding:32px 36px; border-radius:10px; max-width:420px; width:90%; border:1px solid #4EC9B0; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+.submit-modal-box h2 { font-size:14px; color:#4EC9B0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+.submit-modal-box p { font-size:13px; color:#aaa; margin-bottom:14px; line-height:1.6; }
+.submit-modal-box textarea { width:100%; background:#1e1e1e; border:1px solid #444; border-radius:4px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:12px; padding:8px 10px; resize:vertical; min-height:72px; outline:none; margin-bottom:14px; box-sizing:border-box; }
+.submit-modal-box textarea:focus { border-color:#4EC9B0; }
+.submit-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+.btn-cancel { background:#3e3e3e; color:#d4d4d4; border:1px solid #555; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; }
+.btn-send { background:#4EC9B0; color:#1e1e1e; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; }
+.btn-send:hover { background:#3ab89f; }
+.submit-cooldown { font-size:11px; color:#f0a500; margin-top:8px; min-height:16px; }
+
+.btn-submit { background:#e74c3c; color:white; }
+.btn-submit:hover { background:#c0392b; }
+.btn-submit:disabled { background:#555; color:#888; cursor:not-allowed; }
+
+.editor-wrap { flex:1; display:flex; overflow:hidden; background:var(--bg-dark); min-height:0; }
+.line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas','Courier New',monospace; font-size:14px; line-height:1.5; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+#code-input { flex:1; background:var(--bg-dark); color:#d4d4d4; padding:15px 15px 15px 10px; font-family:'Consolas','Courier New',monospace; font-size:14px; border:none; outline:none; resize:none; line-height:1.5; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
         :root { --bg-dark:#1e1e1e; --bg-panel:#252526; --border:#333; --accent:#4EC9B0; --text:#d4d4d4; }
         body,html { margin:0; padding:0; height:100%; font-family:'Segoe UI',sans-serif; overflow:hidden; background:var(--bg-dark); color:var(--text); }
 
@@ -26,7 +59,7 @@
         .main-container { display:flex; height:calc(100% - 50px); width:100vw; }
 
         /* Left 50% */
-        .left-col { width:50%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); }
+        .left-col { width:50%; height:100%; display:flex; flex-direction:column; border-right:2px solid var(--border); overflow:hidden; }
         .panel-header { background:#2d2d2d; padding:0 15px; font-size:12px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); flex-shrink:0; height:30px; display:flex; align-items:center; justify-content:space-between; }
         .btn-view-toggle { background:#4EC9B0; color:#1e1e1e; border:none; padding:3px 10px; border-radius:3px; cursor:pointer; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
         .btn-view-toggle:hover { background:#3ab89f; }
@@ -53,6 +86,30 @@
 </head>
 <body>
 
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🐢 Yang's Faithful Turtle Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your code submissions will be logged for one week to help your teacher support your learning.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<div class="submit-modal-overlay" id="submit-modal">
+  <div class="submit-modal-box">
+    <h2>📤 Submit for Review</h2>
+    <p>Your code will be sent to your teacher. Add a note if you have a specific question.</p>
+    <textarea id="submit-note" placeholder="Optional: what do you want your teacher to look at? (e.g. line 7 is not working)" onclick="this.focus()"></textarea>
+    <div class="submit-modal-actions">
+      <button class="btn-cancel" onclick="closeSubmitModal()">Cancel</button>
+      <button class="btn-send"   onclick="sendSubmission()">Send ▶</button>
+    </div>
+    <div class="submit-cooldown" id="submit-cooldown"></div>
+  </div>
+</div>
+
+
 <div class="header">
     <div class="logo">
         Yang's Faithful Turtle Lab W6L1 - Even more work on summative assessment
@@ -68,6 +125,10 @@
         </button>
         <button class="btn-save" onclick="downloadScript()">📤 Export Code</button>
         <button class="btn-complete" onclick="showComplete()">✔ Complete</button>
+        
+<button class="btn-submit" id="btn-submit" onclick="openSubmitModal()">🙋 Submit for Review</button>
+
+
     </div>
 </div>
 
@@ -81,12 +142,18 @@
         </div>
 
         <div id="code-view">
-            <textarea id="code-input" spellcheck="false"></textarea>
+            <div class="editor-wrap">
+                <div class="line-numbers" id="line-numbers">1</div>
+                <textarea id="code-input" spellcheck="false"
+                    oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+            </div>
             <div id="console-wrapper">
                 <div class="panel-header" style="justify-content:flex-start;">Console Output</div>
                 <pre id="console-output">Ready...</pre>
             </div>
         </div>
+
+
 
         <div id="target-view"></div>
     </div>
@@ -104,6 +171,119 @@
 </div>
 
 <script>
+    
+let studentName = "";
+
+function confirmName() {
+    const raw = document.getElementById("name-modal-input").value.trim();
+    const err = document.getElementById("name-modal-error");
+    if (!raw || raw.length < 2) {
+        err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+        return;
+    }
+    studentName = raw;
+    document.getElementById("name-modal").classList.add("hidden");
+}
+
+const REVIEW_WORKER = "https://teacher-python-review.xu-yangen.workers.dev";
+const PROJECT       = "turtle";
+
+let submitCooldownUntil = 0;
+
+function openSubmitModal() {
+    const now = Date.now();
+    document.getElementById("submit-note").value = "";
+    document.getElementById("submit-cooldown").textContent =
+        now < submitCooldownUntil
+        ? "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s before submitting again."
+        : "";
+    document.getElementById("submit-modal").classList.add("open");
+}
+
+function closeSubmitModal() {
+    document.getElementById("submit-modal").classList.remove("open");
+}
+
+async function sendSubmission() {
+    const now = Date.now();
+    if (now < submitCooldownUntil) {
+        document.getElementById("submit-cooldown").textContent =
+            "Please wait " + Math.ceil((submitCooldownUntil - now) / 1000) + "s.";
+        return;
+    }
+    const code     = document.getElementById("code-input").value;
+    const note     = document.getElementById("submit-note").value.trim();
+    const labLabel = typeof LAB_DATA !== "undefined"
+                   ? LAB_DATA[parseInt(document.getElementById("lab-select").value)].title
+                   : document.title;
+    document.getElementById("submit-cooldown").textContent = "Sending\u2026";
+    try {
+        const resp = await fetch(REVIEW_WORKER + "/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                firstName: studentName || "Student",
+                code:      code,
+                labId:     labLabel,
+                project:   PROJECT,
+                note:      note,
+            }),
+        });
+        const data = await resp.json();
+        if (data.success) {
+            submitCooldownUntil = Date.now() + 60000;
+            startCooldownTimer();
+            closeSubmitModal();
+            log("Submitted for teacher review.", "info");
+        } else {
+            document.getElementById("submit-cooldown").textContent = "Error: " + data.error;
+        }
+    } catch (err) {
+        document.getElementById("submit-cooldown").textContent = "Could not reach server.";
+    }
+}
+
+function startCooldownTimer() {
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    const interval = setInterval(function() {
+        const remaining = Math.ceil((submitCooldownUntil - Date.now()) / 1000);
+        if (remaining <= 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.textContent = "\uD83D\uDE4B Submit for Review";
+        } else {
+            btn.textContent = "\uD83D\uDE4B Submit (" + remaining + "s)";
+        }
+    }, 1000);
+}
+
+function updateLineNumbers() {
+    const ta    = document.getElementById("code-input");
+    const ln    = document.getElementById("line-numbers");
+    const lines = ta.value.split("\n").length;
+    ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+    syncScroll();
+}
+
+function syncScroll() {
+    const ta = document.getElementById("code-input");
+    const ln = document.getElementById("line-numbers");
+    ln.scrollTop = ta.scrollTop;
+}
+
+function handleTab(e) {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const ta    = e.target;
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + 4;
+    updateLineNumbers();
+}
+
+
 // ================================================================
 // LAB DATA
 // ================================================================
@@ -289,6 +469,7 @@ function loadLab() {
     hideOverlay();
     if (showingTarget) toggleView();
     requestAnimationFrame(function() { renderTarget(lab.solutionCode); });
+    updateLineNumbers();
 }
 
 // ================================================================
