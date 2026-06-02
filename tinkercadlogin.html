@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Year 6 Design — Tinkercad Student Login Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f5f0e8;
+      --card:      #ffffff;
+      --ink:       #1a1a2e;
+      --accent1:   #e63946; /* red */
+      --accent2:   #f4a261; /* orange */
+      --accent3:   #2a9d8f; /* teal */
+      --accent4:   #457b9d; /* steel blue */
+      --muted:     #6b7280;
+      --border:    #d1c9b8;
+      --radius:    14px;
+      --shadow:    4px 4px 0px var(--ink);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+      /* subtle dot grid */
+      background-image: radial-gradient(circle, #c8bfae 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .title-badge {
+      display: inline-block;
+      background: var(--ink);
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.9rem;
+      border-radius: 99px;
+      margin-bottom: 0.8rem;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 5vw, 2.6rem);
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.15;
+    }
+
+    h1 span {
+      color: var(--accent1);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 2.5px solid var(--ink);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem 2rem 1.8rem;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    /* ── Steps ── */
+    .step {
+      margin-bottom: 1.6rem;
+    }
+
+    .step-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+
+    .step-num.s1 { background: var(--accent1); color: #fff; border-color: var(--accent1); }
+    .step-num.s2 { background: var(--accent2); color: var(--ink); border-color: var(--accent2); }
+    .step-num.s3 { background: var(--accent3); color: #fff; border-color: var(--accent3); }
+    .step-num.s4 { background: var(--accent4); color: #fff; border-color: var(--accent4); }
+    .step-num.s5 { background: #6b4c9a; color: #fff; border-color: #6b4c9a; }
+
+    /* ── Warning banner ── */
+    .warning-banner {
+      background: #fff3cd;
+      border: 2.5px solid #e09800;
+      border-radius: var(--radius);
+      box-shadow: 3px 3px 0 #e09800;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.8rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .warning-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .warning-text {
+      font-size: 0.88rem;
+      color: #5a3e00;
+      line-height: 1.55;
+    }
+
+    .warning-text strong {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 900;
+      margin-bottom: 0.2rem;
+      color: #3d2900;
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+
+    /* Class selector */
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+    }
+
+    .class-btn {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.4rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+
+    .class-btn:hover {
+      border-color: var(--ink);
+      transform: translateY(-2px);
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    .class-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+      box-shadow: 3px 3px 0 var(--accent2);
+    }
+
+    /* Text inputs */
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.65rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent3);
+      background: #fff;
+    }
+
+    .last-initial {
+      width: 72px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 0.05em;
+    }
+
+    .input-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 2px dashed var(--border);
+      margin: 1.6rem 0;
+    }
+
+    /* Result */
+    #result-section {
+      display: none;
+    }
+
+    #result-section.show {
+      display: block;
+      animation: pop 0.25s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .result-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .code-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.25em;
+      background: var(--bg);
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      padding: 0.9rem 1.2rem;
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--accent3);
+      user-select: all;
+    }
+      display: flex;
+      align-items: stretch;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .code-display {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0 1rem;
+      background: var(--bg);
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: all 0.12s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+
+    .copy-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .copy-btn.copied {
+      background: var(--accent3);
+      color: #fff;
+      border-color: var(--accent3);
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .join-btn {
+      display: block;
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--accent1);
+      color: #fff;
+      border: 2.5px solid var(--ink);
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 900;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: all 0.12s ease;
+      letter-spacing: 0.02em;
+    }
+
+    .join-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+
+    .join-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    /* Error state */
+    .error-msg {
+      display: none;
+      color: var(--accent1);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-top: 0.4rem;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* Footer / disclaimer */
+    footer {
+      margin-top: 2rem;
+      max-width: 500px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    footer strong { color: var(--ink); }
+
+    /* Responsive */
+    @media (max-width: 420px) {
+      .card { padding: 1.4rem 1.2rem; }
+      .code-display { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-badge">Faith Christian School · Distance Education</div>
+    <h1>Year 6 Design<br><span>Tinkercad Login</span></h1>
+    <p class="subtitle">Find your student login code in five steps.</p>
+  </header>
+
+  <div class="card">
+
+    <!-- Warning banner -->
+    <div class="warning-banner">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-text">
+        <strong>Only log into your own account.</strong>
+        Signing into a classmate's account is not allowed. It can overwrite their work, cause confusion, and may be treated as a serious breach of trust. Always use your own name and your own code.
+      </div>
+    </div>
+
+    <!-- Step 1: Class -->
+    <div class="step">
+      <div class="step-label">
+        <div class="step-num s1">1</div>
+        <span class="step-title">Select your class</span>
+      </div>
+      <div class="class-grid">
+        <button class="class-btn" data-class="6DES1" onclick="selectClass(this)">6DES1</button>
+        <button class="class-btn" data-class="6DES2" onclick="selectClass(this)">6DES2</button>
+        <button class="class-btn" data-class="6DES3" onclick="selectClass(this)">6DES3</button>
+      </div>
+    </div>
+
+    <!-- Step 2: First name -->
+    <div class="step">
+      <div class="step-label">
+        <div class="step-num s2">2</div>
+        <span class="step-title">Enter your first name</span>
+      </div>
+      <input
+        type="text"
+        id="firstname"
+        placeholder="e.g. John"
+        maxlength="40"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        oninput="clearResult()"
+      />
+    </div>
+
+    <!-- Step 3: Last initial -->
+    <div class="step">
+      <div class="step-label">
+        <div class="step-num s3">3</div>
+        <span class="step-title">Enter the first letter of your last name</span>
+      </div>
+      <input
+        type="text"
+        id="lastinitial"
+        class="last-initial"
+        placeholder=""
+        maxlength="1"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        oninput="clearResult()"
+        style="width:72px;"
+      />
+      <p class="input-hint">e.g. S for Smith</p>
+      <p class="error-msg" id="error-msg">Please fill in all fields and select a class.</p>
+    </div>
+
+    <!-- Step 4: Generate -->
+    <div class="step" style="margin-bottom:0;">
+      <div class="step-label">
+        <div class="step-num s4">4</div>
+        <span class="step-title">Get your code</span>
+      </div>
+      <button class="join-btn" style="background:var(--accent4); margin-bottom:0;" onclick="generate()">
+        Show my login code →
+      </button>
+    </div>
+
+    <hr class="divider" id="result-divider" style="display:none;" />
+
+    <!-- Result -->
+    <div id="result-section">
+      <p class="result-label">Your login code is</p>
+      <div class="code-row">
+        <div class="code-display" id="code-display">——</div>
+        <button class="copy-btn" id="copy-btn" onclick="copyCode()" title="Copy to clipboard">
+          📋 Copy
+        </button>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step" style="margin-top:1.4rem; margin-bottom:0;">
+        <div class="step-label">
+          <div class="step-num s5">5</div>
+          <span class="step-title">Head to Tinkercad and key it in</span>
+        </div>
+        <a class="join-btn" id="join-link" href="#" target="_blank" rel="noopener">
+          Open my class on Tinkercad ↗
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <strong>Privacy note:</strong> This tool does not collect, store, or transmit any personal information.
+    Your name is used only to generate your login code and is never sent anywhere.
+  </footer>
+
+  <script>
+    const CLASS_LINKS = {
+      '6DES1': 'https://www.tinkercad.com/joinclass/PM5EHFP8H',
+      '6DES2': 'https://www.tinkercad.com/joinclass/DK5G5BQZK',
+      '6DES3': 'https://www.tinkercad.com/joinclass/QHXEE8S4Z',
+    };
+
+    let selectedClass = null;
+
+    function selectClass(btn) {
+      document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedClass = btn.dataset.class;
+      clearResult();
+    }
+
+    function toTitleFirst(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
+
+    function generateCode(firstname, lastInitial) {
+      // Normalise: only first letter capitalised
+      const fn = toTitleFirst(firstname.trim());
+      const li = lastInitial.trim().toUpperCase();
+      // Take up to 4 chars of firstname, then append last initial
+      const fnPart = fn.slice(0, 4);
+      return fnPart + li;
+    }
+
+    function generate() {
+      const fn  = document.getElementById('firstname').value.trim();
+      const li  = document.getElementById('lastinitial').value.trim();
+      const err = document.getElementById('error-msg');
+      const res = document.getElementById('result-section');
+      const div = document.getElementById('result-divider');
+
+      if (!selectedClass || !fn || !li) {
+        err.classList.add('show');
+        res.classList.remove('show');
+        div.style.display = 'none';
+        return;
+      }
+
+      err.classList.remove('show');
+
+      const code = generateCode(fn, li);
+      document.getElementById('code-display').textContent = code;
+
+      const link = document.getElementById('join-link');
+      link.href = CLASS_LINKS[selectedClass];
+
+      div.style.display = 'block';
+      res.classList.add('show');
+    }
+
+    function copyCode() {
+      const code = document.getElementById('code-display').textContent;
+      const btn  = document.getElementById('copy-btn');
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = '📋 Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    function clearResult() {
+      const res = document.getElementById('result-section');
+      const div = document.getElementById('result-divider');
+      res.classList.remove('show');
+      div.style.display = 'none';
+      document.getElementById('error-msg').classList.remove('show');
+    }
+
+    // Allow Enter key to trigger generate
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') generate();
+    });
+  </script>
+</body>
+</html>
