@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Yang's HTML Wrapper IDE</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── RESET & BASE ───────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #1e1e1e;
+            color: #eee;
+            font-family: 'Segoe UI', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── NAME MODAL ─────────────────────────────────────────────────────── */
+        .name-modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .name-modal-overlay.hidden { display: none; }
+        .name-modal-box {
+            background: #252526;
+            border: 2px solid #ce3c3c;
+            border-radius: 12px;
+            padding: 36px 40px;
+            max-width: 420px; width: 90%;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.7);
+        }
+        .name-modal-title { font-size: 16px; font-weight: 800; color: #ce3c3c; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .name-modal-subtitle { font-size: 13px; color: #aaa; margin-bottom: 20px; line-height: 1.7; }
+        .name-modal-input {
+            width: 100%; background: #1e1e1e; border: 2px solid #333;
+            border-radius: 6px; color: #d4d4d4;
+            font-family: 'Consolas', monospace; font-size: 15px;
+            padding: 10px 14px; outline: none; margin-bottom: 12px;
+            transition: border-color 0.15s;
+        }
+        .name-modal-input:focus { border-color: #ce3c3c; }
+        .name-modal-error { font-family: 'Consolas', monospace; font-size: 11px; color: #f05050; margin-bottom: 10px; min-height: 16px; }
+        .name-modal-btn {
+            background: #ce3c3c; color: #fff; border: none;
+            border-radius: 6px; padding: 10px 28px;
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            cursor: pointer; width: 100%;
+        }
+        .name-modal-btn:hover { background: #ff4d4d; }
+
+        /* ── RESET CONFIRM MODAL ────────────────────────────────────────────── */
+        .confirm-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 1500;
+            display: none; align-items: center; justify-content: center;
+        }
+        .confirm-overlay.open { display: flex; }
+        .confirm-box {
+            background: #252526; border: 1px solid #ce3c3c;
+            border-radius: 10px; padding: 28px 32px;
+            max-width: 380px; width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .confirm-box h2 { font-size: 14px; color: #ce3c3c; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .confirm-box p { font-size: 13px; color: #aaa; margin-bottom: 20px; line-height: 1.6; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-cancel { background: #3e3e3e; color: #d4d4d4; border: 1px solid #555; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-confirm-reset { background: #ce3c3c; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-confirm-reset:hover { background: #ff4d4d; }
+
+        /* ── HEADER ─────────────────────────────────────────────────────────── */
+        header {
+            background: #252526;
+            padding: 0 16px;
+            border-bottom: 1px solid #333;
+            height: 48px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        h1 { font-size: 16px; color: #ce3c3c; white-space: nowrap; flex-shrink: 0; }
+        .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+        button {
+            background: #ce3c3c; color: white; border: none;
+            padding: 6px 14px; cursor: pointer;
+            border-radius: 3px; font-weight: bold; font-size: 12px;
+            white-space: nowrap;
+        }
+        button:hover:not(:disabled) { background: #ff4d4d; }
+        button:disabled { background: #555; cursor: not-allowed; color: #888; }
+        .btn-secondary { background: #3a3a3a; border: 1px solid #555; }
+        .btn-secondary:hover:not(:disabled) { background: #4a4a4a; }
+        .btn-upload-label {
+            background: #3a3a3a; color: #ccc; border: 1px solid #555;
+            padding: 6px 14px; border-radius: 3px; cursor: pointer;
+            font-size: 12px; font-weight: bold; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-upload-label:hover { background: #4a4a4a; color: white; }
+        input[type="file"] { display: none; }
+
+        .upload-slot { display: flex; align-items: center; gap: 5px; }
+        .upload-slot-name { font-size: 11px; color: #888; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .upload-slot-clear { background: none; border: none; color: #666; padding: 0 3px; cursor: pointer; font-size: 12px; }
+        .upload-slot-clear:hover { color: #ce3c3c; background: none; }
+
+        #status { font-size: 11px; color: #888; white-space: nowrap; }
+
+        /* ── MAIN LAYOUT ────────────────────────────────────────────────────── */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* ── EDITOR PANE ────────────────────────────────────────────────────── */
+        .editor-pane {
+            display: flex; flex-direction: column;
+            border-right: 1px solid #333;
+            min-width: 0; overflow: hidden;
+        }
+        .pane-header {
+            background: #2d2d2d; padding: 5px 15px;
+            font-size: 11px; text-transform: uppercase;
+            color: #aaa; border-bottom: 1px solid #333;
+            font-weight: bold; flex-shrink: 0;
+        }
+        .editor-wrap {
+            flex: 1; display: flex; overflow: hidden;
+            background: #1e1e1e; min-height: 0;
+        }
+        .line-numbers {
+            width: 44px; flex-shrink: 0;
+            background: #1a1a1a; border-right: 1px solid #2a2a2a;
+            padding: 12px 8px 12px 0;
+            font-family: 'Consolas', monospace; font-size: 13px;
+            line-height: 1.6; color: #555; text-align: right;
+            user-select: none; overflow: hidden; white-space: pre;
+        }
+        #code-editor {
+            flex: 1; background: #1e1e1e; color: #d4d4d4;
+            font-family: 'Consolas', monospace;
+            padding: 12px 15px 12px 10px;
+            border: none; font-size: 13px; line-height: 1.6;
+            resize: none; outline: none; tab-size: 4;
+            white-space: pre; overflow-wrap: normal;
+            overflow-x: auto; overflow-y: auto;
+        }
+
+        /* ── PREVIEW PANE ───────────────────────────────────────────────────── */
+        .preview-pane {
+            display: flex; flex-direction: column;
+            background: #111; min-width: 0; overflow: hidden;
+        }
+        #preview-frame {
+            flex: 1; border: none; background: #fff;
+            min-height: 0;
+        }
+        .preview-placeholder {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            color: #555; font-size: 13px; flex-direction: column; gap: 8px;
+        }
+        .preview-placeholder span { font-size: 32px; }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🌐 Yang's HTML Wrapper IDE</div>
+    <div class="name-modal-subtitle">Enter your first name to begin.<br>Your name will appear in your exported files so you know which one is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name"
+        onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- RESET CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirm-modal">
+  <div class="confirm-box">
+    <h2>⚠ Reset to Template?</h2>
+    <p>This will erase everything you have typed and restore the original template. Your work cannot be recovered unless you have exported it.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-confirm-reset" onclick="doReset()">Yes, Reset</button>
+    </div>
+  </div>
+</div>
+
+<header>
+    <h1>🌐 Yang's HTML Wrapper IDE</h1>
+    <div class="header-controls">
+        <!-- Upload Slot 1 -->
+        <div class="upload-slot">
+            <label class="btn-upload-label">
+                📂 Image 1
+                <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onchange="handleUpload(this, 0)">
+            </label>
+            <span class="upload-slot-name" id="slot-name-0">—</span>
+            <button class="upload-slot-clear" onclick="clearSlot(0)" title="Remove">✕</button>
+        </div>
+        <!-- Upload Slot 2 -->
+        <div class="upload-slot">
+            <label class="btn-upload-label">
+                📂 Image 2
+                <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onchange="handleUpload(this, 1)">
+            </label>
+            <span class="upload-slot-name" id="slot-name-1">—</span>
+            <button class="upload-slot-clear" onclick="clearSlot(1)" title="Remove">✕</button>
+        </div>
+
+        <button onclick="renderPreview()">▶ Render</button>
+        <button class="btn-secondary" onclick="openConfirm()">↺ Reset</button>
+        <button class="btn-secondary" onclick="exportHTML()">⬇ Export .html</button>
+        <button class="btn-secondary" onclick="exportTXT()">⬇ Export .txt</button>
+        <div id="status">—</div>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR -->
+    <div class="editor-pane">
+        <div class="pane-header">index.html — edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT: PREVIEW -->
+    <div class="preview-pane">
+        <div class="pane-header">Preview — press Render to update</div>
+        <div class="preview-placeholder" id="preview-placeholder">
+            <span>🌐</span>
+            Press <strong>Render</strong> to preview your page
+        </div>
+        <iframe id="preview-frame" style="display:none;"
+            sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+
+</div>
+
+<script>
+// ── TEMPLATE ──────────────────────────────────────────────────────────────────
+// This is what students see in the editor.
+// Image placeholders __IMAGE_0_DATA__ and __IMAGE_1_DATA__ are injected at export time.
+
+const TEMPLATE = `<!DOCTYPE html>
+<!--
+  ============================================================
+  YANG'S HTML WRAPPER — READ THIS FIRST
+  ============================================================
+
+  This file wraps your pygame game in a real webpage.
+
+  HOW TO USE THIS FILE:
+  1. Edit the <style> section below to change how your page looks.
+  2. Edit the <body> section to change your page title and text.
+  3. Paste your working pygame code into the marked section.
+  4. Press RENDER in the IDE to preview your page.
+  5. When happy, press EXPORT .HTML to download a file you
+     can share with your family and friends.
+
+  IMPORTANT:
+  - Your pygame game MUST be working before you use this wrapper.
+  - HTML does NOT show you error messages the same way Python does.
+    If your page goes blank or the game does not start, the bug
+    is in your pygame code. Go fix it in the Game IDE first.
+  - Audio is not supported in this browser-based environment.
+  - Use EXPORT .TXT if you want to keep editing next session.
+    Re-upload your images when you come back.
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Game Page</title>
+
+  <!-- ============================================================
+       STUDENT ZONE 1 OF 2: STYLING
+       Change how your page looks here.
+       Try changing the background colour, font, or heading colour.
+       Colours can be names (red, blue) or hex codes (#ff0000).
+  ============================================================ -->
+  <style>
+
+    body {
+      background-color: white;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+    }
+
+    h1 {
+      color: black;
+    }
+
+  </style>
+  <!-- ============================================================
+       END STUDENT ZONE 1
+  ============================================================ -->
+
+</head>
+<body>
+
+  <!-- ============================================================
+       STUDENT ZONE 2 OF 2: PAGE CONTENT
+       Change what appears on your page here.
+       Add your name, a description, whatever you like.
+  ============================================================ -->
+
+  <h1>My Game</h1>
+
+  <p>By Student Name</p>
+
+  <p>Click Start to play!</p>
+
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <br>
+  <button onclick="runGame()">&#9654; Start</button>
+  <button onclick="stopGame()">&#9632; Stop</button>
+
+  <!-- ============================================================
+       END STUDENT ZONE 2
+  ============================================================ -->
+
+
+
+
+  <!-- ============================================================
+       PASTE YOUR PYGAME CODE BELOW THIS LINE
+       Replace everything between the two marker comments.
+       Your game MUST work in the Game IDE before you paste it here.
+  ============================================================ -->
+  <script type="text/python" id="game-code">
+import pygame
+import asyncio
+import random
+
+# ============================================================
+#  DEMO GAME — Click the Square!
+#  Replace this entire block with your own pygame game code.
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Click the Square!")
+    font = pygame.font.SysFont(None, 48)
+    small = pygame.font.SysFont(None, 32)
+
+    sx = random.randint(50, 720)
+    sy = random.randint(50, 520)
+    won = False
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and not won:
+                mx, my = event.pos
+                if sx <= mx <= sx + 80 and sy <= my <= sy + 80:
+                    won = True
+
+        screen.fill((30, 30, 30))
+
+        if not won:
+            pygame.draw.rect(screen, (255, 80, 80), (sx, sy, 80, 80))
+            label = small.render("Click the square!", True, (200, 200, 200))
+            screen.blit(label, (10, 10))
+        else:
+            msg = font.render("You win! Great job!", True, (80, 255, 80))
+            screen.blit(msg, (200, 270))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()
+  <\/script>
+  <!-- ============================================================
+       END OF YOUR PYGAME CODE
+  ============================================================ -->
+
+
+
+
+  <!-- ============================================================
+       DO NOT TOUCH ANYTHING BELOW THIS LINE
+       This section loads the Python engine that runs your game.
+       If you change anything here your game will break.
+  ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"><\/script>
+  <script>
+    let pyodide = null;
+    let isRunning = false;
+
+    async function initPyodide() {
+      pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
+      await pyodide.loadPackage("pygame-ce");
+      pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+      pyodide.setStdout({ batched: (m) => console.log(m) });
+      pyodide.setStderr({ batched: (m) => console.warn(m) });
+
+      // Write uploaded images into the virtual filesystem
+      const images = __IMAGES_JSON__;
+      for (const img of images) {
+        const raw = atob(img.data);
+        const arr = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+        pyodide.FS.writeFile(img.name, arr);
+      }
+    }
+
+    initPyodide();
+
+    async function runGame() {
+      if (!pyodide) return;
+      if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+      isRunning = true;
+      document.getElementById("canvas").focus();
+      const code = document.getElementById("game-code").textContent;
+      try { await pyodide.runPythonAsync(code); }
+      catch (e) { console.error(e); }
+      finally { isRunning = false; }
+    }
+
+    async function stopGame() {
+      if (!pyodide) return;
+      try { await pyodide.runPythonAsync("game_running = False"); } catch(e) {}
+      isRunning = false;
+    }
+  <\/script>
+  <!-- ============================================================
+       END DO NOT TOUCH SECTION
+  ============================================================ -->
+
+</body>
+</html>`;
+
+// ── IMAGE SLOTS ───────────────────────────────────────────────────────────────
+const imageSlots = [null, null]; // { name, b64 }
+
+function handleUpload(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    const maxBytes = 500 * 1024;
+    if (file.size > maxBytes) {
+        alert("Image is too large (max 500 KB). Please resize it first.");
+        input.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const b64 = e.target.result.split(',')[1];
+        imageSlots[slotIndex] = { name: file.name, b64: b64 };
+        document.getElementById('slot-name-' + slotIndex).textContent = file.name;
+        setStatus('Uploaded: ' + file.name);
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function clearSlot(slotIndex) {
+    imageSlots[slotIndex] = null;
+    document.getElementById('slot-name-' + slotIndex).textContent = '—';
+}
+
+// ── BUILD FINAL HTML ──────────────────────────────────────────────────────────
+// Takes the raw editor content and injects image data.
+function buildFinalHTML(editorContent) {
+    const images = imageSlots.filter(Boolean).map(s => ({ name: s.name, data: s.b64 }));
+    const imagesJSON = JSON.stringify(images);
+    return editorContent.replace('__IMAGES_JSON__', imagesJSON);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderPreview() {
+    const content = document.getElementById('code-editor').value;
+    const finalHTML = buildFinalHTML(content);
+
+    const placeholder = document.getElementById('preview-placeholder');
+    const frame = document.getElementById('preview-frame');
+    placeholder.style.display = 'none';
+    frame.style.display = 'block';
+
+    // Write into iframe
+    frame.srcdoc = finalHTML;
+    setStatus('Rendered.');
+}
+
+// ── EXPORT HTML ───────────────────────────────────────────────────────────────
+function exportHTML() {
+    const content = document.getElementById('code-editor').value;
+    const finalHTML = buildFinalHTML(content);
+    const name = studentName ? studentName.toLowerCase().replace(/\s+/g, '-') : 'student';
+    download(name + '-game-page.html', finalHTML, 'text/html');
+    setStatus('Exported as .html');
+}
+
+// ── EXPORT TXT ────────────────────────────────────────────────────────────────
+// Strips base64 image data from __IMAGES_JSON__ — keeps code lean for editing.
+function exportTXT() {
+    let content = document.getElementById('code-editor').value;
+    // Replace image JSON with an empty array so the file is clean
+    content = content.replace('__IMAGES_JSON__', '[]');
+    // Add a reminder comment at top
+    const reminder = `<!--
+  NOTE: Images have been removed from this .txt export to keep the file small.
+  Re-upload your images in the IDE when you are ready to export as .html again.
+-->
+`;
+    content = reminder + content;
+    const name = studentName ? studentName.toLowerCase().replace(/\s+/g, '-') : 'student';
+    download(name + '-game-page.txt', content, 'text/plain');
+    setStatus('Exported as .txt');
+}
+
+function download(filename, content, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+// ── NAME MODAL ────────────────────────────────────────────────────────────────
+let studentName = "";
+
+function confirmName() {
+    const raw = document.getElementById("name-modal-input").value.trim();
+    const err = document.getElementById("name-modal-error");
+    if (!raw || raw.length < 2) {
+        err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+        return;
+    }
+    studentName = raw;
+    document.getElementById("name-modal").classList.add("hidden");
+    // Inject name into template title and byline
+    const personalised = TEMPLATE
+        .replace('My Game Page', raw + "'s Game Page")
+        .replace('By Student Name', 'By ' + raw);
+    document.getElementById('code-editor').value = personalised;
+    updateLineNumbers();
+    setStatus('Ready — ' + raw);
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+function openConfirm() {
+    document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('open');
+}
+function doReset() {
+    const personalised = TEMPLATE
+        .replace('My Game Page', studentName + "'s Game Page")
+        .replace('By Student Name', 'By ' + studentName);
+    document.getElementById('code-editor').value = personalised;
+    updateLineNumbers();
+    // Reset preview
+    document.getElementById('preview-frame').style.display = 'none';
+    document.getElementById('preview-placeholder').style.display = 'flex';
+    document.getElementById('preview-frame').srcdoc = '';
+    closeConfirm();
+    setStatus('Reset to template.');
+}
+
+// ── LINE NUMBERS ──────────────────────────────────────────────────────────────
+function updateLineNumbers() {
+    const ta    = document.getElementById("code-editor");
+    const ln    = document.getElementById("line-numbers");
+    const lines = ta.value.split("\n").length;
+    ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+    syncScroll();
+}
+
+function syncScroll() {
+    const ta = document.getElementById("code-editor");
+    const ln = document.getElementById("line-numbers");
+    ln.scrollTop = ta.scrollTop;
+}
+
+function handleTab(e) {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const ta    = e.target;
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + 4;
+    updateLineNumbers();
+}
+
+function setStatus(msg) {
+    document.getElementById('status').textContent = msg;
+}
+</script>
+</body>
+</html>
