@@ -274,13 +274,14 @@ const TEMPLATE = `<!DOCTYPE html>
   3. Paste your working pygame code into the marked section.
   4. Press RENDER in the IDE to preview your page.
   5. When happy, press EXPORT .HTML to download a file you
-     can share with your family and friends.
+     can share with your family and friends. Files exported as .html cannot be edited and can only be viewed/played.
 
   IMPORTANT:
   - Your pygame game MUST be working before you use this wrapper.
-  - HTML does NOT show you error messages the same way Python does.
+  - HTML does NOT show you error messages the same way Python does. 
     If your page goes blank or the game does not start, the bug
     is in your pygame code. Go fix it in the Game IDE first.
+  - DO NOT edit the section under Student Zone 3.
   - Audio is not supported in this browser-based environment.
   - Use EXPORT .TXT if you want to keep editing next session.
     Re-upload your images when you come back.
@@ -292,7 +293,7 @@ const TEMPLATE = `<!DOCTYPE html>
   <title>My Game Page</title>
 
   <!-- ============================================================
-       STUDENT ZONE 1 OF 2: STYLING
+       STUDENT ZONE 1 OF 3: STYLING
        Change how your page looks here.
        Try changing the background colour, font, or heading colour.
        Colours can be names (red, blue) or hex codes (#ff0000).
@@ -318,7 +319,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <body>
 
   <!-- ============================================================
-       STUDENT ZONE 2 OF 2: PAGE CONTENT
+       STUDENT ZONE 2 OF 3: PAGE CONTENT
        Change what appears on your page here.
        Add your name, a description, whatever you like.
   ============================================================ -->
@@ -326,6 +327,8 @@ const TEMPLATE = `<!DOCTYPE html>
   <h1>My Game</h1>
 
   <p>By Student Name</p>
+
+  <p>&#9203; Game may take about 1 minute to load. Please be patient!</p>
 
   <p>Click Start to play!</p>
 
@@ -342,6 +345,7 @@ const TEMPLATE = `<!DOCTYPE html>
 
 
   <!-- ============================================================
+       STUDENT ZONE 3 of 3
        PASTE YOUR PYGAME CODE BELOW THIS LINE
        Replace everything between the two marker comments.
        Your game MUST work in the Game IDE before you paste it here.
@@ -408,7 +412,7 @@ await main()
   <!-- ============================================================
        DO NOT TOUCH ANYTHING BELOW THIS LINE
        This section loads the Python engine that runs your game.
-       If you change anything here your game will break.
+       If you change anything here your game might break.
   ============================================================ -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"><\/script>
   <script>
@@ -451,9 +455,7 @@ await main()
       isRunning = false;
     }
   <\/script>
-  <!-- ============================================================
-       END DO NOT TOUCH SECTION
-  ============================================================ -->
+
 
 </body>
 </html>`;
