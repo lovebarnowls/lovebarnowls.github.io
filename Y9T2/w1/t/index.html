@@ -170,14 +170,13 @@ const WEEK_CONTENT = {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html>
-<!-- {{FLAG:W1TB2}} -->
 <head>
 <title>Wanderlust Travel Co. — Home</title>
 </head>
 <body style="font-family:sans-serif;padding:40px;background:#fef9f0">
-<!-- {{FLAG:W1TB1}} -->
 <h1 style="color:#c9822f">Wanderlust Travel Co.</h1>
 <p>Adventure starts here.</p>
+<p><a href="#/destinations.html" target="_top" style="color:#c9822f">Browse destinations →</a></p>
 
 <div>
   <p>Our story</p>
@@ -193,12 +192,15 @@ const WEEK_CONTENT = {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html>
+<!-- {{FLAG:W1TB2}} -->
 <head><title>Destinations</title></head>
 <body style="font-family:sans-serif;padding:40px;background:#fef9f0">
+<!-- {{FLAG:W1TB1}} -->
 <h1 style="color:#c9822f">Where will you go?</h1>
 <img src="assets/1.png" alt="A sunny beach destination" style="max-width:100%;border-radius:8px;margin:10px 0">
 <span style="color:#ffffff;background:#ffffff">{{FLAG:W1TA1}}</span>
 <p>Bali. Kyoto. Reykjavik. Marrakesh.</p>
+<p><a href="#/index.html" target="_top" style="color:#c9822f">🏠 Home</a></p>
 </body>
 </html>`
     },
@@ -221,9 +223,9 @@ const WEEK_CONTENT = {
   },
 
   tasks: [
-    { id:"W1TB1", tier:"B", points:50, defaultRoute:"/index.html", leet:"v13w_s0urc3",
+    { id:"W1TB1", tier:"B", points:50, defaultRoute:"/destinations.html", leet:"v13w_s0urc3",
       brief:"This is a flag. Look at the code on the left and the page on the right. HTML comments are invisible when rendered but visible in the source." },
-    { id:"W1TB2", tier:"B", points:50, defaultRoute:"/index.html", leet:"h34d_s3cr3t",
+    { id:"W1TB2", tier:"B", points:50, defaultRoute:"/destinations.html", leet:"h34d_s3cr3t",
       brief:"Comments can live in odd places — even right after the opening <html> tag, before <head>." },
     { id:"W1TB3", tier:"B", points:50, defaultRoute:"/index.html", leet:"4ny_wh3r3",
       brief:"Comments can appear anywhere — nested inside other elements, buried several levels deep." },
