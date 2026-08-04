@@ -159,6 +159,7 @@ const WEEK_CONTENT = {
   tree: [
     { path:"/index.html", label:"index.html" },
     { path:"/destinations.html", label:"destinations.html" },
+    { path:"/assets/1.png", label:"assets/1.png", icon:"🖼" },
     { path:"/owl.html", label:"owl.html", hidden:true }
   ],
 
@@ -211,6 +212,11 @@ const WEEK_CONTENT = {
 <p style="color:#93a8a3;font-size:13px">That's exactly the instinct this whole unit is trying to build.</p>
 </body>
 </html>`
+    },
+    "/assets/1.png": {
+      editable:false,
+      isImage:true,
+      imgSrc:"assets/1.png"
     }
   },
 
@@ -290,7 +296,7 @@ function renderTree(){
     if (item.hidden && !state.revealed.has(item.path)) return;
     const div = document.createElement('div');
     div.className = 'tree-item'; div.id = 'tree-' + item.path;
-    div.innerHTML = `📄 ${item.label}` + (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
+    div.innerHTML = `${item.icon || '📄'} ${item.label}` + (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
     div.onclick = () => navigate(item.path);
     el.appendChild(div);
   });
@@ -334,6 +340,15 @@ function loadRoute(path){
     sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
     labelEl.textContent = 'Source'; controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
     frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  if (route.isImage){
+    labelEl.textContent = 'Source — ' + path;
+    sourceEl.value = '[Binary image file — no text source to view.\nInspect the rendered file directly, or check its properties/metadata.]';
+    sourceEl.readOnly = true;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 binary file</span>';
+    frame.srcdoc = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111"><img src="${route.imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`;
     return;
   }
 
