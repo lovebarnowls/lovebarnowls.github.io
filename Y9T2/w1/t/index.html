@@ -238,7 +238,7 @@ const WEEK_CONTENT = {
 /* ================================================================
    ENGINE — should not need edits per week/lesson
    ================================================================ */
-let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"", revealed:new Set() };
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"", revealed:new Set(), collapsedFolders:new Set() };
 let currentPath = null;
 const routeEdits = {};
 const FLAG_INDEX = {}; // built after flags are computed
@@ -292,13 +292,52 @@ function init(){
 
 function renderTree(){
   const el = document.getElementById('treeBody'); el.innerHTML = '';
+
+  const flat = [];
+  const folders = {}; // folderName -> [items], in tree order
+
   WEEK_CONTENT.tree.forEach(item=>{
-    if (item.hidden && !state.revealed.has(item.path)) return;
+    const parts = item.path.split('/').filter(Boolean); // e.g. ["assets","1.png"]
+    if (parts.length > 1){
+      const folderName = parts[0];
+      (folders[folderName] = folders[folderName] || []).push(item);
+    } else {
+      flat.push(item);
+    }
+  });
+
+  const makeFileRow = (item, indent) => {
     const div = document.createElement('div');
     div.className = 'tree-item'; div.id = 'tree-' + item.path;
-    div.innerHTML = `${item.icon || '📄'} ${item.label}` + (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
+    div.style.paddingLeft = indent ? '18px' : '4px';
+    div.innerHTML = `${item.icon || '📄'} ${item.label.split('/').pop()}` +
+      (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
     div.onclick = () => navigate(item.path);
-    el.appendChild(div);
+    return div;
+  };
+
+  flat.forEach(item=>{
+    if (item.hidden && !state.revealed.has(item.path)) return;
+    el.appendChild(makeFileRow(item, false));
+  });
+
+  Object.keys(folders).forEach(folderName=>{
+    const visibleItems = folders[folderName].filter(item => !item.hidden || state.revealed.has(item.path));
+    if (visibleItems.length === 0) return; // nothing in this folder discovered yet
+
+    const collapsed = state.collapsedFolders.has(folderName);
+    const header = document.createElement('div');
+    header.className = 'tree-item';
+    header.innerHTML = `${collapsed ? '▸' : '▾'} 📁 ${folderName}`;
+    header.onclick = () => {
+      collapsed ? state.collapsedFolders.delete(folderName) : state.collapsedFolders.add(folderName);
+      renderTree();
+    };
+    el.appendChild(header);
+
+    if (!collapsed){
+      visibleItems.forEach(item => el.appendChild(makeFileRow(item, true)));
+    }
   });
 }
 
