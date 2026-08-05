@@ -173,7 +173,8 @@ const WEEK_CONTENT = {
 <h1 style="color:#c9822f">Wanderlust Travel Co.</h1>
 <p style="color:#a3762a;font-size:14px">We rebuilt the site this year — a few things may have moved.</p>
 <p>Adventure starts here. Same friendly team, brand new build.</p>
-<p><a href="#/team.html" target="_top" title="Faithful" style="color:#c9822f">Meet the team →</a></p>
+<p><a href="#/team.html" target="_top" style="color:#c9822f" title="Faithful">Meet the team →</a></p>
+<p style="font-style:italic;color:#8a6a35">"Book once, and you'll be Faithful to us forever," says our founder.</p>
 
 <div>
   <p>Recent updates</p>
@@ -184,6 +185,9 @@ const WEEK_CONTENT = {
 </div>
 
 <!-- TODO: remove before launch — {{FLAG:W1T2B3}} -->
+
+<!-- Link not yet ready -->
+<div style="margin-top:24px;padding-top:12px;border-top:1px solid #e0d3ba;color:#a3762a;font-size:12px">About &nbsp;·&nbsp; Contact &nbsp;·&nbsp; Terms &amp; Conditions</div>
 </body>
 </html>`
     },
@@ -201,12 +205,15 @@ const WEEK_CONTENT = {
 </div>
 
 <div class="member" style="margin:16px 0">
-  <p><strong>Say hello to Turtle</strong> — our very patient office mascot. He has never once missed a flight.</p>
+  <p><strong>Amara T.</strong> — Customer Experience Lead</p>
 </div>
 
 <div style="display:none">{{FLAG:W1T2B5}}</div>
 
 <p><a href="#/index.html" target="_top" style="color:#c9822f">🏠 Home</a></p>
+
+<!-- Link not yet ready -->
+<div style="margin-top:24px;padding-top:12px;border-top:1px solid #e0d3ba;color:#a3762a;font-size:12px">About &nbsp;·&nbsp; Contact &nbsp;·&nbsp; Terms &amp; Conditions</div>
 </body>
 </html>`
     },
@@ -242,11 +249,11 @@ const WEEK_CONTENT = {
       brief:"A hidden <div> can hold a clue meant to be read, not displayed." },
     { id:"W1T2A1", tier:"A", points:10, defaultRoute:"/index.html", leet:"filt3r_n01s3",
       brief:"Several clues are visible, but only one actually works — filter noise, not chase every lead." },
-    { id:"W1T2A2", tier:"A", points:10, defaultRoute:"/team.html", leet:"f41thful_turtl3",
-      brief:"One answer is built from two small words sitting in different parts of the page.",
-      freeTextAnswers:["faithful turtle"] },
+    { id:"W1T2A2", tier:"A", points:10, defaultRoute:"/index.html", leet:"f41thful",
+      brief:"There is a single unusual word sitting right there on the page. Find it, then type it back exactly as it appears — capital letters included.",
+      freeTextAnswers:["Faithful"], caseSensitive:true },
     { id:"W1T2H1", tier:"H", points:1, defaultRoute:null, leet:"gu3ss_fil3n4m3",
-      brief:"Not every page is linked anywhere visible. If you can guess a filename, try it directly." }
+      brief:"Not every page is linked — but sometimes the footer still names one before the link is wired up. If you can guess a filename, try it directly." }
   ]
 };
 
@@ -257,6 +264,7 @@ let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"",
 let currentPath = null;
 const routeEdits = {};
 const FLAG_INDEX = {};
+const EXACT_INDEX = {}; // for tasks with caseSensitive:true — checked before the normalized index
 
 function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,' '); }
 
@@ -282,7 +290,13 @@ async function computeAllFlags(){
 function buildFlagIndex(){
   WEEK_CONTENT.tasks.forEach(task=>{
     FLAG_INDEX[normalize(state.flags[task.id])] = task;
-    if (task.freeTextAnswers) task.freeTextAnswers.forEach(a => FLAG_INDEX[normalize(a)] = task);
+    if (task.freeTextAnswers){
+      if (task.caseSensitive){
+        task.freeTextAnswers.forEach(a => EXACT_INDEX[a.trim()] = task);
+      } else {
+        task.freeTextAnswers.forEach(a => FLAG_INDEX[normalize(a)] = task);
+      }
+    }
   });
 }
 function fillTemplate(text){
@@ -453,8 +467,8 @@ document.getElementById('addrBar').addEventListener('keydown', e=>{
 function submitFlag(){
   const input = document.getElementById('flagInput');
   const msg = document.getElementById('flagMsg');
-  const norm = normalize(input.value);
-  const task = FLAG_INDEX[norm];
+  const raw = input.value.trim();
+  const task = EXACT_INDEX[raw] || FLAG_INDEX[normalize(raw)];
 
   if (!task){ msg.textContent='WRONG'; msg.className='msg err'; return; }
   if (state.foundIds.has(task.id)){ msg.textContent='ALREADY SUBMITTED'; msg.className='msg warn'; return; }
