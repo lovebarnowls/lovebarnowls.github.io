@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the Web — Week 2 L2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-app:#131a1f;--bg-panel:#1b232b;--bg-panel-alt:#161d24;--border:#2a3540;
+    --text-main:#e8edf2;--text-dim:#8a97a3;--accent:#d4a55a;--accent-soft:#d4a55a22;
+    --accent-2:#7fa8bf;--ok:#7fbf8f;--err:#d97a6c;--warn:#d9b26a;
+    --font-display:'Space Grotesk',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-app);color:var(--text-main);font-family:var(--font-mono);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .header{flex:0 0 auto;height:52px;background:var(--bg-panel-alt);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);gap:12px}
+  .header .title{font-family:var(--font-display);font-weight:700;font-size:15px}
+  .header .badge{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-dim)}
+  .header .right b{color:var(--accent)}
+
+  .main{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0}
+  .left{display:grid;grid-template-rows:24% 40% 36%;border-right:1px solid var(--border);min-height:0}
+  .panel{overflow:auto;border-bottom:1px solid var(--border);min-height:0;display:flex;flex-direction:column}
+  .panel-head{padding:7px 12px;background:var(--bg-panel-alt);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex:0 0 auto}
+  .panel-body{padding:10px 12px;overflow:auto}
+  .tree-item{padding:5px 4px;cursor:pointer;border-radius:4px;font-size:13px;display:flex;gap:6px;align-items:center}
+  .tree-item:hover{background:var(--bg-panel-alt)}
+  .tree-item.active{background:var(--accent-soft);color:var(--accent)}
+
+  .edit-toggle{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;cursor:pointer;text-transform:none;letter-spacing:0}
+  .edit-toggle:hover{border-color:var(--accent)}
+  .edit-toggle.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+  .lock-label{font-size:10px;color:var(--text-dim);text-transform:none;letter-spacing:0}
+  .source-note{font-size:10px;color:var(--text-dim);padding:4px 12px;border-bottom:1px solid var(--border);flex:0 0 auto}
+  #sourceBody{flex:1;width:100%;background:transparent;border:none;color:var(--text-main);resize:none;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  #sourceBody:read-only{color:var(--text-dim)}
+
+  .task{padding:8px;border-radius:6px;margin-top:6px;border:1px solid transparent}
+  .task:hover{border-color:var(--border)}
+  .task.selected{background:var(--bg-panel-alt);border-color:var(--accent)}
+  .task .row{display:flex;justify-content:space-between;font-size:12px}
+  .task .tier{font-weight:700;color:var(--accent)}
+  .task .tier.tier-A{color:#9fb8e8}
+  .task .tier.tier-H{color:var(--accent-2)}
+  .task .pts{color:var(--text-dim);font-size:11px}
+  .task.found .tier::after{content:" ✓";color:var(--ok)}
+  .task-brief{padding-top:6px;font-size:12px;color:var(--text-dim);line-height:1.5;cursor:pointer}
+
+  .right{display:flex;flex-direction:column;min-width:0}
+  .addr-row{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:8px 10px;border-bottom:1px solid var(--border)}
+  .addr-row .dots{display:flex;gap:5px}
+  .addr-row .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .addr-bar{flex:1;background:var(--bg-app);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--text-main);font-family:var(--font-mono)}
+  .addr-bar:focus{outline:none;border-color:var(--accent)}
+  iframe{flex:1;border:none;background:#fff}
+
+  .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg-panel-alt)}
+  .flagrow{display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .flagrow input{flex:1;max-width:420px;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:13px}
+  .flagrow input:focus{outline:none;border-color:var(--accent)}
+  .flagrow button{background:var(--accent);color:#1f1608;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-mono);font-weight:700;font-size:13px;cursor:pointer}
+  .flagrow .msg{font-size:13px;font-weight:700;min-width:200px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
+  .receipts{padding:0 16px 12px}
+  .receipts label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
+  .receipts .row2{display:flex;gap:8px;margin-top:4px}
+  .receipts textarea{flex:1;height:46px;resize:none;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-family:var(--font-mono);font-size:11px;padding:8px}
+  .receipts button{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:0 14px;font-family:var(--font-mono);cursor:pointer}
+
+  .modal-backdrop{position:fixed;inset:0;background:#0b0f13ee;display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:28px;width:340px}
+  .modal h2{font-family:var(--font-display);margin:0 0 6px;font-size:19px}
+  .modal p{color:var(--text-dim);font-size:13px;margin:0 0 16px}
+  .modal input{width:100%;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:14px;margin-bottom:12px}
+  .modal button{width:100%;background:var(--accent);color:#1f1608;border:none;border-radius:8px;padding:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="modal-backdrop" id="nameModal">
+  <div class="modal">
+    <h2>Behind the Web</h2>
+    <p>Case File #3 — Coastal Realty, Part II. Enter your name to start.</p>
+    <input id="nameInput" placeholder="Your name" autofocus>
+    <button onclick="startSession()">Begin investigation</button>
+  </div>
+</div>
+
+<div class="header">
+  <span class="title">Behind the Web</span>
+  <span class="badge" id="weekBadge">Week 2 — L2</span>
+  <div class="right">
+    <span>Flags: <b id="flagCount">0</b> · Score: <b id="scoreTotal">0</b></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="panel">
+      <div class="panel-head"><span>Explorer</span></div>
+      <div class="panel-body" id="treeBody"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span id="sourceHeadLabel">Source — select a file</span>
+        <span id="sourceControls"><span class="lock-label" id="lockLabel">🔒 read-only</span></span>
+      </div>
+      <div class="source-note">Most real websites don't let visitors edit their source. In this sandbox, a few files can be — look for the toggle above when it appears.</div>
+      <textarea id="sourceBody" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="panel" style="border-bottom:none">
+      <div class="panel-head"><span>Tasks — L2</span></div>
+      <div class="panel-body" id="taskList"></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="addr-row">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <input class="addr-bar" id="addrBar" spellcheck="false">
+    </div>
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="flagrow">
+    <input id="flagInput" placeholder="Type or paste a flag here...">
+    <button onclick="submitFlag()">Submit</button>
+    <span class="msg" id="flagMsg"></span>
+  </div>
+  <div class="receipts">
+    <label>Your flags — copy and paste at: <span id="scoreboardLink">[insert scoreboard link]</span></label>
+    <div class="row2">
+      <textarea id="receiptBox" readonly placeholder="Solve a task to see your flags listed here..."></textarea>
+      <button onclick="copyReceipts()">Copy all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   WEEK CONTENT — Week 2 · L2 ("Filenames and IDs as data")
+   Coastal Realty — continues directly from L1. Agents (Melchizedek,
+   Tiglath-Pileser) and the /assets/ image set are reused unchanged;
+   only agent-notes-internal.txt and flag.png are new this lesson.
+   ================================================================ */
+
+const FLAG_PREFIX = "faith";
+const FLAG_SALT   = "wanderlust-2026";
+
+const WEEK_CONTENT = {
+  meta:{ week:2, lesson:"L2", label:"Week 2 — L2",
+         deployPath:"lovebarnowls.github.io/Y9T2/w2/l2",
+         scoreboardUrl:"lovebarnowls.github.io/Y9T2/scoreboard.html" },
+
+  tree: [
+    { path:"/index.html", label:"index.html" },
+    { path:"/robots.txt", label:"robots.txt" },
+    { path:"/agents.html", label:"agents.html" },
+    { path:"/agents/melchizedek/bio.html", label:"agents/melchizedek/bio.html" },
+    { path:"/agents/tiglath-pileser/bio.html", label:"agents/tiglath-pileser/bio.html", hidden:true },
+    { path:"/agents/newhires.html", label:"agents/newhires.html", hidden:true },
+    { path:"/listings/view.html?id=4471", label:"listings/view.html?id=4471" },
+    { path:"/listings/view.html?id=4472", label:"listings/view.html?id=4472", hidden:true },
+    { path:"/listings/view.html?id=3390", label:"listings/view.html?id=3390" },
+    { path:"/listings/view.html?id=6608", label:"listings/view.html?id=6608" },
+    { path:"/listings/notes/list-3390-b.html", label:"listings/notes/list-3390-b.html", hidden:true },
+    { path:"/archive/index.html", label:"archive/index.html" },
+    { path:"/archive/announcement-01.html", label:"archive/announcement-01.html" },
+    { path:"/archive/announcement-02.html", label:"archive/announcement-02.html" },
+    { path:"/archive/announcement-03.html", label:"archive/announcement-03.html" },
+    { path:"/archive/announcement-04.html", label:"archive/announcement-04.html" },
+    { path:"/archive/announcement-05.html", label:"archive/announcement-05.html" },
+    { path:"/archive/announcement-06.html", label:"archive/announcement-06.html", hidden:true },
+    { path:"/archive/announcement-07.html", label:"archive/announcement-07.html", hidden:true },
+    { path:"/archive/announcement-08.html", label:"archive/announcement-08.html", hidden:true },
+    { path:"/archive/announcement-09.html", label:"archive/announcement-09.html", hidden:true },
+    { path:"/archive/announcement-10.html", label:"archive/announcement-10.html", hidden:true },
+    { path:"/archive/announcement-11.html", label:"archive/announcement-11.html", hidden:true },
+    { path:"/about-v3.html", label:"about-v3.html" },
+    { path:"/about-v2.html", label:"about-v2.html", hidden:true },
+    { path:"/about-v1.html", label:"about-v1.html", hidden:true },
+    { path:"/assets/coastal-realty-office.png", label:"assets/coastal-realty-office.png", icon:"🖼" },
+    { path:"/assets/agent-melchizedek.png", label:"assets/agent-melchizedek.png", icon:"🖼" },
+    { path:"/assets/agent-tiglath-pileser.png", label:"assets/agent-tiglath-pileser.png", icon:"🖼" },
+    { path:"/assets/24-marina-way.png", label:"assets/24-marina-way.png", icon:"🖼" },
+    { path:"/assets/9-summit-terrace.png", label:"assets/9-summit-terrace.png", icon:"🖼" },
+    { path:"/assets/listing1-cottage.png", label:"assets/listing1-cottage.png", icon:"🖼" },
+    { path:"/assets/listing2-cottage.png", label:"assets/listing2-cottage.png", icon:"🖼" },
+    { path:"/assets/listing3-cottage.png", label:"assets/listing3-cottage.png", icon:"🖼" },
+    { path:"/assets/listing4-cottage.png", label:"assets/listing4-cottage.png", icon:"🖼" },
+    { path:"/assets/listing9-unit.png", label:"assets/listing9-unit.png", icon:"🖼" },
+    { path:"/assets/16-waterfront-way.png", label:"assets/16-waterfront-way.png", icon:"🖼" },
+    { path:"/assets/8-cliffside-ave.png", label:"assets/8-cliffside-ave.png", icon:"🖼" },
+    { path:"/assets/waterfront-units-building.png", label:"assets/waterfront-units-building.png", icon:"🖼" },
+    { path:"/assets/24-marina-way-floorplan.png", label:"assets/24-marina-way-floorplan.png", icon:"🖼" },
+    { path:"/assets/flag.png", label:"assets/flag.png", icon:"🖼", hidden:true },
+    { path:"/assets/agent-notes-internal.txt", label:"assets/agent-notes-internal.txt" }
+  ],
+
+  routes: {
+    "/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8863c;margin-right:16px">Home</a><a href="#/agents.html" target="_top" style="color:#b8863c;margin-right:16px">Agents</a><a href="#/archive/index.html" target="_top" style="color:#b8863c;margin-right:16px">Archive</a><a href="#/about-v3.html" target="_top" style="color:#b8863c">About</a></nav>
+<h1 style="color:#2c4a5e">Coastal Realty</h1>
+<p>Helping you find a home along the coast for over twenty years.</p>
+
+<div style="margin:20px 0">
+  <h3 style="color:#2c4a5e">The Old Harbour Master's House</h3>
+  <p>Reference 4471. <a href="#/listings/view.html?id=4471" target="_top" style="color:#b8863c">View listing →</a></p>
+</div>
+
+<div style="margin:20px 0">
+  <h3 style="color:#2c4a5e">Lighthouse Point Bungalow</h3>
+  <p>Reference 6608. <a href="#/listings/view.html?id=6608" target="_top" style="color:#b8863c">View listing →</a></p>
+</div>
+
+<p style="color:#6b7d89;font-size:13px;margin-top:40px">© Coastal Realty. All listings believed accurate at time of publishing.</p>
+</body>
+</html>`
+    },
+    "/robots.txt": {
+      editable:false,
+      sourceTemplate: `User-agent: *
+Disallow: /archive/drafts/
+Sitemap: /sitemap.xml`
+    },
+    "/agents.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Our Agents — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8863c;margin-right:16px">Home</a><a href="#/archive/index.html" target="_top" style="color:#b8863c;margin-right:16px">Archive</a><a href="#/about-v3.html" target="_top" style="color:#b8863c">About</a></nav>
+<h1 style="color:#2c4a5e">Our Agents</h1>
+<p>Meet the team behind Coastal Realty.</p>
+<div style="margin:20px 0">
+  <h3 style="color:#2c4a5e">Agent Melchizedek</h3>
+  <img src="assets/agent-melchizedek.png" style="max-width:200px;border-radius:8px" alt="Portrait of Agent Melchizedek">
+  <p><a href="#/agents/melchizedek/bio.html" target="_top" style="color:#b8863c">Read full profile →</a></p>
+</div>
+</body>
+</html>`
+    },
+    "/agents/melchizedek/bio.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Agent Melchizedek — Full Profile</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Agent Melchizedek — Full Profile</h1>
+<img src="assets/agent-melchizedek.png" style="max-width:200px;border-radius:8px" alt="Portrait of Agent Melchizedek">
+<p>Melchizedek joined Coastal Realty in 2014 and has closed over 200 waterfront sales since.</p>
+<p>He is currently representing property <a href="#/listings/view.html?id=3390" target="_top" style="color:#b8863c">3390</a>, a recent addition to our books.</p>
+</body>
+</html>`
+    },
+    "/agents/tiglath-pileser/bio.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Agent Tiglath-Pileser</h1>
+<img src="assets/agent-tiglath-pileser.png" style="max-width:200px;border-radius:8px;margin:16px 0" alt="Portrait of Agent Tiglath-Pileser">
+<p>He has never had a profile page of his own — until you noticed his photo sitting in the assets folder and worked out where it pointed.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B3}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/agents/newhires.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Join Coastal Realty</h1>
+<p>A draft page for prospective new agents — never linked from the nav, exactly as the internal note said.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B4}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/listings/view.html?id=4471": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>The Old Harbour Master's House — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8863c;margin-right:16px">Home</a><a href="#/agents.html" target="_top" style="color:#b8863c">Agents</a></nav>
+<h1 style="color:#2c4a5e">The Old Harbour Master's House</h1>
+<img src="assets/waterfront-units-building.png" style="max-width:300px;border-radius:8px" alt="The Old Harbour Master's House exterior">
+<p>Reference 4471. A converted harbour master's residence with commanding views over the marina.</p>
+<p style="color:#6b7d89;font-size:13px">A second property, reference 4472, was listed the same week but has since been reserved.</p>
+</body>
+</html>`
+    },
+    "/listings/view.html?id=4472": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Reference 4472</h1>
+<p>Reserved, but not removed. Editing the address bar's id was all it took.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B2}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/listings/view.html?id=3390": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Reference 3390 — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Reference 3390 — Cliffside Watch</h1>
+<img src="assets/listing1-cottage.png" style="max-width:300px;border-radius:8px" alt="Cliffside Watch exterior">
+<p>A tidy two-bedroom cottage, recently listed by Agent Melchizedek.</p>
+<p style="color:#6b7d89;font-size:13px">Internal file reference: LIST-3390-B</p>
+</body>
+</html>`
+    },
+    "/listings/view.html?id=6608": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Lighthouse Point Bungalow — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8863c;margin-right:16px">Home</a><a href="#/agents.html" target="_top" style="color:#b8863c">Agents</a></nav>
+<h1 style="color:#2c4a5e">Lighthouse Point Bungalow</h1>
+<p>Reference 6608. A cheerful bungalow a short walk from the point, recently repainted throughout.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+  <a href="#/assets/listing3-cottage.png" target="_top"><img src="assets/listing3-cottage.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Bungalow exterior"></a>
+  <a href="#/assets/listing4-cottage.png" target="_top"><img src="assets/listing4-cottage.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Bungalow kitchen"></a>
+  <a href="#/assets/9-summit-terrace.png" target="_top"><img src="assets/9-summit-terrace.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Bungalow garden"></a>
+  <a href="#/assets/flag.png" target="_top"><img src="assets/flag.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Bungalow gallery image"></a>
+</div>
+<p style="color:#6b7d89;font-size:13px;margin-top:12px">Click any photo in the gallery to view it full size.</p>
+</body>
+</html>`
+    },
+    "/listings/notes/list-3390-b.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Internal Note — LIST-3390-B</h1>
+<p>Built from the id in the address bar and the reference on the page itself. Neither one alone was enough.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B5}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/archive/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Archive — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8863c;margin-right:16px">Home</a><a href="#/agents.html" target="_top" style="color:#b8863c">Agents</a></nav>
+<h1 style="color:#2c4a5e">Announcement Archive</h1>
+<p style="color:#6b7d89;font-size:13px">Index of /archive/</p>
+<ul style="font-family:monospace;font-size:13px;line-height:1.9;list-style:none;padding-left:0">
+<li><a href="#/archive/announcement-01.html" target="_top" style="color:#b8863c">announcement-01.html</a></li>
+<li><a href="#/archive/announcement-02.html" target="_top" style="color:#b8863c">announcement-02.html</a></li>
+<li><a href="#/archive/announcement-03.html" target="_top" style="color:#b8863c">announcement-03.html</a></li>
+<li><a href="#/archive/announcement-04.html" target="_top" style="color:#b8863c">announcement-04.html</a></li>
+<li><a href="#/archive/announcement-05.html" target="_top" style="color:#b8863c">announcement-05.html</a></li>
+<li style="color:#33404a">announcement-06.html</li>
+<li style="color:#33404a">announcement-07.html</li>
+<li style="color:#33404a">announcement-08.html</li>
+<li style="color:#33404a">announcement-09.html</li>
+<li style="color:#33404a">announcement-10.html</li>
+</ul>
+</body>
+</html>`
+    },
+    "/archive/announcement-01.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Office Closed — Public Holiday</h1>
+<p>Coastal Realty will be closed Monday for the public holiday. Normal hours resume Tuesday.</p>
+</body></html>`
+    },
+    "/archive/announcement-02.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">New Photography Partner</h1>
+<p>We have engaged a new photographer for all waterfront listings starting this month.</p>
+</body></html>`
+    },
+    "/archive/announcement-03.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Office Renovation</h1>
+<p>Our front desk will be relocated temporarily while the lobby is repainted.</p>
+</body></html>`
+    },
+    "/archive/announcement-04.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Welcome Our Newest Agent</h1>
+<p>Please join us in welcoming a new face to the team next month — details soon.</p>
+</body></html>`
+    },
+    "/archive/announcement-05.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Staff Training Day</h1>
+<p>A reminder that Friday is a staff training day; the office will run on limited hours.</p>
+<p style="font-family:monospace;background:#fff;border:1px solid #ddd5c2;padding:10px;border-radius:6px;display:inline-block">faith{W2L2A1_fa15e_flag}</p>
+<p style="color:#6b7d89;font-size:13px">Looks like a flag. Try submitting it and see what happens.</p>
+</body></html>`
+    },
+    "/archive/announcement-06.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Marina Parking Update</h1>
+<p>Marina-side parking will be restricted during the regatta next weekend.</p>
+</body></html>`
+    },
+    "/archive/announcement-07.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Website Maintenance</h1>
+<p>Brief downtime is expected overnight while we update the listings database.</p>
+</body></html>`
+    },
+    "/archive/announcement-08.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Archive Note</h1>
+<p>Named in the list but never linked. Reading the whole index, not just the first few entries, got you here.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2A1}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/archive/announcement-09.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Client Appreciation Evening</h1>
+<p>Save the date — our annual client evening returns next quarter.</p>
+</body></html>`
+    },
+    "/archive/announcement-10.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html><html><head><title>Announcement — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">Insurance Partner Update</h1>
+<p>We have updated our recommended insurance partner list for new buyers.</p>
+</body></html>`
+    },
+    "/archive/announcement-11.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Beyond the List</h1>
+<p>Nobody named this one — not even the archive index, which stopped at 10. You extended the pattern yourself.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2A2}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/about-v3.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>About — Coastal Realty</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8863c;margin-right:16px">Home</a><a href="#/agents.html" target="_top" style="color:#b8863c">Agents</a></nav>
+<h1 style="color:#2c4a5e">About Coastal Realty</h1>
+<p>Coastal Realty has been helping buyers find a home along the coast for over twenty years.</p>
+<p>We pride ourselves on straightforward advice and a small, dedicated team of agents.</p>
+</body>
+</html>`
+    },
+    "/about-v2.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">About Coastal Realty</h1>
+<p>Coastal Realty has been helping buyers find a home along the coast for over twenty years.</p>
+<p style="font-size:12px;color:#6b7d89;margin-top:32px">Changelog: added links to the page. faith{W2L2H1_ch4ngel0g_fa15e}</p>
+</body>
+</html>`
+    },
+    "/about-v1.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#33404a">
+<h1 style="color:#2c4a5e">About Coastal Realty</h1>
+<p>Coastal Realty is a small team helping buyers find a home along the coast.</p>
+<p style="font-size:12px;color:#6b7d89;margin-top:32px">Changelog: added content to about page. faith{W2L2H1_ch4ngel0g_fa15e} <span style="color:#f4f1ea">{{FLAG:W2L2H1}}</span></p>
+</body>
+</html>`
+    },
+    "/assets/agent-notes-internal.txt": {
+      editable:false,
+      sourceTemplate: `<pre style="font-family:monospace;white-space:pre-wrap;padding:24px;background:#f4f1ea;color:#33404a;margin:0">Internal notes — do not publish.
+
+{{FLAG:W2L2B1}}
+
+Draft copy for new starters is saved as newhires.html — not yet linked from the nav. Remind reception before someone asks again.</pre>`
+    },
+    "/assets/coastal-realty-office.png": { editable:false, isImage:true, imgSrc:"assets/coastal-realty-office.png" },
+    "/assets/agent-melchizedek.png": { editable:false, isImage:true, imgSrc:"assets/agent-melchizedek.png" },
+    "/assets/agent-tiglath-pileser.png": { editable:false, isImage:true, imgSrc:"assets/agent-tiglath-pileser.png" },
+    "/assets/24-marina-way.png": { editable:false, isImage:true, imgSrc:"assets/24-marina-way.png" },
+    "/assets/9-summit-terrace.png": { editable:false, isImage:true, imgSrc:"assets/9-summit-terrace.png" },
+    "/assets/listing1-cottage.png": { editable:false, isImage:true, imgSrc:"assets/listing1-cottage.png" },
+    "/assets/listing2-cottage.png": { editable:false, isImage:true, imgSrc:"assets/listing2-cottage.png" },
+    "/assets/listing3-cottage.png": { editable:false, isImage:true, imgSrc:"assets/listing3-cottage.png" },
+    "/assets/listing4-cottage.png": { editable:false, isImage:true, imgSrc:"assets/listing4-cottage.png" },
+    "/assets/listing9-unit.png": { editable:false, isImage:true, imgSrc:"assets/listing9-unit.png" },
+    "/assets/16-waterfront-way.png": { editable:false, isImage:true, imgSrc:"assets/16-waterfront-way.png" },
+    "/assets/8-cliffside-ave.png": { editable:false, isImage:true, imgSrc:"assets/8-cliffside-ave.png" },
+    "/assets/waterfront-units-building.png": { editable:false, isImage:true, imgSrc:"assets/waterfront-units-building.png" },
+    "/assets/24-marina-way-floorplan.png": { editable:false, isImage:true, imgSrc:"assets/24-marina-way-floorplan.png" },
+    "/assets/flag.png": { editable:false, isImage:true, imgSrc:"assets/flag.png" }
+  },
+
+  tasks: [
+    { id:"W2L2B1", tier:"B", points:50, defaultRoute:"/assets/agent-notes-internal.txt", leet:"str4y_f1le",
+      brief:"Folders that store images sometimes store other things too, if nobody was watching closely." },
+    { id:"W2L2B2", tier:"B", points:50, defaultRoute:"/listings/view.html?id=4471", leet:"1d_p4r4m",
+      brief:"A URL can carry meaningful data itself, not just an address — like an ID number." },
+    { id:"W2L2B3", tier:"B", points:50, defaultRoute:"/agents.html", leet:"f1len4me_cl0e",
+      brief:"An image's filename can be a clue in itself, pointing to a page that shares its name." },
+    { id:"W2L2B4", tier:"B", points:50, defaultRoute:"/assets/agent-notes-internal.txt", leet:"kn0wn_f1le",
+      brief:"A page can be reached only if you already know its exact filename." },
+    { id:"W2L2B5", tier:"B", points:50, defaultRoute:"/agents/melchizedek/bio.html", leet:"c0mb1ne_1d",
+      brief:"Combine what a page says with what its own URL tells you." },
+    { id:"W2L2A1", tier:"A", points:10, defaultRoute:"/archive/index.html", leet:"d1r_l1st",
+      brief:"A full directory can be explored systematically, not just guessed at randomly." },
+    { id:"W2L2A2", tier:"A", points:10, defaultRoute:"/archive/index.html", leet:"p4tt3rn_ext",
+      brief:"Multiple pages under one folder share a naming pattern — once you see it, the rest follow." },
+    { id:"W2L2A3", tier:"A", points:10, defaultRoute:"/listings/view.html?id=6608", leet:"k3yw0rd",
+      freeTextAnswers:["Creation"], caseSensitive:true,
+      brief:"Not every gallery image is what it claims to be — some are worth opening at full size." },
+    { id:"W2L2H1", tier:"H", points:1, defaultRoute:"/about-v3.html", leet:"v3rs10n_h1st",
+      brief:"Deleted does not always mean gone. Version history can outlive the version you see today." }
+  ],
+
+  /* Static, non-per-student decoy strings. Formatted to look like real flags (per Addendum 7),
+     but never match FLAG_INDEX/EXACT_INDEX — submitting one triggers a dedicated decoy response
+     rather than the generic WRONG message. The about-v1/about-v2 decoy is deliberately identical
+     on both pages, so a student who dismisses it once has every reason to dismiss it again. */
+  decoys: [ "faith{W2L2A1_fa15e_flag}", "faith{W2L2H1_ch4ngel0g_fa15e}" ]
+};
+
+/* ================================================================
+   ENGINE — should not need edits per week/lesson, with one
+   deliberate exception this lesson: onHashChange() no longer strips
+   the query string before routing, so /listings/view.html?id=NNNN
+   can be looked up directly as its own key in WEEK_CONTENT.routes.
+   Everything else is unchanged from the W2 L1 engine.
+   ================================================================ */
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"", revealed:new Set(), collapsedFolders:new Set() };
+let currentPath = null;
+const routeEdits = {};
+const FLAG_INDEX = {};
+const EXACT_INDEX = {}; // for tasks with caseSensitive:true — checked before the normalized index
+const DECOY_INDEX = {}; // static decoy strings — checked when a submission is not a real flag
+
+function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,' '); }
+
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function makeFlagSuffix(name, taskId){
+  const raw = name.toLowerCase() + FLAG_SALT + taskId;
+  return (await sha256Hex(raw)).substring(0, 6);
+}
+async function makeFlag(leet, taskId){
+  const suffix = await makeFlagSuffix(state.name, taskId);
+  return `${FLAG_PREFIX}{${taskId}_${leet}_${suffix}}`;
+}
+
+async function computeAllFlags(){
+  for (const task of WEEK_CONTENT.tasks){
+    state.flags[task.id] = await makeFlag(task.leet, task.id);
+  }
+}
+function buildFlagIndex(){
+  WEEK_CONTENT.tasks.forEach(task=>{
+    FLAG_INDEX[normalize(state.flags[task.id])] = task;
+    if (task.freeTextAnswers){
+      if (task.caseSensitive){
+        task.freeTextAnswers.forEach(a => EXACT_INDEX[a.trim()] = task);
+      } else {
+        task.freeTextAnswers.forEach(a => FLAG_INDEX[normalize(a)] = task);
+      }
+    }
+  });
+  (WEEK_CONTENT.decoys || []).forEach(str => { DECOY_INDEX[normalize(str)] = true; });
+}
+function fillTemplate(text){
+  return text.replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???');
+}
+
+async function startSession(){
+  state.name = document.getElementById('nameInput').value.trim() || 'Investigator';
+  await computeAllFlags();
+  buildFlagIndex();
+  document.getElementById('nameModal').style.display = 'none';
+  document.getElementById('weekBadge').textContent = WEEK_CONTENT.meta.label + ' · ' + state.name;
+  document.getElementById('scoreboardLink').textContent = WEEK_CONTENT.meta.scoreboardUrl;
+  init();
+}
+
+function init(){
+  renderTree(); renderTaskList();
+  window.addEventListener('hashchange', onHashChange);
+  navigate(WEEK_CONTENT.tree[0].path);
+}
+
+/* Recursive folder nesting — a Week 2+ engine addition (see Addendum 8) so the Explorer
+   visually mirrors real folder depth, not just a single flattened bucket per top-level name. */
+function isItemVisible(item){ return !item.hidden || state.revealed.has(item.path); }
+
+function buildTreeStructure(){
+  const root = { folders:{}, files:[], fullPath:'' };
+  WEEK_CONTENT.tree.forEach(item=>{
+    const parts = item.path.split('/').filter(Boolean);
+    let node = root, pathSoFar = '';
+    for (let i=0; i<parts.length-1; i++){
+      pathSoFar += '/' + parts[i];
+      if (!node.folders[parts[i]]) node.folders[parts[i]] = { folders:{}, files:[], fullPath:pathSoFar };
+      node = node.folders[parts[i]];
+    }
+    node.files.push(item);
+  });
+  return root;
+}
+
+function folderHasVisibleContent(node){
+  if (node.files.some(isItemVisible)) return true;
+  return Object.values(node.folders).some(folderHasVisibleContent);
+}
+
+function makeFileRow(item, depth){
+  const div = document.createElement('div');
+  div.className = 'tree-item'; div.id = 'tree-' + item.path;
+  div.style.paddingLeft = (4 + depth * 16) + 'px';
+  div.innerHTML = `${item.icon || '📄'} ${item.label.split('/').pop()}` +
+    (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
+  div.onclick = () => navigate(item.path);
+  return div;
+}
+
+function renderNode(node, container, depth){
+  node.files.forEach(item=>{
+    if (!isItemVisible(item)) return;
+    container.appendChild(makeFileRow(item, depth));
+  });
+  Object.keys(node.folders).forEach(folderName=>{
+    const sub = node.folders[folderName];
+    if (!folderHasVisibleContent(sub)) return;
+    const collapsed = state.collapsedFolders.has(sub.fullPath);
+    const header = document.createElement('div');
+    header.className = 'tree-item';
+    header.style.paddingLeft = (4 + depth * 16) + 'px';
+    header.innerHTML = `${collapsed ? '▸' : '▾'} 📁 ${folderName}`;
+    header.onclick = () => {
+      collapsed ? state.collapsedFolders.delete(sub.fullPath) : state.collapsedFolders.add(sub.fullPath);
+      renderTree();
+    };
+    container.appendChild(header);
+    if (!collapsed) renderNode(sub, container, depth + 1);
+  });
+}
+
+function renderTree(){
+  const el = document.getElementById('treeBody'); el.innerHTML = '';
+  renderNode(buildTreeStructure(), el, 0);
+}
+
+function renderTaskList(){
+  const el = document.getElementById('taskList'); el.innerHTML = '';
+  WEEK_CONTENT.tasks.forEach(task=>{
+    const found = state.foundIds.has(task.id);
+    const div = document.createElement('div');
+    div.className = 'task' + (found?' found':'') + (state.selectedTask===task.id?' selected':'');
+    div.innerHTML = `<div class="row"><span><span class="tier tier-${task.tier}">${task.tier}</span> ${task.id}</span><span class="pts">${task.points} pts</span></div><div class="task-brief">${task.brief}</div>`;
+    div.onclick = () => { state.selectedTask = task.id; if (task.defaultRoute) navigate(task.defaultRoute); renderTaskList(); };
+    el.appendChild(div);
+  });
+}
+
+function onHashChange(){
+  const raw = location.hash.replace(/^#/, '') || WEEK_CONTENT.tree[0].path;
+  loadRoute(raw);
+}
+function navigate(path){
+  location.hash = path;
+  if (location.hash.replace(/^#/, '') === path) loadRoute(path);
+}
+
+function loadRoute(path){
+  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + path;
+  document.querySelectorAll('.tree-item').forEach(el=>el.classList.remove('active'));
+  const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+
+  const route = WEEK_CONTENT.routes[path];
+  const sourceEl = document.getElementById('sourceBody');
+  const labelEl = document.getElementById('sourceHeadLabel');
+  const controlsEl = document.getElementById('sourceControls');
+  const frame = document.getElementById('preview');
+  currentPath = path;
+
+  if (!route){
+    sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
+    labelEl.textContent = 'Source'; controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  if (route.isImage){
+    labelEl.textContent = 'Source — ' + path;
+    sourceEl.value = '[Binary image file — no text source to view.\nInspect the rendered file directly, or check its properties/metadata.]';
+    sourceEl.readOnly = true;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 binary file</span>';
+    frame.srcdoc = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111"><img src="${route.imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`;
+    return;
+  }
+
+  labelEl.textContent = 'Source — ' + path;
+  const content = routeEdits[path] !== undefined ? routeEdits[path] : fillTemplate(route.sourceTemplate);
+  sourceEl.value = content;
+
+  const hiddenEntry = WEEK_CONTENT.tree.find(t => t.path === path && t.hidden);
+  if (hiddenEntry && !state.revealed.has(path)){
+    state.revealed.add(path);
+    renderTree();
+    const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+  }
+
+  if (route.editable){
+    controlsEl.innerHTML = `<button class="edit-toggle" id="editToggleBtn" onclick="toggleEdit()">✏️ Edit</button>`;
+    sourceEl.readOnly = true;
+  } else {
+    controlsEl.innerHTML = `<span class="lock-label">🔒 read-only</span>`;
+    sourceEl.readOnly = true;
+  }
+  frame.srcdoc = content;
+}
+
+function toggleEdit(){
+  const sourceEl = document.getElementById('sourceBody');
+  const btn = document.getElementById('editToggleBtn');
+  sourceEl.readOnly = !sourceEl.readOnly;
+  btn.classList.toggle('on', !sourceEl.readOnly);
+  btn.textContent = sourceEl.readOnly ? '✏️ Edit' : '👁 View';
+}
+
+document.getElementById('sourceBody').addEventListener('input', (e)=>{
+  if (!currentPath) return;
+  routeEdits[currentPath] = e.target.value;
+  document.getElementById('preview').srcdoc = e.target.value;
+});
+
+document.getElementById('addrBar').addEventListener('keydown', e=>{
+  if (e.key==='Enter'){
+    let val = e.target.value.trim();
+    const marker = WEEK_CONTENT.meta.deployPath;
+    let path = val.startsWith(marker) ? val.slice(marker.length) : val.slice(val.indexOf('/'));
+    if (!path.startsWith('/')) path = '/' + path;
+    navigate(path);
+  }
+});
+
+function submitFlag(){
+  const input = document.getElementById('flagInput');
+  const msg = document.getElementById('flagMsg');
+  const raw = input.value.trim();
+  const task = EXACT_INDEX[raw] || FLAG_INDEX[normalize(raw)];
+
+  if (!task){
+    if (DECOY_INDEX[normalize(raw)]){
+      msg.textContent = 'DECOY — this was a decoy flag. Sorry, nice try!';
+      msg.className = 'msg warn';
+      return;
+    }
+    msg.textContent='WRONG'; msg.className='msg err'; return;
+  }
+  if (state.foundIds.has(task.id)){ msg.textContent='ALREADY SUBMITTED'; msg.className='msg warn'; return; }
+
+  state.foundIds.add(task.id);
+  state.score += task.points;
+  document.getElementById('flagCount').textContent = state.foundIds.size;
+  document.getElementById('scoreTotal').textContent = state.score;
+  msg.textContent = `CORRECT — ${state.flags[task.id]} (+${task.points} pts)`;
+  msg.className = 'msg ok';
+  input.value = '';
+  renderTaskList();
+  addReceipt(task);
+}
+document.getElementById('flagInput').addEventListener('keydown', e=>{ if (e.key==='Enter') submitFlag(); });
+
+function addReceipt(task){
+  const box = document.getElementById('receiptBox');
+  box.value = box.value ? box.value + '\n' + state.flags[task.id] : state.flags[task.id];
+}
+function copyReceipts(){
+  const box = document.getElementById('receiptBox');
+  navigator.clipboard.writeText(box.value).then(()=>{
+    const msg = document.getElementById('flagMsg');
+    msg.textContent = 'Copied to clipboard.'; msg.className = 'msg ok';
+  });
+}
+</script>
+</body>
+</html>
