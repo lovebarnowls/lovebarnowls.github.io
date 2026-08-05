@@ -157,6 +157,7 @@ const WEEK_CONTENT = {
   tree: [
     { path:"/index.html", label:"index.html" },
     { path:"/destinations.html", label:"destinations.html" },
+    { path:"/contact.html", label:"contact.html" },
     { path:"/styles/main.css", label:"styles/main.css", icon:"🎨" },
     { path:"/secret.html", label:"secret.html", hidden:true }
   ],
@@ -178,7 +179,7 @@ const WEEK_CONTENT = {
 <p>Adventure starts here. Same friendly team, brand new build.</p>
 <p><a href="#/destinations.html" target="_top" style="color:#c9822f">Browse destinations →</a></p>
 
-<p style="color:#a3762a;font-size:13px">Check the footer of our destinations page for shipping updates.</p>
+<p><a href="#/contact.html" target="_top" style="color:#c9822f">Check our shipping updates →</a></p>
 
 <p style="color:#a3762a;font-size:12px;margin-top:30px">Site built by our web team — full build history is public. <a href="https://github.com/lovebarnowls/lovebarnowls.github.io/blob/main/Y9T2/w1/t2/flaghere.md" target="_blank" style="color:#c9822f">See our repo →</a></p>
 </body>
@@ -201,14 +202,36 @@ const WEEK_CONTENT = {
 <!-- {{FLAG:W1L2B3}} -->
 
 <p><a href="#/index.html" target="_top" style="color:#c9822f">🏠 Home</a></p>
+</body>
+</html>`
+    },
+    "/contact.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Contact — Wanderlust Travel Co.</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fef9f0">
+<h1 style="color:#c9822f">Get in touch</h1>
+<p>Shipping updates, booking questions, or just to say hi.</p>
 
 <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0d3ba;color:#a3762a;font-size:12px">{{FLAG:W1L2B5}}</div>
+
+<p><a href="#/index.html" target="_top" style="color:#c9822f">🏠 Home</a></p>
 </body>
 </html>`
     },
     "/styles/main.css": {
       editable:false,
       sourceTemplate: `/* Wanderlust Travel Co. — site styles */
+
+/*
+   CSS stands for Cascading Style Sheets. It's the language a browser uses to
+   control how a page looks — colours, fonts, spacing, layout — kept separate
+   from the HTML that holds the actual content. Linking a stylesheet like this
+   one means every page on the site can share the same look from one file,
+   instead of repeating style rules on every single page.
+*/
+
 body { font-family: sans-serif; }
 h1 { color: #c9822f; }
 a { color: #c9822f; }
