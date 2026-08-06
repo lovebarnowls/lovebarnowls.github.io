@@ -167,7 +167,7 @@ const WEEK_CONTENT = {
     { path:"/listings/view.html?id=4472", label:"listings/view.html?id=4472", hidden:true },
     { path:"/listings/view.html?id=3390", label:"listings/view.html?id=3390" },
     { path:"/listings/view.html?id=6608", label:"listings/view.html?id=6608" },
-    { path:"/listings/notes/list-3390-b.html", label:"listings/notes/list-3390-b.html", hidden:true },
+    { path:"/listings/view.html?id=3390-B", label:"listings/view.html?id=3390-B", hidden:true },
     { path:"/archive/index.html", label:"archive/index.html" },
     { path:"/archive/announcement-01.html", label:"archive/announcement-01.html" },
     { path:"/archive/announcement-02.html", label:"archive/announcement-02.html" },
@@ -322,7 +322,19 @@ Sitemap: /sitemap.xml`
 <h1 style="color:#2c4a5e">Reference 3390 — Cliffside Watch</h1>
 <img src="assets/listing1-cottage.png" style="max-width:300px;border-radius:8px" alt="Cliffside Watch exterior">
 <p>A tidy two-bedroom cottage, recently listed by Agent Melchizedek.</p>
-<p style="color:#6b7d89;font-size:13px">Internal file reference: LIST-3390-B</p>
+<p style="color:#6b7d89;font-size:13px">Internal file reference: 3390-B</p>
+</body>
+</html>`
+    },
+    "/listings/view.html?id=3390-B": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
+<h1>Reference 3390-B</h1>
+<p>Combining the id from the address bar with the reference on the page got you here.</p>
+<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B5}}</p>
+<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
 </body>
 </html>`
     },
@@ -342,18 +354,6 @@ Sitemap: /sitemap.xml`
   <a href="#/assets/flag.png" target="_top"><img src="assets/flag.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Bungalow gallery image"></a>
 </div>
 <p style="color:#6b7d89;font-size:13px;margin-top:12px">Click any photo in the gallery to view it full size.</p>
-</body>
-</html>`
-    },
-    "/listings/notes/list-3390-b.html": {
-      editable:false,
-      sourceTemplate: `<!doctype html>
-<html>
-<body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
-<h1>Internal Note — LIST-3390-B</h1>
-<p>Built from the id in the address bar and the reference on the page itself. Neither one alone was enough.</p>
-<p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B5}}</p>
-<p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
 </body>
 </html>`
     },
@@ -540,12 +540,12 @@ Draft copy for new starters is saved as newhires.html — not yet linked from th
   },
 
   tasks: [
-    { id:"W2L2B1", tier:"B", points:50, defaultRoute:"/assets/agent-notes-internal.txt", leet:"str4y_f1le",
-      brief:"Folders that store images sometimes store other things too, if nobody was watching closely." },
+    { id:"W2L2B1", tier:"B", points:50, defaultRoute:"/index.html", leet:"str4y_f1le",
+      brief:"Folders that store images sometimes store other things too, if nobody was watching closely. Try looking at the Explorer menu." },
     { id:"W2L2B2", tier:"B", points:50, defaultRoute:"/listings/view.html?id=4471", leet:"1d_p4r4m",
       brief:"A URL can carry meaningful data itself, not just an address — like an ID number." },
     { id:"W2L2B3", tier:"B", points:50, defaultRoute:"/agents.html", leet:"f1len4me_cl0e",
-      brief:"An image's filename can be a clue in itself, pointing to a page that shares its name." },
+      brief:"An image's filename can be a clue in itself, pointing to a page that shares its name. Can you find the profile page of the other agent? His name contains a hyphen." },
     { id:"W2L2B4", tier:"B", points:50, defaultRoute:"/assets/agent-notes-internal.txt", leet:"kn0wn_f1le",
       brief:"A page can be reached only if you already know its exact filename." },
     { id:"W2L2B5", tier:"B", points:50, defaultRoute:"/agents/melchizedek/bio.html", leet:"c0mb1ne_1d",
