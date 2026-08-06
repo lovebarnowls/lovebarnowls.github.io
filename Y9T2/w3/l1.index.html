@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the Web — Week 3 L1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-app:#1f1712;--bg-panel:#2a2018;--bg-panel-alt:#241b14;--border:#3a2e22;
+    --text-main:#f0e9e2;--text-dim:#9c8b7c;--accent:#e0793f;--accent-soft:#e0793f22;
+    --accent-2:#8fae6b;--ok:#7fbf8f;--err:#d97a6c;--warn:#d9b26a;
+    --font-display:'Space Grotesk',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-app);color:var(--text-main);font-family:var(--font-mono);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .header{flex:0 0 auto;height:52px;background:var(--bg-panel-alt);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);gap:12px}
+  .header .title{font-family:var(--font-display);font-weight:700;font-size:15px}
+  .header .badge{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-dim)}
+  .header .right b{color:var(--accent)}
+
+  .main{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0}
+  .left{display:grid;grid-template-rows:24% 40% 36%;border-right:1px solid var(--border);min-height:0}
+  .panel{overflow:auto;border-bottom:1px solid var(--border);min-height:0;display:flex;flex-direction:column}
+  .panel-head{padding:7px 12px;background:var(--bg-panel-alt);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex:0 0 auto}
+  .panel-body{padding:10px 12px;overflow:auto}
+  .tree-item{padding:5px 4px;cursor:pointer;border-radius:4px;font-size:13px;display:flex;gap:6px;align-items:center}
+  .tree-item:hover{background:var(--bg-panel-alt)}
+  .tree-item.active{background:var(--accent-soft);color:var(--accent)}
+
+  .edit-toggle{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;cursor:pointer;text-transform:none;letter-spacing:0}
+  .edit-toggle:hover{border-color:var(--accent)}
+  .edit-toggle.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+  .lock-label{font-size:10px;color:var(--text-dim);text-transform:none;letter-spacing:0}
+  .source-note{font-size:10px;color:var(--text-dim);padding:4px 12px;border-bottom:1px solid var(--border);flex:0 0 auto}
+  #sourceBody{flex:1;width:100%;background:transparent;border:none;color:var(--text-main);resize:none;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  #sourceBody:read-only{color:var(--text-dim)}
+
+  .task{padding:8px;border-radius:6px;margin-top:6px;border:1px solid transparent}
+  .task:hover{border-color:var(--border)}
+  .task.selected{background:var(--bg-panel-alt);border-color:var(--accent)}
+  .task .row{display:flex;justify-content:space-between;font-size:12px}
+  .task .tier{font-weight:700;color:var(--accent)}
+  .task .tier.tier-A{color:#9fb8e8}
+  .task .tier.tier-H{color:var(--accent-2)}
+  .task .pts{color:var(--text-dim);font-size:11px}
+  .task.found .tier::after{content:" ✓";color:var(--ok)}
+  .task-brief{padding-top:6px;font-size:12px;color:var(--text-dim);line-height:1.5;cursor:pointer}
+
+  .right{display:flex;flex-direction:column;min-width:0}
+  .addr-row{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:8px 10px;border-bottom:1px solid var(--border)}
+  .addr-row .dots{display:flex;gap:5px}
+  .addr-row .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .addr-bar{flex:1;background:var(--bg-app);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--text-main);font-family:var(--font-mono)}
+  .addr-bar:focus{outline:none;border-color:var(--accent)}
+  iframe{flex:1;border:none;background:#fff}
+
+  .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg-panel-alt)}
+  .flagrow{display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .flagrow input{flex:1;max-width:420px;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:13px}
+  .flagrow input:focus{outline:none;border-color:var(--accent)}
+  .flagrow button{background:var(--accent);color:#231508;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-mono);font-weight:700;font-size:13px;cursor:pointer}
+  .flagrow .msg{font-size:13px;font-weight:700;min-width:200px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
+  .receipts{padding:0 16px 12px}
+  .receipts label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
+  .receipts .row2{display:flex;gap:8px;margin-top:4px}
+  .receipts textarea{flex:1;height:46px;resize:none;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-family:var(--font-mono);font-size:11px;padding:8px}
+  .receipts button{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:0 14px;font-family:var(--font-mono);cursor:pointer}
+
+  .modal-backdrop{position:fixed;inset:0;background:#0b0f13ee;display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:28px;width:340px}
+  .modal h2{font-family:var(--font-display);margin:0 0 6px;font-size:19px}
+  .modal p{color:var(--text-dim);font-size:13px;margin:0 0 16px}
+  .modal input{width:100%;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:14px;margin-bottom:12px}
+  .modal button{width:100%;background:var(--accent);color:#231508;border:none;border-radius:8px;padding:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="modal-backdrop" id="nameModal">
+  <div class="modal">
+    <h2>Behind the Web</h2>
+    <p>Case File #4 — HungryKoala. Enter your name to start.</p>
+    <input id="nameInput" placeholder="Your name" autofocus>
+    <button onclick="startSession()">Begin investigation</button>
+  </div>
+</div>
+
+<div class="header">
+  <span class="title">Behind the Web</span>
+  <span class="badge" id="weekBadge">Week 3 — L1</span>
+  <div class="right">
+    <span>Flags: <b id="flagCount">0</b> · Score: <b id="scoreTotal">0</b></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="panel">
+      <div class="panel-head"><span>Explorer</span></div>
+      <div class="panel-body" id="treeBody"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span id="sourceHeadLabel">Source — select a file</span>
+        <span id="sourceControls"><span class="lock-label" id="lockLabel">🔒 read-only</span></span>
+      </div>
+      <div class="source-note">Most real websites don't let visitors edit their source. In this sandbox, a few files can be — look for the toggle above when it appears.</div>
+      <textarea id="sourceBody" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="panel" style="border-bottom:none">
+      <div class="panel-head"><span>Tasks — L1</span></div>
+      <div class="panel-body" id="taskList"></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="addr-row">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <input class="addr-bar" id="addrBar" spellcheck="false">
+    </div>
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="flagrow">
+    <input id="flagInput" placeholder="Type or paste a flag here...">
+    <button onclick="submitFlag()">Submit</button>
+    <span class="msg" id="flagMsg"></span>
+  </div>
+  <div class="receipts">
+    <label>Your flags — copy and paste at: <span id="scoreboardLink">[insert scoreboard link]</span></label>
+    <div class="row2">
+      <textarea id="receiptBox" readonly placeholder="Solve a task to see your flags listed here..."></textarea>
+      <button onclick="copyReceipts()">Copy all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   WEEK CONTENT — Week 3 · L1 ("The data about the data")
+   HungryKoala — Damaris's food blog, AI-generated koala-themed
+   recipe photography. This is the site as it stands today; L2
+   revisits it after a redesign. Assets are shared at the week
+   level (Addendum 9) with no per-lesson prefix, so filenames here
+   are fair game for L2 to reuse or build on directly.
+   ================================================================ */
+
+const FLAG_PREFIX = "faith";
+const FLAG_SALT   = "wanderlust-2026";
+
+const WEEK_CONTENT = {
+  meta:{ week:3, lesson:"L1", label:"Week 3 — L1",
+         deployPath:"lovebarnowls.github.io/Y9T2/w3/l1",
+         scoreboardUrl:"lovebarnowls.github.io/Y9T2/scoreboard.html" },
+
+  tree: [
+    { path:"/index.html", label:"index.html" },
+    { path:"/recipes/eucalyptus-slaw.html", label:"recipes/eucalyptus-slaw.html" },
+    { path:"/recipes/gum-leaf-tea-cake.html", label:"recipes/gum-leaf-tea-cake.html" },
+    { path:"/recipes/wattle-seed-damper.html", label:"recipes/wattle-seed-damper.html" },
+    { path:"/recipes/drafts/bushtucker-pavlova.html", label:"recipes/drafts/bushtucker-pavlova.html", hidden:true },
+    { path:"/about.html", label:"about.html" },
+    { path:"/gallery.html", label:"gallery.html" },
+    { path:"/contact.html", label:"contact.html" },
+    { path:"/sitemap.xml", label:"sitemap.xml" },
+    { path:"/assets/hero-banner.png", label:"assets/hero-banner.png", icon:"🖼" },
+    { path:"/assets/slaw-plate.png", label:"assets/slaw-plate.png", icon:"🖼" },
+    { path:"/assets/tea-cake-plate.png", label:"assets/tea-cake-plate.png", icon:"🖼" },
+    { path:"/assets/damper-plate.png", label:"assets/damper-plate.png", icon:"🖼" },
+    { path:"/assets/gallery-closeup.png", label:"assets/gallery-closeup.png", icon:"🖼", hidden:true }
+  ],
+
+  routes: {
+    "/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head>
+<title>HungryKoala — Recipes for the Determined Herbivore | {{FLAG:W3L1B1}}</title>
+</head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c;margin-right:16px">Home</a><a href="#/about.html" target="_top" style="color:#c25a2c;margin-right:16px">About</a><a href="#/gallery.html" target="_top" style="color:#c25a2c;margin-right:16px">Gallery</a><a href="#/contact.html" target="_top" style="color:#c25a2c">Contact</a></nav>
+<h1 style="color:#5c4128">HungryKoala</h1>
+<p>Recipes for the determined herbivore, photographed one leaf at a time.</p>
+
+<div style="margin:24px 0">
+  <h3 style="color:#5c4128">Eucalyptus Slaw</h3>
+  <p>A bright, crunchy starter. <a href="#/recipes/eucalyptus-slaw.html" target="_top" style="color:#c25a2c">Read the recipe →</a></p>
+</div>
+
+<div style="margin:24px 0">
+  <h3 style="color:#5c4128">Gum Leaf Tea Cake</h3>
+  <p>A soft afternoon bake. <a href="#/recipes/gum-leaf-tea-cake.html" target="_top" style="color:#c25a2c">Read the recipe →</a></p>
+</div>
+
+<div style="margin:24px 0">
+  <h3 style="color:#5c4128">Wattle Seed Damper</h3>
+  <p>A rustic camp-oven classic. <a href="#/recipes/wattle-seed-damper.html" target="_top" style="color:#c25a2c">Read the recipe →</a></p>
+</div>
+
+<p style="color:#8a7460;font-size:13px;margin-top:40px">© HungryKoala. All recipes tested, if not entirely eaten.</p>
+</body>
+</html>`
+    },
+    "/recipes/eucalyptus-slaw.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head>
+<title>Eucalyptus Slaw — HungryKoala</title>
+<meta name="description" content="A bright, crunchy eucalyptus slaw with a citrus dressing, ready in fifteen minutes. Note from Damaris: this batch's photos were reshot twice before publishing — the flag for anyone reading this closely is {{FLAG:W3L1B2}}.">
+</head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Eucalyptus Slaw</h1>
+<img src="../assets/slaw-plate.png" style="max-width:320px;border-radius:8px" alt="Eucalyptus slaw served on a wooden plate">
+<p>A bright, crunchy starter with a citrus dressing.</p>
+</body>
+</html>`
+    },
+    "/recipes/gum-leaf-tea-cake.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head>
+<title>Gum Leaf Tea Cake — HungryKoala</title>
+<link rel="canonical" href="../recipes/drafts/bushtucker-pavlova.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Gum Leaf Tea Cake",
+  "author": "Damaris",
+  "recipeCategory": "Baking",
+  "internalNotes": "faith{W3L1B5_jsonld_sch3ma_4b8e02}"
+}
+</script>
+</head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Gum Leaf Tea Cake</h1>
+<img src="../assets/tea-cake-plate.png" style="max-width:320px;border-radius:8px" alt="Gum leaf tea cake on a cooling rack">
+<p>A soft afternoon bake, best served warm.</p>
+</body>
+</html>`
+    },
+    "/recipes/wattle-seed-damper.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Wattle Seed Damper — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Wattle Seed Damper</h1>
+<img src="../assets/damper-plate.png" style="max-width:320px;border-radius:8px" alt="Wattle seed damper fresh from the camp oven, close crumb shot, shared with permission from the original photographer's contact sheet — unused frame reference {{FLAG:W3L1B3}}, kept here only for the blogger's own records">
+<p>A rustic camp-oven classic, best torn rather than sliced.</p>
+</body>
+</html>`
+    },
+    "/recipes/drafts/bushtucker-pavlova.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head>
+<title>Bushtucker Pavlova (draft) — HungryKoala</title>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Bushtucker Pavlova",
+  "author": "Damaris",
+  "recipeCategory": "Dessert",
+  "internalNotes": "{{FLAG:W3L1B5}}"
+}
+</script>
+</head>
+<body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center">
+<h1>Bushtucker Pavlova — draft</h1>
+<p>Not yet published — reached only because the tea cake page's canonical link named it.</p>
+<p style="font-family:monospace;background:#241b14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L1B4}}</p>
+<p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below. There is a second, different flag further up in this page's source — worth reading everything here, not just what renders.</p>
+</body>
+</html>`
+    },
+    "/about.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head>
+<title>About Damaris — HungryKoala</title>
+<meta name="author" content="Damaris">
+<meta name="keywords" content="koala, recipes, food blog, eucalyptus, bushtucker">
+<meta name="theme-color" content="#e0793f">
+<meta name="twitter:description" content="faith{W3L1A1_h34d_re4d_7c2f91}">
+<meta name="og:description" content="HungryKoala is written and photographed by Damaris, one recipe at a time. Behind-the-scenes note for anyone reading the whole head, not just the first tag: {{FLAG:W3L1A1}}">
+</head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">About Damaris</h1>
+<p>Damaris started HungryKoala as a way of combining two things she loved and could not otherwise justify combining: elaborate home cooking, and an entirely unreasonable fondness for koalas.</p>
+<p>Every photograph on this site is AI-generated — no actual koalas are involved in the making of any recipe.</p>
+</body>
+</html>`
+    },
+    "/gallery.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head>
+<title>Gallery — HungryKoala</title>
+<meta property="og:image" content="../assets/gallery-closeup.png">
+</head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Gallery</h1>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+  <img src="../assets/slaw-plate.png" style="width:140px;height:100px;object-fit:cover;border-radius:6px" alt="Eucalyptus slaw">
+  <img src="../assets/tea-cake-plate.png" style="width:140px;height:100px;object-fit:cover;border-radius:6px" alt="Gum leaf tea cake">
+  <img src="../assets/damper-plate.png" style="width:140px;height:100px;object-fit:cover;border-radius:6px" alt="Wattle seed damper">
+</div>
+<p style="color:#8a7460;font-size:13px;margin-top:12px">More photos are added throughout the month.</p>
+</body>
+</html>`
+    },
+    "/contact.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Contact — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Contact</h1>
+<p>For recipe requests or collaborations, reach Damaris at hello@hungrykoala.example.</p>
+</body>
+</html>`
+    },
+    "/sitemap.xml": {
+      editable:false,
+      sourceTemplate: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>https://hungrykoala.example/index.html</loc></url>
+<url><loc>https://hungrykoala.example/about.html</loc></url>
+<url><loc>https://hungrykoala.example/gallery.html</loc></url>
+<url><loc>https://hungrykoala.example/contact.html</loc></url>
+<url><loc>https://hungrykoala.example/recipes/eucalyptus-slaw.html</loc></url>
+<url><loc>https://hungrykoala.example/recipes/gum-leaf-tea-cake.html</loc></url>
+<url><loc>https://hungrykoala.example/recipes/wattle-seed-damper.html</loc></url>
+<url><loc>https://hungrykoala.example/gallery/behind-the-scenes.html</loc></url>
+</urlset>`
+    },
+    "/gallery/behind-the-scenes.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center">
+<h1>Behind the Scenes</h1>
+<p>Never linked from any nav on the live site — only named inside sitemap.xml, a file most visitors never open.</p>
+<p style="font-family:monospace;background:#241b14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L1A2}}</p>
+<p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/assets/hero-banner.png": { editable:false, isImage:true, imgSrc:"../assets/hero-banner.png" },
+    "/assets/slaw-plate.png": { editable:false, isImage:true, imgSrc:"../assets/slaw-plate.png" },
+    "/assets/tea-cake-plate.png": { editable:false, isImage:true, imgSrc:"../assets/tea-cake-plate.png" },
+    "/assets/damper-plate.png": { editable:false, isImage:true, imgSrc:"../assets/damper-plate.png" },
+    "/assets/gallery-closeup.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-closeup.png" }
+  },
+
+  tasks: [
+    { id:"W3L1B1", tier:"B", points:50, defaultRoute:"/index.html", leet:"t1tle_t4g",
+      brief:"A page's title tag is written for the browser tab and search engines, not for the reader — it does not have to match the heading shown on the page itself." },
+    { id:"W3L1B2", tier:"B", points:50, defaultRoute:"/recipes/eucalyptus-slaw.html", leet:"m3t4_d3sc",
+      brief:"A meta description exists to summarise a page for search results, and it does not need to match the page's own visible summary word for word." },
+    { id:"W3L1B3", tier:"B", points:50, defaultRoute:"/recipes/wattle-seed-damper.html", leet:"4lt_t3xt",
+      brief:"Alt text exists to describe an image to someone who cannot see it — which means it can hold far more detail than any visitor ever notices." },
+    { id:"W3L1B4", tier:"B", points:50, defaultRoute:"/recipes/gum-leaf-tea-cake.html", leet:"c4n0n1c4l",
+      brief:"A canonical link tells a search engine which address is the real version of a page — sometimes it points somewhere nothing else on the site ever mentions." },
+    { id:"W3L1B5", tier:"B", points:50, defaultRoute:"/recipes/drafts/bushtucker-pavlova.html", leet:"jsonld_sch3ma",
+      brief:"Structured data blocks describe a page's content to machines, not to visitors, and are never shown on the rendered page. Once you are on the right page, it is worth reading everything in it, not just what renders." },
+    { id:"W3L1A1", tier:"A", points:10, defaultRoute:"/about.html", leet:"h34d_re4d",
+      brief:"A page's head can carry several meta tags at once — reading only the first one you notice is a good way to miss the one that matters." },
+    { id:"W3L1A2", tier:"A", points:10, defaultRoute:"/sitemap.xml", leet:"s1t3m4p",
+      brief:"Not every file describing a website is meant to be read by a person. One in particular lists every page that exists, whether or not anything links to it." },
+    { id:"W3L1A3", tier:"A", points:10, defaultRoute:"/gallery.html", leet:"0g_1m4ge",
+      freeTextAnswers:["Proof"], caseSensitive:true,
+      brief:"The image shown when a link is shared on social media is not always drawn from the same set of images shown in a gallery. Not every file in this course carries a faith{...} flag — some carry a single word instead, found by opening the file itself." }
+  ],
+
+  /* Static, non-per-student decoy strings. From Week 3 onward these are fully
+     flag-shaped with no visible tell (Addendum 7's live decision point) — they
+     match the format of a real flag for their named task exactly, and only
+     fail because the hex suffix is not one this session's student actually
+     computed. */
+  decoys: [ "faith{W3L1A1_h34d_re4d_7c2f91}", "faith{W3L1B5_jsonld_sch3ma_4b8e02}" ]
+};
+
+/* ================================================================
+   ENGINE — unchanged from W2 L2, including the Addendum 8 nested
+   folder renderer and the query-string-aware router. Addendum 9
+   applies here for the first time: every real image path uses
+   ../assets/filename.png, one level up from this lesson's own
+   folder to the week-level shared assets folder.
+   ================================================================ */
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"", revealed:new Set(), collapsedFolders:new Set() };
+let currentPath = null;
+const routeEdits = {};
+const FLAG_INDEX = {};
+const EXACT_INDEX = {};
+const DECOY_INDEX = {};
+
+function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,' '); }
+
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function makeFlagSuffix(name, taskId){
+  const raw = name.toLowerCase() + FLAG_SALT + taskId;
+  return (await sha256Hex(raw)).substring(0, 6);
+}
+async function makeFlag(leet, taskId){
+  const suffix = await makeFlagSuffix(state.name, taskId);
+  return `${FLAG_PREFIX}{${taskId}_${leet}_${suffix}}`;
+}
+
+async function computeAllFlags(){
+  for (const task of WEEK_CONTENT.tasks){
+    state.flags[task.id] = await makeFlag(task.leet, task.id);
+  }
+}
+function buildFlagIndex(){
+  WEEK_CONTENT.tasks.forEach(task=>{
+    FLAG_INDEX[normalize(state.flags[task.id])] = task;
+    if (task.freeTextAnswers){
+      if (task.caseSensitive){
+        task.freeTextAnswers.forEach(a => EXACT_INDEX[a.trim()] = task);
+      } else {
+        task.freeTextAnswers.forEach(a => FLAG_INDEX[normalize(a)] = task);
+      }
+    }
+  });
+  (WEEK_CONTENT.decoys || []).forEach(str => { DECOY_INDEX[normalize(str)] = true; });
+}
+function fillTemplate(text){
+  return text.replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???');
+}
+
+async function startSession(){
+  state.name = document.getElementById('nameInput').value.trim() || 'Investigator';
+  await computeAllFlags();
+  buildFlagIndex();
+  document.getElementById('nameModal').style.display = 'none';
+  document.getElementById('weekBadge').textContent = WEEK_CONTENT.meta.label + ' · ' + state.name;
+  document.getElementById('scoreboardLink').textContent = WEEK_CONTENT.meta.scoreboardUrl;
+  init();
+}
+
+function init(){
+  renderTree(); renderTaskList();
+  window.addEventListener('hashchange', onHashChange);
+  navigate(WEEK_CONTENT.tree[0].path);
+}
+
+function isItemVisible(item){ return !item.hidden || state.revealed.has(item.path); }
+
+function buildTreeStructure(){
+  const root = { folders:{}, files:[], fullPath:'' };
+  WEEK_CONTENT.tree.forEach(item=>{
+    const parts = item.path.split('/').filter(Boolean);
+    let node = root, pathSoFar = '';
+    for (let i=0; i<parts.length-1; i++){
+      pathSoFar += '/' + parts[i];
+      if (!node.folders[parts[i]]) node.folders[parts[i]] = { folders:{}, files:[], fullPath:pathSoFar };
+      node = node.folders[parts[i]];
+    }
+    node.files.push(item);
+  });
+  return root;
+}
+
+function folderHasVisibleContent(node){
+  if (node.files.some(isItemVisible)) return true;
+  return Object.values(node.folders).some(folderHasVisibleContent);
+}
+
+function makeFileRow(item, depth){
+  const div = document.createElement('div');
+  div.className = 'tree-item'; div.id = 'tree-' + item.path;
+  div.style.paddingLeft = (4 + depth * 16) + 'px';
+  div.innerHTML = `${item.icon || '📄'} ${item.label.split('/').pop()}` +
+    (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
+  div.onclick = () => navigate(item.path);
+  return div;
+}
+
+function renderNode(node, container, depth){
+  node.files.forEach(item=>{
+    if (!isItemVisible(item)) return;
+    container.appendChild(makeFileRow(item, depth));
+  });
+  Object.keys(node.folders).forEach(folderName=>{
+    const sub = node.folders[folderName];
+    if (!folderHasVisibleContent(sub)) return;
+    const collapsed = state.collapsedFolders.has(sub.fullPath);
+    const header = document.createElement('div');
+    header.className = 'tree-item';
+    header.style.paddingLeft = (4 + depth * 16) + 'px';
+    header.innerHTML = `${collapsed ? '▸' : '▾'} 📁 ${folderName}`;
+    header.onclick = () => {
+      collapsed ? state.collapsedFolders.delete(sub.fullPath) : state.collapsedFolders.add(sub.fullPath);
+      renderTree();
+    };
+    container.appendChild(header);
+    if (!collapsed) renderNode(sub, container, depth + 1);
+  });
+}
+
+function renderTree(){
+  const el = document.getElementById('treeBody'); el.innerHTML = '';
+  renderNode(buildTreeStructure(), el, 0);
+}
+
+function renderTaskList(){
+  const el = document.getElementById('taskList'); el.innerHTML = '';
+  WEEK_CONTENT.tasks.forEach(task=>{
+    const found = state.foundIds.has(task.id);
+    const div = document.createElement('div');
+    div.className = 'task' + (found?' found':'') + (state.selectedTask===task.id?' selected':'');
+    div.innerHTML = `<div class="row"><span><span class="tier tier-${task.tier}">${task.tier}</span> ${task.id}</span><span class="pts">${task.points} pts</span></div><div class="task-brief">${task.brief}</div>`;
+    div.onclick = () => { state.selectedTask = task.id; if (task.defaultRoute) navigate(task.defaultRoute); renderTaskList(); };
+    el.appendChild(div);
+  });
+}
+
+function onHashChange(){
+  const raw = location.hash.replace(/^#/, '') || WEEK_CONTENT.tree[0].path;
+  loadRoute(raw);
+}
+function navigate(path){
+  location.hash = path;
+  if (location.hash.replace(/^#/, '') === path) loadRoute(path);
+}
+
+function loadRoute(path){
+  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + path;
+  document.querySelectorAll('.tree-item').forEach(el=>el.classList.remove('active'));
+  const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+
+  const route = WEEK_CONTENT.routes[path];
+  const sourceEl = document.getElementById('sourceBody');
+  const labelEl = document.getElementById('sourceHeadLabel');
+  const controlsEl = document.getElementById('sourceControls');
+  const frame = document.getElementById('preview');
+  currentPath = path;
+
+  if (!route){
+    sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
+    labelEl.textContent = 'Source'; controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  if (route.isImage){
+    labelEl.textContent = 'Source — ' + path;
+    sourceEl.value = '[Binary image file — no text source to view.\nInspect the rendered file directly, or check its properties/metadata.]';
+    sourceEl.readOnly = true;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 binary file</span>';
+    frame.srcdoc = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111"><img src="${route.imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`;
+    return;
+  }
+
+  labelEl.textContent = 'Source — ' + path;
+  const content = routeEdits[path] !== undefined ? routeEdits[path] : fillTemplate(route.sourceTemplate);
+  sourceEl.value = content;
+
+  const hiddenEntry = WEEK_CONTENT.tree.find(t => t.path === path && t.hidden);
+  if (hiddenEntry && !state.revealed.has(path)){
+    state.revealed.add(path);
+    renderTree();
+    const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+  }
+
+  if (route.editable){
+    controlsEl.innerHTML = `<button class="edit-toggle" id="editToggleBtn" onclick="toggleEdit()">✏️ Edit</button>`;
+    sourceEl.readOnly = true;
+  } else {
+    controlsEl.innerHTML = `<span class="lock-label">🔒 read-only</span>`;
+    sourceEl.readOnly = true;
+  }
+  frame.srcdoc = content;
+}
+
+function toggleEdit(){
+  const sourceEl = document.getElementById('sourceBody');
+  const btn = document.getElementById('editToggleBtn');
+  sourceEl.readOnly = !sourceEl.readOnly;
+  btn.classList.toggle('on', !sourceEl.readOnly);
+  btn.textContent = sourceEl.readOnly ? '✏️ Edit' : '👁 View';
+}
+
+document.getElementById('sourceBody').addEventListener('input', (e)=>{
+  if (!currentPath) return;
+  routeEdits[currentPath] = e.target.value;
+  document.getElementById('preview').srcdoc = e.target.value;
+});
+
+document.getElementById('addrBar').addEventListener('keydown', e=>{
+  if (e.key==='Enter'){
+    let val = e.target.value.trim();
+    const marker = WEEK_CONTENT.meta.deployPath;
+    let path = val.startsWith(marker) ? val.slice(marker.length) : val.slice(val.indexOf('/'));
+    if (!path.startsWith('/')) path = '/' + path;
+    navigate(path);
+  }
+});
+
+function submitFlag(){
+  const input = document.getElementById('flagInput');
+  const msg = document.getElementById('flagMsg');
+  const raw = input.value.trim();
+  const task = EXACT_INDEX[raw] || FLAG_INDEX[normalize(raw)];
+
+  if (!task){
+    if (DECOY_INDEX[normalize(raw)]){
+      msg.textContent = 'DECOY — this was a decoy flag. Sorry, nice try!';
+      msg.className = 'msg warn';
+      return;
+    }
+    msg.textContent='WRONG'; msg.className='msg err'; return;
+  }
+  if (state.foundIds.has(task.id)){ msg.textContent='ALREADY SUBMITTED'; msg.className='msg warn'; return; }
+
+  state.foundIds.add(task.id);
+  state.score += task.points;
+  document.getElementById('flagCount').textContent = state.foundIds.size;
+  document.getElementById('scoreTotal').textContent = state.score;
+  msg.textContent = `CORRECT — ${state.flags[task.id]} (+${task.points} pts)`;
+  msg.className = 'msg ok';
+  input.value = '';
+  renderTaskList();
+  addReceipt(task);
+}
+document.getElementById('flagInput').addEventListener('keydown', e=>{ if (e.key==='Enter') submitFlag(); });
+
+function addReceipt(task){
+  const box = document.getElementById('receiptBox');
+  box.value = box.value ? box.value + '\n' + state.flags[task.id] : state.flags[task.id];
+}
+function copyReceipts(){
+  const box = document.getElementById('receiptBox');
+  navigator.clipboard.writeText(box.value).then(()=>{
+    const msg = document.getElementById('flagMsg');
+    msg.textContent = 'Copied to clipboard.'; msg.className = 'msg ok';
+  });
+}
+</script>
+</body>
+</html>
