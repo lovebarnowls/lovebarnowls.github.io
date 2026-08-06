@@ -167,7 +167,7 @@ const WEEK_CONTENT = {
     { path:"/listings/view.html?id=4472", label:"listings/view.html?id=4472", hidden:true },
     { path:"/listings/view.html?id=3390", label:"listings/view.html?id=3390" },
     { path:"/listings/view.html?id=6608", label:"listings/view.html?id=6608" },
-    { path:"/listings/view.html?id=3390-B", label:"listings/view.html?id=3390-B", hidden:true },
+    { path:"/listings/view.html?id=3390-old", label:"listings/view.html?id=3390-old", hidden:true },
     { path:"/archive/index.html", label:"archive/index.html" },
     { path:"/archive/announcement-01.html", label:"archive/announcement-01.html" },
     { path:"/archive/announcement-02.html", label:"archive/announcement-02.html" },
@@ -322,17 +322,17 @@ Sitemap: /sitemap.xml`
 <h1 style="color:#2c4a5e">Reference 3390 — Cliffside Watch</h1>
 <img src="assets/listing1-cottage.png" style="max-width:300px;border-radius:8px" alt="Cliffside Watch exterior">
 <p>A tidy two-bedroom cottage, recently listed by Agent Melchizedek.</p>
-<p style="color:#6b7d89;font-size:13px">Internal file reference: 3390-B</p>
+<p style="color:#6b7d89;font-size:13px">Old reference: 3390-old</p>
 </body>
 </html>`
     },
-    "/listings/view.html?id=3390-B": {
+    "/listings/view.html?id=3390-old": {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html>
 <body style="font-family:sans-serif;padding:40px;background:#2c4a5e;color:#f4f1ea;text-align:center">
-<h1>Reference 3390-B</h1>
-<p>Combining the id from the address bar with the reference on the page got you here.</p>
+<h1>Reference 3390-old</h1>
+<p>An old reference, mentioned in passing on the current listing. Still live, just not current.</p>
 <p style="font-family:monospace;background:#1c313f;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W2L2B5}}</p>
 <p style="color:#9fb3bd;font-size:13px">Copy that straight into the flag box below.</p>
 </body>
@@ -549,7 +549,7 @@ Draft copy for new starters is saved as newhires.html — not yet linked from th
     { id:"W2L2B4", tier:"B", points:50, defaultRoute:"/assets/agent-notes-internal.txt", leet:"kn0wn_f1le",
       brief:"A page can be reached only if you already know its exact filename." },
     { id:"W2L2B5", tier:"B", points:50, defaultRoute:"/agents/melchizedek/bio.html", leet:"c0mb1ne_1d",
-      brief:"Combine what a page says with what its own URL tells you." },
+      brief:"A reference does not have to be purely numeric — try exactly what the page tells you, not just a nearby number." },
     { id:"W2L2A1", tier:"A", points:10, defaultRoute:"/archive/index.html", leet:"d1r_l1st",
       brief:"A full directory can be explored systematically, not just guessed at randomly." },
     { id:"W2L2A2", tier:"A", points:10, defaultRoute:"/archive/index.html", leet:"p4tt3rn_ext",
