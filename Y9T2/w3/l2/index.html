@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the Web — Week 3 L2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-app:#1f1712;--bg-panel:#2a2018;--bg-panel-alt:#241b14;--border:#3a2e22;
+    --text-main:#f0e9e2;--text-dim:#9c8b7c;--accent:#e0793f;--accent-soft:#e0793f22;
+    --accent-2:#8fae6b;--ok:#7fbf8f;--err:#d97a6c;--warn:#d9b26a;
+    --font-display:'Space Grotesk',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-app);color:var(--text-main);font-family:var(--font-mono);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .header{flex:0 0 auto;height:52px;background:var(--bg-panel-alt);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);gap:12px}
+  .header .title{font-family:var(--font-display);font-weight:700;font-size:15px}
+  .header .badge{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-dim)}
+  .header .right b{color:var(--accent)}
+
+  .main{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0}
+  .left{display:grid;grid-template-rows:24% 40% 36%;border-right:1px solid var(--border);min-height:0}
+  .panel{overflow:auto;border-bottom:1px solid var(--border);min-height:0;display:flex;flex-direction:column}
+  .panel-head{padding:7px 12px;background:var(--bg-panel-alt);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex:0 0 auto}
+  .panel-body{padding:10px 12px;overflow:auto}
+  .tree-item{padding:5px 4px;cursor:pointer;border-radius:4px;font-size:13px;display:flex;gap:6px;align-items:center}
+  .tree-item:hover{background:var(--bg-panel-alt)}
+  .tree-item.active{background:var(--accent-soft);color:var(--accent)}
+
+  .edit-toggle{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;cursor:pointer;text-transform:none;letter-spacing:0}
+  .edit-toggle:hover{border-color:var(--accent)}
+  .edit-toggle.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+  .lock-label{font-size:10px;color:var(--text-dim);text-transform:none;letter-spacing:0}
+  .source-note{font-size:10px;color:var(--text-dim);padding:4px 12px;border-bottom:1px solid var(--border);flex:0 0 auto}
+  #sourceBody{flex:1;width:100%;background:transparent;border:none;color:var(--text-main);resize:none;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  #sourceBody:read-only{color:var(--text-dim)}
+
+  .task{padding:8px;border-radius:6px;margin-top:6px;border:1px solid transparent}
+  .task:hover{border-color:var(--border)}
+  .task.selected{background:var(--bg-panel-alt);border-color:var(--accent)}
+  .task .row{display:flex;justify-content:space-between;font-size:12px}
+  .task .tier{font-weight:700;color:var(--accent)}
+  .task .tier.tier-A{color:#9fb8e8}
+  .task .tier.tier-H{color:var(--accent-2)}
+  .task .pts{color:var(--text-dim);font-size:11px}
+  .task.found .tier::after{content:" ✓";color:var(--ok)}
+  .task-brief{padding-top:6px;font-size:12px;color:var(--text-dim);line-height:1.5;cursor:pointer}
+
+  .right{display:flex;flex-direction:column;min-width:0}
+  .addr-row{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:8px 10px;border-bottom:1px solid var(--border)}
+  .addr-row .dots{display:flex;gap:5px}
+  .addr-row .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .addr-bar{flex:1;background:var(--bg-app);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--text-main);font-family:var(--font-mono)}
+  .addr-bar:focus{outline:none;border-color:var(--accent)}
+  iframe{flex:1;border:none;background:#fff}
+
+  .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg-panel-alt)}
+  .flagrow{display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .flagrow input{flex:1;max-width:420px;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:13px}
+  .flagrow input:focus{outline:none;border-color:var(--accent)}
+  .flagrow button{background:var(--accent);color:#231508;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-mono);font-weight:700;font-size:13px;cursor:pointer}
+  .flagrow .msg{font-size:13px;font-weight:700;min-width:200px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
+  .receipts{padding:0 16px 12px}
+  .receipts label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
+  .receipts .row2{display:flex;gap:8px;margin-top:4px}
+  .receipts textarea{flex:1;height:46px;resize:none;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-family:var(--font-mono);font-size:11px;padding:8px}
+  .receipts button{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:0 14px;font-family:var(--font-mono);cursor:pointer}
+
+  .modal-backdrop{position:fixed;inset:0;background:#0b0f13ee;display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:28px;width:340px}
+  .modal h2{font-family:var(--font-display);margin:0 0 6px;font-size:19px}
+  .modal p{color:var(--text-dim);font-size:13px;margin:0 0 16px}
+  .modal input{width:100%;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:14px;margin-bottom:12px}
+  .modal button{width:100%;background:var(--accent);color:#231508;border:none;border-radius:8px;padding:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="modal-backdrop" id="nameModal">
+  <div class="modal">
+    <h2>Behind the Web</h2>
+    <p>Case File #4 — HungryKoala, Part II. Enter your name to start.</p>
+    <input id="nameInput" placeholder="Your name" autofocus>
+    <button onclick="startSession()">Begin investigation</button>
+  </div>
+</div>
+
+<div class="header">
+  <span class="title">Behind the Web</span>
+  <span class="badge" id="weekBadge">Week 3 — L2</span>
+  <div class="right">
+    <span>Flags: <b id="flagCount">0</b> · Score: <b id="scoreTotal">0</b></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="panel">
+      <div class="panel-head"><span>Explorer</span></div>
+      <div class="panel-body" id="treeBody"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span id="sourceHeadLabel">Source — select a file</span>
+        <span id="sourceControls"><span class="lock-label" id="lockLabel">🔒 read-only</span></span>
+      </div>
+      <div class="source-note">Most real websites don't let visitors edit their source. In this sandbox, a few files can be — look for the toggle above when it appears.</div>
+      <textarea id="sourceBody" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="panel" style="border-bottom:none">
+      <div class="panel-head"><span>Tasks — L2</span></div>
+      <div class="panel-body" id="taskList"></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="addr-row">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <input class="addr-bar" id="addrBar" spellcheck="false">
+    </div>
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="flagrow">
+    <input id="flagInput" placeholder="Type or paste a flag here...">
+    <button onclick="submitFlag()">Submit</button>
+    <span class="msg" id="flagMsg"></span>
+  </div>
+  <div class="receipts">
+    <label>Your flags — copy and paste at: <span id="scoreboardLink">[insert scoreboard link]</span></label>
+    <div class="row2">
+      <textarea id="receiptBox" readonly placeholder="Solve a task to see your flags listed here..."></textarea>
+      <button onclick="copyReceipts()">Copy all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   WEEK CONTENT — Week 3 · L2 ("What the redesign left behind")
+   HungryKoala — same site as L1, one point in time later. Damaris
+   relaunched with a new folder structure; whoever did the migration
+   did not clean up after themselves. Assets are shared at the week
+   level (Addendum 9) with L1, no per-lesson prefix.
+   ================================================================ */
+
+const FLAG_PREFIX = "faith";
+const FLAG_SALT   = "wanderlust-2026";
+
+const WEEK_CONTENT = {
+  meta:{ week:3, lesson:"L2", label:"Week 3 — L2",
+         deployPath:"lovebarnowls.github.io/Y9T2/w3/l2",
+         scoreboardUrl:"lovebarnowls.github.io/Y9T2/scoreboard.html" },
+
+  tree: [
+    { path:"/index.html", label:"index.html" },
+    { path:"/recipes/index.html", label:"recipes/index.html" },
+    { path:"/recipes/sweet/gum-leaf-tea-cake.html", label:"recipes/sweet/gum-leaf-tea-cake.html" },
+    { path:"/recipes/savoury/wattle-seed-damper.html", label:"recipes/savoury/wattle-seed-damper.html" },
+    { path:"/recipes/savoury/eucalyptus-slaw.html", label:"recipes/savoury/eucalyptus-slaw.html" },
+    { path:"/about.html", label:"about.html" },
+    { path:"/gallery.html", label:"gallery.html" },
+    { path:"/contact.html", label:"contact.html" },
+    { path:"/sitemap.xml", label:"sitemap.xml" },
+    { path:"/practice-edit.html", label:"practice-edit.html" },
+    { path:"/recipes/eucalyptus-slaw.html", label:"recipes/eucalyptus-slaw.html", hidden:true },
+    { path:"/recipes/old-recipe-4.html", label:"recipes/old-recipe-4.html", hidden:true },
+    { path:"/index.html.bak", label:"index.html.bak", hidden:true },
+    { path:"/recipes/migration-notes.txt", label:"recipes/migration-notes.txt", hidden:true },
+    { path:"/staff/handoff.html", label:"staff/handoff.html", hidden:true },
+    { path:"/archive/old-site/index.html", label:"archive/old-site/index.html", hidden:true },
+    { path:"/archive/old-site/page-01.html", label:"archive/old-site/page-01.html", hidden:true },
+    { path:"/archive/old-site/page-02.html", label:"archive/old-site/page-02.html", hidden:true },
+    { path:"/archive/old-site/page-03.html", label:"archive/old-site/page-03.html", hidden:true },
+    { path:"/archive/old-site/page-04.html", label:"archive/old-site/page-04.html", hidden:true },
+    { path:"/archive/old-site/page-05.html", label:"archive/old-site/page-05.html", hidden:true },
+    { path:"/archive/old-site/page-06.html", label:"archive/old-site/page-06.html", hidden:true },
+    { path:"/archive/old-site/page-07.html", label:"archive/old-site/page-07.html", hidden:true },
+    { path:"/archive/old-site/page-08.html", label:"archive/old-site/page-08.html", hidden:true },
+    { path:"/assets/gallery-1.png", label:"assets/gallery-1.png", icon:"🖼" },
+    { path:"/assets/gallery-2.png", label:"assets/gallery-2.png", icon:"🖼" },
+    { path:"/assets/gallery-3.png", label:"assets/gallery-3.png", icon:"🖼" },
+    { path:"/assets/gallery-4.png", label:"assets/gallery-4.png", icon:"🖼" },
+    { path:"/assets/gallery-5.png", label:"assets/gallery-5.png", icon:"🖼" },
+    { path:"/assets/gallery-6.png", label:"assets/gallery-6.png", icon:"🖼" },
+    { path:"/assets/gallery-7.png", label:"assets/gallery-7.png", icon:"🖼", hidden:true }
+  ],
+
+  routes: {
+    "/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>HungryKoala — freshly redesigned</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c;margin-right:16px">Home</a><a href="#/recipes/index.html" target="_top" style="color:#c25a2c;margin-right:16px">Recipes</a><a href="#/about.html" target="_top" style="color:#c25a2c;margin-right:16px">About</a><a href="#/gallery.html" target="_top" style="color:#c25a2c;margin-right:16px">Gallery</a><a href="#/contact.html" target="_top" style="color:#c25a2c">Contact</a></nav>
+<h1 style="color:#5c4128">HungryKoala</h1>
+<p>We have had a refresh! New look, new folders, same recipes — mostly.</p>
+<p><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">Browse all recipes →</a></p>
+<p style="color:#8a7460;font-size:13px;margin-top:40px">© HungryKoala. Recently redesigned — please excuse any stray old pages we have not got around to tidying up yet.</p>
+</body>
+</html>`
+    },
+    "/recipes/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Recipes — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">All Recipes</h1>
+<h3 style="color:#5c4128">Sweet</h3>
+<p><a href="#/recipes/sweet/gum-leaf-tea-cake.html" target="_top" style="color:#c25a2c">Gum Leaf Tea Cake →</a></p>
+<h3 style="color:#5c4128">Savoury</h3>
+<p><a href="#/recipes/savoury/wattle-seed-damper.html" target="_top" style="color:#c25a2c">Wattle Seed Damper →</a></p>
+<p><a href="#/recipes/savoury/eucalyptus-slaw.html" target="_top" style="color:#c25a2c">Eucalyptus Slaw →</a></p>
+</body>
+</html>`
+    },
+    "/recipes/sweet/gum-leaf-tea-cake.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Gum Leaf Tea Cake — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">All recipes</a></nav>
+<h1 style="color:#5c4128">Gum Leaf Tea Cake</h1>
+<img src="../../assets/gallery-2.png" style="max-width:320px;border-radius:8px" alt="Gum leaf tea cake, new photo shoot">
+<p>A soft afternoon bake, now living in its new home under /recipes/sweet/.</p>
+</body>
+</html>`
+    },
+    "/recipes/savoury/wattle-seed-damper.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Wattle Seed Damper — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">All recipes</a></nav>
+<h1 style="color:#5c4128">Wattle Seed Damper</h1>
+<img src="../../assets/gallery-3.png" style="max-width:320px;border-radius:8px" alt="Wattle seed damper, new photo shoot">
+<p>A rustic camp-oven classic, now living in its new home under /recipes/savoury/.</p>
+</body>
+</html>`
+    },
+    "/recipes/savoury/eucalyptus-slaw.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Eucalyptus Slaw — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">All recipes</a></nav>
+<h1 style="color:#5c4128">Eucalyptus Slaw</h1>
+<img src="../../assets/gallery-1.png" style="max-width:320px;border-radius:8px" alt="Eucalyptus slaw, new photo shoot">
+<p>A bright, crunchy starter, now living in its new home under /recipes/savoury/.</p>
+</body>
+</html>`
+    },
+    "/recipes/eucalyptus-slaw.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center">
+<h1>Eucalyptus Slaw — old address</h1>
+<p>The redesign moved this recipe to <code>/recipes/savoury/eucalyptus-slaw.html</code>, but this original file was never taken down.</p>
+<p style="font-family:monospace;background:#1c1610;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L2B2}}</p>
+<p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/recipes/old-recipe-4.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center">
+<h1>Old Recipe 4</h1>
+<p>Never named anywhere — migration-notes.txt only ever mentions three removed files, numbered 1 to 3. This one was simply forgotten.</p>
+<p style="font-family:monospace;background:#1c1610;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L2A2}}</p>
+<p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/about.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>About Damaris — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">About Damaris</h1>
+<p>Damaris started HungryKoala as a way of combining elaborate home cooking with an entirely unreasonable fondness for koalas.</p>
+
+<div id="testers" style="margin-top:20px;padding:16px;background:#241b14;color:#fbf6ee;border-radius:8px;display:none">
+  <h3 style="margin-top:0">Recipe Testers</h3>
+  <p>{{FLAG:W3L2B5}}</p>
+</div>
+
+<script>
+let visitorRole = "guest";
+if (visitorRole === "tester") {
+  document.getElementById('testers').style.display = 'block';
+}
+<\/script>
+</body>
+</html>`
+    },
+    "/gallery.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Gallery — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Gallery</h1>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+  <img src="../assets/gallery-1.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 1">
+  <img src="../assets/gallery-2.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 2">
+  <img src="../assets/gallery-3.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 3">
+  <img src="../assets/gallery-4.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 4">
+  <img src="../assets/gallery-5.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 5">
+  <img src="../assets/gallery-6.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 6">
+</div>
+<p style="color:#8a7460;font-size:13px;margin-top:12px">Six photos, freshly reshot for the redesign.</p>
+</body>
+</html>`
+    },
+    "/contact.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Contact — HungryKoala</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
+<h1 style="color:#5c4128">Contact</h1>
+<p>For recipe requests or collaborations, reach Damaris at hello@hungrykoala.example.</p>
+<p style="color:#8a7460;font-size:13px">For staff-only resources, see <a href="#/satff/handoff.html" target="_top" style="color:#c25a2c">the handoff notes</a> — a leftover link from before the redesign, may no longer work.</p>
+</body>
+</html>`
+    },
+    "/staff/handoff.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center">
+<h1>Staff Handoff Notes</h1>
+<p>Reached only by fixing the mistyped link on the contact page.</p>
+<p style="font-family:monospace;background:#1c1610;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L2B4}}</p>
+<p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/sitemap.xml": {
+      editable:false,
+      sourceTemplate: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l2/index.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l2/recipes/index.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l2/about.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l2/gallery.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l2/contact.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l2/archive/old-site/index.html</loc></url>
+</urlset>`
+    },
+    "/practice-edit.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Practice: editing the source — HungryKoala Labs</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<h1 style="color:#5c4128">Try the editable panel</h1>
+<p>Some files this term can be edited directly in the source panel, not just read — you may already have tried this in Week 3 L1. This page is a quick reminder before it matters again below.</p>
+<ol>
+<li>Click "Edit" above the source panel on the left.</li>
+<li>Scroll to the paragraph wrapped in comment markers below.</li>
+<li>Delete just the <code>&lt;!--</code> and <code>--&gt;</code> markers.</li>
+<li>Check the preview — the flag will appear.</li>
+</ol>
+<!-- <p style="font-size:22px;font-family:monospace;background:#241b14;color:#fbf6ee;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W3L2B1}}</p> -->
+</body>
+</html>`
+    },
+    "/index.html.bak": {
+      editable:false,
+      sourceTemplate: `<pre style="font-family:monospace;white-space:pre-wrap;padding:24px;background:#fbf6ee;color:#3a2e22;margin:0">Backup of index.html — old homepage, kept from before the redesign.
+
+{{FLAG:W3L2B3}}
+
+Note to self: see migration-notes.txt for the rest of what still needs cleaning up after the relaunch.</pre>`
+    },
+    "/recipes/migration-notes.txt": {
+      editable:false,
+      sourceTemplate: `<pre style="font-family:monospace;white-space:pre-wrap;padding:24px;background:#fbf6ee;color:#3a2e22;margin:0">Migration notes — HungryKoala relaunch
+
+Removed during cleanup:
+- old-recipe-1.html
+- old-recipe-2.html
+- old-recipe-3.html
+
+Still pending:
+- Fix the broken staff link on contact.html (should point to /staff/handoff.html)
+- Take down the old archive at /archive/old-site/ once Damaris has copied the photos she wants to keep
+
+{{FLAG:W3L2B6}}</pre>`
+    },
+    "/archive/old-site/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22">
+<h1 style="color:#5c4128">Archive — old site</h1>
+<p style="font-family:monospace;background:#fff;border:1px solid #ddd5c2;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W3L2A3}}</p>
+<ul style="font-family:monospace;font-size:13px;line-height:1.9;list-style:none;padding-left:0;margin-top:16px">
+<li><a href="#/archive/old-site/page-01.html" target="_top" style="color:#c25a2c">page-01.html</a></li>
+<li><a href="#/archive/old-site/page-02.html" target="_top" style="color:#c25a2c">page-02.html</a></li>
+<li><a href="#/archive/old-site/page-03.html" target="_top" style="color:#c25a2c">page-03.html</a></li>
+<li><a href="#/archive/old-site/page-04.html" target="_top" style="color:#c25a2c">page-04.html</a></li>
+<li><a href="#/archive/old-site/page-05.html" target="_top" style="color:#c25a2c">page-05.html</a></li>
+<li style="color:#3a2e22">page-06.html</li>
+<li style="color:#3a2e22">page-07.html</li>
+<li style="color:#3a2e22">page-08.html</li>
+</ul>
+</body>
+</html>`
+    },
+    "/archive/old-site/page-01.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Site moved to a new host this quarter.</p></body></html>` },
+    "/archive/old-site/page-02.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Recipe photography schedule for the old layout.</p></body></html>` },
+    "/archive/old-site/page-03.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Draft newsletter sign-up copy, never used.</p></body></html>` },
+    "/archive/old-site/page-04.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Looks like a flag. Try submitting it and see what happens.</p><p style="font-family:monospace;background:#fff;border:1px solid #ddd5c2;padding:10px;border-radius:6px;display:inline-block">faith{W3L2A1_re4d_wh0le_l1st_9d3f21}</p></body></html>` },
+    "/archive/old-site/page-05.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Old contact form field labels, superseded.</p></body></html>` },
+    "/archive/old-site/page-06.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Named in the list but never linked. Reading the whole index, not just the first few entries, got you here.</p></body></html>` },
+    "/archive/old-site/page-07.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center"><h1>Archive Note</h1><p>Named as plain text on the index, never linked — reading the whole list, not just the first five entries, got you here.</p><p style="font-family:monospace;background:#1c1610;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L2A1}}</p><p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p></body></html>` },
+    "/archive/old-site/page-08.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Placeholder page, never finished.</p></body></html>` },
+    "/assets/gallery-1.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-1.png" },
+    "/assets/gallery-2.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-2.png" },
+    "/assets/gallery-3.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-3.png" },
+    "/assets/gallery-4.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-4.png" },
+    "/assets/gallery-5.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-5.png" },
+    "/assets/gallery-6.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-6.png" },
+    "/assets/gallery-7.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-7.png" }
+  },
+
+  tasks: [
+    { id:"W3L2B1", tier:"B", points:50, defaultRoute:"/practice-edit.html", leet:"unc0mm3nt_pr4ct1c3",
+      brief:"Not part of the real site — a practice page for the editable source panel, in case you have not used it yet or want a reminder. Follow its steps exactly." },
+    { id:"W3L2B2", tier:"B", points:50, defaultRoute:"/recipes/index.html", leet:"0ld_url",
+      brief:"The redesign reorganised recipes into new folders — but not everything from the old site was necessarily taken down along with it. If you remember roughly how this site used to be laid out, an old address might still resolve." },
+    { id:"W3L2B3", tier:"B", points:50, defaultRoute:"/index.html", leet:"b4ckup_f1le",
+      brief:"A backup copy of a file is not the same file, and often is not cleaned up as carefully — try a very ordinary file-naming habit on the homepage itself." },
+    { id:"W3L2B4", tier:"B", points:50, defaultRoute:"/contact.html", leet:"f1x_the_l1nk",
+      brief:"A link that goes nowhere is not necessarily meant to go nowhere — sometimes it is only one small typing mistake away from working." },
+    { id:"W3L2B5", tier:"B", points:50, defaultRoute:"/about.html", leet:"cl13nt_g4te",
+      brief:"A page can decide what to show a visitor using a check that runs entirely in the visitor's own browser. Reading the source carefully may already tell you everything — try that first, then try changing the check itself and see what changes." },
+    { id:"W3L2B6", tier:"B", points:50, defaultRoute:"/index.html.bak", leet:"m1gr4t10n_n0tes",
+      brief:"A backup file can name other files without meaning to — read everything in it, not just the part that looks like the answer." },
+    { id:"W3L2A1", tier:"A", points:10, defaultRoute:"/archive/old-site/index.html", leet:"re4d_wh0le_l1st",
+      brief:"A directory listing can name far more than it links — reading only the clickable half is a good way to miss something." },
+    { id:"W3L2A2", tier:"A", points:10, defaultRoute:"/recipes/migration-notes.txt", leet:"p4tt3rn_ext",
+      brief:"A list that stops at three does not necessarily mean only three ever existed — sometimes the pattern simply continues past what was written down." },
+    { id:"W3L2A3", tier:"A", points:10, defaultRoute:"/sitemap.xml", leet:"s1t3m4p_4rch1ve",
+      brief:"A sitemap is written for search engines, not for a site's own navigation menu — the two do not always agree on what exists." },
+    { id:"W3L2H1", tier:"H", points:1, defaultRoute:"/gallery.html", leet:"0v3rlook3d",
+      freeTextAnswers:["OVERLOOKED"], caseSensitive:true,
+      brief:"Six photographs, numbered and all linked. If a redesign reshoots a gallery in a numbered sequence, it is worth asking whether the sequence really stops where the visible page stops." }
+  ],
+
+  /* Static, non-per-student decoy strings. Fully flag-shaped, no visible
+     tell (Addendum 7, in force from Week 3 onward). One extra dead
+     reference (a nonexistent old-recipe-0.html, mentioned nowhere here
+     but worth knowing if a student asks) is left as an honest 404 rather
+     than a fabricated decoy flag, per the tree-never-lies principle. */
+  decoys: [ "faith{W3L2A1_re4d_wh0le_l1st_9d3f21}" ]
+};
+
+/* ================================================================
+   ENGINE — unchanged from W3 L1, including the escaped <\/script>
+   pattern inside simulated page content (see the about.html gate
+   script above) — a literal script end-tag anywhere in this file's
+   real text, even inside a JS string or a JS comment, would truncate
+   the real engine script early in any browser's HTML parser.
+   ================================================================ */
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"", revealed:new Set(), collapsedFolders:new Set() };
+let currentPath = null;
+const routeEdits = {};
+const FLAG_INDEX = {};
+const EXACT_INDEX = {};
+const DECOY_INDEX = {};
+
+function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,' '); }
+
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function makeFlagSuffix(name, taskId){
+  const raw = name.toLowerCase() + FLAG_SALT + taskId;
+  return (await sha256Hex(raw)).substring(0, 6);
+}
+async function makeFlag(leet, taskId){
+  const suffix = await makeFlagSuffix(state.name, taskId);
+  return `${FLAG_PREFIX}{${taskId}_${leet}_${suffix}}`;
+}
+
+async function computeAllFlags(){
+  for (const task of WEEK_CONTENT.tasks){
+    state.flags[task.id] = await makeFlag(task.leet, task.id);
+  }
+}
+function buildFlagIndex(){
+  WEEK_CONTENT.tasks.forEach(task=>{
+    FLAG_INDEX[normalize(state.flags[task.id])] = task;
+    if (task.freeTextAnswers){
+      if (task.caseSensitive){
+        task.freeTextAnswers.forEach(a => EXACT_INDEX[a.trim()] = task);
+      } else {
+        task.freeTextAnswers.forEach(a => FLAG_INDEX[normalize(a)] = task);
+      }
+    }
+  });
+  (WEEK_CONTENT.decoys || []).forEach(str => { DECOY_INDEX[normalize(str)] = true; });
+}
+function fillTemplate(text){
+  return text.replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???');
+}
+
+async function startSession(){
+  state.name = document.getElementById('nameInput').value.trim() || 'Investigator';
+  await computeAllFlags();
+  buildFlagIndex();
+  document.getElementById('nameModal').style.display = 'none';
+  document.getElementById('weekBadge').textContent = WEEK_CONTENT.meta.label + ' · ' + state.name;
+  document.getElementById('scoreboardLink').textContent = WEEK_CONTENT.meta.scoreboardUrl;
+  init();
+}
+
+function init(){
+  renderTree(); renderTaskList();
+  window.addEventListener('hashchange', onHashChange);
+  navigate(WEEK_CONTENT.tree[0].path);
+}
+
+function isItemVisible(item){ return !item.hidden || state.revealed.has(item.path); }
+
+function buildTreeStructure(){
+  const root = { folders:{}, files:[], fullPath:'' };
+  WEEK_CONTENT.tree.forEach(item=>{
+    const parts = item.path.split('/').filter(Boolean);
+    let node = root, pathSoFar = '';
+    for (let i=0; i<parts.length-1; i++){
+      pathSoFar += '/' + parts[i];
+      if (!node.folders[parts[i]]) node.folders[parts[i]] = { folders:{}, files:[], fullPath:pathSoFar };
+      node = node.folders[parts[i]];
+    }
+    node.files.push(item);
+  });
+  return root;
+}
+
+function folderHasVisibleContent(node){
+  if (node.files.some(isItemVisible)) return true;
+  return Object.values(node.folders).some(folderHasVisibleContent);
+}
+
+function makeFileRow(item, depth){
+  const div = document.createElement('div');
+  div.className = 'tree-item'; div.id = 'tree-' + item.path;
+  div.style.paddingLeft = (4 + depth * 16) + 'px';
+  div.innerHTML = `${item.icon || '📄'} ${item.label.split('/').pop()}` +
+    (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
+  div.onclick = () => navigate(item.path);
+  return div;
+}
+
+function renderNode(node, container, depth){
+  node.files.forEach(item=>{
+    if (!isItemVisible(item)) return;
+    container.appendChild(makeFileRow(item, depth));
+  });
+  Object.keys(node.folders).forEach(folderName=>{
+    const sub = node.folders[folderName];
+    if (!folderHasVisibleContent(sub)) return;
+    const collapsed = state.collapsedFolders.has(sub.fullPath);
+    const header = document.createElement('div');
+    header.className = 'tree-item';
+    header.style.paddingLeft = (4 + depth * 16) + 'px';
+    header.innerHTML = `${collapsed ? '▸' : '▾'} 📁 ${folderName}`;
+    header.onclick = () => {
+      collapsed ? state.collapsedFolders.delete(sub.fullPath) : state.collapsedFolders.add(sub.fullPath);
+      renderTree();
+    };
+    container.appendChild(header);
+    if (!collapsed) renderNode(sub, container, depth + 1);
+  });
+}
+
+function renderTree(){
+  const el = document.getElementById('treeBody'); el.innerHTML = '';
+  renderNode(buildTreeStructure(), el, 0);
+}
+
+function renderTaskList(){
+  const el = document.getElementById('taskList'); el.innerHTML = '';
+  WEEK_CONTENT.tasks.forEach(task=>{
+    const found = state.foundIds.has(task.id);
+    const div = document.createElement('div');
+    div.className = 'task' + (found?' found':'') + (state.selectedTask===task.id?' selected':'');
+    div.innerHTML = `<div class="row"><span><span class="tier tier-${task.tier}">${task.tier}</span> ${task.id}</span><span class="pts">${task.points} pts</span></div><div class="task-brief">${task.brief}</div>`;
+    div.onclick = () => { state.selectedTask = task.id; if (task.defaultRoute) navigate(task.defaultRoute); renderTaskList(); };
+    el.appendChild(div);
+  });
+}
+
+function onHashChange(){
+  const raw = location.hash.replace(/^#/, '') || WEEK_CONTENT.tree[0].path;
+  loadRoute(raw);
+}
+function navigate(path){
+  location.hash = path;
+  if (location.hash.replace(/^#/, '') === path) loadRoute(path);
+}
+
+function loadRoute(path){
+  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + path;
+  document.querySelectorAll('.tree-item').forEach(el=>el.classList.remove('active'));
+  const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+
+  const route = WEEK_CONTENT.routes[path];
+  const sourceEl = document.getElementById('sourceBody');
+  const labelEl = document.getElementById('sourceHeadLabel');
+  const controlsEl = document.getElementById('sourceControls');
+  const frame = document.getElementById('preview');
+  currentPath = path;
+
+  if (!route){
+    sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
+    labelEl.textContent = 'Source'; controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  if (route.isImage){
+    labelEl.textContent = 'Source — ' + path;
+    sourceEl.value = '[Binary image file — no text source to view.\nInspect the rendered file directly, or check its properties/metadata.]';
+    sourceEl.readOnly = true;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 binary file</span>';
+    frame.srcdoc = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111"><img src="${route.imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`;
+    return;
+  }
+
+  labelEl.textContent = 'Source — ' + path;
+  const content = routeEdits[path] !== undefined ? routeEdits[path] : fillTemplate(route.sourceTemplate);
+  sourceEl.value = content;
+
+  const hiddenEntry = WEEK_CONTENT.tree.find(t => t.path === path && t.hidden);
+  if (hiddenEntry && !state.revealed.has(path)){
+    state.revealed.add(path);
+    renderTree();
+    const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+  }
+
+  if (route.editable){
+    controlsEl.innerHTML = `<button class="edit-toggle" id="editToggleBtn" onclick="toggleEdit()">✏️ Edit</button>`;
+    sourceEl.readOnly = true;
+  } else {
+    controlsEl.innerHTML = `<span class="lock-label">🔒 read-only</span>`;
+    sourceEl.readOnly = true;
+  }
+  frame.srcdoc = content;
+}
+
+function toggleEdit(){
+  const sourceEl = document.getElementById('sourceBody');
+  const btn = document.getElementById('editToggleBtn');
+  sourceEl.readOnly = !sourceEl.readOnly;
+  btn.classList.toggle('on', !sourceEl.readOnly);
+  btn.textContent = sourceEl.readOnly ? '✏️ Edit' : '👁 View';
+}
+
+document.getElementById('sourceBody').addEventListener('input', (e)=>{
+  if (!currentPath) return;
+  routeEdits[currentPath] = e.target.value;
+  document.getElementById('preview').srcdoc = e.target.value;
+});
+
+document.getElementById('addrBar').addEventListener('keydown', e=>{
+  if (e.key==='Enter'){
+    let val = e.target.value.trim();
+    const marker = WEEK_CONTENT.meta.deployPath;
+    let path = val.startsWith(marker) ? val.slice(marker.length) : val.slice(val.indexOf('/'));
+    if (!path.startsWith('/')) path = '/' + path;
+    navigate(path);
+  }
+});
+
+function submitFlag(){
+  const input = document.getElementById('flagInput');
+  const msg = document.getElementById('flagMsg');
+  const raw = input.value.trim();
+  const task = EXACT_INDEX[raw] || FLAG_INDEX[normalize(raw)];
+
+  if (!task){
+    if (DECOY_INDEX[normalize(raw)]){
+      msg.textContent = 'DECOY — this was a decoy flag. Sorry, nice try!';
+      msg.className = 'msg warn';
+      return;
+    }
+    msg.textContent='WRONG'; msg.className='msg err'; return;
+  }
+  if (state.foundIds.has(task.id)){ msg.textContent='ALREADY SUBMITTED'; msg.className='msg warn'; return; }
+
+  state.foundIds.add(task.id);
+  state.score += task.points;
+  document.getElementById('flagCount').textContent = state.foundIds.size;
+  document.getElementById('scoreTotal').textContent = state.score;
+  msg.textContent = `CORRECT — ${state.flags[task.id]} (+${task.points} pts)`;
+  msg.className = 'msg ok';
+  input.value = '';
+  renderTaskList();
+  addReceipt(task);
+}
+document.getElementById('flagInput').addEventListener('keydown', e=>{ if (e.key==='Enter') submitFlag(); });
+
+function addReceipt(task){
+  const box = document.getElementById('receiptBox');
+  box.value = box.value ? box.value + '\n' + state.flags[task.id] : state.flags[task.id];
+}
+function copyReceipts(){
+  const box = document.getElementById('receiptBox');
+  navigator.clipboard.writeText(box.value).then(()=>{
+    const msg = document.getElementById('flagMsg');
+    msg.textContent = 'Copied to clipboard.'; msg.className = 'msg ok';
+  });
+}
+</script>
+</body>
+</html>
