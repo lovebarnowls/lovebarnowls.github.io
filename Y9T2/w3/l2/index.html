@@ -182,13 +182,7 @@ const WEEK_CONTENT = {
     { path:"/archive/old-site/page-06.html", label:"archive/old-site/page-06.html", hidden:true },
     { path:"/archive/old-site/page-07.html", label:"archive/old-site/page-07.html", hidden:true },
     { path:"/archive/old-site/page-08.html", label:"archive/old-site/page-08.html", hidden:true },
-    { path:"/assets/gallery-1.png", label:"assets/gallery-1.png", icon:"🖼" },
-    { path:"/assets/gallery-2.png", label:"assets/gallery-2.png", icon:"🖼" },
-    { path:"/assets/gallery-3.png", label:"assets/gallery-3.png", icon:"🖼" },
-    { path:"/assets/gallery-4.png", label:"assets/gallery-4.png", icon:"🖼" },
-    { path:"/assets/gallery-5.png", label:"assets/gallery-5.png", icon:"🖼" },
-    { path:"/assets/gallery-6.png", label:"assets/gallery-6.png", icon:"🖼" },
-    { path:"/assets/gallery-7.png", label:"assets/gallery-7.png", icon:"🖼", hidden:true }
+    { path:"/assets/hero-banner.png", label:"assets/hero-banner.png", icon:"🖼", hidden:true }
   ],
 
   routes: {
@@ -230,7 +224,7 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
 <nav style="margin-bottom:24px"><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">All recipes</a></nav>
 <h1 style="color:#5c4128">Gum Leaf Tea Cake</h1>
-<img src="../../assets/gallery-2.png" style="max-width:320px;border-radius:8px" alt="Gum leaf tea cake, new photo shoot">
+<img src="../assets/tea-cake-plate.png" style="max-width:320px;border-radius:8px" alt="Gum leaf tea cake, same photo as before the redesign">
 <p>A soft afternoon bake, now living in its new home under /recipes/sweet/.</p>
 </body>
 </html>`
@@ -243,7 +237,7 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
 <nav style="margin-bottom:24px"><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">All recipes</a></nav>
 <h1 style="color:#5c4128">Wattle Seed Damper</h1>
-<img src="../../assets/gallery-3.png" style="max-width:320px;border-radius:8px" alt="Wattle seed damper, new photo shoot">
+<img src="../assets/damper-plate.png" style="max-width:320px;border-radius:8px" alt="Wattle seed damper, same photo as before the redesign">
 <p>A rustic camp-oven classic, now living in its new home under /recipes/savoury/.</p>
 </body>
 </html>`
@@ -256,7 +250,7 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
 <nav style="margin-bottom:24px"><a href="#/recipes/index.html" target="_top" style="color:#c25a2c">All recipes</a></nav>
 <h1 style="color:#5c4128">Eucalyptus Slaw</h1>
-<img src="../../assets/gallery-1.png" style="max-width:320px;border-radius:8px" alt="Eucalyptus slaw, new photo shoot">
+<img src="../assets/slaw-plate.png" style="max-width:320px;border-radius:8px" alt="Eucalyptus slaw, same photo as before the redesign">
 <p>A bright, crunchy starter, now living in its new home under /recipes/savoury/.</p>
 </body>
 </html>`
@@ -318,14 +312,11 @@ if (visitorRole === "tester") {
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c25a2c">Home</a></nav>
 <h1 style="color:#5c4128">Gallery</h1>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-  <img src="../assets/gallery-1.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 1">
-  <img src="../assets/gallery-2.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 2">
-  <img src="../assets/gallery-3.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 3">
-  <img src="../assets/gallery-4.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 4">
-  <img src="../assets/gallery-5.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 5">
-  <img src="../assets/gallery-6.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gallery photo 6">
+  <img src="../assets/slaw-plate.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Eucalyptus slaw">
+  <img src="../assets/tea-cake-plate.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Gum leaf tea cake">
+  <img src="../assets/damper-plate.png" style="width:120px;height:90px;object-fit:cover;border-radius:6px" alt="Wattle seed damper">
 </div>
-<p style="color:#8a7460;font-size:13px;margin-top:12px">Six photos, freshly reshot for the redesign.</p>
+<p style="color:#8a7460;font-size:13px;margin-top:12px">Same three photos as before the redesign — no reshoot needed this time.</p>
 </body>
 </html>`
     },
@@ -435,13 +426,7 @@ Still pending:
     "/archive/old-site/page-06.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Named in the list but never linked. Reading the whole index, not just the first few entries, got you here.</p></body></html>` },
     "/archive/old-site/page-07.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#3a2e22;color:#fbf6ee;text-align:center"><h1>Archive Note</h1><p>Named as plain text on the index, never linked — reading the whole list, not just the first five entries, got you here.</p><p style="font-family:monospace;background:#1c1610;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L2A1}}</p><p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p></body></html>` },
     "/archive/old-site/page-08.html": { editable:false, sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#f4f1ea;color:#3a2e22"><h1 style="color:#5c4128">Old Site Note</h1><p>Placeholder page, never finished.</p></body></html>` },
-    "/assets/gallery-1.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-1.png" },
-    "/assets/gallery-2.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-2.png" },
-    "/assets/gallery-3.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-3.png" },
-    "/assets/gallery-4.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-4.png" },
-    "/assets/gallery-5.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-5.png" },
-    "/assets/gallery-6.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-6.png" },
-    "/assets/gallery-7.png": { editable:false, isImage:true, imgSrc:"../assets/gallery-7.png" }
+    "/assets/hero-banner.png": { editable:false, isImage:true, imgSrc:"../assets/hero-banner.png" }
   },
 
   tasks: [
@@ -465,7 +450,7 @@ Still pending:
       brief:"A sitemap is written for search engines, not for a site's own navigation menu — the two do not always agree on what exists." },
     { id:"W3L2H1", tier:"H", points:1, defaultRoute:"/gallery.html", leet:"0v3rlook3d",
       freeTextAnswers:["OVERLOOKED"], caseSensitive:true,
-      brief:"Six photographs, numbered and all linked. If a redesign reshoots a gallery in a numbered sequence, it is worth asking whether the sequence really stops where the visible page stops." }
+      brief:"Not every image in the shared folder has ever appeared on a page. One in particular sat there unused before the redesign, and it is still unused now — never in a gallery, never in a nav, never named anywhere in this site at all." }
   ],
 
   /* Static, non-per-student decoy strings. Fully flag-shaped, no visible
