@@ -168,6 +168,7 @@ const WEEK_CONTENT = {
     { path:"/gallery.html", label:"gallery.html" },
     { path:"/contact.html", label:"contact.html" },
     { path:"/sitemap.xml", label:"sitemap.xml" },
+    { path:"/test.html", label:"test.html" },
     { path:"/assets/hero-banner.png", label:"assets/hero-banner.png", icon:"🖼" },
     { path:"/assets/slaw-plate.png", label:"assets/slaw-plate.png", icon:"🖼" },
     { path:"/assets/tea-cake-plate.png", label:"assets/tea-cake-plate.png", icon:"🖼" },
@@ -343,14 +344,14 @@ const WEEK_CONTENT = {
       editable:false,
       sourceTemplate: `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://hungrykoala.example/index.html</loc></url>
-<url><loc>https://hungrykoala.example/about.html</loc></url>
-<url><loc>https://hungrykoala.example/gallery.html</loc></url>
-<url><loc>https://hungrykoala.example/contact.html</loc></url>
-<url><loc>https://hungrykoala.example/recipes/eucalyptus-slaw.html</loc></url>
-<url><loc>https://hungrykoala.example/recipes/gum-leaf-tea-cake.html</loc></url>
-<url><loc>https://hungrykoala.example/recipes/wattle-seed-damper.html</loc></url>
-<url><loc>https://hungrykoala.example/gallery/behind-the-scenes.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/index.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/about.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/gallery.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/contact.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/recipes/eucalyptus-slaw.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/recipes/gum-leaf-tea-cake.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/recipes/wattle-seed-damper.html</loc></url>
+<url><loc>lovebarnowls.github.io/Y9T2/w3/l1/gallery/behind-the-scenes.html</loc></url>
 </urlset>`
     },
     "/gallery/behind-the-scenes.html": {
@@ -362,6 +363,26 @@ const WEEK_CONTENT = {
 <p>Never linked from any nav on the live site — only named inside sitemap.xml, a file most visitors never open.</p>
 <p style="font-family:monospace;background:#241b14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W3L1A2}}</p>
 <p style="color:#c9b8a5;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+    "/test.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Practice: editing the source — HungryKoala Labs</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf6ee;color:#3a2e22">
+<h1 style="color:#5c4128">Practice page</h1>
+<p>This page is not part of Damaris's real site — it exists so you can practise using the editable source panel before it matters for real.</p>
+
+<h3 style="color:#5c4128">Exercise 1 — uncomment a paragraph</h3>
+<p>Click "Edit" above the source panel. Find the two comment markers, <code>&lt;!--</code> and <code>--&gt;</code>, around the paragraph just below, and delete only those two markers. Watch the preview update.</p>
+<!-- <p id="ex1" style="font-size:20px;font-family:monospace;background:#241b14;color:#fbf6ee;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W3L1A4}}</p> -->
+
+<h3 style="color:#5c4128">Exercise 2 — change a colour so text becomes visible</h3>
+<p>The paragraph below already exists and is not commented out at all — but its text colour has been set to match the page background, so it renders invisibly. Find the line below in the source and change its <code>color</code> value to something else, such as <code>#3a2e22</code>, then check the preview.</p>
+<p id="ex2" style="font-size:20px;font-family:monospace;color:#fbf6ee">{{FLAG:W3L1A5}}</p>
+
 </body>
 </html>`
     },
@@ -389,7 +410,11 @@ const WEEK_CONTENT = {
       brief:"Not every file describing a website is meant to be read by a person. One in particular lists every page that exists, whether or not anything links to it." },
     { id:"W3L1A3", tier:"A", points:10, defaultRoute:"/gallery.html", leet:"0g_1m4ge",
       freeTextAnswers:["PROOF"], caseSensitive:true,
-      brief:"The image shown when a link is shared on social media is not always drawn from the same set of images shown in a gallery. Not every file in this course carries a faith{...} flag — some carry a single word instead, found by opening the file itself." }
+      brief:"The image shown when a link is shared on social media is not always drawn from the same set of images shown in a gallery. Not every file in this course carries a faith{...} flag — some carry a single word instead, found by opening the file itself." },
+    { id:"W3L1A4", tier:"A", points:10, defaultRoute:"/test.html", leet:"unc0mm3nt",
+      brief:"Not part of the site — a practice page for the editable source panel. Follow Exercise 1's instructions exactly: find the comment markers and remove them." },
+    { id:"W3L1A5", tier:"A", points:10, defaultRoute:"/test.html", leet:"ch4nge_c0l0r",
+      brief:"Same practice page, a different skill. Exercise 2's paragraph is not commented out at all — it is only invisible because of one CSS value. Change it." }
   ],
 
   /* Static, non-per-student decoy strings. From Week 3 onward these are fully
