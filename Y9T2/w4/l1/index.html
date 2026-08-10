@@ -181,6 +181,7 @@ const WEEK_CONTENT = {
     { path:"/machines/outrun.html", label:"machines/outrun.html" },
     { path:"/machines/frogger.html", label:"machines/frogger.html" },
     { path:"/staff-notes.html", label:"staff-notes.html" },
+    { path:"/debug.html", label:"debug.html" },
     { path:"/vip-lounge.html", label:"vip-lounge.html", hidden:true },
     { path:"/machines/galaxian7.html", label:"machines/galaxian7.html", hidden:true },
     { path:"/machines/PINBOT.html", label:"machines/PINBOT.html", hidden:true },
@@ -245,7 +246,7 @@ def machine_page(machine_id):
 def vote():
     # nominate-your-favourite-machine, half-finished feature
     machine = request.args.get('machine')
-    if machine == 'tempest':
+    if machine == 'frogger.html':
         return render_page('vote-result.html')
     return "Thanks for voting! Results are still being counted."
 
@@ -288,10 +289,14 @@ def highscore():
 <tr><td>Out Run</td><td>3:41.02</td><td>DMN</td></tr>
 </table>
 <h3 style="color:#5ad1e0;margin-top:32px">Nominate Your Favourite Machine</h3>
-<p style="color:#8a8fb0;font-size:13px">Voting isn't wired up on the front end yet — check app.py if you're curious how it'll work once it is.</p>
-<select disabled style="background:#161825;color:#e8eaf5;border:1px solid #2b2f42;border-radius:6px;padding:6px 10px">
-<option>pacman</option><option>tempest</option><option>defender</option><option>joust</option><option>centipede</option>
-</select>
+<p style="color:#8a8fb0;font-size:13px">Click a machine to vote. Watch the address bar when you do — that's the exact address each click sends.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a href="#/vote.html?machine=pacland.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Pac-Land</a>
+<a href="#/vote.html?machine=outrun.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Out Run</a>
+<a href="#/vote.html?machine=frogger.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Frogger</a>
+<a href="#/vote.html?machine=galaxian7.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Galaxian 7</a>
+<a href="#/vote.html?machine=PINBOT.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">PINBOT</a>
+</div>
 </body>
 </html>`
     },
@@ -369,7 +374,7 @@ def highscore():
 <p>Case matters. You typed it exactly right.</p>
 <p style="font-family:monospace;background:#0d0e14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W4L1B3}}</p>
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
-<p style="color:#8a8fb0;font-size:12px;margin-top:24px;max-width:340px;margin-left:auto;margin-right:auto">Side note while you're here — remember /vote.html takes a ?machine= value too, same idea as above. Worth trying once you've read app.py's /vote.html route properly.</p>
+<p style="color:#8a8fb0;font-size:12px;margin-top:24px;max-width:340px;margin-left:auto;margin-right:auto">Side note while you're here — remember /vote.html takes a ?machine= value too, same idea as above. The leaderboard page has clickable options now — try one and watch what shows up in the address bar, like /vote.html?machine=pacland.html.</p>
 </body></html>`
     },
     "/machines/04-04.html": {
@@ -439,16 +444,27 @@ def highscore():
       <ul>
         <li>Single HTML file — no separate pages. All sections live inside the one page, navigated using the URL hash (<code>#</code>), e.g. <code>#about</code>, <code>#contact</code> — like a single-page app.</li>
       </ul>
-      <p>Here is a working example of the pattern to use as a starting point. Copy this into Copilot as part of the prompt, then ask it to extend this exact pattern into the real site with 3 to 6 sections:</p>
+      <p>Here is a working example of the pattern to use as a starting point. Copy this into Copilot as part of the prompt, then ask it to extend this exact pattern into the real site with 3 to 6 sections. Notice this example has links both in the top nav <b>and</b> inside the page content itself — that second kind matters, since a "hidden page" only works if it's linked from somewhere on the site, just not the main nav:</p>
       <pre style="background:var(--bg-panel-alt);border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;font-size:12px;color:var(--text-main);white-space:pre">&lt;nav&gt;
   &lt;a href="#page1"&gt;Page 1&lt;/a&gt;
   &lt;a href="#page2"&gt;Page 2&lt;/a&gt;
-  &lt;a href="#page3"&gt;Page 3&lt;/a&gt;
 &lt;/nav&gt;
 
-&lt;section id="page1"&gt;This is page 1.&lt;/section&gt;
-&lt;section id="page2" style="display:none"&gt;This is page 2.&lt;/section&gt;
-&lt;section id="page3" style="display:none"&gt;This is page 3.&lt;/section&gt;
+&lt;section id="page1"&gt;
+  This is page 1.
+  &lt;p&gt;&lt;a href="#page2"&gt;Go to page 2&lt;/a&gt;&lt;/p&gt;
+&lt;/section&gt;
+
+&lt;section id="page2" style="display:none"&gt;
+  This is page 2.
+  &lt;p&gt;&lt;a href="#page1"&gt;Back to page 1&lt;/a&gt;&lt;/p&gt;
+  &lt;p&gt;&lt;a href="#page3"&gt;See more&lt;/a&gt;&lt;/p&gt;
+&lt;/section&gt;
+
+&lt;section id="page3" style="display:none"&gt;
+  This is page 3 — notice it isn't in the nav at the top. The
+  only way to reach it is the link inside page 2's content above.
+&lt;/section&gt;
 
 &lt;script&gt;
 function showPage() {
@@ -461,6 +477,7 @@ window.addEventListener('hashchange', showPage);
 showPage();
 &lt;/script&gt;</pre>
       <ul>
+        <li>Ask Copilot to keep using this pattern for every page you plant a flag on: some pages should only be reachable through a link inside another page's content, never through the main nav. That's what makes a hidden/unlinked page actually hidden.</li>
         <li>Between 3 and 6 flags total, each written exactly as <code>faith{something_here}</code> — lowercase "faith", curly braces, no spaces.</li>
         <li>Every flag must come from one of these three categories, and every category must be used at least once:
           <ul>
@@ -532,9 +549,9 @@ function buildPrompt(){
     { id:"W4L1B3", tier:"B", points:50, defaultRoute:"/app.py", leet:"c4se_s3ns1t1v3",
       brief:"Python string comparison is case-sensitive. The value this route checks for is not written in lowercase — read carefully." },
     { id:"W4L1B4", tier:"B", points:50, defaultRoute:"/leaderboard.html", leet:"on3_0f_f1ve",
-      brief:"The leaderboard shows five plausible machine names. Only one of them satisfies a condition in app.py's /vote route — the others do nothing." },
+      brief:"The leaderboard has five clickable machine options. Click one and watch the address bar — it'll show you exactly what /vote.html?machine=... looks like. Only one of the five satisfies a condition in app.py's /vote.html route." },
     { id:"W4L1A1", tier:"A", points:10, defaultRoute:"/staff-notes.html", leet:"d3bug_us3r",
-      brief:"A username sits directly in an HTML comment, waiting to be tried somewhere. app.py already shows you the shape of the route it belongs to." },
+      brief:"A username sits directly in an HTML comment, waiting to be tried somewhere. debug.html is now visible in the Explorer — but visiting it alone isn't enough, you might need a ?user= entry too." },
     { id:"W4L1A2", tier:"A", points:10, defaultRoute:"/machines/index.html", leet:"c4b1n3t_p4tt3rn",
       brief:"Three cabinets are listed, but this page might already contain a fourth — just not visible yet. Try the Edit button in the Source panel and look carefully." },
     { id:"W4L1H1", tier:"H", points:1, defaultRoute:"/app.py", leet:"r3sp0nse_h34d3r",
@@ -556,8 +573,8 @@ Server: Werkzeug/3.0 Python/3.11
 X-Powered-By: RetroPixelArcade`;
 
 const VOTE_SUCCESS_TEMPLATE = `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
-<h1>Vote Recorded — Tempest</h1>
-<p>Good choice. Also, you found the one value out of five that actually does anything.</p>
+<h1>Vote Recorded — Frogger</h1>
+<p>Good choice. Also, you found the one option out of five that actually does anything.</p>
 <p style="font-family:monospace;background:#0d0e14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W4L1B4}}</p>
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
 </body></html>`;
@@ -582,7 +599,7 @@ X-Arcade-Debug: {{FLAG:W4L1H1}}`;
 const DYNAMIC_ROUTES = {
   "/vote.html": function(params){
     const machine = params.get('machine');
-    if (machine === 'tempest') return { body: fillTemplate(VOTE_SUCCESS_TEMPLATE), headers: GENERIC_HTML_HEADERS };
+    if (machine === 'frogger.html') return { body: fillTemplate(VOTE_SUCCESS_TEMPLATE), headers: GENERIC_HTML_HEADERS };
     return { body: VOTE_DEFAULT_BODY, headers: GENERIC_HTML_HEADERS };
   },
   "/debug.html": function(params){
