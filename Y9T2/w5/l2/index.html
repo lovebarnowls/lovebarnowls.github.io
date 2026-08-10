@@ -192,6 +192,13 @@ const WEEK_CONTENT = {
 <h1 style="color:#c98a00">Golden Bunch Banana Festival</h1>
 <p>Registration is open. Day passes are back this year for anyone who can only make it down for one day.</p>
 <p><a href="#/register.html" target="_top" style="color:#7cb518;font-weight:bold">Get your tickets →</a></p>
+
+<div style="margin-top:40px;padding:20px;background:#1a1a2e;color:#f5f5f5;border:3px solid #ff4d4d;border-radius:10px;max-width:600px">
+  <h3 style="margin-top:0;color:#ff4d4d;font-size:14px;text-transform:uppercase;letter-spacing:.05em">📌 Note for Students</h3>
+  <p style="font-size:13px;line-height:1.6;margin:0 0 12px">This week's content is a genuine step up — regular expressions, hidden fields combined with server-side rules, and forms that check things in more than one place at once. If this feels like the hardest week so far, that is because it is, not because you are behind. Real cyber-defence professionals spend their careers looking for exactly these kinds of blind spots — small gaps between what a form shows you and what actually gets checked — so genuinely completing every Basic task this week is already a real achievement.</p>
+  <p style="font-size:13px;line-height:1.6;margin:0 0 12px">Everything from this week, along with everything from every week before it, comes together next week in a revision session, plus a practice audit report — so if something has not clicked yet, there is a proper second pass coming, not just a move on to the next thing.</p>
+  <p style="font-size:13px;line-height:1.6;margin:0;color:#ffd23f"><strong>And as always: whatever you learn this week, please do not try it on a website you do not have permission to test. Outside this sandbox, that is not a grey area — it can carry serious consequences.</strong></p>
+</div>
 </body>
 </html>`
     },
@@ -377,7 +384,7 @@ document.getElementById('volForm').addEventListener('submit', function(e){
 <body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b">Home</a></nav>
 <h1 style="color:#c98a00">Volunteer Portal</h1>
-<p style="font-size:13px;color:#8a7a3a">A small side project of Sherah's — not linked from the main site. Every volunteer gets their own personal access code. See <code>volunteer-portal-app.py</code> for exactly how it is worked out.</p>
+<p style="font-size:13px;color:#8a7a3a">Every volunteer gets their own personal access code. See <code>volunteer-portal-app.py</code> for exactly how it is worked out.</p>
 
 <form id="portalForm">
   <label style="display:block;margin-bottom:4px;font-size:13px">Access code</label>
@@ -564,7 +571,7 @@ def day_pass():
     { id:"W5L2A2", tier:"A", points:10, defaultRoute:"/volunteer.html", leet:"st4ff_c4llb4ck",
       brief:"There is a field on this form that is not asking you for anything — it is telling you something, if you know where to take it." },
     { id:"W5L2A3", tier:"A", points:10, defaultRoute:"/volunteer-portal.html", leet:"h4sh3d_4cc3ss",
-      brief:"A standalone extra for anyone who wants a real challenge. Every volunteer gets their own personal access code — volunteer-portal-app.py shows exactly how it is computed. Nobody else's code will work for you here." }
+      brief:"Every volunteer gets their own personal access code. volunteer-portal-app.py explains exactly how it is worked out." }
   ],
 
   decoys: [ ]
@@ -648,6 +655,12 @@ const DYNAMIC_ROUTES = {
     let body = `<h1 style="color:#c98a00">Volunteer Portal</h1>`;
     if (submitted && submitted === realCode) {
       body += flagBox('#d8e8f4', 'Access code correct.', state.flags['W5L2A3']);
+      body += `<div style="max-width:520px;color:#3a4a5a;font-size:13px;line-height:1.6;margin-top:16px">
+<p>Real websites almost never store your actual password. Instead they store a "hash" of it — the result of a one-way function (like SHA-256, the one you just used) that turns text into a fixed string of characters that cannot be reversed back into the original.</p>
+<p>This is different from encryption, which is a two-way process meant to be undone by whoever holds the key. When you log in, a website hashes what you just typed and checks whether it matches the stored hash, rather than comparing your actual password against anything.</p>
+<p>A "salt" — the extra fixed text mixed in before hashing, like the one you just used — makes sure that even two people with the exact same password end up with completely different stored hashes. This stops attackers from cracking many accounts at once using pre-built lists of common hashes.</p>
+<p>Real websites also use specially slow hashing methods built just for passwords, rather than plain SHA-256, to make large-scale cracking even harder. But the basic idea — combine with a salt, hash, and compare — is exactly what you just did.</p>
+</div>`;
     } else {
       body += `<p style="color:#e08a7a">Access code not recognised.</p>`;
     }
