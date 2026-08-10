@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the Web — Week 5 L2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-app:#2a2410;--bg-panel:#332b16;--bg-panel-alt:#2a2410;--border:#4a3f22;
+    --text-main:#fdf6e3;--text-dim:#b8a978;--accent:#ffd23f;--accent-soft:#ffd23f22;
+    --accent-2:#7cb518;--ok:#8fdc8f;--err:#e08a7a;--warn:#f2c14e;
+    --font-display:'Baloo 2',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-app);color:var(--text-main);font-family:var(--font-mono);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .header{flex:0 0 auto;height:52px;background:var(--bg-panel-alt);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);gap:12px}
+  .header .title{font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--accent)}
+  .header .badge{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-dim)}
+  .header .right b{color:var(--accent)}
+
+  .main{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0}
+  .left{display:grid;grid-template-rows:24% 40% 36%;border-right:1px solid var(--border);min-height:0}
+  .panel{overflow:auto;border-bottom:1px solid var(--border);min-height:0;display:flex;flex-direction:column}
+  .panel-head{padding:7px 12px;background:var(--bg-panel-alt);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex:0 0 auto}
+  .panel-body{padding:10px 12px;overflow:auto}
+  .tree-item{padding:5px 4px;cursor:pointer;border-radius:4px;font-size:13px;display:flex;gap:6px;align-items:center}
+  .tree-item:hover{background:var(--bg-panel-alt)}
+  .tree-item.active{background:var(--accent-soft);color:var(--accent)}
+
+  .edit-toggle{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;cursor:pointer}
+  .edit-toggle:hover{border-color:var(--accent)}
+  .edit-toggle.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+  .reset-btn{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;cursor:pointer;margin-left:6px}
+  .reset-btn:hover{border-color:var(--accent-2);color:var(--accent-2)}
+  .lock-label{font-size:10px;color:var(--text-dim)}
+  .source-note{font-size:10px;color:var(--text-dim);padding:4px 12px;border-bottom:1px solid var(--border);flex:0 0 auto}
+
+  .panelTextarea{flex:1;width:100%;background:transparent;border:none;color:var(--text-main);resize:none;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  .panelTextarea:read-only{color:var(--text-dim)}
+
+  .task{padding:8px;border-radius:6px;margin-top:6px;border:1px solid transparent}
+  .task:hover{border-color:var(--border)}
+  .task.selected{background:var(--bg-panel-alt);border-color:var(--accent)}
+  .task .row{display:flex;justify-content:space-between;font-size:12px}
+  .task .tier{font-weight:700;color:var(--accent)}
+  .task .tier.tier-A{color:#a9d18e}
+  .task .pts{color:var(--text-dim);font-size:11px}
+  .task.found .tier::after{content:" ✓";color:var(--ok)}
+  .task-brief{padding-top:6px;font-size:12px;color:var(--text-dim);line-height:1.5;cursor:pointer}
+
+  .right{display:flex;flex-direction:column;min-width:0}
+  .addr-row{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:8px 10px;border-bottom:1px solid var(--border)}
+  .addr-row .dots{display:flex;gap:5px}
+  .addr-row .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .addr-bar{flex:1;background:var(--bg-app);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--text-main);font-family:var(--font-mono)}
+  .addr-bar:focus{outline:none;border-color:var(--accent)}
+  iframe{flex:1;border:none;background:#fffbea}
+
+  .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg-panel-alt)}
+  .flagrow{display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .flagrow input{flex:1;max-width:420px;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:13px}
+  .flagrow input:focus{outline:none;border-color:var(--accent)}
+  .flagrow button{background:var(--accent);color:#2a2410;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-mono);font-weight:700;font-size:13px;cursor:pointer}
+  .flagrow .msg{font-size:13px;font-weight:700;min-width:200px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
+  .receipts{padding:0 16px 12px}
+  .receipts label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
+  .receipts .row2{display:flex;gap:8px;margin-top:4px}
+  .receipts textarea{flex:1;height:46px;resize:none;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-family:var(--font-mono);font-size:11px;padding:8px}
+  .receipts button{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:0 14px;font-family:var(--font-mono);cursor:pointer}
+
+  .modal-backdrop{position:fixed;inset:0;background:#1a1608ee;display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:28px;width:340px}
+  .modal h2{font-family:var(--font-display);margin:0 0 10px;font-size:18px;color:var(--accent)}
+  .modal p{color:var(--text-dim);font-size:13px;margin:0 0 16px}
+  .modal input{width:100%;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:14px;margin-bottom:12px}
+  .modal button{width:100%;background:var(--accent);color:#2a2410;border:none;border-radius:8px;padding:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="modal-backdrop" id="nameModal">
+  <div class="modal">
+    <h2>BEHIND THE WEB</h2>
+    <p>Case File #6 — Golden Bunch Banana Festival, Part II. Enter your name to start.</p>
+    <input id="nameInput" placeholder="Your name" autofocus>
+    <button onclick="startSession()">Begin investigation</button>
+  </div>
+</div>
+
+<div class="header">
+  <span class="title">BEHIND THE WEB</span>
+  <span class="badge" id="weekBadge">Week 5 — L2</span>
+  <div class="right">
+    <span>Flags: <b id="flagCount">0</b> · Score: <b id="scoreTotal">0</b></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="panel">
+      <div class="panel-head"><span>Explorer</span></div>
+      <div class="panel-body" id="treeBody"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span id="sourceHeadLabel">Source — select a file</span>
+        <span id="sourceControls"><span class="lock-label" id="lockLabel">🔒 read-only</span></span>
+      </div>
+      <div class="source-note">Most real websites do not let visitors edit their source. In this sandbox, a few files can be — look for the toggle above when it appears.</div>
+      <textarea id="sourceBody" class="panelTextarea" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="panel" style="border-bottom:none">
+      <div class="panel-head"><span>Tasks — L2</span></div>
+      <div class="panel-body" id="taskList"></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="addr-row">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <input class="addr-bar" id="addrBar" spellcheck="false">
+    </div>
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="flagrow">
+    <input id="flagInput" placeholder="Type or paste a flag here...">
+    <button onclick="submitFlag()">Submit</button>
+    <span class="msg" id="flagMsg"></span>
+  </div>
+  <div class="receipts">
+    <label>Your flags — copy and paste at: <span id="scoreboardLink">[insert scoreboard link]</span></label>
+    <div class="row2">
+      <textarea id="receiptBox" readonly placeholder="Solve a task to see your flags listed here..."></textarea>
+      <button onclick="copyReceipts()">Copy all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   WEEK CONTENT — Week 5 · L2 ("Where validation actually lives")
+   Golden Bunch Banana Festival, continuing straight on from L1 —
+   same site, same architecture. validate.py carries L1's routes
+   above a marker (already solved, nothing new to find there) and
+   this lesson's routes below it.
+
+   ARCHITECTURE REMINDER (same rule as L1 — read before editing):
+   every form submits by building a query string from its own field
+   values and navigating the TOP-LEVEL frame to a "-response.html"
+   route (see DYNAMIC_ROUTES below). Those routes are not declared
+   in WEEK_CONTENT.routes and are not in the tree, so the Source
+   panel only ever shows a generic placeholder for them — never the
+   real content. Do NOT put a flag inside any route's own
+   sourceTemplate; that reopens the leak L1 was rebuilt to avoid.
+   ================================================================ */
+
+const FLAG_PREFIX = "faith";
+const FLAG_SALT   = "wanderlust-2026";
+
+const WEEK_CONTENT = {
+  meta:{ week:5, lesson:"L2", label:"Week 5 — L2",
+         deployPath:"lovebarnowls.github.io/Y9T2/w5/l2",
+         scoreboardUrl:"lovebarnowls.github.io/Y9T2/scoreboard.html" },
+
+  tree: [
+    { path:"/index.html", label:"index.html" },
+    { path:"/register.html", label:"register.html" },
+    { path:"/crew-register.html", label:"crew-register.html" },
+    { path:"/day-pass.html", label:"day-pass.html" },
+    { path:"/volunteer.html", label:"volunteer.html" },
+    { path:"/validate.py", label:"validate.py" }
+  ],
+
+  routes: {
+    "/index.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Golden Bunch Banana Festival</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b;margin-right:16px">Home</a><a href="#/register.html" target="_top" style="color:#b8860b;margin-right:16px">Get Tickets</a><a href="#/day-pass.html" target="_top" style="color:#b8860b;margin-right:16px">Day Passes</a><a href="#/volunteer.html" target="_top" style="color:#b8860b">Volunteer</a></nav>
+<h1 style="color:#c98a00">Golden Bunch Banana Festival</h1>
+<p>Registration is open. Day passes are back this year for anyone who can only make it down for one day.</p>
+<p><a href="#/register.html" target="_top" style="color:#7cb518;font-weight:bold">Get your tickets →</a></p>
+</body>
+</html>`
+    },
+
+    "/register.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Get Tickets — Golden Bunch Banana Festival</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b">Home</a></nav>
+<h1 style="color:#c98a00">Get Tickets</h1>
+
+<form id="registerForm">
+  <label style="display:block;margin-bottom:4px;font-size:13px">Ticket type</label>
+  <select name="ticket_type" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+    <option value="general">General</option>
+    <option value="vip">VIP</option>
+  </select>
+
+  <label style="display:block;margin-bottom:4px;font-size:13px">Postcode</label>
+  <input type="text" name="postcode" pattern="[0-9]{4}" maxlength="4" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+
+  <label style="display:block;margin-bottom:4px;font-size:13px">Meal preference</label>
+  <select name="meal_pref" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+    <option value="standard">Standard</option>
+    <option value="vegetarian">Vegetarian</option>
+  </select>
+
+  <label style="display:block;margin-bottom:4px;font-size:13px">Email</label>
+  <input type="text" name="email" pattern="[^@\\s]+@[^@\\s]+\\.com" title="Must be a .com address" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+
+  <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Register</button>
+</form>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var data = new FormData(e.target);
+  var params = new URLSearchParams();
+  params.set('ticket_type', data.get('ticket_type') || '');
+  params.set('postcode', (data.get('postcode') || '').trim());
+  params.set('meal_pref', data.get('meal_pref') || '');
+  params.set('email', (data.get('email') || '').trim());
+  window.top.location.hash = '/register-response.html?' + params.toString();
+});
+<\/script>
+</body>
+</html>`
+    },
+
+    "/crew-register.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Crew Application — Golden Bunch Banana Festival</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b">Home</a></nav>
+<h1 style="color:#c98a00">Crew Application</h1>
+<p style="font-size:13px;color:#8a7a3a">A separate form from ticket registration — kept simple, since crew sign-ups do not need to go through the same checks as ticket buyers.</p>
+
+<form id="crewRegisterForm">
+  <label style="display:block;margin-bottom:4px;font-size:13px">Preferred role</label>
+  <select name="role" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+    <option value="setup">Setup Crew</option>
+    <option value="ticket_booth">Ticket Booth</option>
+    <option value="cleanup">Cleanup</option>
+    <option value="head_organiser" disabled>Head Organiser (invite only)</option>
+  </select>
+
+  <label style="display:block;margin-bottom:4px;font-size:13px">Postcode</label>
+  <input type="text" name="postcode" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+
+  <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Apply</button>
+</form>
+
+<script>
+document.getElementById('crewRegisterForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var data = new FormData(e.target);
+  var params = new URLSearchParams();
+  params.set('role', data.get('role') || '');
+  params.set('postcode', (data.get('postcode') || '').trim());
+  window.top.location.hash = '/crew-register-response.html?' + params.toString();
+});
+<\/script>
+</body>
+</html>`
+    },
+
+    "/day-pass.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Day Passes — Golden Bunch Banana Festival</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b">Home</a></nav>
+<h1 style="color:#c98a00">Day Passes</h1>
+<p style="font-size:13px;color:#8a7a3a">The festival runs Friday to Sunday. Pick the day you arrive and the day you leave.</p>
+
+<form id="dayPassForm">
+  <label style="display:block;margin-bottom:4px;font-size:13px">Arrival day</label>
+  <select name="arrival_day" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+    <option value="friday">Friday</option>
+    <option value="saturday">Saturday</option>
+    <option value="sunday">Sunday</option>
+  </select>
+
+  <label style="display:block;margin-bottom:4px;font-size:13px">Departure day</label>
+  <select name="departure_day" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+    <option value="friday">Friday</option>
+    <option value="saturday">Saturday</option>
+    <option value="sunday">Sunday</option>
+  </select>
+
+  <input type="hidden" name="days_claimed" value="3">
+
+  <label style="display:block;margin-bottom:10px;font-size:13px">
+    <input type="checkbox" name="single_day_discount"> I am only attending one day (single-day discount)
+  </label>
+
+  <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Get Day Pass</button>
+</form>
+
+<script>
+document.getElementById('dayPassForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var data = new FormData(e.target);
+  var params = new URLSearchParams();
+  params.set('arrival_day', data.get('arrival_day') || '');
+  params.set('departure_day', data.get('departure_day') || '');
+  params.set('days_claimed', data.get('days_claimed') || '');
+  window.top.location.hash = '/day-pass-response.html?' + params.toString();
+});
+<\/script>
+</body>
+</html>`
+    },
+
+    "/volunteer.html": {
+      editable:true,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Volunteer — Golden Bunch Banana Festival</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b">Home</a></nav>
+<h1 style="color:#c98a00">Volunteer With Us</h1>
+
+<form id="volForm">
+  <label style="display:block;margin-bottom:4px;font-size:13px">Full name</label>
+  <input type="text" name="volunteer_name" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+
+  <label style="display:block;margin-bottom:4px;font-size:13px">Preferred role</label>
+  <select name="role" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+    <option>Setup Crew</option>
+    <option>Ticket Booth</option>
+    <option>Cleanup</option>
+  </select>
+
+  <input type="hidden" name="staff_redirect" value="/staff-scores.html">
+
+  <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Submit application</button>
+</form>
+
+<script>
+document.getElementById('volForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  document.getElementById('thanksMsg').style.display = 'block';
+});
+<\/script>
+<p id="thanksMsg" style="display:none;margin-top:16px;color:#7cb518">Thanks for applying — Sherah will be in touch closer to the date.</p>
+</body>
+</html>`
+    },
+
+    "/validate.py": {
+      editable:false,
+      sourceTemplate: `# Golden Bunch Banana Festival — registration & volunteer forms
+# Sherah wrote this to keep the forms honest, whatever the browser
+# already stopped (or let through) before it ever got here.
+
+# Nothing in this sandbox travels over a real network — but treat this
+# file as what a genuine server would check. Some routes below use
+# request.form.get('something'). That means the value came from a form
+# field named "something" — not the address bar, the actual form data.
+
+@app.route('/register.html', methods=['POST'])
+def register():
+    ticket_type = request.form.get('ticket_type')
+    promo = request.form.get('promo_code', '')
+    insider_code = request.form.get('insider_code', '')
+
+    valid_ticket_types = ['general', 'vip', 'crew']
+    if ticket_type not in valid_ticket_types:
+        return "Please choose a valid ticket type."
+
+    REAL_PROMO = 'BANANAS2026'
+    if promo == REAL_PROMO:
+        pass  # correct promo code path — see the response page itself
+
+    if insider_code == REAL_PROMO + REAL_PROMO:
+        pass  # final flag path
+
+    return render_page('register.html')
+
+@app.route('/volunteer.html', methods=['POST'])
+def volunteer():
+    shift = request.form.get('shift', 'general')
+    if shift == 'backstage':
+        pass  # flag path
+    return render_page('volunteer.html')
+
+@app.route('/checkout.html', methods=['POST'])
+def checkout():
+    price = float(request.form.get('price', '45.00'))
+    if price <= 0:
+        pass  # flag path, plus an explanation of what went wrong
+    return render_page('checkout.html')
+
+# ============================================================
+# END OF WEEK 5, LESSON 1 CONTENT.
+# Everything above this line is already solved — nothing new to
+# find up there. Read from here down for today's lesson.
+# ============================================================
+
+@app.route('/register.html', methods=['POST'])
+def register_l2():
+    meal_pref = request.form.get('meal_pref')
+    email = request.form.get('email', '')
+
+    # the meal preference dropdown only ever shows 'standard' and
+    # 'vegetarian' — this route has always quietly accepted a third
+    # value too, same pattern as the ticket-type field last lesson
+    valid_meal_prefs = ['standard', 'vegetarian', 'vegan']
+    if meal_pref not in valid_meal_prefs:
+        return "Please choose a valid meal preference."
+
+    # the visible email field requires a .com address (I wrote that
+    # pattern myself) — but all I actually check for here is an @
+    # symbol somewhere in the string. Nothing more.
+    if '@' in email:
+        pass  # flag path if the browser's own .com rule was bypassed
+
+    return render_page('register.html')
+
+@app.route('/crew-register.html', methods=['POST'])
+def crew_register():
+    role = request.form.get('role')
+    postcode = request.form.get('postcode', '')
+
+    # 'head_organiser' is marked disabled in the dropdown, but I never
+    # actually removed it as an accepted value down here — the
+    # disabled attribute only ever lived in the HTML
+    if role == 'head_organiser':
+        pass  # flag path
+
+    # this route has never validated postcode format at all, unlike
+    # the register.html route, which restricts it to 4 digits
+    return render_page('crew-register.html')
+
+@app.route('/day-pass.html', methods=['POST'])
+def day_pass():
+    arrival = request.form.get('arrival_day')
+    departure = request.form.get('departure_day')
+    days_claimed = request.form.get('days_claimed', '3')
+
+    day_order = {'friday': 1, 'saturday': 2, 'sunday': 3}
+
+    # I check that arrival and departure are each real days of the
+    # festival — I never check that departure actually comes after
+    # arrival. Two individually valid days can still make no sense
+    # together.
+    if day_order.get(departure, 0) < day_order.get(arrival, 0):
+        pass  # flag path — departure before arrival
+
+    # the single-day discount checkbox on the page does not actually
+    # get read here at all. All that matters to this route is
+    # days_claimed — a field nothing on the visible page ever lets a
+    # visitor edit directly.
+    if days_claimed == '1' and arrival != departure:
+        pass  # flag path — claiming a single day while actually
+              # spanning more than one, according to the dropdowns
+
+    return render_page('day-pass.html')
+
+# staff-scores.html still exists, still un-linked from anywhere on
+# the rendered site, same as the week it first showed up.`
+    }
+  },
+
+  tasks: [
+    { id:"W5L2B1", tier:"B", points:50, defaultRoute:"/crew-register.html", leet:"w34k3r_f0rm",
+      brief:"register.html and crew-register.html both ask for a postcode, but they do not enforce the same rule. Compare the two — one accepts things the other never would." },
+    { id:"W5L2B2", tier:"B", points:50, defaultRoute:"/register.html", leet:"unl1st3d_m34l",
+      brief:"The meal preference dropdown only offers Standard and Vegetarian. validate.py tells a different story about what this route actually accepts." },
+    { id:"W5L2B3", tier:"B", points:50, defaultRoute:"/crew-register.html", leet:"l0ck3d_1n_l00ks_0nly",
+      brief:"The 'Head Organiser' role is greyed out in the dropdown. Greyed out is a browser decision, not a server one." },
+    { id:"W5L2B4", tier:"B", points:50, defaultRoute:"/day-pass.html", leet:"b4ckw4rds_d4tes",
+      brief:"Arrival day and departure day are each perfectly valid choices on their own. Nothing stops them making no sense together." },
+    { id:"W5L2B5", tier:"B", points:50, defaultRoute:"/register.html", leet:"l00s3r_ch3ck",
+      brief:"The email field insists on a .com address. What this route actually checks for is a lot less fussy than that." },
+    { id:"W5L2A1", tier:"A", points:10, defaultRoute:"/day-pass.html", leet:"d1sc0unt_fr4ud",
+      brief:"The single-day discount checkbox looks like it controls the discount. It is not the field that actually does." },
+    { id:"W5L2A2", tier:"A", points:10, defaultRoute:"/volunteer.html", leet:"st4ff_c4llb4ck",
+      brief:"There is a field on this form that is not asking you for anything — it is telling you something, if you know where to take it." }
+  ],
+
+  decoys: [ ]
+};
+
+/* ================================================================
+   DYNAMIC RESPONSE ROUTES — same discipline as L1: never in
+   WEEK_CONTENT.routes, never in the tree, never source-visible.
+   ================================================================ */
+
+function wrapResponse(backHref, bodyHtml){
+  return `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<a href="${backHref}" target="_top" style="color:#b8860b;font-size:13px">← Back</a>
+${bodyHtml}
+</body></html>`;
+}
+
+function flagBox(color, heading, flag){
+  return `<div style="background:${color};padding:14px;border-radius:8px;margin:14px 0"><b>${heading}</b><p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">${flag}</p></div>`;
+}
+
+const DYNAMIC_ROUTES = {
+  "/register-response.html": function(params){
+    const mealPref = (params.get('meal_pref') || '').trim();
+    const email = (params.get('email') || '').trim();
+    const COM_PATTERN = /^[^@\s]+@[^@\s]+\.com$/i;
+
+    let body = `<h1 style="color:#c98a00">Registration Result</h1><p>Thanks for registering!</p>`;
+    if (mealPref === 'vegan') body += flagBox('#e8f4d8', 'Vegan meal noted.', state.flags['W5L2B2']);
+    if (email.includes('@') && !COM_PATTERN.test(email)) {
+      body += flagBox('#e8f4d8', 'Email accepted — the .com rule was only ever a browser rule.', state.flags['W5L2B5']);
+    }
+    return wrapResponse('#/register.html', body);
+  },
+
+  "/crew-register-response.html": function(params){
+    const role = (params.get('role') || '').trim();
+    const postcode = (params.get('postcode') || '').trim();
+
+    let body = `<h1 style="color:#c98a00">Crew Application Result</h1><p>Thanks for applying!</p>`;
+    if (postcode && !/^\d{4}$/.test(postcode)) {
+      body += flagBox('#e8f4d8', 'Postcode accepted — this form never checked the format at all.', state.flags['W5L2B1']);
+    }
+    if (role === 'head_organiser') {
+      body += flagBox('#d8e8f4', 'Head Organiser role recognised.', state.flags['W5L2B3']);
+    }
+    return wrapResponse('#/crew-register.html', body);
+  },
+
+  "/day-pass-response.html": function(params){
+    const arrival = (params.get('arrival_day') || '').trim();
+    const departure = (params.get('departure_day') || '').trim();
+    const daysClaimed = (params.get('days_claimed') || '').trim();
+    const dayOrder = { friday: 1, saturday: 2, sunday: 3 };
+
+    let body = `<h1 style="color:#c98a00">Day Pass Result</h1>`;
+    let anyFlag = false;
+
+    if ((dayOrder[departure] || 0) < (dayOrder[arrival] || 0)) {
+      body += flagBox('#e8f4d8', 'Pass issued — nobody checked that departure came after arrival.', state.flags['W5L2B4']);
+      anyFlag = true;
+    }
+    if (daysClaimed === '1' && arrival !== departure) {
+      body += flagBox('#d8e8f4', 'Single-day discount applied — to a pass that spans more than one day.', state.flags['W5L2A1']);
+      anyFlag = true;
+    }
+    if (!anyFlag) {
+      body += `<p style="color:#7cb518">Day pass confirmed. See you at the festival!</p>`;
+    }
+    return wrapResponse('#/day-pass.html', body);
+  },
+
+  "/staff-scores.html": function(params){
+    const body = `<h1 style="color:#c98a00">Staff Scores</h1><p>Internal leaderboard, never meant to be public — never linked from anywhere on the rendered site, same as it was back in Week 4.</p>` + flagBox('#d8e8f4', 'Found it.', state.flags['W5L2A2']);
+    return wrapResponse('#/volunteer.html', body);
+  }
+};
+
+/* No login/password mechanic in this lesson — kept as an empty list
+   so the engine's per-student password loop below still runs safely
+   even with nothing in it. */
+const PASSWORD_TOKENS = [ ];
+
+/* ================================================================
+   ENGINE
+   ================================================================ */
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, passwords:{}, name:"", collapsedFolders:new Set() };
+let currentPath = null;
+const routeEdits = {};
+const FLAG_INDEX = {};
+const DECOY_INDEX = {};
+
+function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,' '); }
+
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function makeFlagSuffix(name, taskId){
+  const raw = name.toLowerCase() + FLAG_SALT + taskId;
+  return (await sha256Hex(raw)).substring(0, 6);
+}
+async function makeFlag(leet, taskId){
+  const suffix = await makeFlagSuffix(state.name, taskId);
+  return `${FLAG_PREFIX}{${taskId}_${leet}_${suffix}}`;
+}
+
+async function computeAllFlags(){
+  for (const task of WEEK_CONTENT.tasks){
+    state.flags[task.id] = await makeFlag(task.leet, task.id);
+  }
+  for (const tokenId of PASSWORD_TOKENS){
+    const suffix = await makeFlagSuffix(state.name, tokenId);
+    state.passwords[tokenId] = suffix.substring(0, 3).toUpperCase();
+  }
+}
+function buildFlagIndex(){
+  WEEK_CONTENT.tasks.forEach(task=>{
+    FLAG_INDEX[normalize(state.flags[task.id])] = task;
+  });
+  (WEEK_CONTENT.decoys || []).forEach(str => { DECOY_INDEX[normalize(str)] = true; });
+}
+function fillTemplate(text){
+  return text
+    .replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???')
+    .replace(/\{\{PASS:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.passwords[id] || '???')
+    .replace(/\{\{NAME\}\}/g, () => (state.name || 'Investigator').replace(/"/g,'&quot;').replace(/'/g,'&#39;'));
+}
+
+async function startSession(){
+  state.name = document.getElementById('nameInput').value.trim() || 'Investigator';
+  await computeAllFlags();
+  buildFlagIndex();
+  document.getElementById('nameModal').style.display = 'none';
+  document.getElementById('weekBadge').textContent = WEEK_CONTENT.meta.label + ' · ' + state.name;
+  document.getElementById('scoreboardLink').textContent = WEEK_CONTENT.meta.scoreboardUrl;
+  init();
+}
+
+function init(){
+  renderTree(); renderTaskList();
+  window.addEventListener('hashchange', onHashChange);
+  navigate(WEEK_CONTENT.tree[0].path);
+}
+
+function buildTreeStructure(){
+  const root = { folders:{}, files:[], fullPath:'' };
+  WEEK_CONTENT.tree.forEach(item=>{
+    const parts = item.path.split('/').filter(Boolean);
+    let node = root, pathSoFar = '';
+    for (let i=0; i<parts.length-1; i++){
+      pathSoFar += '/' + parts[i];
+      if (!node.folders[parts[i]]) node.folders[parts[i]] = { folders:{}, files:[], fullPath:pathSoFar };
+      node = node.folders[parts[i]];
+    }
+    node.files.push(item);
+  });
+  return root;
+}
+
+function makeFileRow(item, depth){
+  const div = document.createElement('div');
+  div.className = 'tree-item'; div.id = 'tree-' + item.path;
+  div.style.paddingLeft = (4 + depth * 16) + 'px';
+  div.innerHTML = `📄 ${item.label.split('/').pop()}`;
+  div.onclick = () => navigate(item.path);
+  return div;
+}
+
+function renderNode(node, container, depth){
+  node.files.forEach(item=>{ container.appendChild(makeFileRow(item, depth)); });
+  Object.keys(node.folders).forEach(folderName=>{
+    const sub = node.folders[folderName];
+    const collapsed = state.collapsedFolders.has(sub.fullPath);
+    const header = document.createElement('div');
+    header.className = 'tree-item';
+    header.style.paddingLeft = (4 + depth * 16) + 'px';
+    header.innerHTML = `${collapsed ? '▸' : '▾'} 📁 ${folderName}`;
+    header.onclick = () => {
+      collapsed ? state.collapsedFolders.delete(sub.fullPath) : state.collapsedFolders.add(sub.fullPath);
+      renderTree();
+    };
+    container.appendChild(header);
+    if (!collapsed) renderNode(sub, container, depth + 1);
+  });
+}
+
+function renderTree(){
+  const el = document.getElementById('treeBody'); el.innerHTML = '';
+  renderNode(buildTreeStructure(), el, 0);
+}
+
+function renderTaskList(){
+  const el = document.getElementById('taskList'); el.innerHTML = '';
+  WEEK_CONTENT.tasks.forEach(task=>{
+    const found = state.foundIds.has(task.id);
+    const div = document.createElement('div');
+    div.className = 'task' + (found?' found':'') + (state.selectedTask===task.id?' selected':'');
+    div.innerHTML = `<div class="row"><span><span class="tier tier-${task.tier}">${task.tier}</span> ${task.id}</span><span class="pts">${task.points} pts</span></div><div class="task-brief">${task.brief}</div>`;
+    div.onclick = () => { state.selectedTask = task.id; if (task.defaultRoute) navigate(task.defaultRoute); renderTaskList(); };
+    el.appendChild(div);
+  });
+}
+
+function onHashChange(){
+  const raw = location.hash.replace(/^#/, '') || WEEK_CONTENT.tree[0].path;
+  loadRoute(raw);
+}
+function navigate(path){
+  location.hash = path;
+  if (location.hash.replace(/^#/, '') === path) loadRoute(path);
+}
+
+function loadRoute(fullPath){
+  const qIndex = fullPath.indexOf('?');
+  const path = qIndex === -1 ? fullPath : fullPath.substring(0, qIndex);
+  const queryString = qIndex === -1 ? '' : fullPath.substring(qIndex + 1);
+
+  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + fullPath;
+  document.querySelectorAll('.tree-item').forEach(el=>el.classList.remove('active'));
+  const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
+  currentPath = path;
+
+  const sourceEl = document.getElementById('sourceBody');
+  const labelEl = document.getElementById('sourceHeadLabel');
+  const controlsEl = document.getElementById('sourceControls');
+  const frame = document.getElementById('preview');
+
+  if (DYNAMIC_ROUTES[path]){
+    const params = new URLSearchParams(queryString);
+    const body = DYNAMIC_ROUTES[path](params);
+    labelEl.textContent = 'Response — ' + path;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    sourceEl.value = 'This is a live response, not a source file — its logic lives in validate.py. Nothing else to view here.';
+    sourceEl.readOnly = true;
+    frame.srcdoc = body;
+    return;
+  }
+
+  const route = WEEK_CONTENT.routes[path];
+
+  if (!route){
+    sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
+    labelEl.textContent = 'Source'; controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  labelEl.textContent = 'Source — ' + path;
+  const content = routeEdits[path] !== undefined ? routeEdits[path] : fillTemplate(route.sourceTemplate);
+  sourceEl.value = content;
+
+  if (route.editable){
+    controlsEl.innerHTML = `<button class="edit-toggle" id="editToggleBtn" onclick="toggleEdit()">✏️ Edit</button><button class="reset-btn" onclick="resetRoute()">↺ Reset</button>`;
+    sourceEl.readOnly = true;
+  } else {
+    controlsEl.innerHTML = `<span class="lock-label">🔒 read-only</span>`;
+    sourceEl.readOnly = true;
+  }
+  frame.srcdoc = content;
+}
+
+function toggleEdit(){
+  const sourceEl = document.getElementById('sourceBody');
+  const btn = document.getElementById('editToggleBtn');
+  sourceEl.readOnly = !sourceEl.readOnly;
+  btn.classList.toggle('on', !sourceEl.readOnly);
+  btn.textContent = sourceEl.readOnly ? '✏️ Edit' : '👁 View';
+}
+
+function resetRoute(){
+  if (!currentPath) return;
+  delete routeEdits[currentPath];
+  loadRoute(currentPath);
+}
+
+document.getElementById('sourceBody').addEventListener('input', (e)=>{
+  if (!currentPath) return;
+  routeEdits[currentPath] = e.target.value;
+  document.getElementById('preview').srcdoc = e.target.value;
+});
+
+document.getElementById('addrBar').addEventListener('keydown', e=>{
+  if (e.key==='Enter'){
+    let val = e.target.value.trim();
+    const marker = WEEK_CONTENT.meta.deployPath;
+    let path = val.startsWith(marker) ? val.slice(marker.length) : val.slice(val.indexOf('/'));
+    if (!path.startsWith('/')) path = '/' + path;
+    navigate(path);
+  }
+});
+
+function submitFlag(){
+  const input = document.getElementById('flagInput');
+  const msg = document.getElementById('flagMsg');
+  const raw = input.value.trim();
+  const task = FLAG_INDEX[normalize(raw)];
+
+  if (!task){
+    if (DECOY_INDEX[normalize(raw)]){
+      msg.textContent = 'DECOY — this was a decoy flag. Sorry, nice try!';
+      msg.className = 'msg warn';
+      return;
+    }
+    msg.textContent='WRONG'; msg.className='msg err'; return;
+  }
+  if (state.foundIds.has(task.id)){ msg.textContent='ALREADY SUBMITTED'; msg.className='msg warn'; return; }
+
+  state.foundIds.add(task.id);
+  state.score += task.points;
+  document.getElementById('flagCount').textContent = state.foundIds.size;
+  document.getElementById('scoreTotal').textContent = state.score;
+  msg.textContent = `CORRECT — ${state.flags[task.id]} (+${task.points} pts)`;
+  msg.className = 'msg ok';
+  input.value = '';
+  renderTaskList();
+  addReceipt(task);
+}
+document.getElementById('flagInput').addEventListener('keydown', e=>{ if (e.key==='Enter') submitFlag(); });
+
+function addReceipt(task){
+  const box = document.getElementById('receiptBox');
+  box.value = box.value ? box.value + '\n' + state.flags[task.id] : state.flags[task.id];
+}
+function copyReceipts(){
+  const box = document.getElementById('receiptBox');
+  navigator.clipboard.writeText(box.value).then(()=>{
+    const msg = document.getElementById('flagMsg');
+    msg.textContent = 'Copied to clipboard.'; msg.className = 'msg ok';
+  });
+}
+</script>
+</body>
+</html>
