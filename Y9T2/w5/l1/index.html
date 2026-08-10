@@ -146,11 +146,21 @@
 <script>
 /* ================================================================
    WEEK CONTENT — Week 5 · L1 ("The browser is not the boundary")
-   Golden Bunch Banana Festival, built by Sherah. No Flask query
-   routes this lesson — everything is a form, checked two ways:
-   what the browser stops (HTML attributes, inline JS) and what
-   validate.py actually requires. Read validate.py to find the
-   values the forms themselves never volunteer.
+   Golden Bunch Banana Festival, built by Sherah.
+
+   IMPORTANT ARCHITECTURE NOTE (read before editing this file further):
+   Every form on every editable page submits by building a query string
+   from its own field values and navigating the TOP-LEVEL frame to a
+   "-response.html" route (see DYNAMIC_ROUTES below). Those response
+   routes are NOT declared in WEEK_CONTENT.routes and are NOT in the
+   tree — they are handled the same way Week 4's DYNAMIC_ROUTES were,
+   so the Source panel shows a generic placeholder for them, never
+   real content. This is deliberate: it is the only thing stopping a
+   student from finding every flag just by clicking Source before
+   doing anything. Do NOT "simplify" a task by putting its flag back
+   inside a route's own sourceTemplate — that reopens the exact leak
+   this design avoids. If a task needs a flag revealed, it goes
+   through a response route, full stop.
    ================================================================ */
 
 const FLAG_PREFIX = "faith";
@@ -228,38 +238,15 @@ const WEEK_CONTENT = {
   <button type="submit" id="registerSubmit" disabled style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer;opacity:0.5">Register (loading...)</button>
 </form>
 
-<div style="margin-top:24px">
-  <div id="flagB1" style="display:none;background:#fff3c4;padding:14px;border-radius:8px;margin-bottom:10px">
-    <b>Registered!</b>
-    <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1B1}}</p>
-  </div>
-  <div id="flagB2" style="display:none;background:#e8f4d8;padding:14px;border-radius:8px;margin-bottom:10px">
-    <b>Crew ticket recognised.</b>
-    <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1B2}}</p>
-  </div>
-  <div id="flagB3" style="display:none;background:#e8f4d8;padding:14px;border-radius:8px;margin-bottom:10px">
-    <b>Promo code accepted.</b>
-    <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1B3}}</p>
-  </div>
-  <div id="flagH1" style="display:none;background:#d8e8f4;padding:14px;border-radius:8px;margin-bottom:10px">
-    <b>Insider code recognised — that took some digging.</b>
-    <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1H1}}</p>
-  </div>
-</div>
-
 <script>
 document.getElementById('registerForm').addEventListener('submit', function(e){
   e.preventDefault();
   var data = new FormData(e.target);
-  var ticketType = data.get('ticket_type');
-  var promo = (data.get('promo_code') || '').trim();
-  var insider = (data.get('insider_code') || '').trim();
-  var REAL_PROMO = 'BANANAS2026';
-
-  document.getElementById('flagB1').style.display = 'block';
-  if (ticketType === 'crew') document.getElementById('flagB2').style.display = 'block';
-  if (promo === REAL_PROMO) document.getElementById('flagB3').style.display = 'block';
-  if (insider === REAL_PROMO + REAL_PROMO) document.getElementById('flagH1').style.display = 'block';
+  var params = new URLSearchParams();
+  params.set('ticket_type', data.get('ticket_type') || '');
+  params.set('promo_code', (data.get('promo_code') || '').trim());
+  params.set('insider_code', (data.get('insider_code') || '').trim());
+  window.top.location.hash = '/register-response.html?' + params.toString();
 });
 <\/script>
 </body>
@@ -291,10 +278,15 @@ document.getElementById('registerForm').addEventListener('submit', function(e){
   <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Submit application</button>
 </form>
 
-<div id="flagB4" style="display:none;background:#e8f4d8;padding:14px;border-radius:8px;margin-top:16px">
-  <b>Backstage shift confirmed.</b>
-  <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1B4}}</p>
-</div>
+<script>
+document.getElementById('volForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var data = new FormData(e.target);
+  var params = new URLSearchParams();
+  params.set('shift', data.get('shift') || '');
+  window.top.location.hash = '/volunteer-response.html?' + params.toString();
+});
+<\/script>
 
 <hr style="margin:36px 0;border:none;border-top:1px solid #e8dcae">
 
@@ -303,15 +295,6 @@ document.getElementById('registerForm').addEventListener('submit', function(e){
   <p style="font-size:13px">Logged in as: <strong id="crewName"></strong></p>
   <input type="password" id="crewPassInput" placeholder="Crew password" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;display:block">
   <button onclick="checkCrewLogin()" style="padding:6px 14px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Log in</button>
-
-  <div id="flagA3" style="display:none;background:#e8f4d8;padding:14px;border-radius:8px;margin-top:12px">
-    <b>Logged in.</b>
-    <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1A3}}</p>
-  </div>
-  <div id="flagA4" style="display:none;background:#d8e8f4;padding:14px;border-radius:8px;margin-top:12px">
-    <b>Gate skipped entirely.</b>
-    <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">{{FLAG:W5L1A4}}</p>
-  </div>
 </section>
 
 <section style="margin-top:36px">
@@ -322,29 +305,16 @@ document.getElementById('registerForm').addEventListener('submit', function(e){
 </section>
 
 <script>
-document.getElementById('volForm').addEventListener('submit', function(e){
-  e.preventDefault();
-  var data = new FormData(e.target);
-  if (data.get('shift') === 'backstage') {
-    document.getElementById('flagB4').style.display = 'block';
-  }
-});
-
 document.getElementById('crewName').textContent = "{{NAME}}";
 
 var crewGateEnabled = true;
 
 function checkCrewLogin(){
   var val = document.getElementById('crewPassInput').value.trim();
-  if (!crewGateEnabled) {
-    document.getElementById('flagA4').style.display = 'block';
-    return;
-  }
-  if (val === "{{PASS:CREWPASSW5L1}}") {
-    document.getElementById('flagA3').style.display = 'block';
-  } else {
-    alert('Incorrect password.');
-  }
+  var params = new URLSearchParams();
+  params.set('bypassed', crewGateEnabled ? 'false' : 'true');
+  params.set('password_attempt', val);
+  window.top.location.hash = '/crew-response.html?' + params.toString();
 }
 <\/script>
 </body>
@@ -366,23 +336,13 @@ function checkCrewLogin(){
   <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Confirm order</button>
 </form>
 
-<div id="normalResult" style="display:none;margin-top:16px;color:#7cb518">Order confirmed. Thanks for coming!</div>
-
-<div id="flagA1" style="display:none;background:#d8e8f4;padding:14px;border-radius:8px;margin-top:16px">
-  <p style="max-width:420px;margin:0 0 10px;color:#3a4a5a">This order went through at a price of zero or less. Nothing on this page, or in the form itself, ever checked that the number arriving here made sense — a real till would need to.</p>
-  <p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W5L1A1}}</p>
-</div>
-
 <script>
 document.getElementById('checkoutForm').addEventListener('submit', function(e){
   e.preventDefault();
   var data = new FormData(e.target);
-  var price = parseFloat(data.get('price'));
-  if (isNaN(price) || price > 0) {
-    document.getElementById('normalResult').style.display = 'block';
-  } else {
-    document.getElementById('flagA1').style.display = 'block';
-  }
+  var params = new URLSearchParams();
+  params.set('price', data.get('price') || '');
+  window.top.location.hash = '/checkout-response.html?' + params.toString();
 });
 <\/script>
 </body>
@@ -416,7 +376,7 @@ def register():
     # both mine, and neither one matches this
     REAL_PROMO = 'BANANAS2026'
     if promo == REAL_PROMO:
-        pass  # correct promo code path — see the page itself
+        pass  # correct promo code path — see the response page itself
 
     # insider_code isn't shown anywhere in the visible form. Whatever's
     # in it needs to equal the real promo code, written twice back to
@@ -476,6 +436,78 @@ def checkout():
 /* Password-style tokens, generated the same way flags are — a slice of
    the same per-student hash, just shorter and not wrapped in faith{}. */
 const PASSWORD_TOKENS = [ "CREWPASSW5L1" ];
+
+/* ================================================================
+   DYNAMIC RESPONSE ROUTES — the fix that keeps flags out of Source.
+
+   These are deliberately NOT in WEEK_CONTENT.routes and NOT in the
+   tree. loadRoute() below shows a generic placeholder in the Source
+   panel for any path matched here — the actual HTML returned by
+   these functions is only ever visible in the rendered preview,
+   after a student has genuinely triggered the right submission.
+   Same pattern Week 4 used for query-string-driven responses.
+   ================================================================ */
+
+function wrapResponse(backHref, bodyHtml){
+  return `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<a href="${backHref}" target="_top" style="color:#b8860b;font-size:13px">← Back</a>
+${bodyHtml}
+</body></html>`;
+}
+
+function flagBox(color, heading, flag){
+  return `<div style="background:${color};padding:14px;border-radius:8px;margin:14px 0"><b>${heading}</b><p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block;margin-top:6px">${flag}</p></div>`;
+}
+
+const DYNAMIC_ROUTES = {
+  "/register-response.html": function(params){
+    const ticketType = (params.get('ticket_type') || '').trim();
+    const promo = (params.get('promo_code') || '').trim();
+    const insider = (params.get('insider_code') || '').trim();
+    const REAL_PROMO = 'BANANAS2026';
+
+    let body = `<h1 style="color:#c98a00">Registration Result</h1>`;
+    // Reaching this route at all means the disabled attribute was already removed.
+    body += flagBox('#fff3c4', 'Registered!', state.flags['W5L1B1']);
+    if (ticketType === 'crew') body += flagBox('#e8f4d8', 'Crew ticket recognised.', state.flags['W5L1B2']);
+    if (promo === REAL_PROMO) body += flagBox('#e8f4d8', 'Promo code accepted.', state.flags['W5L1B3']);
+    if (insider === REAL_PROMO + REAL_PROMO) body += flagBox('#d8e8f4', 'Insider code recognised — that took some digging.', state.flags['W5L1H1']);
+    return wrapResponse('#/register.html', body);
+  },
+
+  "/volunteer-response.html": function(params){
+    const shift = (params.get('shift') || '').trim();
+    let body = `<h1 style="color:#c98a00">Application Received</h1><p>Thanks for applying — Sherah will be in touch closer to the date.</p>`;
+    if (shift === 'backstage') body += flagBox('#e8f4d8', 'Backstage shift confirmed.', state.flags['W5L1B4']);
+    return wrapResponse('#/volunteer.html', body);
+  },
+
+  "/checkout-response.html": function(params){
+    const price = parseFloat(params.get('price'));
+    let body = `<h1 style="color:#c98a00">Order Result</h1>`;
+    if (isNaN(price) || price > 0) {
+      body += `<p style="color:#7cb518">Order confirmed. Thanks for coming!</p>`;
+    } else {
+      body += `<div style="background:#d8e8f4;padding:14px;border-radius:8px;margin:14px 0"><p style="max-width:420px;margin:0 0 10px;color:#3a4a5a">This order went through at a price of zero or less. Nothing on this page, or in the form itself, ever checked that the number arriving here made sense — a real till would need to.</p><p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block">${state.flags['W5L1A1']}</p></div>`;
+    }
+    return wrapResponse('#/checkout.html', body);
+  },
+
+  "/crew-response.html": function(params){
+    const bypassed = params.get('bypassed') === 'true';
+    const attempt = (params.get('password_attempt') || '').trim();
+    const realPassword = state.passwords['CREWPASSW5L1'];
+    let body = `<h1 style="color:#c98a00">Crew Login</h1>`;
+    if (bypassed) {
+      body += flagBox('#d8e8f4', 'Gate skipped entirely.', state.flags['W5L1A4']);
+    } else if (attempt === realPassword) {
+      body += flagBox('#e8f4d8', 'Logged in.', state.flags['W5L1A3']);
+    } else {
+      body += `<p style="color:#e08a7a">Incorrect password.</p>`;
+    }
+    return wrapResponse('#/volunteer.html', body);
+  }
+};
 
 /* ================================================================
    ENGINE
@@ -608,17 +640,33 @@ function navigate(path){
   if (location.hash.replace(/^#/, '') === path) loadRoute(path);
 }
 
-function loadRoute(path){
-  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + path;
+function loadRoute(fullPath){
+  const qIndex = fullPath.indexOf('?');
+  const path = qIndex === -1 ? fullPath : fullPath.substring(0, qIndex);
+  const queryString = qIndex === -1 ? '' : fullPath.substring(qIndex + 1);
+
+  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + fullPath;
   document.querySelectorAll('.tree-item').forEach(el=>el.classList.remove('active'));
   const t = document.getElementById('tree-' + path); if (t) t.classList.add('active');
   currentPath = path;
 
-  const route = WEEK_CONTENT.routes[path];
   const sourceEl = document.getElementById('sourceBody');
   const labelEl = document.getElementById('sourceHeadLabel');
   const controlsEl = document.getElementById('sourceControls');
   const frame = document.getElementById('preview');
+
+  if (DYNAMIC_ROUTES[path]){
+    const params = new URLSearchParams(queryString);
+    const body = DYNAMIC_ROUTES[path](params);
+    labelEl.textContent = 'Response — ' + path;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    sourceEl.value = 'This is a live response, not a source file — its logic lives in validate.py. Nothing else to view here.';
+    sourceEl.readOnly = true;
+    frame.srcdoc = body;
+    return;
+  }
+
+  const route = WEEK_CONTENT.routes[path];
 
   if (!route){
     sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
