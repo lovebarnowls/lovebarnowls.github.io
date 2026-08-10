@@ -177,14 +177,14 @@ const WEEK_CONTENT = {
     { path:"/app.py", label:"app.py" },
     { path:"/leaderboard.html", label:"leaderboard.html" },
     { path:"/machines/index.html", label:"machines/index.html" },
-    { path:"/machines/pacland", label:"machines/pacland" },
-    { path:"/machines/outrun", label:"machines/outrun" },
-    { path:"/machines/frogger", label:"machines/frogger" },
+    { path:"/machines/pacland.html", label:"machines/pacland.html" },
+    { path:"/machines/outrun.html", label:"machines/outrun.html" },
+    { path:"/machines/frogger.html", label:"machines/frogger.html" },
     { path:"/staff-notes.html", label:"staff-notes.html" },
-    { path:"/vip-lounge", label:"vip-lounge", hidden:true },
-    { path:"/machines/galaxian7", label:"machines/galaxian7", hidden:true },
-    { path:"/machines/PINBOT", label:"machines/PINBOT", hidden:true },
-    { path:"/machines/04-04", label:"machines/04-04", hidden:true }
+    { path:"/vip-lounge.html", label:"vip-lounge.html", hidden:true },
+    { path:"/machines/galaxian7.html", label:"machines/galaxian7.html", hidden:true },
+    { path:"/machines/PINBOT.html", label:"machines/PINBOT.html", hidden:true },
+    { path:"/machines/04-04.html", label:"machines/04-04.html", hidden:true }
   ],
 
   routes: {
@@ -207,32 +207,32 @@ const WEEK_CONTENT = {
       sourceTemplate: `# RetroPixel Arcade — leaderboard app
 # Maharai wrote this in a weekend. Sorry in advance.
 
-@app.route('/vip-lounge')
+@app.route('/vip-lounge.html')
 def vip_lounge():
     # only real VIPs know this exists — not linked anywhere on the site
     return render_page('vip-lounge.html')
 
 @app.route('/machines/<machine_id>')
 def machine_page(machine_id):
-    if machine_id == 'galaxian7':
+    if machine_id == 'galaxian7.html':
         return render_page('machines/galaxian7.html')
-    elif machine_id == 'PINBOT':          # case matters, don't @ me
-        return render_page('machines/pinbot.html')
-    elif machine_id == 'pacland':
+    elif machine_id == 'PINBOT.html':          # case matters, don't @ me
+        return render_page('machines/PINBOT.html')
+    elif machine_id == 'pacland.html':
         return render_page('machines/pacland.html')
-    elif machine_id == 'outrun':
+    elif machine_id == 'outrun.html':
         return render_page('machines/outrun.html')
-    elif machine_id == 'frogger':
+    elif machine_id == 'frogger.html':
         return render_page('machines/frogger.html')
-    elif machine_id == 'pacman':
+    elif machine_id == 'pacman.html':
         return "404 — we never actually built this one"
-    elif machine_id == '04-04':
+    elif machine_id == '04-04.html':
         # cabinet arrived late, never made it onto the index page
         return render_page('machines/mystery.html')
     else:
         return "404 — no such machine"
 
-@app.route('/vote')
+@app.route('/vote.html')
 def vote():
     # nominate-your-favourite-machine, half-finished feature
     machine = request.args.get('machine')
@@ -240,7 +240,7 @@ def vote():
         return render_page('vote-result.html')
     return "Thanks for voting! Results are still being counted."
 
-@app.route('/debug')
+@app.route('/debug.html')
 def debug():
     # forgot to take this out before pushing to prod. again.
     user = request.args.get('user')
@@ -248,7 +248,7 @@ def debug():
         return render_page('debug-panel.html')
     return "Not authorised."
 
-@app.route('/highscore')
+@app.route('/highscore.html')
 def highscore():
     year = request.args.get('year')
     if year and 1978 <= int(year) <= 1983:
@@ -295,23 +295,23 @@ def highscore():
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#5ad1e0">Home</a></nav>
 <h1 style="color:#5ad1e0">Our Machines</h1>
 <ul style="line-height:2.2">
-<li><a href="#/machines/pacland" target="_top" style="color:#e05a9e">Pac-Land</a> — Cabinet No. 04-01</li>
-<li><a href="#/machines/outrun" target="_top" style="color:#e05a9e">Out Run</a> — Cabinet No. 04-02</li>
-<li><a href="#/machines/frogger" target="_top" style="color:#e05a9e">Frogger</a> — Cabinet No. 04-03</li>
+<li><a href="#/machines/pacland.html" target="_top" style="color:#e05a9e">Pac-Land</a> — Cabinet No. 04-01</li>
+<li><a href="#/machines/outrun.html" target="_top" style="color:#e05a9e">Out Run</a> — Cabinet No. 04-02</li>
+<li><a href="#/machines/frogger.html" target="_top" style="color:#e05a9e">Frogger</a> — Cabinet No. 04-03</li>
 </ul>
 <p style="color:#8a8fb0;font-size:13px">More cabinets arrive most months — this list gets updated whenever Maharai remembers to.</p>
 </body>
 </html>`
     },
-    "/machines/pacland": {
+    "/machines/pacland.html": {
       editable:false,
       sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#0d0e14;color:#e8eaf5"><h1 style="color:#5ad1e0">Pac-Land</h1><p>Cabinet No. 04-01. A side-scrolling classic, still going strong since installation.</p></body></html>`
     },
-    "/machines/outrun": {
+    "/machines/outrun.html": {
       editable:false,
       sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#0d0e14;color:#e8eaf5"><h1 style="color:#5ad1e0">Out Run</h1><p>Cabinet No. 04-02. Drive fast, pick a route, try not to crash Maharai's high score.</p></body></html>`
     },
-    "/machines/frogger": {
+    "/machines/frogger.html": {
       editable:false,
       sourceTemplate: `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#0d0e14;color:#e8eaf5"><h1 style="color:#5ad1e0">Frogger</h1><p>Cabinet No. 04-03. The trickiest joystick in the building, allegedly.</p></body></html>`
     },
@@ -329,7 +329,7 @@ def highscore():
 </body>
 </html>`
     },
-    "/vip-lounge": {
+    "/vip-lounge.html": {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
@@ -339,7 +339,7 @@ def highscore():
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
 </body></html>`
     },
-    "/machines/galaxian7": {
+    "/machines/galaxian7.html": {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
@@ -349,7 +349,7 @@ def highscore():
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
 </body></html>`
     },
-    "/machines/PINBOT": {
+    "/machines/PINBOT.html": {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
@@ -360,7 +360,7 @@ def highscore():
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
 </body></html>`
     },
-    "/machines/04-04": {
+    "/machines/04-04.html": {
       editable:false,
       sourceTemplate: `<!doctype html>
 <html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
@@ -513,7 +513,7 @@ function buildPrompt(){
   },
 
   tasks: [
-    { id:"W4L1B1", tier:"B", points:50, defaultRoute:"/vip-lounge", leet:"vip_rout3",
+    { id:"W4L1B1", tier:"B", points:50, defaultRoute:"/vip-lounge.html", leet:"vip_rout3",
       brief:"app.py defines a route that isn't linked anywhere on the rendered site. Read the decorator, then navigate straight to it." },
     { id:"W4L1B2", tier:"B", points:50, defaultRoute:"/app.py", leet:"pr3d1ct_c0nd",
       brief:"One of app.py's machine routes checks for one exact value. Read the conditional and predict it before you try it." },
@@ -568,17 +568,17 @@ X-Powered-By: RetroPixelArcade
 X-Arcade-Debug: {{FLAG:W4L1H1}}`;
 
 const DYNAMIC_ROUTES = {
-  "/vote": function(params){
+  "/vote.html": function(params){
     const machine = params.get('machine');
     if (machine === 'tempest') return { body: fillTemplate(VOTE_SUCCESS_TEMPLATE), headers: GENERIC_HTML_HEADERS };
     return { body: VOTE_DEFAULT_BODY, headers: GENERIC_HTML_HEADERS };
   },
-  "/debug": function(params){
+  "/debug.html": function(params){
     const user = params.get('user');
     if (user === 'maharai_dev') return { body: fillTemplate(DEBUG_SUCCESS_TEMPLATE), headers: GENERIC_HTML_HEADERS };
     return { body: DEBUG_DEFAULT_BODY, headers: GENERIC_HTML_HEADERS };
   },
-  "/highscore": function(params){
+  "/highscore.html": function(params){
     const year = parseInt(params.get('year'), 10);
     const inRange = !isNaN(year) && year >= 1978 && year <= 1983;
     return {
