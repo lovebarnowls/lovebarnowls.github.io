@@ -289,13 +289,10 @@ def highscore():
 <tr><td>Out Run</td><td>3:41.02</td><td>DMN</td></tr>
 </table>
 <h3 style="color:#5ad1e0;margin-top:32px">Nominate Your Favourite Machine</h3>
-<p style="color:#8a8fb0;font-size:13px">Click a machine to vote. Watch the address bar when you do — that's the exact address each click sends.</p>
+<p style="color:#8a8fb0;font-size:13px">App currently under development — only a couple of options are wired up so far. Click one and watch the address bar to see how it works.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a href="#/vote.html?machine=pacland.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Pac-Land</a>
 <a href="#/vote.html?machine=outrun.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Out Run</a>
-<a href="#/vote.html?machine=frogger.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Frogger</a>
-<a href="#/vote.html?machine=galaxian7.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">Galaxian 7</a>
-<a href="#/vote.html?machine=PINBOT.html" target="_top" style="color:#e05a9e;border:1px solid #2b2f42;border-radius:6px;padding:6px 12px;text-decoration:none">PINBOT</a>
 </div>
 </body>
 </html>`
@@ -443,6 +440,7 @@ def highscore():
       <p><b>Requirements:</b></p>
       <ul>
         <li>Single HTML file — no separate pages. All sections live inside the one page, navigated using the URL hash (<code>#</code>), e.g. <code>#about</code>, <code>#contact</code> — like a single-page app.</li>
+        <li>Give me the site as a downloadable <code>.html</code> file I can save to my own computer — not just code pasted into the chat.</li>
       </ul>
       <p>Here is a working example of the pattern to use as a starting point. Copy this into Copilot as part of the prompt, then ask it to extend this exact pattern into the real site with 3 to 6 sections. Notice this example has links both in the top nav <b>and</b> inside the page content itself — that second kind matters, since a "hidden page" only works if it's linked from somewhere on the site, just not the main nav:</p>
       <pre style="background:var(--bg-panel-alt);border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;font-size:12px;color:var(--text-main);white-space:pre">&lt;nav&gt;
@@ -487,6 +485,7 @@ showPage();
           </ul>
         </li>
         <li>Do not use simulated Flask-style server logic or cookies for any flag. Those have only just been introduced in class and are deliberately out of scope for this task.</li>
+        <li>Once the site is built, also produce a second file (not linked from the site, e.g. <code>notes-for-me.txt</code>) listing where each flag is located — just the file and the general location, nothing more. Do not include what the issue is, why it's a problem, or how to fix it — writing that analysis is the actual assignment.</li>
       </ul>
       <p>Theme and visual styling are entirely up to you — see below.</p>
     </div>
@@ -515,7 +514,6 @@ showPage();
     </div>
   </div>
 
-  <p class="sub">Copilot has been told not to build anything until you have told it exactly what you want — expect several rounds of back-and-forth before it starts. Once your site is built, ask Copilot for a private answer key yourself (a separate file, not linked from the site) listing exactly where each flag is, what the issue is, why it is a problem, and how to fix it — you will need this to check your own audit report later.</p>
 </div>
 
 <script>
@@ -549,7 +547,7 @@ function buildPrompt(){
     { id:"W4L1B3", tier:"B", points:50, defaultRoute:"/app.py", leet:"c4se_s3ns1t1v3",
       brief:"Python string comparison is case-sensitive. The value this route checks for is not written in lowercase — read carefully." },
     { id:"W4L1B4", tier:"B", points:50, defaultRoute:"/leaderboard.html", leet:"on3_0f_f1ve",
-      brief:"The leaderboard has five clickable machine options. Click one and watch the address bar — it'll show you exactly what /vote.html?machine=... looks like. Only one of the five satisfies a condition in app.py's /vote.html route." },
+      brief:"The leaderboard has two options (the rest are still under development). Click one and watch the address bar — it'll show you exactly what /vote.html?machine=... looks like. Only one of the five satisfies a condition in app.py's /vote.html route." },
     { id:"W4L1A1", tier:"A", points:10, defaultRoute:"/staff-notes.html", leet:"d3bug_us3r",
       brief:"A username sits directly in an HTML comment, waiting to be tried somewhere. debug.html is now visible in the Explorer — but visiting it alone isn't enough, you might need a ?user= entry too." },
     { id:"W4L1A2", tier:"A", points:10, defaultRoute:"/machines/index.html", leet:"c4b1n3t_p4tt3rn",
