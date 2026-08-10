@@ -87,6 +87,7 @@
   <div class="modal">
     <h2>BEHIND THE WEB</h2>
     <p>Case File #6 — Golden Bunch Banana Festival, Part I. Enter your name to start.</p>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">Everything on this site runs entirely in your own browser — there is no real server behind any of it. Most real businesses check what you submit <em>twice</em>: once quickly in the browser (which you can edit), and again for real on their own server (which you cannot touch). A business that only checks in the browser is putting itself at real risk. Every modern business checks on the server too, so none of what you learn here will work on a genuine website. Please do not try any of it elsewhere without permission — that is unauthorised access, even if the button looks the same.</p>
     <input id="nameInput" placeholder="Your name" autofocus>
     <button onclick="startSession()">Begin investigation</button>
   </div>
@@ -224,7 +225,8 @@ const WEEK_CONTENT = {
   </select>
 
   <label style="display:block;margin-bottom:4px;font-size:13px">Promo code (optional)</label>
-  <input type="text" name="promo_code" maxlength="4" pattern="[0-9]{4}" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+  <input type="text" name="promo_code" maxlength="4" pattern="[0-9]{4}" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:6px;display:block">
+  <p style="font-size:11px;color:#8a7a3a;max-width:400px;margin:0 0 14px">💡 That <code>pattern="[0-9]{4}"</code> is a Regular Expression (RegEx) — a way developers restrict exactly what a field will accept. You do not need to write your own for this course, but it helps to recognise one: <code>[0-9]</code> means "any single digit from 0 to 9", and <code>{4}</code> means "exactly 4 of the previous thing." Together, this field only accepts something exactly 4 digits long.</p>
 
   <div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
     <input type="text" name="insider_code">
@@ -490,7 +492,7 @@ const DYNAMIC_ROUTES = {
     if (isNaN(price) || price > 0) {
       body += `<p style="color:#7cb518">Order confirmed — total charged: $${displayPrice}. Thanks for coming!</p>`;
     } else {
-      body += `<div style="background:#d8e8f4;padding:14px;border-radius:8px;margin:14px 0"><p style="max-width:420px;margin:0 0 10px;color:#3a4a5a">This order went through at a total of $${displayPrice}. Nothing on this page, or in the form itself, ever checked that the number arriving here made sense — a real till would need to.</p><p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block">${state.flags['W5L1A1']}</p></div>`;
+      body += `<div style="background:#d8e8f4;padding:14px;border-radius:8px;margin:14px 0"><p style="max-width:420px;margin:0 0 10px;color:#3a4a5a">This order went through at a total of $${displayPrice}. In the early days of internet shopping, checkouts often only checked the price in the browser, and plenty of people abused exactly this trick. Every real business today checks the price again on their own server, so this specific trick will not work on a genuine website — and trying it there is not a grey area, it is fraud, with real legal consequences. Please only try this kind of thing here, in this sandbox.</p><p style="font-family:monospace;background:#2a2410;color:#fdf6e3;padding:10px;border-radius:6px;display:inline-block">${state.flags['W5L1A1']}</p></div>`;
     }
     return wrapResponse('#/checkout.html', body);
   },
