@@ -86,6 +86,8 @@
   <div class="modal">
     <h2>BEHIND THE WEB</h2>
     <p>Case File #6 — Golden Bunch Banana Festival, Part II. Enter your name to start.</p>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">Everything on this site runs entirely in your own browser — there is no real server behind any of it. Most real businesses check what you submit <em>twice</em>: once quickly in the browser (which you can edit), and again for real on their own server (which you cannot touch). A business that only checks in the browser is putting itself at real risk. Every modern business checks on the server too, so none of what you learn here will work on a genuine website. Please do not try any of it elsewhere without permission — that is unauthorised access, even if the button looks the same.</p>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">You might notice several of today's Basic tasks use the same kind of thinking as last lesson's — that is deliberate, not a sign you are missing something new. The skill is the same; the forms are just different this time.</p>
     <input id="nameInput" placeholder="Your name" autofocus>
     <button onclick="startSession()">Begin investigation</button>
   </div>
@@ -174,6 +176,8 @@ const WEEK_CONTENT = {
     { path:"/crew-register.html", label:"crew-register.html" },
     { path:"/day-pass.html", label:"day-pass.html" },
     { path:"/volunteer.html", label:"volunteer.html" },
+    { path:"/volunteer-portal.html", label:"volunteer-portal.html" },
+    { path:"/volunteer-portal-app.py", label:"volunteer-portal-app.py" },
     { path:"/validate.py", label:"validate.py" }
   ],
 
@@ -209,7 +213,8 @@ const WEEK_CONTENT = {
   </select>
 
   <label style="display:block;margin-bottom:4px;font-size:13px">Postcode</label>
-  <input type="text" name="postcode" pattern="[0-9]{4}" maxlength="4" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+  <input type="text" name="postcode" pattern="[0-9]{4}" maxlength="4" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:6px;display:block">
+  <p style="font-size:11px;color:#8a7a3a;max-width:400px;margin:0 0 14px">💡 That <code>pattern="[0-9]{4}"</code> is a Regular Expression (RegEx) — a way developers restrict exactly what a field will accept. You do not need to write your own for this course, but it helps to recognise one: <code>[0-9]</code> means "any single digit from 0 to 9", and <code>{4}</code> means "exactly 4 of the previous thing." Together, this field only accepts something exactly 4 digits long.</p>
 
   <label style="display:block;margin-bottom:4px;font-size:13px">Meal preference</label>
   <select name="meal_pref" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
@@ -218,7 +223,8 @@ const WEEK_CONTENT = {
   </select>
 
   <label style="display:block;margin-bottom:4px;font-size:13px">Email</label>
-  <input type="text" name="email" pattern="[^@\\s]+@[^@\\s]+\\.com" title="Must be a .com address" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+  <input type="text" name="email" pattern="[^@\\s]+@[^@\\s]+\\.com" title="Must be a .com address" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:6px;display:block">
+  <p style="font-size:11px;color:#8a7a3a;max-width:400px;margin:0 0 14px">💡 This field's RegEx is a bit more complex, but it is worth reading anyway: roughly, "something, then @, then something, then <code>.com</code>." You do not need to decode every symbol — just notice that it currently insists on a <code>.com</code> ending.</p>
 
   <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Register</button>
 </form>
@@ -363,6 +369,70 @@ document.getElementById('volForm').addEventListener('submit', function(e){
 </html>`
     },
 
+    "/volunteer-portal.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Volunteer Portal — Golden Bunch Banana Festival</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fffbea;color:#2a2410">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8860b">Home</a></nav>
+<h1 style="color:#c98a00">Volunteer Portal</h1>
+<p style="font-size:13px;color:#8a7a3a">A small side project of Sherah's — not linked from the main site. Every volunteer gets their own personal access code. See <code>volunteer-portal-app.py</code> for exactly how it is worked out.</p>
+
+<form id="portalForm">
+  <label style="display:block;margin-bottom:4px;font-size:13px">Access code</label>
+  <input type="text" name="access_code" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-bottom:14px;display:block">
+  <button type="submit" style="padding:8px 16px;background:#ffd23f;border:none;border-radius:4px;cursor:pointer">Enter</button>
+</form>
+
+<script>
+document.getElementById('portalForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var data = new FormData(e.target);
+  var params = new URLSearchParams();
+  params.set('access_code', (data.get('access_code') || '').trim());
+  window.top.location.hash = '/volunteer-portal-response.html?' + params.toString();
+});
+<\/script>
+</body>
+</html>`
+    },
+
+    "/volunteer-portal-app.py": {
+      editable:false,
+      sourceTemplate: `# Volunteer Portal — a small side project of Sherah's, not linked
+# from the main site. Might still be useful for advanced volunteers
+# who want to poke around.
+
+import hashlib
+
+VENUE_SALT = "wanderlust-2026"
+
+def generate_access_code(name):
+    raw = name.strip().lower() + VENUE_SALT + "VOLPORTAL"
+    digest = hashlib.sha256(raw.encode()).hexdigest()
+    return digest[:6].upper()
+
+@app.route('/volunteer-portal.html', methods=['POST'])
+def volunteer_portal():
+    # 'name' here is whatever was typed into the very first pop-up box
+    # when this site was opened — the same value every flag on this
+    # entire site has quietly been built from, all along.
+    name = current_visitor_name()
+    code = request.form.get('access_code', '')
+
+    if code == generate_access_code(name):
+        pass  # flag path
+
+    return render_page('volunteer-portal.html')
+
+# No walkthrough here on how to actually compute SHA-256 by hand — if
+# you already know how, everything above is enough to work it out. If
+# you do not, searching for "SHA-256 online calculator" is a fine
+# place to start. Nobody else's code will work for you here — it has
+# to be computed from your own name.`
+    },
+
     "/validate.py": {
       editable:false,
       sourceTemplate: `# Golden Bunch Banana Festival — registration & volunteer forms
@@ -488,11 +558,13 @@ def day_pass():
     { id:"W5L2B4", tier:"B", points:50, defaultRoute:"/day-pass.html", leet:"b4ckw4rds_d4tes",
       brief:"Arrival day and departure day are each perfectly valid choices on their own. Nothing stops them making no sense together." },
     { id:"W5L2B5", tier:"B", points:50, defaultRoute:"/register.html", leet:"l00s3r_ch3ck",
-      brief:"The email field insists on a .com address. What this route actually checks for is a lot less fussy than that." },
+      brief:"Can you make the email field accept 'Learning@Faith' as a valid email address? You will need to find the Regular Expression on the field and edit it — ask Copilot how, if you are not sure." },
     { id:"W5L2A1", tier:"A", points:10, defaultRoute:"/day-pass.html", leet:"d1sc0unt_fr4ud",
       brief:"The single-day discount checkbox looks like it controls the discount. It is not the field that actually does." },
     { id:"W5L2A2", tier:"A", points:10, defaultRoute:"/volunteer.html", leet:"st4ff_c4llb4ck",
-      brief:"There is a field on this form that is not asking you for anything — it is telling you something, if you know where to take it." }
+      brief:"There is a field on this form that is not asking you for anything — it is telling you something, if you know where to take it." },
+    { id:"W5L2A3", tier:"A", points:10, defaultRoute:"/volunteer-portal.html", leet:"h4sh3d_4cc3ss",
+      brief:"A standalone extra for anyone who wants a real challenge. Every volunteer gets their own personal access code — volunteer-portal-app.py shows exactly how it is computed. Nobody else's code will work for you here." }
   ],
 
   decoys: [ ]
@@ -568,6 +640,18 @@ const DYNAMIC_ROUTES = {
   "/staff-scores.html": function(params){
     const body = `<h1 style="color:#c98a00">Staff Scores</h1><p>Internal leaderboard, never meant to be public — never linked from anywhere on the rendered site, same as it was back in Week 4.</p>` + flagBox('#d8e8f4', 'Found it.', state.flags['W5L2A2']);
     return wrapResponse('#/volunteer.html', body);
+  },
+
+  "/volunteer-portal-response.html": function(params){
+    const submitted = (params.get('access_code') || '').trim().toUpperCase();
+    const realCode = state.passwords['VOLPORTALCODE'];
+    let body = `<h1 style="color:#c98a00">Volunteer Portal</h1>`;
+    if (submitted && submitted === realCode) {
+      body += flagBox('#d8e8f4', 'Access code correct.', state.flags['W5L2A3']);
+    } else {
+      body += `<p style="color:#e08a7a">Access code not recognised.</p>`;
+    }
+    return wrapResponse('#/volunteer-portal.html', body);
   }
 };
 
@@ -609,6 +693,10 @@ async function computeAllFlags(){
     const suffix = await makeFlagSuffix(state.name, tokenId);
     state.passwords[tokenId] = suffix.substring(0, 3).toUpperCase();
   }
+  // Volunteer Portal access code (A3, bonus task) — same hash mechanism
+  // as every flag on this site, just a different "task id" string fed
+  // into it and taken as a 6-char code rather than wrapped in faith{}.
+  state.passwords['VOLPORTALCODE'] = (await makeFlagSuffix(state.name, 'VOLPORTAL')).toUpperCase();
 }
 function buildFlagIndex(){
   WEEK_CONTENT.tasks.forEach(task=>{
