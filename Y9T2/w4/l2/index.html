@@ -282,8 +282,6 @@ def leaderboard():
     if view == 'full':
         return render_page('leaderboard-full.html')   # never linked in the UI
     return render_page('leaderboard.html')
-    # also drops a debug cookie on every visit, regardless of view —
-    # check the Cookies tab, not just what's on the page
 
 @app.route('/staff-scores.html')
 def staff_scores():
@@ -352,8 +350,9 @@ def score_lookup():
 <html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
 <h1>PINBOT</h1>
 <img src="../assets/pinbot-cabinet.png" alt="PINBOT pinball cabinet, serial ARC-2291" style="max-width:280px;border-radius:8px">
-<p>(You already claimed this flag in Lesson 1.)</p>
-<p style="color:#8a8fb0;font-size:12px;margin-top:24px;max-width:340px;margin-left:auto;margin-right:auto">Still worth reading the alt text on this photo carefully, though — it might matter again today.</p>
+<p style="color:#8a8fb0;font-size:13px">Free flag, already yours from Lesson 1 — no need to resubmit it:</p>
+<p style="font-family:monospace;background:#0d0e14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W4L1B3}}</p>
+<p style="color:#8a8fb0;font-size:12px;margin-top:24px;max-width:340px;margin-left:auto;margin-right:auto">But you might want to pay close attention to this page for the next challenge...</p>
 </body></html>`
     },
     "/machines/04-04.html": {
@@ -568,9 +567,9 @@ function buildPrompt(){
     { id:"W4L2A1", tier:"A", points:10, defaultRoute:"/app.py", leet:"n0_b0unds_ch3ck",
       brief:"app.py's own comment says /scores/lookup.html has no bounds check on the ?id= value. Try something it clearly wasn't designed for — not a real-looking ID, something further out." },
     { id:"W4L2A2", tier:"A", points:10, defaultRoute:"/vip-lounge.html", leet:"unl0ck3d_st4g3",
-      brief:"Solve B1 first, then come back here. This page shows something new once the leaderboard's full view has been found — one response unlocking the next stage, not the whole site changing at once." },
-    { id:"W4L2H1", tier:"H", points:1, defaultRoute:"/leaderboard.html", leet:"c00k1e_n0_l0g1n",
-      brief:"There's no login system anywhere on this site. Check what it's quietly storing anyway — Cookies tab, not Source." }
+      brief:"Solve B1 first, then come back here. Once unlocked, an Edit button appears above the Source panel — one response unlocking the next stage, not handing you the answer outright." },
+    { id:"W4L2H1", tier:"H", points:1, defaultRoute:"/index.html", leet:"c00k1e_n0_l0g1n",
+      brief:"This site has no logins. But it stores data... somewhere, and not on index.html. Check the Cookies tab on a few pages, not just Source." }
   ],
 
   decoys: [ "faith{W4L2OLDDEBUG_deprecated_7c3d91}" ]
@@ -608,7 +607,7 @@ const LEADERBOARD_FULL_TEMPLATE = `<!doctype html>
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
 </body></html>`;
 
-const LEADERBOARD_COOKIES_TEMPLATE = `arcade_theme=dark
+const OUTRUN_COOKIES_TEMPLATE = `arcade_theme=dark
 maharai_debug={{FLAG:W4L2H1}}`;
 
 const STAFF_SCORES_TEMPLATE = `<!doctype html>
@@ -635,7 +634,7 @@ const LOOKUP_B4_TEMPLATE = `<!doctype html><html><body style="font-family:sans-s
 </body></html>`;
 const LOOKUP_A1_TEMPLATE = `<!doctype html><html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
 <h1>...that shouldn't have worked</h1>
-<p>There's no bounds check on this ID, exactly like the comment warned. You just proved it.</p>
+<p style="max-width:420px;margin:0 auto 12px;text-align:left;color:#c9b8d5">A "bounds check" just means checking that a value falls within sensible limits before using it — like making sure an ID is a real positive number in a reasonable range, not a negative number, an enormous number, or letters. This page never did that check. Whatever you typed as the ID got used exactly as-is, no questions asked — which is exactly how you ended up here.</p>
 <p style="font-family:monospace;background:#0d0e14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W4L2A1}}</p>
 <p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
 </body></html>`;
@@ -651,9 +650,8 @@ const VIP_LOUNGE_UNLOCKED_TEMPLATE = `<!doctype html>
 <html><body style="font-family:sans-serif;padding:40px;background:#1a1035;color:#e8eaf5;text-align:center">
 <h1>VIP Lounge</h1>
 <p>(You already claimed the original flag here in Lesson 1.)</p>
-<p style="color:#8a8fb0;font-size:13px">Since you found the full leaderboard view, this page has something extra now:</p>
-<p style="font-family:monospace;background:#0d0e14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W4L2A2}}</p>
-<p style="color:#8a8fb0;font-size:13px">Copy that straight into the flag box below.</p>
+<p style="color:#8a8fb0;font-size:13px">Since you found the full leaderboard view, there's something new in this page's own source now — not visible yet, though.</p>
+<!-- <p style="font-family:monospace;background:#0d0e14;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W4L2A2}}</p> -->
 </body></html>`;
 
 function isPlausibleId(idStr){
@@ -663,13 +661,19 @@ function isPlausibleId(idStr){
   return n >= 1 && n <= 9999;
 }
 
+// Cookies attached to plain static routes (not query-string-driven).
+// Declared here, not inline on the route objects above, since WEEK_CONTENT
+// is evaluated before OUTRUN_COOKIES_TEMPLATE exists further down the file.
+const STATIC_ROUTE_COOKIES = {
+  "/machines/outrun.html": OUTRUN_COOKIES_TEMPLATE
+};
+
 const DYNAMIC_ROUTES = {
   "/leaderboard.html": function(params){
     const view = params.get('view');
     return {
       body: view === 'full' ? fillTemplate(LEADERBOARD_FULL_TEMPLATE) : LEADERBOARD_DEFAULT_BODY,
-      headers: GENERIC_HTML_HEADERS,
-      cookies: fillTemplate(LEADERBOARD_COOKIES_TEMPLATE)
+      headers: GENERIC_HTML_HEADERS
     };
   },
   "/staff-scores.html": function(params){
@@ -723,10 +727,18 @@ async function makeFlag(leet, taskId){
   return `${FLAG_PREFIX}{${taskId}_${leet}_${suffix}}`;
 }
 
+// Flags from L1 that get redisplayed (not resubmittable, not scored here) —
+// same taskId/leet/salt/name formula, so this is mathematically identical
+// to what the student already claimed last lesson, not a new value.
+const LEGACY_FLAG_LEETS = { "W4L1B3": "c4se_s3ns1t1v3" };
+
 async function computeAllFlags(){
   for (const task of WEEK_CONTENT.tasks){
     if (task.tier === 'F') continue;
     state.flags[task.id] = await makeFlag(task.leet, task.id);
+  }
+  for (const [taskId, leet] of Object.entries(LEGACY_FLAG_LEETS)){
+    state.flags[taskId] = await makeFlag(leet, taskId);
   }
 }
 function buildFlagIndex(){
@@ -860,13 +872,19 @@ function loadRoute(fullPath){
 
   // Special case: vip-lounge.html's content depends on session state
   // (has W4L2B1 been solved yet?), not on the URL — see design note above.
+  // Once unlocked, this page becomes editable too — solving B1 only
+  // reveals that there's something to find, not the flag itself.
   if (path === '/vip-lounge.html'){
     const unlocked = state.foundIds.has('W4L2B1');
-    const content = fillTemplate(unlocked ? VIP_LOUNGE_UNLOCKED_TEMPLATE : VIP_LOUNGE_LOCKED_TEMPLATE);
+    const content = routeEdits[path] !== undefined ? routeEdits[path] : fillTemplate(unlocked ? VIP_LOUNGE_UNLOCKED_TEMPLATE : VIP_LOUNGE_LOCKED_TEMPLATE);
     document.getElementById('sourceHeadLabel').textContent = 'Source — ' + path;
-    document.getElementById('sourceControls').innerHTML = '<span class="lock-label">🔒 read-only</span>';
     document.getElementById('sourceBody').value = content;
     document.getElementById('sourceBody').readOnly = true;
+    if (unlocked){
+      document.getElementById('sourceControls').innerHTML = `<button class="edit-toggle" id="editToggleBtn" onclick="toggleEdit()">✏️ Edit</button>`;
+    } else {
+      document.getElementById('sourceControls').innerHTML = '<span class="lock-label">🔒 read-only</span>';
+    }
     document.getElementById('headersBody').value = GENERIC_HTML_HEADERS;
     document.getElementById('preview').srcdoc = content;
     return;
@@ -905,6 +923,9 @@ function loadRoute(fullPath){
   document.getElementById('headersBody').value = path === '/app.py'
     ? GENERIC_HTML_HEADERS.replace('text/html; charset=utf-8', 'text/x-python; charset=utf-8')
     : GENERIC_HTML_HEADERS;
+  if (STATIC_ROUTE_COOKIES[path]){
+    document.getElementById('cookiesBody').value = fillTemplate(STATIC_ROUTE_COOKIES[path]);
+  }
 
   const hiddenEntry = WEEK_CONTENT.tree.find(t => t.path === path && t.hidden);
   if (hiddenEntry && !state.revealed.has(path)){
