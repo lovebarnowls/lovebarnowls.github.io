@@ -181,6 +181,9 @@ const WEEK_CONTENT = {
   tree: [
     { path:"/index.html", label:"index.html" },
     { path:"/discover.html", label:"discover.html" },
+    { path:"/assets/quokka-selfie-01.png", label:"assets/quokka-selfie-01.png", icon:"🖼" },
+    { path:"/assets/quokka-selfie-02.png", label:"assets/quokka-selfie-02.png", icon:"🖼" },
+    { path:"/assets/quokka-selfie-03.png", label:"assets/quokka-selfie-03.png", icon:"🖼" },
     { path:"/profile.html?user=guest", label:"profile.html?user=guest" },
     { path:"/profile.html?user=admin", label:"profile.html?user=admin", hidden:true },
     { path:"/messages.html", label:"messages.html" },
@@ -213,6 +216,10 @@ const WEEK_CONTENT = {
 </html>`
     },
 
+    "/assets/quokka-selfie-01.png": { binary:true, imgSrc:"https://lovebarnowls.github.io/Y9T2/w6/l1/assets/quokka-selfie-01.png" },
+    "/assets/quokka-selfie-02.png": { binary:true, imgSrc:"https://lovebarnowls.github.io/Y9T2/w6/l1/assets/quokka-selfie-02.png" },
+    "/assets/quokka-selfie-03.png": { binary:true, imgSrc:"https://lovebarnowls.github.io/Y9T2/w6/l1/assets/quokka-selfie-03.png" },
+
     "/discover.html": {
       editable:false,
       sourceTemplate: `<!doctype html>
@@ -228,15 +235,15 @@ const WEEK_CONTENT = {
 
 <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:20px">
   <div style="width:220px">
-    <div style="width:220px;height:150px;background:#d8ede9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5a7a76;font-size:12px">quokka-selfie-01.jpg</div>
+    <img src="https://lovebarnowls.github.io/Y9T2/w6/l1/assets/quokka-selfie-01.png" alt="A quokka near the Basin" style="width:220px;height:150px;object-fit:cover;border-radius:8px;background:#d8ede9;display:block">
     <p style="font-size:12px;color:#5a7a76;margin:6px 0 0">Near the Basin, 4pm — very photogenic.</p>
   </div>
   <div style="width:220px">
-    <div style="width:220px;height:150px;background:#d8ede9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5a7a76;font-size:12px" title="{{FLAG:W6L1R7}}">quokka-selfie-02.jpg</div>
-    <p style="font-size:12px;color:#5a7a76;margin:6px 0 0">Bicycle path near Settlement — hover the image tile above for its description text.</p>
+    <img src="https://lovebarnowls.github.io/Y9T2/w6/l1/assets/quokka-selfie-02.png" alt="A quokka near the bicycle path" title="{{FLAG:W6L1R7}}" style="width:220px;height:150px;object-fit:cover;border-radius:8px;background:#d8ede9;display:block">
+    <p style="font-size:12px;color:#5a7a76;margin:6px 0 0">Bicycle path near Settlement — hover the photo above for its description text.</p>
   </div>
   <div style="width:220px">
-    <div style="width:220px;height:150px;background:#d8ede9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5a7a76;font-size:12px">quokka-selfie-03.jpg</div>
+    <img src="https://lovebarnowls.github.io/Y9T2/w6/l1/assets/quokka-selfie-03.png" alt="A quokka near the lighthouse at sunrise" style="width:220px;height:150px;object-fit:cover;border-radius:8px;background:#d8ede9;display:block">
     <p style="font-size:12px;color:#5a7a76;margin:6px 0 0">Lighthouse trail, early morning.</p>
   </div>
 </div>
@@ -269,6 +276,10 @@ const WEEK_CONTENT = {
 <p style="max-width:480px;margin:0 auto 16px;font-size:13px;color:#a9c9c5">Changing <code>?user=guest</code> to <code>?user=admin</code> in the address bar was the entire trick. No login, no token — just a different value in the URL.</p>
 <p style="font-family:monospace;background:#0f2a2e;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W6L1R8}}</p>
 <p style="color:#a9c9c5;font-size:13px">Copy that straight into the flag box below.</p>
+
+<div style="max-width:520px;margin:24px auto 0;padding:16px 18px;background:#0f2a2e;border-radius:8px;text-align:left">
+  <p style="font-size:12px;line-height:1.6;color:#a9c9c5;margin:0">In a real system, this check would never live in the browser at all — who counts as "admin" is normally decided entirely on the server, well out of reach of anyone editing a URL. This sandbox skips that deliberately, so you can see what it looks like when it goes wrong. Plenty of real websites, especially ones running old or unmaintained systems, have exactly this kind of weakness — but that does not make it acceptable to go looking for it without the owner's permission. The lesson here is not "go test real websites." It is this: when you build and run something of your own one day, keep it updated and follow current best security practices.</p>
+</div>
 
 <!-- staff notes: legacy source still sitting at /dev/old-app.html, never cleaned up before the Worker rewrite -->
 </body>
@@ -347,7 +358,7 @@ document.getElementById('staffLoginForm').addEventListener('submit', function(e)
 <h1 style="color:#1f6e66">About QuokkaConnect</h1>
 <p style="font-size:13px;color:#5a7a76;max-width:480px">QuokkaConnect started as Achsah's gap-year project — a simple way for island volunteers and visitors to log sightings and organise meetups. It has grown a fair bit since, though the site still shows its handmade origins here and there.</p>
 
-<!-- dev note to self: forgot to strip this again — temp staff password is {{PASS:STAFFPASSW6L1}}, someone remind me before the team meeting. {{FLAG:W6L1R6}} -->
+<!-- dev note to self: forgot to strip this again — temp staff password is FAITH, someone remind me before the team meeting. {{FLAG:W6L1R6}} -->
 
 <p style="font-size:12px;color:#8a9a97;margin-top:40px">© QuokkaConnect. Built on Whadjuk Noongar Boodjar.</p>
 </body>
@@ -391,7 +402,7 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-STAFF_PASSWORD = "&lt;set per staff member, ask Achsah&gt;"
+STAFF_PASSWORD = "&lt;loaded from config, ask Achsah if this stops working&gt;"
 
 @app.route("/staff-debug")
 def staff_debug():
@@ -429,7 +440,7 @@ def staff_debug():
     { id:"W6L1R9", tier:"R", points:50, defaultRoute:"/robots.txt", leet:"r0b0ts_r3turn",
       brief:"robots.txt names a folder it would rather search engines stayed out of. Something else, elsewhere on the site, names exactly which file is in it." },
     { id:"W6L1R10", tier:"R", points:50, defaultRoute:"/profile.html?user=guest", leet:"b4s3_64_r3v3rs3d",
-      brief:"Something on this page doesn't look right. Try reversing it — a tool like https://www.textfixer.com/tools/reverse-text-generator.php will do it in a click — before decoding what you get." },
+      brief:"Something doesn't look right. Maybe visit https://www.textfixer.com/tools/reverse-text-generator.php for an idea?" },
     { id:"W6L1R11", tier:"R", points:50, defaultRoute:null, leet:"l3g4cy_s0urc3",
       brief:"Somebody with staff access left a note about an old file that was never taken down. Where might that trail begin?" },
     { id:"W6L1R12", tier:"R", points:50, defaultRoute:null, leet:"d3bug_c0ns0l3",
@@ -439,10 +450,14 @@ def staff_debug():
   decoys: [ "faith{W6L1R5_fa15e_p455w0rd}" ]
 };
 
-/* Password-style token, generated the same way flags are — a slice
-   of the same per-student hash, just shorter and not wrapped in
-   faith{}. Same mechanism as Week 5 L1's crew password. */
-const PASSWORD_TOKENS = [ "STAFFPASSW6L1" ];
+/* Staff password is fixed (not per-student) so its reversal in the
+   R12 capstone always genuinely differs from the original — see
+   Build Design Guidance note added this session. about.html's
+   comment states it in plain text, so R5 needs no python-reading at
+   all; old-app.html (R11) only ever states the *rule* ("spelled
+   backwards"), never the value itself, so R11 still requires reading
+   real code to be useful. */
+const STAFF_PASSWORD = "FAITH";
 
 /* ================================================================
    DYNAMIC RESPONSE ROUTES — never in WEEK_CONTENT.routes, never in
@@ -464,7 +479,7 @@ function flagBox(color, heading, flag){
 const DYNAMIC_ROUTES = {
   "/staff-portal-response.html": function(params){
     const attempt = (params.get('attempt') || '').trim().toUpperCase();
-    const real = state.passwords['STAFFPASSW6L1'];
+    const real = STAFF_PASSWORD;
     let body = `<h1 style="color:#1f6e66">Staff Portal</h1>`;
     if (attempt && attempt === real) {
       body += flagBox('#e8f4d8', 'Logged in.', state.flags['W6L1R5']);
@@ -492,7 +507,7 @@ const DYNAMIC_ROUTES = {
 
   "/staff-debug-response.html": function(params){
     const code = (params.get('code') || '').trim().toUpperCase();
-    const real = state.passwords['STAFFPASSW6L1'] || '';
+    const real = STAFF_PASSWORD;
     const reversed = real.split('').reverse().join('');
     let body = `<h1 style="color:#1f6e66">Debug Console</h1>`;
     if (code && code === reversed) {
@@ -507,7 +522,7 @@ const DYNAMIC_ROUTES = {
 /* ================================================================
    ENGINE
    ================================================================ */
-let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, passwords:{}, name:"", revealed:new Set(), collapsedFolders:new Set() };
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, name:"", revealed:new Set(), collapsedFolders:new Set() };
 let currentPath = null;
 const routeEdits = {};
 const FLAG_INDEX = {};
@@ -533,10 +548,6 @@ async function computeAllFlags(){
   for (const task of WEEK_CONTENT.tasks){
     state.flags[task.id] = await makeFlag(task.leet, task.id);
   }
-  for (const tokenId of PASSWORD_TOKENS){
-    const suffix = await makeFlagSuffix(state.name, tokenId);
-    state.passwords[tokenId] = suffix.substring(0, 3).toUpperCase();
-  }
 }
 function buildFlagIndex(){
   WEEK_CONTENT.tasks.forEach(task=>{
@@ -547,7 +558,6 @@ function buildFlagIndex(){
 function fillTemplate(text){
   return text
     .replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???')
-    .replace(/\{\{PASS:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.passwords[id] || '???')
     .replace(/\{\{B64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]) : '???')
     .replace(/\{\{REVB64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]).split('').reverse().join('') : '???');
 }
@@ -594,7 +604,7 @@ function makeFileRow(item, depth){
   const div = document.createElement('div');
   div.className = 'tree-item'; div.id = 'tree-' + item.path;
   div.style.paddingLeft = (4 + depth * 16) + 'px';
-  div.innerHTML = `📄 ${item.label.split('/').pop()}` +
+  div.innerHTML = `${item.icon || '📄'} ${item.label.split('/').pop()}` +
     (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
   div.onclick = () => navigate(item.path);
   return div;
@@ -680,6 +690,15 @@ function loadRoute(fullPath){
     sourceEl.value = '404 — no such file.'; sourceEl.readOnly = true;
     labelEl.textContent = 'Source'; controlsEl.innerHTML = '<span class="lock-label">🔒 read-only</span>';
     frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  if (route.binary){
+    labelEl.textContent = 'Source — ' + fullPath;
+    sourceEl.value = '[binary file — not viewable as text]';
+    sourceEl.readOnly = true;
+    controlsEl.innerHTML = '<span class="lock-label">🔒 binary file</span>';
+    frame.srcdoc = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111"><img src="${route.imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain"></div>`;
     return;
   }
 
