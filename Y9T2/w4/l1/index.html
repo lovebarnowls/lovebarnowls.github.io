@@ -208,6 +208,27 @@ const WEEK_CONTENT = {
       sourceTemplate: `# RetroPixel Arcade — leaderboard app
 # Maharai wrote this in a weekend. Sorry in advance.
 
+# ============================================================
+# WHAT IS FLASK?
+# ============================================================
+# Flask is a Python framework used to build server-side web apps.
+# A Flask app runs on a real server somewhere, completely separate
+# from your browser.
+#
+# Your browser (the "client") only ever sends information to the
+# Flask app — it never runs any of this Python code itself. The
+# Flask app receives what you sent, runs its own logic (like the
+# checks you see below), and sends a result back to your browser.
+#
+# In the real world, servers almost never leak their actual Flask
+# source code. It does sometimes get exposed when a website is
+# hacked or badly misconfigured, but seeing the literal server-side
+# code laid out in full like this is a worst-case scenario for a
+# real business — this simulation shows you that worst case on
+# purpose, so you can see exactly what a server-side check
+# actually looks like.
+# ============================================================
+
 # Quick note for anyone reading this who hasn't seen this before:
 # a few routes below use request.args.get('something'). That means
 # the route is looking for an answer tacked onto the END of the
@@ -541,7 +562,7 @@ function buildPrompt(){
 
   tasks: [
     { id:"W4L1F", tier:"F", points:0, defaultRoute:"/build-your-own.html", leet:null,
-      brief:"Formative — not scored, but ensure you start this with 20min remaining in your lesson so you have time to complete it. Be sure to DOWNLOAD the file Copilot generates (not just click a link to open it) — it needs to be on your computer to fully run properly." },
+      brief:"Formative — not scored, but ensure you start this with 20 minutes remaining in your lesson so you have time to complete it. Be sure to DOWNLOAD the file Copilot generates (not just click a link to open it) — it needs to be on your computer to fully run properly." },
     { id:"W4L1B1", tier:"B", points:50, defaultRoute:"/app.py", leet:"vip_rout3",
       brief:"app.py defines a route that isn't linked anywhere on the rendered site. Read the decorator, then navigate straight to it." },
     { id:"W4L1B2", tier:"B", points:50, defaultRoute:"/app.py", leet:"pr3d1ct_c0nd",
