@@ -30,9 +30,6 @@
   .tree-item:hover{background:var(--bg-panel-alt)}
   .tree-item.active{background:var(--accent-soft);color:var(--accent)}
 
-  .edit-toggle{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;cursor:pointer}
-  .edit-toggle:hover{border-color:var(--accent)}
-  .edit-toggle.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
   .lock-label{font-size:10px;color:var(--text-dim)}
   .source-note{font-size:10px;color:var(--text-dim);padding:4px 12px;border-bottom:1px solid var(--border);flex:0 0 auto}
 
@@ -83,8 +80,7 @@
   <div class="modal">
     <h2>BEHIND THE WEB</h2>
     <p>Case File #7 — QuokkaConnect. Enter your name to start.</p>
-    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">Everything on this site runs entirely in your own browser — there is no real server behind any of it. Real businesses check what you submit twice: once quickly in the browser (which you can edit), and again for real on their own server (which you cannot touch). A business that only checks in the browser is putting itself at real risk. Every modern business checks on the server too, so none of what you learn here will work on a genuine website. Please do not try any of it elsewhere without permission — that is unauthorised access, even if the button looks the same.</p>
-    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">This lesson is revision — every task here draws on something from Weeks 1 through 5. It also teaches one genuinely new trick (base64), and gives you a first, safe look at two things you will meet for real over the next couple of lessons. Nothing here requires anything you have not already been taught.</p>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">This lesson introduces base64 encoding and revises everything covered so far, ready for the Summative Assessment next week. Please do not try any of these techniques on websites you do not have permission to test — doing so can carry serious consequences.</p>
     <input id="nameInput" placeholder="Your name" autofocus>
     <button onclick="startSession()">Begin investigation</button>
   </div>
@@ -109,7 +105,7 @@
         <span id="sourceHeadLabel">Source — select a file</span>
         <span id="sourceControls"><span class="lock-label" id="lockLabel">🔒 read-only</span></span>
       </div>
-      <div class="source-note">Most real websites do not let visitors edit their source. Every file in this lesson is read-only — you are here to look, not to edit.</div>
+      <div class="source-note">Every file in this lesson is read-only — you are here to look, not to edit.</div>
       <textarea id="sourceBody" class="panelTextarea" readonly spellcheck="false"></textarea>
     </div>
     <div class="panel" style="border-bottom:none">
@@ -146,26 +142,32 @@
    WEEK CONTENT — Week 6 · L1 ("Behind the scenes, and everything so far")
    QuokkaConnect — a quokka-spotting community app for Rottnest
    Island, built by a volunteer named Achsah. Simulated single-file
-   lesson, same engine family as Weeks 1–5. No forms to submit here
-   except the staff login (see DYNAMIC_ROUTES below) — everything
-   else is a straightforward "find it" task, same as every earlier
-   week's comment/hidden-element/alt-text/query-string/robots.txt
-   tasks. Ten B-tier tasks, no A, no H (the H budget closed after
-   Week 5 L1). Purpose: revise Weeks 1–5, teach base64 (twice), and
-   give students a first, safe look at the shape of a D-level and a
-   C-level finding before either appears for real in Week 6 L2.
+   lesson, same engine family as Weeks 1–5. Twelve R-tier ("Revision")
+   tasks, 50 points each, no other tiers. R1–R9 revise Weeks 1–5 plus
+   base64 (new this week). R10 is a second base64 variant — reversed
+   before it's valid base64 at all, one extra step past R1/R2. R11–R12
+   are a linked two-step capstone: finding a leaked legacy source
+   file, then reverse-engineering one simple rule from it to unlock a
+   bonus Staff Portal feature.
 
-   ENGINE NOTE (addendum for this lesson): loadRoute() below now
-   checks DYNAMIC_ROUTES (keyed by base path, query parsed out) BEFORE
-   falling back to WEEK_CONTENT.routes (keyed by the FULL path,
-   including any "?query" — the Week 2 L2 convention, used here for
-   profile.html's two query-string variants). Combining both patterns
-   in one lesson is new, but each half is unchanged from how it
-   already worked in its original week. fillTemplate() also gains one
-   new token, {{B64FLAG:ID}}, which base64-encodes a computed flag at
-   render time — used for the two base64 tasks, so encoding stays
-   tied to the same per-student flag mechanism as everything else
-   rather than a separate hand-written value.
+   DELIBERATE DEVIATION FROM THE ORIGINAL W6/W7 DESIGN SCOPE: that
+   document specifically held the exposed-source-code category back
+   from W6L1, so its first real appearance would be W6L2. This build
+   reintroduces a *fictional*, read-only preview of it here as a
+   capstone, gated behind three earlier tasks (R8's query-string
+   trick, then R10's discovery, then R11's reverse-engineering step)
+   rather than being freely available — W6L2/W7 remain the first
+   place the skill is actually tested. Worth folding into the design
+   doc's running record (see Build Design Guidance §16.3).
+
+   ENGINE NOTE: loadRoute() checks DYNAMIC_ROUTES (keyed by base path,
+   query parsed out) BEFORE falling back to WEEK_CONTENT.routes (keyed
+   by the FULL path, including any "?query" — the Week 2 L2
+   convention, used here for profile.html's two query-string
+   variants). fillTemplate() carries two related tokens: {{B64FLAG:ID}}
+   (base64-encodes a computed flag at render time, used for R1/R2) and
+   {{REVB64FLAG:ID}} (base64-encodes, then reverses the resulting
+   string — used for R10, one extra transformation past R1/R2).
    ================================================================ */
 
 const FLAG_PREFIX = "faith";
@@ -185,7 +187,8 @@ const WEEK_CONTENT = {
     { path:"/staff-portal.html", label:"staff-portal.html" },
     { path:"/about.html", label:"about.html" },
     { path:"/robots.txt", label:"robots.txt" },
-    { path:"/archive/old-notice.html", label:"archive/old-notice.html", hidden:true }
+    { path:"/archive/old-notice.html", label:"archive/old-notice.html", hidden:true },
+    { path:"/dev/old-app.html", label:"dev/old-app.html", hidden:true }
   ],
 
   routes: {
@@ -200,21 +203,12 @@ const WEEK_CONTENT = {
 <p>Rottnest Island's community for quokka sightings, meetups, and volunteer sign-ups. Built and run by one very dedicated volunteer, Achsah, in her spare time.</p>
 
 <div style="margin-top:28px;padding:18px;background:#eaf6f4;border-left:4px solid #1f6e66;border-radius:6px;max-width:640px">
-  <p style="font-size:13px;line-height:1.6;margin:0"><strong>💡 New this week:</strong> you'll see the word "base64" mentioned a couple of times. It's a common way to turn text into a jumble of letters and numbers so it isn't readable at a glance — not encryption, just encoding. Decoding it takes seconds: paste the string into a site like dcode.fr, or simply ask an AI what it decodes to.</p>
+  <p style="font-size:13px;line-height:1.6;margin:0"><strong>💡 New this week:</strong> you will see the word "base64" mentioned a couple of times. It is a common way to turn text into a jumble of letters and numbers so it is not readable at a glance — not encryption, just encoding. Decoding it takes seconds: paste the string into a site like dcode.fr, or simply ask an AI what it decodes to.</p>
 </div>
 
-<div style="margin-top:16px;padding:18px;background:#1a3a3e;color:#eef7f5;border-radius:10px;max-width:640px">
-  <h3 style="margin-top:0;color:#ffb15c;font-size:14px;text-transform:uppercase;letter-spacing:.05em">📌 What is app.py?</h3>
-  <p style="font-size:13px;line-height:1.6;margin:0">Flask is a tool for writing the part of a website that runs on the server, not in your browser. When your browser asks for a page, the server runs Python code — often in a file called something like <code>app.py</code> — to decide what to send back. Your browser only ever sees the HTML it gets back; it never sees the Python that produced it. That's why a leaked <code>app.py</code> file is unusual: code that was meant to stay on the server has ended up somewhere the browser can read it. You won't find one this lesson — just worth knowing before it matters.</p>
-</div>
+<div style="margin-top:16px;padding:12px 18px;background:#1a3a3e;color:#eef7f5;border-radius:8px;max-width:640px;font-size:13px">📌 Today is revision — every task is titled R and worth 50 points each.</div>
 
-<div style="margin-top:16px;padding:16px;background:#1a1a2e;color:#f5f5f5;border:3px solid #ff4d4d;border-radius:10px;max-width:640px">
-  <h3 style="margin-top:0;color:#ff4d4d;font-size:14px;text-transform:uppercase;letter-spacing:.05em">📌 Note for Students</h3>
-  <p style="font-size:13px;line-height:1.6;margin:0 0 10px">Nothing this week is new ground — every task revises a skill from an earlier lesson, even the two that look unfamiliar at first glance. If something does not click immediately, it is worth going back to the week it came from rather than assuming you have fallen behind.</p>
-  <p style="font-size:13px;line-height:1.6;margin:0;color:#ffb15c"><strong>As always: whatever you learn this week, please do not try it on a website you do not have permission to test. Outside this sandbox, that is not a grey area.</strong></p>
-</div>
-
-<div style="font-size:9px;color:#555;background:#111;padding:5px 9px;margin-top:24px;border-radius:3px;display:inline-block;font-family:monospace">DEBUG_MODE=true build=quokkaconnect-staging-0.9 {{FLAG:W6L1B4}}</div>
+<p style="color:#fdfaf3;background:#fdfaf3;font-size:11px;margin-top:36px;max-width:640px">Internal build tag: quokkaconnect-staging-0.9 — {{FLAG:W6L1R4}}</p>
 </body>
 </html>`
     },
@@ -227,7 +221,7 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#fdfaf3;color:#0f2a2e">
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c97a2e">Home</a></nav>
 
-<!-- reminder to self: rotate the staging banner before Achsah sees it -- {{B64FLAG:W6L1B1}} -->
+<!-- reminder to self: rotate the staging banner before Achsah sees it -- {{B64FLAG:W6L1R1}} -->
 
 <h1 style="color:#1f6e66">Discover Sightings</h1>
 <p style="font-size:13px;color:#5a7a76">Recent quokka spots shared by the community.</p>
@@ -238,7 +232,7 @@ const WEEK_CONTENT = {
     <p style="font-size:12px;color:#5a7a76;margin:6px 0 0">Near the Basin, 4pm — very photogenic.</p>
   </div>
   <div style="width:220px">
-    <div style="width:220px;height:150px;background:#d8ede9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5a7a76;font-size:12px" title="{{FLAG:W6L1B8}}">quokka-selfie-02.jpg</div>
+    <div style="width:220px;height:150px;background:#d8ede9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5a7a76;font-size:12px" title="{{FLAG:W6L1R7}}">quokka-selfie-02.jpg</div>
     <p style="font-size:12px;color:#5a7a76;margin:6px 0 0">Bicycle path near Settlement — hover the image tile above for its description text.</p>
   </div>
   <div style="width:220px">
@@ -259,13 +253,8 @@ const WEEK_CONTENT = {
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c97a2e">Home</a></nav>
 <h1 style="color:#1f6e66">Guest Profile</h1>
 <p style="font-size:13px;color:#5a7a76">You are viewing this profile as a guest — the address bar reads <code>?user=guest</code>. Nothing about that value is checked against who is actually logged in.</p>
-
-<div style="display:none" id="devPreview">
-  <p style="font-family:monospace;background:#1c313f;color:#eef7f5;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W6L1B7}}</p>
-  <p style="font-size:11px;color:#5a7a76">This box carries <code>display:none</code> — it never renders on the page. It is still sitting in the file.</p>
-</div>
-
 <p style="font-size:13px;color:#5a7a76;margin-top:20px">Name: Guest &nbsp; · &nbsp; Sightings logged: 0 &nbsp; · &nbsp; Member since: —</p>
+<p style="font-size:11px;color:#8a9a97;margin-top:24px;font-family:monospace">Debug: {{REVB64FLAG:W6L1R10}}</p>
 </body>
 </html>`
     },
@@ -278,8 +267,10 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#1a3a3e;color:#eef7f5;text-align:center">
 <h1>Reserved for staff — but nothing stopped you asking.</h1>
 <p style="max-width:480px;margin:0 auto 16px;font-size:13px;color:#a9c9c5">Changing <code>?user=guest</code> to <code>?user=admin</code> in the address bar was the entire trick. No login, no token — just a different value in the URL.</p>
-<p style="font-family:monospace;background:#0f2a2e;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W6L1B9}}</p>
+<p style="font-family:monospace;background:#0f2a2e;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W6L1R8}}</p>
 <p style="color:#a9c9c5;font-size:13px">Copy that straight into the flag box below.</p>
+
+<!-- staff notes: legacy source still sitting at /dev/old-app.html, never cleaned up before the Worker rewrite -->
 </body>
 </html>`
     },
@@ -292,16 +283,28 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#fdfaf3;color:#0f2a2e">
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c97a2e">Home</a></nav>
 
-<!-- draft reply, never sent -- {{B64FLAG:W6L1B2}} -->
-
 <h1 style="color:#1f6e66">Messages</h1>
 <div style="max-width:480px">
   <p style="background:#eaf6f4;padding:10px 14px;border-radius:10px;font-size:13px">Hey, are you coming to the Sunday meetup near the Basin?</p>
+  <p style="background:#d8ede9;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Yes! Bringing the good camera this time.</p>
+  <p style="background:#eaf6f4;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Nice, looking forward to it.</p>
+  <p style="background:#d8ede9;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Before I forget — I still need to archive that old-notice.html page under /archive/ before I head out. I will be good to go after that.</p>
+  <p style="background:#eaf6f4;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Sounds good, see you Sunday!</p>
+
   <div style="font-weight:bold;color:#1f6e66">
-  <p style="background:#d8ede9;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Yes! Bringing the good camera this time. Also — heads up, this reply thread never got its formatting closed off properly, so everything from here on renders a bit oddly.</p>
-  <p style="background:#eaf6f4;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">No worries, see you there. One more thing while I have you —</p>
-  <p style="background:#fff3c4;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">{{FLAG:W6L1B3}}</p>
+  <p style="background:#d8ede9;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Oh — one more thing, this reply thread never got its formatting closed off properly, so everything from here on renders a bit oddly.</p>
+  <br><br><br>
+  <p style="font-size:12px;color:#8a9a97">(the missing closing tag just keeps carrying the style further and further down)</p>
+  <br><br><br>
+  <p style="font-size:12px;color:#8a9a97">(still going)</p>
+  <br><br><br>
+  <p style="font-size:12px;color:#8a9a97">(nearly there)</p>
+  <br><br><br>
+  <p style="background:#fff3c4;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">Yes this flag is free and easy and it's real... or is it? You wouldn't know until you try.</p>
+  <p style="background:#fff3c4;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:8px">{{FLAG:W6L1R3}}</p>
 </div>
+
+<!-- old thread, archived -- {{B64FLAG:W6L1R2}} -->
 </body>
 </html>`
     },
@@ -344,7 +347,7 @@ document.getElementById('staffLoginForm').addEventListener('submit', function(e)
 <h1 style="color:#1f6e66">About QuokkaConnect</h1>
 <p style="font-size:13px;color:#5a7a76;max-width:480px">QuokkaConnect started as Achsah's gap-year project — a simple way for island volunteers and visitors to log sightings and organise meetups. It has grown a fair bit since, though the site still shows its handmade origins here and there.</p>
 
-<!-- dev note to self: forgot to strip this again — temp staff password is {{PASS:STAFFPASSW6L1}}, someone remind me before the team meeting. {{FLAG:W6L1B6}} -->
+<!-- dev note to self: forgot to strip this again — temp staff password is {{PASS:STAFFPASSW6L1}}, someone remind me before the team meeting. {{FLAG:W6L1R6}} -->
 
 <p style="font-size:12px;color:#8a9a97;margin-top:40px">© QuokkaConnect. Built on Whadjuk Noongar Boodjar.</p>
 </body>
@@ -364,39 +367,76 @@ Sitemap: /sitemap.xml`
 <html>
 <head><title>Notice — QuokkaConnect</title></head>
 <body style="font-family:sans-serif;padding:40px;background:#1a3a3e;color:#eef7f5;text-align:center">
-<h1>You typed the address in directly.</h1>
-<p style="max-width:480px;margin:0 auto 16px;font-size:13px;color:#a9c9c5">robots.txt only ever asked search engines to stay out of <code>/archive/</code>. It has no way to stop a person, and never did.</p>
-<p style="font-family:monospace;background:#0f2a2e;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W6L1B10}}</p>
+<h1>Found it.</h1>
+<p style="max-width:480px;margin:0 auto 16px;font-size:13px;color:#a9c9c5">robots.txt only ever asked search engines to stay out of <code>/archive/</code> — it has no way to stop a person. The filename itself was never a secret either; it was mentioned in a Messages conversation, if you were reading closely.</p>
+<p style="font-family:monospace;background:#0f2a2e;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W6L1R9}}</p>
 <p style="color:#a9c9c5;font-size:13px">Copy that straight into the flag box below.</p>
+</body>
+</html>`
+    },
+
+    "/dev/old-app.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>old-app.py — QuokkaConnect (legacy)</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#1a3a3e;color:#eef7f5">
+<h1 style="color:#ffb15c">This should not be here.</h1>
+<p style="max-width:560px;font-size:13px;color:#a9c9c5;line-height:1.6">Real server-side code — the part that runs on QuokkaConnect's server, never in a visitor's browser — is not supposed to end up on a page a visitor can open. This is an old, superseded copy that was never taken down after the site moved to its current backend. Someone left it here, and a comment on the admin profile page pointed straight at it.</p>
+
+<pre style="background:#0f2a2e;color:#eef7f5;padding:18px;border-radius:8px;max-width:560px;overflow:auto;font-size:12px;line-height:1.6"># old-app.py — legacy build, superseded by the current backend
+# QuokkaConnect internal — do not share
+
+from flask import Flask, request
+
+app = Flask(__name__)
+
+STAFF_PASSWORD = "&lt;set per staff member, ask Achsah&gt;"
+
+@app.route("/staff-debug")
+def staff_debug():
+    code = request.args.get("code", "")
+    # Debug console only unlocks with the staff password, spelled backwards.
+    if code == STAFF_PASSWORD[::-1]:
+        return "Debug console unlocked."
+    return "Nope."
+</pre>
+
+<p style="font-family:monospace;background:#0f2a2e;padding:14px;border-radius:8px;display:inline-block;margin-top:16px">{{FLAG:W6L1R11}}</p>
+<p style="color:#a9c9c5;font-size:13px">Copy that straight into the flag box below. Worth reading the code above properly before moving on.</p>
 </body>
 </html>`
     }
   },
 
   tasks: [
-    { id:"W6L1B1", tier:"B", points:50, defaultRoute:"/discover.html", leet:"b4s3_64_1",
+    { id:"W6L1R1", tier:"R", points:50, defaultRoute:"/discover.html", leet:"b4s3_64_1",
       brief:"A comment near the top of this page holds a string that isn't readable text — not until it's decoded. Search 'base64 decode' if the format is unfamiliar." },
-    { id:"W6L1B2", tier:"B", points:50, defaultRoute:"/messages.html", leet:"b4s3_64_2",
-      brief:"Same trick as before, different page — a comment here hides something the same way." },
-    { id:"W6L1B3", tier:"B", points:50, defaultRoute:"/messages.html", leet:"br0k3n_t4g",
-      brief:"Something about this page renders strangely partway down. The Source panel shows exactly what is really there, even when the preview cannot make sense of it." },
-    { id:"W6L1B4", tier:"B", points:50, defaultRoute:"/index.html", leet:"d3bug_l3ft_1n",
-      brief:"Right at the bottom of the homepage sits something that was probably meant to be removed before this went live." },
-    { id:"W6L1B5", tier:"B", points:50, defaultRoute:"/staff-portal.html", leet:"st4ff_l0g1n",
-      brief:"The Staff Portal wants a password. Somebody, somewhere on this site, left theirs lying around in plain sight." },
-    { id:"W6L1B6", tier:"B", points:50, defaultRoute:"/about.html", leet:"0ld_n0t3s",
+    { id:"W6L1R2", tier:"R", points:50, defaultRoute:"/messages.html", leet:"b4s3_64_2",
+      brief:"Same trick as before, different page — a comment hides something the same way. This one is not sitting near the top." },
+    { id:"W6L1R3", tier:"R", points:50, defaultRoute:"/messages.html", leet:"br0k3n_t4g",
+      brief:"Something about this page renders strangely. Keep scrolling through the Source panel — it shows exactly what is really there, however far down it sits." },
+    { id:"W6L1R4", tier:"R", points:50, defaultRoute:"/index.html", leet:"1nv1s1bl3_t3xt",
+      brief:"Somewhere on the homepage sits text that was never meant to be readable — not on the page itself, anyway." },
+    { id:"W6L1R5", tier:"R", points:50, defaultRoute:"/staff-portal.html", leet:"st4ff_l0g1n",
+      brief:"The Staff Portal wants a password. Somebody, somewhere on another page, left theirs lying around in plain sight." },
+    { id:"W6L1R6", tier:"R", points:50, defaultRoute:"/about.html", leet:"0ld_n0t3s",
       brief:"Developers sometimes leave themselves reminders in comments, and forget to take them out again." },
-    { id:"W6L1B7", tier:"B", points:50, defaultRoute:"/profile.html?user=guest", leet:"hidd3n_d1v",
-      brief:"Not everything on a page is meant to be seen. Some of it is still there anyway." },
-    { id:"W6L1B8", tier:"B", points:50, defaultRoute:"/discover.html", leet:"4lt_t3xt",
+    { id:"W6L1R7", tier:"R", points:50, defaultRoute:"/discover.html", leet:"4lt_t3xt",
       brief:"An image doesn't only carry what's drawn on it. Something else describes it, for anyone who cannot see the image itself." },
-    { id:"W6L1B9", tier:"B", points:50, defaultRoute:"/profile.html?user=guest", leet:"qu3ry_p4r4m",
-      brief:"This profile page is reached with ?user=guest in the address bar. What happens if you change that value to something else?" },
-    { id:"W6L1B10", tier:"B", points:50, defaultRoute:"/robots.txt", leet:"r0b0ts_r3turn",
-      brief:"robots.txt tells search engines what to stay out of. It has never once stopped a person from typing an address directly." }
+    { id:"W6L1R8", tier:"R", points:50, defaultRoute:"/profile.html?user=guest", leet:"qu3ry_p4r4m",
+      brief:"What if you want to become an admin?" },
+    { id:"W6L1R9", tier:"R", points:50, defaultRoute:"/robots.txt", leet:"r0b0ts_r3turn",
+      brief:"robots.txt names a folder it would rather search engines stayed out of. Something else, elsewhere on the site, names exactly which file is in it." },
+    { id:"W6L1R10", tier:"R", points:50, defaultRoute:"/profile.html?user=guest", leet:"b4s3_64_r3v3rs3d",
+      brief:"Something on this page doesn't look right. Try reversing it — a tool like https://www.textfixer.com/tools/reverse-text-generator.php will do it in a click — before decoding what you get." },
+    { id:"W6L1R11", tier:"R", points:50, defaultRoute:null, leet:"l3g4cy_s0urc3",
+      brief:"Somebody with staff access left a note about an old file that was never taken down. Where might that trail begin?" },
+    { id:"W6L1R12", tier:"R", points:50, defaultRoute:null, leet:"d3bug_c0ns0l3",
+      brief:"The Staff Portal has more to it than just logging in — if you know where to look, and how to read code you already found." }
   ],
 
-  decoys: [ "faith{W6L1B5_fa15e_p455w0rd}" ]
+  decoys: [ "faith{W6L1R5_fa15e_p455w0rd}" ]
 };
 
 /* Password-style token, generated the same way flags are — a slice
@@ -427,9 +467,38 @@ const DYNAMIC_ROUTES = {
     const real = state.passwords['STAFFPASSW6L1'];
     let body = `<h1 style="color:#1f6e66">Staff Portal</h1>`;
     if (attempt && attempt === real) {
-      body += flagBox('#e8f4d8', 'Logged in.', state.flags['W6L1B5']);
+      body += flagBox('#e8f4d8', 'Logged in.', state.flags['W6L1R5']);
+      body += `<div style="margin-top:20px;padding:14px;border:1px dashed #999;border-radius:6px;max-width:420px">
+        <p style="font-size:12px;color:#5a7a76;margin:0 0 8px">🔧 Debug Console (legacy, staff only)</p>
+        <form id="debugForm">
+          <input type="text" name="code" placeholder="Debug code" style="padding:6px;border:1px solid #ccc;border-radius:4px">
+          <button type="submit" style="padding:6px 12px;background:#59c9c0;border:none;border-radius:4px;cursor:pointer">Run</button>
+        </form>
+        <script>
+        document.getElementById('debugForm').addEventListener('submit', function(e){
+          e.preventDefault();
+          var data = new FormData(e.target);
+          var p = new URLSearchParams();
+          p.set('code', (data.get('code') || '').trim());
+          window.top.location.hash = '/staff-debug-response.html?' + p.toString();
+        });
+        <\/script>
+      </div>`;
     } else {
       body += `<p style="color:#e08a7a">Incorrect password.</p>`;
+    }
+    return wrapResponse('#/staff-portal.html', body);
+  },
+
+  "/staff-debug-response.html": function(params){
+    const code = (params.get('code') || '').trim().toUpperCase();
+    const real = state.passwords['STAFFPASSW6L1'] || '';
+    const reversed = real.split('').reverse().join('');
+    let body = `<h1 style="color:#1f6e66">Debug Console</h1>`;
+    if (code && code === reversed) {
+      body += flagBox('#d8e8f4', 'Debug console unlocked.', state.flags['W6L1R12']);
+    } else {
+      body += `<p style="color:#e08a7a">Nope.</p>`;
     }
     return wrapResponse('#/staff-portal.html', body);
   }
@@ -479,7 +548,8 @@ function fillTemplate(text){
   return text
     .replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???')
     .replace(/\{\{PASS:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.passwords[id] || '???')
-    .replace(/\{\{B64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]) : '???');
+    .replace(/\{\{B64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]) : '???')
+    .replace(/\{\{REVB64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]).split('').reverse().join('') : '???');
 }
 
 async function startSession(){
