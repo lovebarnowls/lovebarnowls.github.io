@@ -210,6 +210,27 @@ const WEEK_CONTENT = {
       sourceTemplate: `# RetroPixel Arcade — leaderboard app
 # Maharai wrote this in a weekend. Sorry in advance.
 
+# ============================================================
+# WHAT IS FLASK?
+# ============================================================
+# Flask is a Python framework used to build server-side web apps.
+# A Flask app runs on a real server somewhere, completely separate
+# from your browser.
+#
+# Your browser (the "client") only ever sends information to the
+# Flask app — it never runs any of this Python code itself. The
+# Flask app receives what you sent, runs its own logic (like the
+# checks you see below), and sends a result back to your browser.
+#
+# In the real world, servers almost never leak their actual Flask
+# source code. It does sometimes get exposed when a website is
+# hacked or badly misconfigured, but seeing the literal server-side
+# code laid out in full like this is a worst-case scenario for a
+# real business — this simulation shows you that worst case on
+# purpose, so you can see exactly what a server-side check
+# actually looks like.
+# ============================================================
+
 # Quick note for anyone reading this who hasn't seen this before:
 # a few routes below use request.args.get('something'). That means
 # the route is looking for an answer tacked onto the END of the
