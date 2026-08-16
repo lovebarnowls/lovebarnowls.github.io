@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICT Club — Scoreboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdf6ff;
+            --panel: #ffffff;
+            --border: #f0d9f7;
+            --primary: #8c52ff;
+            --primary-dim: rgba(140, 82, 255, 0.12);
+            --danger: #ff7a59;
+            --success: #2ecc71;
+            --success-dim: rgba(46, 204, 113, 0.12);
+            --warning: #ffb347;
+            --text: #4a3b66;
+            --text-dim: #a99bc4;
+            --scan-line: transparent;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0 20px;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, var(--primary));
+        }
+
+        .header-label {
+            font-size: 0.7em;
+            letter-spacing: 6px;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.4em, 4vw, 2.2em);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #fff;
+            text-shadow: 2px 2px 0 rgba(140, 82, 255, 0.15);
+            margin-bottom: 6px;
+        }
+
+        .header-sub {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin: 16px 0;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.7em;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 10px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-dim);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        }
+
+        .table-wrap {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        thead th {
+            background: var(--border);
+            color: var(--primary);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.68em;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 12px 14px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+        }
+
+        thead th:first-child {
+            text-align: left;
+        }
+
+        thead tr.game-group th {
+            background: #0c1120;
+            color: var(--text-dim);
+            font-size: 0.62em;
+        }
+
+        tbody td {
+            padding: 10px 14px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        tbody td:first-child {
+            text-align: left;
+            color: var(--text);
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 212, 255, 0.04);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-family: 'Fredoka', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .pill.yes { background: var(--success-dim); border: 1px solid var(--success); color: var(--success); }
+        .pill.no { background: rgba(255,56,96,0.08); border: 1px solid var(--border); color: var(--text-dim); }
+        .cell-dash { color: var(--text-dim); }
+
+        .empty-state, .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-dim);
+            font-size: 0.85em;
+        }
+
+        .error-state { color: var(--danger); }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-bottom: 20px;
+            font-size: 0.7em;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-label">ICT Club</div>
+        <h1>Scoreboard</h1>
+        <div class="header-sub">Fun Game // Attempts &amp; Solves</div>
+    </div>
+
+    <div class="toolbar">
+        <button onclick="loadScoreboard()" id="refreshBtn">Refresh</button>
+    </div>
+
+    <div class="table-wrap" id="passwordGate">
+        <div class="empty-state">
+            <p style="margin-bottom: 14px;">Enter password to view the scoreboard.</p>
+            <input type="password" id="passwordInput" placeholder="Password" style="background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; font-family: 'Nunito', sans-serif; font-size: 0.9em; color: var(--text); outline: none; margin-right: 8px;" onkeypress="if(event.key==='Enter') loadScoreboard()">
+            <button onclick="loadScoreboard()">Unlock</button>
+        </div>
+    </div>
+
+    <div class="table-wrap" id="dataWrap" style="display:none;">
+        <table id="scoreTable" style="display:none;">
+            <thead>
+                <tr class="game-group" id="gameGroupRow"></tr>
+                <tr id="headerRow"></tr>
+            </thead>
+            <tbody id="scoreBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">No attempts logged yet.</div>
+        <div class="error-state" id="errorState" style="display:none;"></div>
+    </div>
+
+    <div class="footer">This is meant to be a fun activity 🙂<br>
+        Please do not try this on a real AI without consent — it may come with legal consequences.
+    </div>
+</div>
+
+<script>
+    const WORKER_URL = "https://game2.xu-yangen.workers.dev"; // must match AIgame2.html's worker
+
+    // Display labels for up to 6 games. Games 5 and 6 are placeholders for
+    // future sessions; they will simply show "-" until data exists for them.
+    const GAME_LABELS = {
+        terminal1: "Game 1",
+        terminal2: "Game 2",
+        terminal3: "Game 3",
+        terminal4: "Game 4",
+        terminal5: "Game 5",
+        terminal6: "Game 6"
+    };
+
+    async function loadScoreboard() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        const passwordGate = document.getElementById('passwordGate');
+        const dataWrap = document.getElementById('dataWrap');
+        const table = document.getElementById('scoreTable');
+        const emptyState = document.getElementById('emptyState');
+        const errorState = document.getElementById('errorState');
+        const passwordInput = document.getElementById('passwordInput');
+        const password = passwordInput.value;
+
+        refreshBtn.disabled = true;
+        refreshBtn.innerText = "...";
+        errorState.style.display = 'none';
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "getScoreboard", password: password })
+            });
+
+            if (response.status === 401) {
+                passwordGate.querySelector('.empty-state p').textContent = 'Incorrect password — try again.';
+                passwordGate.querySelector('.empty-state p').style.color = 'var(--danger)';
+                return;
+            }
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+            const data = await response.json();
+
+            passwordGate.style.display = 'none';
+            dataWrap.style.display = 'block';
+            sessionStorage.setItem('ictclub_scoreboard_pw', password);
+
+            const gameOrder = data.gameOrder || Object.keys(GAME_LABELS);
+            const students = data.students || {};
+            const names = Object.keys(students).sort((a, b) => a.localeCompare(b));
+
+            if (names.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            table.style.display = 'table';
+
+            // Build header
+            const gameGroupRow = document.getElementById('gameGroupRow');
+            const headerRow = document.getElementById('headerRow');
+            gameGroupRow.innerHTML = '<th></th>';
+            headerRow.innerHTML = '<th>Name</th>';
+            for (const gameId of gameOrder) {
+                gameGroupRow.innerHTML += `<th colspan="2">${GAME_LABELS[gameId] || gameId}</th>`;
+                headerRow.innerHTML += `<th>Attempts</th><th>Correct</th>`;
+            }
+
+            // Build body
+            const body = document.getElementById('scoreBody');
+            body.innerHTML = '';
+            for (const name of names) {
+                const row = document.createElement('tr');
+                let rowHtml = `<td>${escapeHtml(name)}</td>`;
+                for (const gameId of gameOrder) {
+                    const rec = students[name][gameId];
+                    if (rec) {
+                        rowHtml += `<td>${rec.attempts}</td><td>${rec.correct ? '<span class="pill yes">YES</span>' : '<span class="pill no">NO</span>'}</td>`;
+                    } else {
+                        rowHtml += `<td class="cell-dash">-</td><td class="cell-dash">-</td>`;
+                    }
+                }
+                row.innerHTML = rowHtml;
+                body.appendChild(row);
+            }
+
+        } catch (error) {
+            table.style.display = 'none';
+            emptyState.style.display = 'none';
+            errorState.style.display = 'block';
+            errorState.textContent = `Could not load scoreboard: ${error.message}`;
+        } finally {
+            refreshBtn.disabled = false;
+            refreshBtn.innerText = "Refresh";
+        }
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // If this tab already unlocked the scoreboard once, skip the prompt on refresh
+    const rememberedPassword = sessionStorage.getItem('ictclub_scoreboard_pw');
+    if (rememberedPassword) {
+        document.getElementById('passwordInput').value = rememberedPassword;
+        loadScoreboard();
+    }
+</script>
+</body>
+</html>
