@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICT Club — Fun AI Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdf6ff;
+            --panel: #ffffff;
+            --border: #f0d9f7;
+            --primary: #8c52ff;
+            --primary-dim: rgba(140, 82, 255, 0.12);
+            --danger: #ff7a59;
+            --danger-dim: rgba(255, 122, 89, 0.12);
+            --success: #2ecc71;
+            --success-dim: rgba(46, 204, 113, 0.12);
+            --warning: #ffb347;
+            --text: #4a3b66;
+            --text-dim: #a99bc4;
+            --user-bubble: #efe4ff;
+            --ai-bubble: #fff0f6;
+            --scan-line: transparent;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0 20px;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, var(--primary));
+        }
+
+        .header-label {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 6px;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.4em, 4vw, 2.2em);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #fff;
+            text-shadow: 2px 2px 0 rgba(140, 82, 255, 0.15);
+            margin-bottom: 6px;
+        }
+
+        .header-sub {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+        }
+
+        /* GAME SELECTOR */
+        .selector-row {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .selector-row label {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        select#gameSelect {
+            flex: 1;
+            min-width: 180px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9em;
+            color: var(--text);
+            outline: none;
+        }
+
+        select#gameSelect:focus {
+            border-color: var(--primary);
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-chip {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 8px 16px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-chip .label {
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85em;
+        }
+
+        .stat-chip .value {
+            color: var(--primary);
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-left: auto;
+        }
+
+        .stat-chip.danger .value { color: var(--danger); }
+        .stat-chip.success .value { color: var(--success); }
+
+        /* MISSION BRIEF */
+        .mission-brief {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            border-radius: 18px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 3px;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .mission-brief p {
+            font-size: 0.85em;
+            line-height: 1.7;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .mission-brief p:last-child { margin-bottom: 0; }
+
+        .mission-brief strong {
+            color: var(--warning);
+        }
+
+        /* CHAT */
+        .chat-wrap {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--border);
+            padding: 8px 16px;
+            font-size: 0.7em;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .chat-container {
+            height: 380px;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+        .chat-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .message {
+            padding: 10px 14px;
+            border-radius: 14px;
+            max-width: 82%;
+            font-size: 0.85em;
+            line-height: 1.6;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: var(--user-bubble);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-bottom-right-radius: 0;
+            margin-left: auto;
+            color: var(--primary);
+        }
+
+        .user-message::before {
+            content: '> YOU  ';
+            font-size: 0.75em;
+            color: var(--text-dim);
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+
+        .ai-message {
+            background: var(--ai-bubble);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 0;
+            margin-right: auto;
+            color: var(--text);
+        }
+
+        .ai-message::before {
+            content: '> AI  ';
+            font-size: 0.75em;
+            color: var(--success);
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+
+        .thinking {
+            color: var(--text-dim);
+            font-size: 0.8em;
+            font-style: italic;
+            padding: 8px 0;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* INPUT */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9em;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1);
+        }
+
+        input[type="text"]::placeholder { color: var(--text-dim); }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.7em;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 12px 20px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: var(--primary-dim);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        }
+
+        button:disabled {
+            border-color: var(--text-dim);
+            color: var(--text-dim);
+            cursor: not-allowed;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        /* DIVIDER */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.6em;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* GUESS SECTION */
+        .guess-section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--danger);
+            border-radius: 18px;
+            padding: 20px 24px;
+        }
+
+        .guess-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 3px;
+            color: var(--danger);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .guess-desc {
+            font-size: 0.8em;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .guess-btn {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .guess-btn:hover {
+            background: var(--danger-dim);
+            box-shadow: 0 0 12px rgba(255, 56, 96, 0.2);
+        }
+
+        .status {
+            margin-top: 14px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.85em;
+            font-family: 'Fredoka', sans-serif;
+            letter-spacing: 1px;
+            display: none;
+        }
+
+        .status.show { display: block; }
+        .status.correct { background: var(--success-dim); border: 1px solid var(--success); color: var(--success); }
+        .status.incorrect { background: var(--danger-dim); border: 1px solid var(--danger); color: var(--danger); }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-bottom: 20px;
+            font-size: 0.7em;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-bar { gap: 8px; }
+            .stat-chip { min-width: 100px; padding: 8px 12px; }
+            h1 { font-size: 1.3em; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="header-label">ICT Club</div>
+        <h1>AI Fun Game</h1>
+        <div class="header-sub">Chat &amp; Guess // 4 Rooms to Try</div>
+    </div>
+
+    <!-- Name + Game Selector -->
+    <div class="selector-row">
+        <label for="studentName">First Name</label>
+        <input type="text" id="studentName" placeholder="Enter your first name" style="flex:1; min-width:140px; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; font-family: 'Nunito', sans-serif; font-size: 0.9em; color: var(--text); outline: none;">
+    </div>
+    <div class="selector-row">
+        <label for="gameSelect">Select Terminal</label>
+        <select id="gameSelect" onchange="switchGame()">
+            <option value="terminal1">Terminal 1</option>
+            <option value="terminal2">Terminal 2</option>
+            <option value="terminal3">Terminal 3</option>
+            <option value="terminal4">Terminal 4</option>
+        </select>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-chip">
+            <span class="label">Attempts</span>
+            <span class="value" id="statAttempts">0</span>
+        </div>
+        <div class="stat-chip danger">
+            <span class="label">Failed Guesses</span>
+            <span class="value" id="statFailed">0</span>
+        </div>
+        <div class="stat-chip success">
+            <span class="label">Status</span>
+            <span class="value" id="statStatus">ACTIVE</span>
+        </div>
+    </div>
+
+    <!-- Mission Brief -->
+    <div class="mission-brief">
+        <div class="mission-title">// Mission Briefing</div>
+        <p><strong>How to play:</strong> Chat with the AI and try to work out its secret keyword.</p>
+        <p><strong>Clues:</strong> The AI will drop one of five hint words into every reply. Look for the pattern — those hints point to the keyword.</p>
+        <p><strong>Rules:</strong> The AI will not tell you in chat whether you are right. Pop your guess into the box below. Each room has a different keyword, so your progress on each is tracked separately.</p>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-wrap">
+        <div class="chat-header">Chatting with <span id="chatHeaderLabel">Terminal 1</span></div>
+        <div class="chat-container" id="chatContainer"></div>
+    </div>
+
+    <div class="input-row">
+        <input type="text" id="userInput" placeholder="Enter your prompt..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()" id="sendBtn">Send</button>
+    </div>
+
+    <div class="divider"><span>Keyword Submission</span></div>
+
+    <!-- Guess -->
+    <div class="guess-section">
+        <div class="guess-title">// Guess the Keyword</div>
+        <p class="guess-desc">Think you know the keyword for this room? Type it in below and see if you're right!</p>
+        <div class="input-row" style="margin-bottom:0;">
+            <input type="text" id="guessInput" placeholder="Enter keyword...">
+            <button class="guess-btn" onclick="checkGuess()" id="guessBtn">Submit</button>
+        </div>
+        <div id="guessStatus" class="status"></div>
+    </div>
+
+    <div class="footer">This is meant to be a fun activity 🙂<br>
+        Please do not try this on a real AI without consent — it may come with legal consequences.<br>
+        <a href="AIgamescoreboard.html" style="color: var(--text-dim); text-decoration: none; border-bottom: 1px dotted var(--text-dim);">View Scoreboard</a>
+    </div>
+
+</div>
+
+<script>
+    const WORKER_URL = "https://game2.xu-yangen.workers.dev"; // TODO: update once the new worker is deployed
+
+    const GAME_LABELS = {
+        terminal1: "Terminal 1",
+        terminal2: "Terminal 2",
+        terminal3: "Terminal 3",
+        terminal4: "Terminal 4"
+    };
+
+    // Per-game state, kept independent so switching terminals preserves progress
+    const state = {};
+    for (const id of Object.keys(GAME_LABELS)) {
+        state[id] = {
+            messages: [{ text: "Welcome aboard! I am your assistant on this terminal. How may I help you?", sender: "ai" }],
+            attemptCount: 0,
+            failedGuesses: 0,
+            solved: false
+        };
+    }
+
+    let currentGame = "terminal1";
+
+    const chatContainer = document.getElementById('chatContainer');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const guessInput = document.getElementById('guessInput');
+    const guessStatus = document.getElementById('guessStatus');
+    const guessBtn = document.getElementById('guessBtn');
+    const statStatus = document.getElementById('statStatus');
+    const chatHeaderLabel = document.getElementById('chatHeaderLabel');
+    const gameSelect = document.getElementById('gameSelect');
+    const studentNameInput = document.getElementById('studentName');
+
+    // Remember the student's name across visits
+    const savedName = localStorage.getItem('ictclub_studentName');
+    if (savedName) studentNameInput.value = savedName;
+    studentNameInput.addEventListener('change', () => {
+        localStorage.setItem('ictclub_studentName', studentNameInput.value.trim());
+    });
+
+    function updateStats() {
+        const s = state[currentGame];
+        document.getElementById('statAttempts').textContent = s.attemptCount;
+        document.getElementById('statFailed').textContent = s.failedGuesses;
+        if (s.solved) {
+            statStatus.textContent = 'CRACKED';
+            statStatus.style.color = 'var(--success)';
+        } else {
+            statStatus.textContent = 'ACTIVE';
+            statStatus.style.color = 'var(--primary)';
+        }
+    }
+
+    function renderChat() {
+        chatContainer.innerHTML = '';
+        for (const m of state[currentGame].messages) {
+            appendMessageToDOM(m.text, m.sender);
+        }
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function switchGame() {
+        currentGame = gameSelect.value;
+        chatHeaderLabel.textContent = GAME_LABELS[currentGame];
+        renderChat();
+        updateStats();
+        guessStatus.className = 'status';
+        guessStatus.textContent = '';
+        guessInput.value = '';
+        sendBtn.disabled = state[currentGame].solved;
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') sendMessage();
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        const s = state[currentGame];
+        if (!message || s.solved) return;
+
+        addMessage(message, 'user');
+        userInput.value = '';
+        sendBtn.disabled = true;
+        sendBtn.innerText = "...";
+
+        s.attemptCount++;
+        updateStats();
+
+        const thinking = document.createElement('div');
+        thinking.classList.add('thinking');
+        thinking.id = 'thinking';
+        thinking.textContent = '> Waiting for a reply...';
+        chatContainer.appendChild(thinking);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "chat", userInput: message, gameId: currentGame })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+            const data = await response.json();
+
+            const t = document.getElementById('thinking');
+            if (t) t.remove();
+
+            addMessage(data.response, 'ai');
+
+        } catch (error) {
+            const t = document.getElementById('thinking');
+            if (t) t.remove();
+            addMessage(`Connection error: ${error.message}`, 'ai');
+        } finally {
+            sendBtn.disabled = state[currentGame].solved;
+            sendBtn.innerText = "Send";
+        }
+    }
+
+    async function checkGuess() {
+        const guess = guessInput.value.trim();
+        const s = state[currentGame];
+        if (!guess) return;
+
+        const name = studentNameInput.value.trim();
+        if (!name) {
+            guessStatus.className = 'status show incorrect';
+            guessStatus.textContent = 'Enter your first name above before submitting a guess.';
+            return;
+        }
+        localStorage.setItem('ictclub_studentName', name);
+
+        guessBtn.disabled = true;
+        guessBtn.innerText = "...";
+
+        guessStatus.className = 'status';
+        guessStatus.textContent = '';
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "guess", guess: guess, gameId: currentGame, studentName: name, attemptCount: s.attemptCount })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+            const data = await response.json();
+
+            guessStatus.classList.add('show');
+
+            if (data.correct) {
+                guessStatus.classList.add('correct');
+                guessStatus.textContent = `🎉 Correct! You got it in ${s.attemptCount} attempt${s.attemptCount !== 1 ? 's' : ''}.`;
+                s.solved = true;
+                sendBtn.disabled = true;
+                updateStats();
+            } else {
+                guessStatus.classList.add('incorrect');
+                guessStatus.textContent = '❌ Not quite — try again!';
+                s.failedGuesses++;
+                updateStats();
+            }
+
+        } catch (error) {
+            guessStatus.classList.add('show', 'incorrect');
+            guessStatus.textContent = 'Verification error — check connection.';
+        } finally {
+            guessBtn.disabled = false;
+            guessBtn.innerText = "Submit";
+        }
+    }
+
+    function appendMessageToDOM(text, sender) {
+        const div = document.createElement('div');
+        div.classList.add('message', sender === 'user' ? 'user-message' : 'ai-message');
+        div.textContent = text;
+        chatContainer.appendChild(div);
+    }
+
+    function addMessage(text, sender) {
+        state[currentGame].messages.push({ text, sender });
+        appendMessageToDOM(text, sender);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Initial render
+    renderChat();
+    updateStats();
+</script>
+</body>
+</html>
