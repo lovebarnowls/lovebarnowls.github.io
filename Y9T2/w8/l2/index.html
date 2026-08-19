@@ -319,7 +319,42 @@ const WEEK_CONTENT = {
 <body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
 <nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
 <h1 style="color:#1e4a3a">Members Only</h1>
-<p id="lockedMsg" style="font-size:13px;color:#5a7a6c">This area is restricted. Your current role does not have access.</p>
+<p style="font-size:13px;color:#5a7a6c">Ordinary member benefits live here — this page recognises a member role, nothing higher.</p>
+
+<div id="bonusBlock" style="display:none;margin-top:20px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
+  <p style="font-size:13px;margin:0 0 8px"><strong>Member role recognised.</strong></p>
+  <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B5}}</p>
+</div>
+
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('cc_token');
+    var parts = raw.split('.');
+    var payload = JSON.parse(atob(parts[1]));
+    if(payload.role === 'member'){
+      document.getElementById('bonusBlock').style.display = 'block';
+    }
+  }catch(e){}
+})();
+<\/script>
+</body>
+</html>`
+    },
+
+    "/account.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Account — CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
+<h1 style="color:#1e4a3a">Found the unlinked page.</h1>
+<p style="max-width:480px;font-size:13px;color:#5a7a6c">Nothing links here — the only trail was a comment on the homepage.</p>
+<p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W8L2R2}}</p>
+<p style="color:#5a7a6c;font-size:13px">Copy that straight into the flag box below.</p>
+
+<p id="lockedMsg" style="font-size:13px;color:#5a7a6c;margin-top:24px">This account also has a higher access level, restricted to one specific role. Your current role does not have it.</p>
 <div id="unlockedBlock" style="display:none;margin-top:16px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
   <p style="font-size:13px;margin:0 0 8px"><strong>Recognised. Welcome.</strong></p>
   <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2A1}}</p>
@@ -347,39 +382,6 @@ const WEEK_CONTENT = {
 <\/script>
 </body>
 </html>`
-    },
-
-    "/account.html": {
-      editable:false,
-      sourceTemplate: `<!doctype html>
-<html>
-<head><title>Account — CassowaryClub</title></head>
-<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
-<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
-<h1 style="color:#1e4a3a">Found the unlinked page.</h1>
-<p style="max-width:480px;font-size:13px;color:#5a7a6c">Nothing links here — the only trail was a comment on the homepage.</p>
-<p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W8L2R2}}</p>
-<p style="color:#5a7a6c;font-size:13px">Copy that straight into the flag box below.</p>
-
-<div id="bonusBlock" style="display:none;margin-top:20px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
-  <p style="font-size:13px;margin:0 0 8px"><strong>Member role recognised.</strong></p>
-  <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B5}}</p>
-</div>
-
-<script>
-(function(){
-  try{
-    var raw = localStorage.getItem('cc_token');
-    var parts = raw.split('.');
-    var payload = JSON.parse(atob(parts[1]));
-    if(payload.role === 'member'){
-      document.getElementById('bonusBlock').style.display = 'block';
-    }
-  }catch(e){}
-})();
-<\/script>
-</body>
-</html>`
     }
   },
 
@@ -402,10 +404,10 @@ const WEEK_CONTENT = {
       brief:"Not every key was there from the start." },
     { id:"W8L2B4", tier:"B", points:50, defaultRoute:"/perks.html", leet:"3d1t_t13r",
       brief:"cc_token's payload has a \"tier\" field, currently \"bronze\". Decode the token, edit the JSON so tier is \"gold\", re-encode just that middle part, then paste the whole three-part string back into cc_token in DevTools and press Enter. Reload the Perks page afterwards." },
-    { id:"W8L2B5", tier:"B", points:50, defaultRoute:"/account.html", leet:"3d1t_r0l3",
-      brief:"Same editing trick as before, a different field this time — cc_token also has a \"role\"." },
-    { id:"W8L2A1", tier:"A", points:10, defaultRoute:"/members-only.html", leet:"f0und3r_r0l3",
-      brief:"Members Only checks cc_token's role against one specific value — not \"member\". That value is not written anywhere in plain text; it only appears inside another token's decoded payload." },
+    { id:"W8L2B5", tier:"B", points:50, defaultRoute:"/members-only.html", leet:"3d1t_r0l3",
+      brief:"Same editing trick as before, a different field this time — cc_token also has a \"role\". Ordinary members get in here." },
+    { id:"W8L2A1", tier:"A", points:10, defaultRoute:"/account.html", leet:"f0und3r_r0l3",
+      brief:"Your account page checks cc_token's role against one specific value, higher than \"member\". That value is not written anywhere in plain text; it only appears inside another token's decoded payload." },
     { id:"W8L2A2", tier:"A", points:10, defaultRoute:null, leet:"4lg_n0n3",
       brief:"Decode the header segment (the first part, before the first dot) of any token here. What algorithm does it claim to use? Type your answer, exactly as it appears, into the flag box.",
       freeTextAnswers:["none"] }
@@ -418,7 +420,7 @@ const WEEK_CONTENT = {
    requiredRole for A1 is the literal string checked via SHA-256 in
    members-only.html, never written anywhere in plain text itself. */
 const TOKEN_DEFS = {
-  CC_TOKEN:    (flags) => ({ member:"Guest", tier:"bronze", role:"guest", note: flags["W8L2B1"] }),
+  CC_TOKEN:    (flags) => ({ member: state.name, tier:"bronze", role:"guest", note: flags["W8L2B1"] }),
   CC_SESSION:  (flags) => ({ device:"browser", note: flags["W8L2B2"] }),
   CC_REFERRAL: (flags) => ({ code:"CASSOWARY-REF-2026", requiredRole:"founder", note: flags["W8L2B3"] })
 };
