@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the Web — Week 8 L2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-app:#0d2b24;--bg-panel:#123a30;--bg-panel-alt:#0f3128;--border:#245446;
+    --text-main:#eef7f0;--text-dim:#8fb8a8;--accent:#e8b84b;--accent-soft:#e8b84b22;
+    --accent-2:#7ad6a9;--ok:#8fdc8f;--err:#e08a7a;--warn:#f2c14e;
+    --font-display:'Fredoka',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-app);color:var(--text-main);font-family:var(--font-mono);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .header{flex:0 0 auto;height:52px;background:var(--bg-panel-alt);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);gap:12px}
+  .header .title{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--accent)}
+  .header .badge{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-dim)}
+  .header .right b{color:var(--accent)}
+
+  .main{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0}
+  .left{display:grid;grid-template-rows:24% 40% 36%;border-right:1px solid var(--border);min-height:0}
+  .panel{overflow:auto;border-bottom:1px solid var(--border);min-height:0;display:flex;flex-direction:column}
+  .panel-head{padding:7px 12px;background:var(--bg-panel-alt);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex:0 0 auto}
+  .panel-body{padding:10px 12px;overflow:auto}
+  .tree-item{padding:5px 4px;cursor:pointer;border-radius:4px;font-size:13px;display:flex;gap:6px;align-items:center}
+  .tree-item:hover{background:var(--bg-panel-alt)}
+  .tree-item.active{background:var(--accent-soft);color:var(--accent)}
+
+  .lock-label{font-size:10px;color:var(--text-dim)}
+  .source-note{font-size:10px;color:var(--text-dim);padding:4px 12px;border-bottom:1px solid var(--border);flex:0 0 auto}
+
+  .panelTextarea{flex:1;width:100%;background:transparent;border:none;color:var(--text-main);resize:none;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  .panelTextarea:read-only{color:var(--text-dim)}
+
+  .task{padding:8px;border-radius:6px;margin-top:6px;border:1px solid transparent}
+  .task:hover{border-color:var(--border)}
+  .task.selected{background:var(--bg-panel-alt);border-color:var(--accent)}
+  .task .row{display:flex;justify-content:space-between;font-size:12px}
+  .task .tier{font-weight:700;color:var(--accent)}
+  .task .pts{color:var(--text-dim);font-size:11px}
+  .task.found .tier::after{content:" ✓";color:var(--ok)}
+  .task-brief{padding-top:6px;font-size:12px;color:var(--text-dim);line-height:1.5;cursor:pointer}
+
+  .right{display:flex;flex-direction:column;min-width:0}
+  .addr-row{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:8px 10px;border-bottom:1px solid var(--border)}
+  .addr-row .dots{display:flex;gap:5px}
+  .addr-row .dot{width:9px;height:9px;border-radius:50%;background:var(--border)}
+  .addr-bar{flex:1;background:var(--bg-app);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--text-main);font-family:var(--font-mono)}
+  .addr-bar:focus{outline:none;border-color:var(--accent)}
+  iframe{flex:1;border:none;background:#fbf8ef}
+
+  .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg-panel-alt)}
+  .flagrow{display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .flagrow input{flex:1;max-width:420px;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:13px}
+  .flagrow input:focus{outline:none;border-color:var(--accent)}
+  .flagrow button{background:var(--accent);color:#0d2b24;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-mono);font-weight:700;font-size:13px;cursor:pointer}
+  .flagrow .msg{font-size:13px;font-weight:700;min-width:200px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
+  .receipts{padding:0 16px 12px}
+  .receipts label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
+  .receipts .row2{display:flex;gap:8px;margin-top:4px}
+  .receipts textarea{flex:1;height:46px;resize:none;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-family:var(--font-mono);font-size:11px;padding:8px}
+  .receipts button{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:0 14px;font-family:var(--font-mono);cursor:pointer}
+
+  .modal-backdrop{position:fixed;inset:0;background:#06150feb;display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:28px;width:400px}
+  .modal h2{font-family:var(--font-display);margin:0 0 10px;font-size:18px;color:var(--accent)}
+  .modal p{color:var(--text-dim);font-size:13px;margin:0 0 16px;line-height:1.55}
+  .modal input{width:100%;background:var(--bg-app);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);font-family:var(--font-mono);font-size:14px;margin-bottom:12px}
+  .modal button{width:100%;background:var(--accent);color:#0d2b24;border:none;border-radius:8px;padding:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="modal-backdrop" id="nameModal">
+  <div class="modal">
+    <h2>BEHIND THE WEB</h2>
+    <p>Case File #9 — CassowaryClub. Enter your name to start.</p>
+    <p><strong>You have finished the assessment.</strong> From here, it is pure fun. Some of what follows is genuinely hard — harder than anything marked this term — so do not worry if progress feels slower than usual. As always: please do not try any of this on a website you do not have permission to test. If any of this has sparked a real interest in white-hat hacking as a path, do speak to your teacher, who can help put you in touch with people who could take that further.</p>
+    <input id="nameInput" placeholder="Your name" autofocus>
+    <button onclick="startSession()">Begin investigation</button>
+  </div>
+</div>
+
+<div class="header">
+  <span class="title">BEHIND THE WEB</span>
+  <span class="badge" id="weekBadge">Week 8 — L2</span>
+  <div class="right">
+    <span>Flags: <b id="flagCount">0</b> · Score: <b id="scoreTotal">0</b></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="panel">
+      <div class="panel-head"><span>Explorer</span></div>
+      <div class="panel-body" id="treeBody"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span id="sourceHeadLabel">Select a file</span>
+        <span class="lock-label">🔒 read-only</span>
+      </div>
+      <div class="source-note">This is a page's HTML. What a page stores in Local Storage does not show here — open your real browser's Application tab for that, on this very page.</div>
+      <textarea id="sourceBody" class="panelTextarea" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="panel" style="border-bottom:none">
+      <div class="panel-head"><span>Tasks — L2</span></div>
+      <div class="panel-body" id="taskList"></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="addr-row">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <input class="addr-bar" id="addrBar" spellcheck="false">
+    </div>
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="flagrow">
+    <input id="flagInput" placeholder="Type or paste a flag here...">
+    <button onclick="submitFlag()">Submit</button>
+    <span class="msg" id="flagMsg"></span>
+  </div>
+  <div class="receipts">
+    <label>Your flags — copy and paste at: <span id="scoreboardLink">[insert scoreboard link]</span></label>
+    <div class="row2">
+      <textarea id="receiptBox" readonly placeholder="Solve a task to see your flags listed here..."></textarea>
+      <button onclick="copyReceipts()">Copy all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   WEEK CONTENT — Week 8 · L2 ("Behind the storage")
+   CassowaryClub — a small-business loyalty/membership app. Post-exam
+   enrichment: no ceiling/floor constraint, no assessment link.
+
+   NEW MECHANIC: localStorage, holding JWT-SHAPED tokens (three
+   base64 segments — header.payload.signature). Unlike Week 8 L1's
+   headers, this mechanic is GENUINELY REAL: the pages rendered into
+   the preview iframe run real inline <script> tags that call the
+   real window.localStorage API, so a student's actual browser
+   DevTools → Application → Local Storage tab shows real entries for
+   this page's own origin. No simulation needed here — see B0.
+
+   IMPORTANT CAVEAT, not yet verified on a real deployment: srcdoc
+   iframes are usually treated as same-origin with their parent and
+   so should share localStorage normally, but this has not been
+   tested against the actual deployed GitHub Pages build across
+   browsers. Test this specifically before shipping — if it does not
+   work in the target browser/lab setup, this lesson's core mechanic
+   does not function and needs rethinking before use.
+
+   Tokens are NOT real JWTs — "alg":"none" in the header, and the
+   signature segment is meaningless — deliberately, so A2 can make
+   the point that this token trusts itself with no real verification.
+
+   Seeded keys use an if(!localStorage.getItem(...)) guard so a
+   student's manual edits in DevTools survive a page reload — without
+   this guard, revisiting a page would silently overwrite any edit
+   the student just made, breaking B4/B5/A1 entirely.
+
+   A1's capstone check compares a SHA-256 hash of the entered role,
+   not a literal string, so the required value cannot be read
+   straight out of members-only.html's own Source panel — same
+   pattern as Week 5's client-side password-hash check.
+   ================================================================ */
+
+const FLAG_PREFIX = "faith";
+const FLAG_SALT   = "cassowary-club-2026";
+
+const WEEK_CONTENT = {
+  meta:{ week:8, lesson:"L2", label:"Week 8 — L2",
+         deployPath:"lovebarnowls.github.io/Y9T2/w8/l2",
+         scoreboardUrl:"lovebarnowls.github.io/Y9T2/scoreboard.html" },
+
+  tree: [
+    { path:"/index.html", label:"index.html" },
+    { path:"/how-to-real-storage.html", label:"how-to-real-storage.html" },
+    { path:"/perks.html", label:"perks.html" },
+    { path:"/refer.html", label:"refer.html" },
+    { path:"/members-only.html", label:"members-only.html" },
+    { path:"/account.html", label:"account.html", hidden:true }
+  ],
+
+  routes: {
+    "/index.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e;margin-right:16px">Home</a><a href="#/perks.html" target="_top" style="color:#b8862e;margin-right:16px">Perks</a><a href="#/refer.html" target="_top" style="color:#b8862e;margin-right:16px">Refer a friend</a><a href="#/members-only.html" target="_top" style="color:#b8862e;margin-right:16px">Members</a><a href="#/how-to-real-storage.html" target="_top" style="color:#b8862e">Storage 101</a></nav>
+<h1 style="color:#1e4a3a">🐦 CassowaryClub</h1>
+<p>A loyalty club for small businesses across the island, run by Elnathan out of the old post office building.</p>
+
+<div style="margin-top:28px;padding:18px;background:#e8f4ec;border-left:4px solid #1e4a3a;border-radius:6px;max-width:640px">
+  <p style="font-size:13px;line-height:1.6;margin:0"><strong>💡 New this week:</strong> this site remembers you using <em>Local Storage</em> — a place your browser keeps data for a site between visits, similar in spirit to a cookie but larger and easier to inspect. Real DevTools → Application tab → Local Storage. This one is genuinely real, not simulated — see the Storage 101 link above if that is unfamiliar.</p>
+</div>
+
+<div style="margin-top:16px;padding:12px 18px;background:#123a30;color:#eef7f0;border-radius:8px;max-width:640px;font-size:13px">📌 R tasks are quick revision wins from earlier weeks — nothing to do with storage. B and A tasks are this week's real content.</div>
+
+<div style="margin-top:24px">
+  <img src="https://lovebarnowls.github.io/Y9T2/w8/l2/assets/cassowary-01.jpg" alt="{{FLAG:W8L2R3}}" style="width:240px;height:160px;object-fit:cover;border-radius:8px;background:#e8f4ec;display:block">
+  <p style="font-size:12px;color:#5a7a6c;margin:6px 0 0">The club's mascot, mid-stride, outside the old post office building.</p>
+</div>
+
+<!-- staff note: forgot to take account.html off the test list again -- {{FLAG:W8L2R1}} -->
+
+<script>
+(function(){
+  if(!localStorage.getItem('cc_token')){
+    localStorage.setItem('cc_token','{{TOKEN:CC_TOKEN}}');
+  }
+  if(!localStorage.getItem('cc_session')){
+    localStorage.setItem('cc_session','{{TOKEN:CC_SESSION}}');
+  }
+})();
+<\/script>
+</body>
+</html>`
+    },
+
+    "/how-to-real-storage.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Storage 101 — CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
+<h1 style="color:#1e4a3a">Checking Local Storage on a real page</h1>
+<p style="font-size:13px;color:#5a7a6c;max-width:560px">Unlike last lesson's headers, this one is not simulated — this page really has just written real data into your real browser's storage, for real. Here is how to see it:</p>
+
+<ol style="max-width:560px;font-size:13px;color:#0d2b24;line-height:1.9">
+  <li>Right-click anywhere on this page (inside the browser preview) and choose <strong>Inspect</strong>, or press <strong>F12</strong>.</li>
+  <li>Click the <strong>Application</strong> tab (in some browsers, this is called <strong>Storage</strong>).</li>
+  <li>In the sidebar, find <strong>Local Storage</strong> and expand it.</li>
+  <li>Click the one entry listed underneath it.</li>
+  <li>You should see one or more key/value rows appear — real data, really stored by this real page, a moment ago.</li>
+</ol>
+
+<p style="font-size:13px;color:#5a7a6c;max-width:560px">You can edit a value directly in that panel too — double-click it, change it, press Enter. Several later tasks this lesson need exactly that.</p>
+
+<div style="margin-top:24px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:560px">
+  <p style="font-size:13px;margin:0 0 8px"><strong>No trick to this one — the flag is simply here, for reading this page properly.</strong></p>
+  <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B0}}</p>
+</div>
+</body>
+</html>`
+    },
+
+    "/perks.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Perks — CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
+<h1 style="color:#1e4a3a">Member Perks</h1>
+<p style="font-size:13px;color:#5a7a6c">Bronze members get a 5% discount at partner cafes. Higher tiers get more — if this page can tell you are one.</p>
+
+<div id="bonusBlock" style="display:none;margin-top:20px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
+  <p style="font-size:13px;margin:0 0 8px"><strong>Gold tier recognised.</strong></p>
+  <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B4}}</p>
+</div>
+
+<!-- reminder: rotate the shed router password again -- {{B64FLAG:W8L2R4}} -->
+
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('cc_token');
+    var parts = raw.split('.');
+    var payload = JSON.parse(atob(parts[1]));
+    if(payload.tier === 'gold'){
+      document.getElementById('bonusBlock').style.display = 'block';
+    }
+  }catch(e){}
+})();
+<\/script>
+</body>
+</html>`
+    },
+
+    "/refer.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Refer a friend — CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
+<h1 style="color:#1e4a3a">Refer a friend</h1>
+<p style="font-size:13px;color:#5a7a6c">Every member who refers a friend gets a small bonus. Nothing on this page shows your referral details directly — they are just stored, quietly, the moment you arrive.</p>
+
+<script>
+(function(){
+  if(!localStorage.getItem('cc_referral')){
+    localStorage.setItem('cc_referral','{{TOKEN:CC_REFERRAL}}');
+  }
+})();
+<\/script>
+</body>
+</html>`
+    },
+
+    "/members-only.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Members Only — CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
+<h1 style="color:#1e4a3a">Members Only</h1>
+<p id="lockedMsg" style="font-size:13px;color:#5a7a6c">This area is restricted. Your current role does not have access.</p>
+<div id="unlockedBlock" style="display:none;margin-top:16px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
+  <p style="font-size:13px;margin:0 0 8px"><strong>Recognised. Welcome.</strong></p>
+  <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2A1}}</p>
+</div>
+
+<script>
+(function(){
+  async function sha256Hex(str){
+    var enc = new TextEncoder().encode(str);
+    var buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  }
+  try{
+    var raw = localStorage.getItem('cc_token');
+    var parts = raw.split('.');
+    var payload = JSON.parse(atob(parts[1]));
+    sha256Hex(String(payload.role || '')).then(function(hash){
+      if(hash === '{{FOUNDERHASH}}'){
+        document.getElementById('lockedMsg').style.display = 'none';
+        document.getElementById('unlockedBlock').style.display = 'block';
+      }
+    });
+  }catch(e){}
+})();
+<\/script>
+</body>
+</html>`
+    },
+
+    "/account.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Account — CassowaryClub</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fbf8ef;color:#0d2b24">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#b8862e">Home</a></nav>
+<h1 style="color:#1e4a3a">Found the unlinked page.</h1>
+<p style="max-width:480px;font-size:13px;color:#5a7a6c">Nothing links here — the only trail was a comment on the homepage.</p>
+<p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:14px;border-radius:8px;display:inline-block">{{FLAG:W8L2R2}}</p>
+<p style="color:#5a7a6c;font-size:13px">Copy that straight into the flag box below.</p>
+
+<div id="bonusBlock" style="display:none;margin-top:20px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
+  <p style="font-size:13px;margin:0 0 8px"><strong>Member role recognised.</strong></p>
+  <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B5}}</p>
+</div>
+
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('cc_token');
+    var parts = raw.split('.');
+    var payload = JSON.parse(atob(parts[1]));
+    if(payload.role === 'member'){
+      document.getElementById('bonusBlock').style.display = 'block';
+    }
+  }catch(e){}
+})();
+<\/script>
+</body>
+</html>`
+    }
+  },
+
+  tasks: [
+    { id:"W8L2R1", tier:"R", points:100, defaultRoute:"/index.html", leet:"c0mm3nt_h4nt",
+      brief:"A comment on the homepage mentions a page nothing else on the site links to." },
+    { id:"W8L2R2", tier:"R", points:100, defaultRoute:"/account.html", leet:"h1dd3n_p4g3",
+      brief:"Somewhere unlinked, waiting to be visited directly. R1's comment is the trail." },
+    { id:"W8L2R3", tier:"R", points:100, defaultRoute:"/index.html", leet:"4lt_t3xt",
+      brief:"An image on the homepage carries more than what is drawn on it — check what describes it in the page's own HTML." },
+    { id:"W8L2R4", tier:"R", points:100, defaultRoute:"/perks.html", leet:"b4s3_64",
+      brief:"A comment on the Perks page holds a string that is not readable text until it is decoded." },
+    { id:"W8L2B0", tier:"B", points:50, defaultRoute:"/how-to-real-storage.html", leet:"r34l_st0r4g3",
+      brief:"Before this lesson's real tasks, a quick primer on checking Local Storage on a real page using your actual browser. Read it through; the flag is given directly, no trick to it." },
+    { id:"W8L2B1", tier:"B", points:50, defaultRoute:"/index.html", leet:"d3c0d3_t0k3n",
+      brief:"The homepage stores a token in Local Storage under the key cc_token — three parts, separated by dots, each base64-encoded. Decode the middle part (the payload) and read what is inside it." },
+    { id:"W8L2B2", tier:"B", points:50, defaultRoute:"/index.html", leet:"s3c0nd_k3y",
+      brief:"Same trick, a different key — look for what else got stored alongside cc_token." },
+    { id:"W8L2B3", tier:"B", points:50, defaultRoute:"/refer.html", leet:"n3w_k3y",
+      brief:"Not every key was there from the start." },
+    { id:"W8L2B4", tier:"B", points:50, defaultRoute:"/perks.html", leet:"3d1t_t13r",
+      brief:"cc_token's payload has a \"tier\" field, currently \"bronze\". Decode the token, edit the JSON so tier is \"gold\", re-encode just that middle part, then paste the whole three-part string back into cc_token in DevTools and press Enter. Reload the Perks page afterwards." },
+    { id:"W8L2B5", tier:"B", points:50, defaultRoute:"/account.html", leet:"3d1t_r0l3",
+      brief:"Same editing trick as before, a different field this time — cc_token also has a \"role\"." },
+    { id:"W8L2A1", tier:"A", points:10, defaultRoute:"/members-only.html", leet:"f0und3r_r0l3",
+      brief:"Members Only checks cc_token's role against one specific value — not \"member\". That value is not written anywhere in plain text; it only appears inside another token's decoded payload." },
+    { id:"W8L2A2", tier:"A", points:10, defaultRoute:null, leet:"4lg_n0n3",
+      brief:"Decode the header segment (the first part, before the first dot) of any token here. What algorithm does it claim to use? Type your answer, exactly as it appears, into the flag box.",
+      freeTextAnswers:["none"] }
+  ],
+
+  decoys: [ "faith{W8L2B1_c0rrupt3d_t0k3n_7d3f42}" ]
+};
+
+/* Token payloads — assembled once per session, after flags are known.
+   requiredRole for A1 is the literal string checked via SHA-256 in
+   members-only.html, never written anywhere in plain text itself. */
+const TOKEN_DEFS = {
+  CC_TOKEN:    (flags) => ({ member:"Guest", tier:"bronze", role:"guest", note: flags["W8L2B1"] }),
+  CC_SESSION:  (flags) => ({ device:"browser", note: flags["W8L2B2"] }),
+  CC_REFERRAL: (flags) => ({ code:"CASSOWARY-REF-2026", requiredRole:"founder", note: flags["W8L2B3"] })
+};
+const REQUIRED_ROLE = "founder";
+
+const DYNAMIC_ROUTES = {};
+
+/* ================================================================
+   ENGINE — largely unchanged from Week 6 L1 / Week 8 L1. Changes
+   this lesson: (1) no Headers tab, this lesson has no header
+   content; (2) computeTokens() builds JWT-shaped strings once flags
+   are known, stored in state.tokens, filled via a new {{TOKEN:ID}}
+   placeholder; (3) state.founderRoleHash computed once at startup
+   for A1's members-only.html hash check; (4) freeTextAnswers support
+   restored (see W1T2) for A2's conceptual answer.
+   ================================================================ */
+let state = { selectedTask:null, foundIds:new Set(), score:0, flags:{}, tokens:{}, founderRoleHash:"", name:"", revealed:new Set(), collapsedFolders:new Set() };
+let currentPath = null;
+const FLAG_INDEX = {};
+const DECOY_INDEX = {};
+
+function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,' '); }
+
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function makeFlagSuffix(name, taskId){
+  const raw = name.toLowerCase() + FLAG_SALT + taskId;
+  return (await sha256Hex(raw)).substring(0, 6);
+}
+async function makeFlag(leet, taskId){
+  const suffix = await makeFlagSuffix(state.name, taskId);
+  return `${FLAG_PREFIX}{${taskId}_${leet}_${suffix}}`;
+}
+async function computeAllFlags(){
+  for (const task of WEEK_CONTENT.tasks){
+    state.flags[task.id] = await makeFlag(task.leet, task.id);
+  }
+}
+function buildJWT(payloadObj){
+  const header = btoa(JSON.stringify({alg:"none", typ:"JWT"}));
+  const payload = btoa(JSON.stringify(payloadObj));
+  const signature = btoa("not-a-real-signature-do-not-trust-this");
+  return `${header}.${payload}.${signature}`;
+}
+async function computeTokens(){
+  Object.keys(TOKEN_DEFS).forEach(key=>{
+    state.tokens[key] = buildJWT(TOKEN_DEFS[key](state.flags));
+  });
+  state.founderRoleHash = await sha256Hex(REQUIRED_ROLE);
+}
+function buildFlagIndex(){
+  WEEK_CONTENT.tasks.forEach(task=>{
+    FLAG_INDEX[normalize(state.flags[task.id])] = task;
+    if (task.freeTextAnswers){
+      task.freeTextAnswers.forEach(a => FLAG_INDEX[normalize(a)] = task);
+    }
+  });
+  (WEEK_CONTENT.decoys || []).forEach(str => { DECOY_INDEX[normalize(str)] = true; });
+}
+function fillTemplate(text){
+  return text
+    .replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???')
+    .replace(/\{\{B64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]) : '???')
+    .replace(/\{\{TOKEN:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.tokens[id] || '???')
+    .replace(/\{\{FOUNDERHASH\}\}/g, () => state.founderRoleHash || '???');
+}
+
+async function startSession(){
+  const nameInput = document.getElementById('nameInput');
+  const name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); return; }
+  state.name = name;
+  await computeAllFlags();
+  await computeTokens();
+  buildFlagIndex();
+  document.getElementById('nameModal').style.display = 'none';
+  renderTree();
+  renderTaskList();
+  window.addEventListener('hashchange', onHashChange);
+  navigate(WEEK_CONTENT.tree[0].path);
+}
+
+function isItemVisible(item){ return !item.hidden || state.revealed.has(item.path); }
+
+function buildTreeStructure(){
+  const root = { folders:{}, files:[], fullPath:'' };
+  WEEK_CONTENT.tree.forEach(item=>{
+    const parts = item.path.split('/').filter(Boolean);
+    let node = root, pathSoFar = '';
+    for (let i=0; i<parts.length-1; i++){
+      pathSoFar += '/' + parts[i];
+      if (!node.folders[parts[i]]) node.folders[parts[i]] = { folders:{}, files:[], fullPath:pathSoFar };
+      node = node.folders[parts[i]];
+    }
+    node.files.push(item);
+  });
+  return root;
+}
+function folderHasVisibleContent(node){
+  if (node.files.some(isItemVisible)) return true;
+  return Object.values(node.folders).some(folderHasVisibleContent);
+}
+function makeFileRow(item, depth){
+  const div = document.createElement('div');
+  div.className = 'tree-item'; div.id = 'tree-' + item.path;
+  div.style.paddingLeft = (4 + depth * 16) + 'px';
+  div.innerHTML = `${item.icon || '📄'} ${item.label.split('/').pop()}` +
+    (item.hidden ? ' <span style="color:var(--accent);font-size:10px">· found</span>' : '');
+  div.onclick = () => navigate(item.path);
+  return div;
+}
+function renderNode(node, container, depth){
+  node.files.forEach(item=>{
+    if (!isItemVisible(item)) return;
+    container.appendChild(makeFileRow(item, depth));
+  });
+  Object.keys(node.folders).forEach(folderName=>{
+    const sub = node.folders[folderName];
+    if (!folderHasVisibleContent(sub)) return;
+    const collapsed = state.collapsedFolders.has(sub.fullPath);
+    const header = document.createElement('div');
+    header.className = 'tree-item';
+    header.style.paddingLeft = (4 + depth * 16) + 'px';
+    header.innerHTML = `${collapsed ? '▸' : '▾'} 📁 ${folderName}`;
+    header.onclick = () => {
+      collapsed ? state.collapsedFolders.delete(sub.fullPath) : state.collapsedFolders.add(sub.fullPath);
+      renderTree();
+    };
+    container.appendChild(header);
+    if (!collapsed) renderNode(sub, container, depth + 1);
+  });
+}
+function renderTree(){
+  const el = document.getElementById('treeBody'); el.innerHTML = '';
+  renderNode(buildTreeStructure(), el, 0);
+}
+
+function renderTaskList(){
+  const el = document.getElementById('taskList'); el.innerHTML = '';
+  WEEK_CONTENT.tasks.forEach(task=>{
+    const found = state.foundIds.has(task.id);
+    const div = document.createElement('div');
+    div.className = 'task' + (found?' found':'') + (state.selectedTask===task.id?' selected':'');
+    div.innerHTML = `<div class="row"><span><span class="tier tier-${task.tier}">${task.tier}</span> ${task.id}</span><span class="pts">${task.points} pts</span></div><div class="task-brief">${task.brief}</div>`;
+    div.onclick = () => { state.selectedTask = task.id; if (task.defaultRoute) navigate(task.defaultRoute); renderTaskList(); };
+    el.appendChild(div);
+  });
+}
+
+function onHashChange(){
+  const raw = location.hash.replace(/^#/, '') || WEEK_CONTENT.tree[0].path;
+  loadRoute(raw);
+}
+function navigate(path){
+  location.hash = path;
+  if (location.hash.replace(/^#/, '') === path) loadRoute(path);
+}
+
+function loadRoute(fullPath){
+  document.getElementById('addrBar').value = WEEK_CONTENT.meta.deployPath + fullPath;
+  document.querySelectorAll('.tree-item').forEach(el=>el.classList.remove('active'));
+  const t = document.getElementById('tree-' + fullPath); if (t) t.classList.add('active');
+  currentPath = fullPath;
+
+  const sourceEl = document.getElementById('sourceBody');
+  const labelEl = document.getElementById('sourceHeadLabel');
+  const frame = document.getElementById('preview');
+
+  const route = WEEK_CONTENT.routes[fullPath];
+
+  if (!route){
+    sourceEl.value = '404 — no such file.';
+    labelEl.textContent = 'Source';
+    frame.srcdoc = `<div style="font-family:sans-serif;padding:40px;color:#888">404 — page not found.</div>`;
+    return;
+  }
+
+  labelEl.textContent = 'Source — ' + fullPath;
+  const content = fillTemplate(route.sourceTemplate);
+  sourceEl.value = content;
+  frame.srcdoc = content;
+
+  const hiddenEntry = WEEK_CONTENT.tree.find(item => item.path === fullPath && item.hidden);
+  if (hiddenEntry && !state.revealed.has(fullPath)){
+    state.revealed.add(fullPath);
+    renderTree();
+    const t2 = document.getElementById('tree-' + fullPath); if (t2) t2.classList.add('active');
+  }
+}
+
+document.getElementById('addrBar').addEventListener('keydown', e=>{
+  if (e.key==='Enter'){
+    let val = e.target.value.trim();
+    const marker = WEEK_CONTENT.meta.deployPath;
+    let path = val.startsWith(marker) ? val.slice(marker.length) : val.slice(val.indexOf('/'));
+    if (!path.startsWith('/')) path = '/' + path;
+    navigate(path);
+  }
+});
+
+function submitFlag(){
+  const input = document.getElementById('flagInput');
+  const msg = document.getElementById('flagMsg');
+  const raw = input.value.trim();
+  const task = FLAG_INDEX[normalize(raw)];
+
+  if (!task){
+    if (DECOY_INDEX[normalize(raw)]){
+      msg.textContent = 'DECOY — this was a decoy flag. Sorry, nice try!';
+      msg.className = 'msg warn';
+      return;
+    }
+    msg.textContent='WRONG'; msg.className='msg err'; return;
+  }
+  if (state.foundIds.has(task.id)){ msg.textContent='ALREADY SUBMITTED'; msg.className='msg warn'; return; }
+
+  state.foundIds.add(task.id);
+  state.score += task.points;
+  document.getElementById('flagCount').textContent = state.foundIds.size;
+  document.getElementById('scoreTotal').textContent = state.score;
+  const shown = task.freeTextAnswers ? raw : state.flags[task.id];
+  msg.textContent = `CORRECT — ${shown} (+${task.points} pts)`;
+  msg.className = 'msg ok';
+  input.value = '';
+  renderTaskList();
+  addReceipt(task);
+}
+document.getElementById('flagInput').addEventListener('keydown', e=>{ if (e.key==='Enter') submitFlag(); });
+
+function addReceipt(task){
+  const box = document.getElementById('receiptBox');
+  const val = task.freeTextAnswers ? `${task.id}: (conceptual answer accepted)` : state.flags[task.id];
+  box.value = box.value ? box.value + '\n' + val : val;
+}
+function copyReceipts(){
+  const box = document.getElementById('receiptBox');
+  navigator.clipboard.writeText(box.value).then(()=>{
+    const msg = document.getElementById('flagMsg');
+    msg.textContent = 'Copied to clipboard.'; msg.className = 'msg ok';
+  });
+}
+</script>
+</body>
+</html>
