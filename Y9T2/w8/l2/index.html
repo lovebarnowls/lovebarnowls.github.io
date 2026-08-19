@@ -270,6 +270,9 @@ const WEEK_CONTENT = {
 <div id="bonusBlock" style="display:none;margin-top:20px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
   <p style="font-size:13px;margin:0 0 8px"><strong>Gold tier recognised.</strong></p>
   <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B4}}</p>
+  <div style="margin-top:14px;padding-top:14px;border-top:1px solid #cddbd2;font-size:12px;color:#3a5a4c;line-height:1.65">
+    <strong>Why this worked:</strong> nothing here checked with a server — the "gold tier" decision happened entirely in your own browser, reading a value your own browser also lets you edit. A properly built backend checks who someone is and what they are allowed to do again, on the server, every single time — it never trusts a role sitting in the browser as-is. This is also why sensitive client-side data like tokens, roles, and sessions normally needs to be encrypted or signed: so even if someone edits it, the server can tell it has been tampered with and reject it. Real websites do get compromised exactly this way — a developer trusts client-side data, or skips the server-side check, or stores something sensitive without proper encryption. The lesson: never trust the client alone, and always verify — and encrypt — on the server.
+  </div>
 </div>
 
 <!-- reminder: rotate the shed router password again -- {{B64FLAG:W8L2R4}} -->
@@ -324,6 +327,9 @@ const WEEK_CONTENT = {
 <div id="bonusBlock" style="display:none;margin-top:20px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
   <p style="font-size:13px;margin:0 0 8px"><strong>Member role recognised.</strong></p>
   <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2B5}}</p>
+  <div style="margin-top:14px;padding-top:14px;border-top:1px solid #cddbd2;font-size:12px;color:#3a5a4c;line-height:1.65">
+    <strong>Same gap as the Perks page:</strong> this check only ever happens in your own browser, never re-checked on a server. A real system verifies — and encrypts — this kind of data server-side, every time, rather than trusting the client alone.
+  </div>
 </div>
 
 <script>
@@ -358,6 +364,9 @@ const WEEK_CONTENT = {
 <div id="unlockedBlock" style="display:none;margin-top:16px;padding:14px 18px;background:#e8f4ec;border-radius:8px;max-width:480px">
   <p style="font-size:13px;margin:0 0 8px"><strong>Recognised. Welcome.</strong></p>
   <p style="font-family:monospace;background:#123a30;color:#eef7f0;padding:10px;border-radius:6px;display:inline-block">{{FLAG:W8L2A1}}</p>
+  <div style="margin-top:14px;padding-top:14px;border-top:1px solid #cddbd2;font-size:12px;color:#3a5a4c;line-height:1.65">
+    <strong>Same gap as before, one more time:</strong> even this harder-to-reach role only ever gets checked in your own browser. A real system re-checks — and encrypts — this kind of thing server-side, on every request, rather than trusting anything the client sends as-is.
+  </div>
 </div>
 
 <script>
