@@ -128,6 +128,7 @@
     <button onclick="submitFlag()">Submit</button>
     <span class="msg" id="flagMsg"></span>
   </div>
+  <div id="explainBox" style="display:none;padding:0 16px 12px;font-size:12px;color:var(--text-dim);line-height:1.6;max-width:640px"></div>
   <div class="receipts">
     <label>Your flags — copy and paste at: <span id="scoreboardLink">[insert scoreboard link]</span></label>
     <div class="row2">
@@ -276,6 +277,7 @@ const WEEK_CONTENT = {
 </div>
 
 <!-- reminder: rotate the shed router password again -- {{B64FLAG:W8L2R4}} -->
+<!-- side note to self: base64 isn't the only way to hide something in plain sight — ASCII has its uses too, once you know how to read it -->
 
 <script>
 (function(){
@@ -419,7 +421,8 @@ const WEEK_CONTENT = {
       brief:"Your account page checks cc_token's role against one specific value, higher than \"member\". That value is not written anywhere in plain text; it only appears inside another token's decoded payload." },
     { id:"W8L2A2", tier:"A", points:10, defaultRoute:null, leet:"4lg_n0n3",
       brief:"Decode the header segment (the first part, before the first dot) of any token here. What algorithm does it claim to use? Type your answer, exactly as it appears, into the flag box.",
-      freeTextAnswers:["none"] }
+      freeTextAnswers:["none"],
+      explanation:"\"none\" means this token trusts itself completely — nothing signs it, so nothing can prove it hasn't been changed. If a real system trusted a token built this way, anyone could edit their own role, tier, or permissions, and the server would have no way to tell. This exact flaw — a token that openly claims \"alg\":\"none\", and a server that believes it anyway — is something real security researchers actively look for in real systems." }
   ],
 
   decoys: [ "faith{W8L2B1_c0rrupt3d_t0k3n_7d3f42}" ]
@@ -657,6 +660,13 @@ function submitFlag(){
   msg.textContent = `CORRECT — ${shown} (+${task.points} pts)`;
   msg.className = 'msg ok';
   input.value = '';
+  const explainBox = document.getElementById('explainBox');
+  if (task.explanation){
+    explainBox.textContent = task.explanation;
+    explainBox.style.display = 'block';
+  } else {
+    explainBox.style.display = 'none';
+  }
   renderTaskList();
   addReceipt(task);
 }
