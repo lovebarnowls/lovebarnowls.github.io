@@ -152,8 +152,8 @@
    appear on one site without it feeling arbitrary.
 
    Combines both Week 8 L1's engine (headers tab, simulated) and
-   Week 8 L2's engine (real localStorage, JWT-shaped tokens). Four
-   chained tasks (tier "C"), 25 pts each:
+   Week 8 L2's engine (real localStorage, JWT-shaped tokens). Five
+   chained/standalone tasks (tier "C"), 25 pts each:
 
    C1 — header hint (unmentioned — this is the "remember doing
         that" tier for headers), leads to a hidden page whose own
@@ -172,6 +172,14 @@
         token's role to that value (real DevTools edit, same skill
         as Week 8 L2's B4/B5/A1) unlocks the last page. Hash-checked,
         not a literal string match, same pattern as Week 8 L2's A1.
+   C5 — standalone, not chained to C1–C4. Foreshadowed by a throwaway
+        comment planted in Week 8 L2's R4 (base64 task) — "base64
+        isn't the only way to hide something." One flag, split into
+        three contiguous substrings, each encoded a different way
+        (base64 / space-separated ASCII character codes / hex) and
+        placed in three separate HTML comments. CyberChef's Magic
+        wand is name-checked in the brief as the natural tool for
+        this — decode each part on its own, then concatenate.
    ================================================================ */
 
 const FLAG_PREFIX = "faith";
@@ -187,6 +195,7 @@ const WEEK_CONTENT = {
   tree: [
     { path:"/index.html", label:"index.html" },
     { path:"/exchange-desk.html", label:"exchange-desk.html" },
+    { path:"/signal.html", label:"signal.html" },
     { path:"/vault.html", label:"vault.html", hidden:true },
     { path:"/founders-hall.html", label:"founders-hall.html", hidden:true }
   ],
@@ -198,7 +207,7 @@ const WEEK_CONTENT = {
 <html>
 <head><title>The Wombat Exchange</title></head>
 <body style="font-family:sans-serif;padding:40px;background:#fdf6f0;color:#241016">
-<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c9412e;margin-right:16px">Home</a><a href="#/exchange-desk.html" target="_top" style="color:#c9412e">Exchange desk</a></nav>
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c9412e;margin-right:16px">Home</a><a href="#/exchange-desk.html" target="_top" style="color:#c9412e;margin-right:16px">Exchange desk</a><a href="#/signal.html" target="_top" style="color:#c9412e">Signal</a></nav>
 <h1 style="color:#7a2438">🦫 The Wombat Exchange</h1>
 <p style="font-size:13px;color:#7a5a60;max-width:560px">A joint venture between PlatypusPost and CassowaryClub — one loyalty scheme, one delivery network, one very confused shared admin panel. Nothing here is explained twice. If it looks familiar from Week 8, it is.</p>
 
@@ -241,6 +250,26 @@ document.getElementById('codeForm').addEventListener('submit', function(e){
   window.top.location.hash = '/exchange-desk-response.html?' + params.toString();
 });
 <\/script>
+</body>
+</html>`,
+      headers: { "Content-Type":"text/html; charset=utf-8" }
+    },
+
+    "/signal.html": {
+      editable:false,
+      sourceTemplate: `<!doctype html>
+<html>
+<head><title>Signal — The Wombat Exchange</title></head>
+<body style="font-family:sans-serif;padding:40px;background:#fdf6f0;color:#241016">
+<nav style="margin-bottom:24px"><a href="#/index.html" target="_top" style="color:#c9412e">Home</a></nav>
+<h1 style="color:#7a2438">Signal</h1>
+<p style="font-size:13px;color:#7a5a60;max-width:520px">One message, split across three comments below. Each part uses a different encoding — not just base64 this time. Decode each one on its own, then join them in order.</p>
+<p style="font-size:12px;color:#a37e84;max-width:520px">CyberChef's "Magic" wand (gchq.github.io/CyberChef) can often work out an unfamiliar encoding for you automatically — worth running each part through it separately, rather than pasting all three in at once.</p>
+
+<!-- signal, part 1 (base64): {{SIGNALB64}} -->
+<!-- signal, part 2 (ASCII character codes, space-separated): {{SIGNALASCII}} -->
+<!-- signal, part 3 (hex): {{SIGNALHEX}} -->
+
 </body>
 </html>`,
       headers: { "Content-Type":"text/html; charset=utf-8" }
@@ -317,7 +346,9 @@ document.getElementById('codeForm').addEventListener('submit', function(e){
     { id:"W9CXC3", tier:"C", points:25, defaultRoute:"/exchange-desk.html", leet:"us3_th3_c0d3",
       brief:"That same decoded payload has a second field, an access code — not a flag. Take it to the Exchange Desk and submit it there, not into the flag box below." },
     { id:"W9CXC4", tier:"C", points:25, defaultRoute:null, leet:"f0und3rs_h4ll",
-      brief:"A correct code at the Exchange Desk reveals a role. Set that role on we_token the way you edited cc_token in Week 8 L2, then find where that role gets you in." }
+      brief:"A correct code at the Exchange Desk reveals a role. Set that role on we_token the way you edited cc_token in Week 8 L2, then find where that role gets you in." },
+    { id:"W9CXC5", tier:"C", points:25, defaultRoute:"/signal.html", leet:"3nc0d1ng_st4ck",
+      brief:"Base64 was never the only trick — some of you may already have noticed a hint about that back in Week 8 L2. Signal splits one message across three comments, each encoded differently. Decode each part on its own, then join them in the order they appear." }
   ],
 
   decoys: [ "faith{W9CXC1_c0rrupt3d_r0ut3_9f13c2}" ]
@@ -392,6 +423,19 @@ async function computeTokens(){
     state.tokens[key] = buildJWT(TOKEN_DEFS[key](state.flags));
   });
   state.requiredRoleHash = await sha256Hex(REQUIRED_ROLE);
+  computeSignalParts();
+}
+function computeSignalParts(){
+  const flag = state.flags['W9CXC5'];
+  const third = Math.ceil(flag.length / 3);
+  const p1 = flag.slice(0, third);
+  const p2 = flag.slice(third, third * 2);
+  const p3 = flag.slice(third * 2);
+  state.signalParts = {
+    b64: btoa(p1),
+    ascii: p2.split('').map(c => c.charCodeAt(0)).join(' '),
+    hex: p3.split('').map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join('')
+  };
 }
 function buildFlagIndex(){
   WEEK_CONTENT.tasks.forEach(task=>{
@@ -403,7 +447,10 @@ function fillTemplate(text){
   return text
     .replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???')
     .replace(/\{\{TOKEN:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.tokens[id] || '???')
-    .replace(/\{\{REQUIREDROLEHASH\}\}/g, () => state.requiredRoleHash || '???');
+    .replace(/\{\{REQUIREDROLEHASH\}\}/g, () => state.requiredRoleHash || '???')
+    .replace(/\{\{SIGNALB64\}\}/g, () => state.signalParts ? state.signalParts.b64 : '???')
+    .replace(/\{\{SIGNALASCII\}\}/g, () => state.signalParts ? state.signalParts.ascii : '???')
+    .replace(/\{\{SIGNALHEX\}\}/g, () => state.signalParts ? state.signalParts.hex : '???');
 }
 function fillHeaders(headersObj){
   const out = {};
