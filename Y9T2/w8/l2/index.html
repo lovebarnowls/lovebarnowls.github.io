@@ -276,8 +276,8 @@ const WEEK_CONTENT = {
   </div>
 </div>
 
-<!-- reminder: rotate the shed router password again -- {{B64FLAG:W8L2R4}} -->
-<!-- side note to self: base64 isn't the only way to hide something in plain sight — ASCII has its uses too, once you know how to read it -->
+<!-- reminder: rotate the shed router password again -- {{ASCIIFLAG:W8L2R4}} -->
+<!-- side note to self: ASCII isn't the only alternative to base64 either — hex has its uses too, once you know how to read it -->
 
 <script>
 (function(){
@@ -403,7 +403,7 @@ const WEEK_CONTENT = {
       brief:"Somewhere unlinked, waiting to be visited directly. R1's comment is the trail." },
     { id:"W8L2R3", tier:"R", points:100, defaultRoute:"/index.html", leet:"4lt_t3xt",
       brief:"An image on the homepage carries more than what is drawn on it — check what describes it in the page's own HTML." },
-    { id:"W8L2R4", tier:"R", points:100, defaultRoute:"/perks.html", leet:"b4s3_64",
+    { id:"W8L2R4", tier:"R", points:100, defaultRoute:"/perks.html", leet:"4sc11_c0d3s",
       brief:"A comment on the Perks page holds a string that is not readable text until it is decoded." },
     { id:"W8L2B0", tier:"B", points:50, defaultRoute:"/how-to-real-storage.html", leet:"r34l_st0r4g3",
       brief:"Before this lesson's real tasks, a quick primer on checking Local Storage on a real page using your actual browser. Read it through; the flag is given directly, no trick to it." },
@@ -499,6 +499,7 @@ function fillTemplate(text){
   return text
     .replace(/\{\{FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] || '???')
     .replace(/\{\{B64FLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? btoa(state.flags[id]) : '???')
+    .replace(/\{\{ASCIIFLAG:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.flags[id] ? state.flags[id].split('').map(c => c.charCodeAt(0)).join(' ') : '???')
     .replace(/\{\{TOKEN:([A-Za-z0-9_]+)\}\}/g, (_, id) => state.tokens[id] || '???')
     .replace(/\{\{FOUNDERHASH\}\}/g, () => state.founderRoleHash || '???');
 }
