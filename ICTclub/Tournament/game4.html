@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal 4 — The Old Man | ICT Club Tournament</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>:root { --game-accent: #ff6fa5; }</style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="header-label">ICT Club Tournament // Terminal 4</div>
+        <h1 style="color:#ff6fa5">The Old Man</h1>
+        <div class="header-sub">The Cruise Director has logged your arrival at this station.</div>
+    </div>
+
+    <div class="selector-row">
+        <label for="studentName">First Name</label>
+        <input type="text" id="studentName" placeholder="Enter your first name">
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-chip">
+            <span class="label">Attempts</span>
+            <span class="value" id="statAttempts">0</span>
+        </div>
+        <div class="stat-chip danger">
+            <span class="label">Failed Guesses</span>
+            <span class="value" id="statFailed">0</span>
+        </div>
+        <div class="stat-chip success">
+            <span class="label">Status</span>
+            <span class="value" id="statStatus">ACTIVE</span>
+        </div>
+    </div>
+
+    <div class="mission-brief" style="border-left-color:#ff6fa5">
+        <div class="mission-title" style="color:#ff6fa5">// Mission Briefing</div>
+        <p><strong>Scene:</strong> You have sat down with an old man who loves telling short stories about his younger days.</p>
+        <p><strong>How to play:</strong> Chat with an old man and try to work out the secret keyword.</p>
+        <p><strong>Clues:</strong> One hint word slips into every reply. Look for the pattern — those hints point to the keyword.</p>
+        <p><strong>Rules:</strong> The AI will not tell you in chat whether you are right. Pop your guess into the box below.</p>
+    </div>
+
+    <div class="chat-wrap">
+        <div class="chat-header">Chatting with an old man</div>
+        <div class="chat-container" id="chatContainer"></div>
+    </div>
+
+    <div class="input-row">
+        <input type="text" id="userInput" placeholder="Enter your message..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()" id="sendBtn">Send</button>
+    </div>
+
+    <div class="divider"><span>Keyword Submission</span></div>
+
+    <div class="guess-section">
+        <div class="guess-title">// Guess the Keyword</div>
+        <p class="guess-desc">Think you know the keyword for this station? Type it in below and see if you're right!</p>
+        <div class="input-row" style="margin-bottom:0;">
+            <input type="text" id="guessInput" placeholder="Enter keyword...">
+            <button class="guess-btn" onclick="checkGuess()" id="guessBtn">Submit</button>
+        </div>
+        <div id="guessStatus" class="status"></div>
+    </div>
+
+    <div class="footer">This is meant to be a fun activity 🙂<br>
+        Please do not try this on a real AI without consent — it may come with legal consequences.<br>
+        <a href="index.html">Back to Tournament Hub</a> &nbsp;·&nbsp; <a href="scoreboard.html">View Scoreboard</a>
+    </div>
+
+</div>
+
+<script>
+    // TODO: replace with your deployed Worker URL (same URL for every game page)
+    window.GAME_CONFIG = {
+        gameId: "game4",
+        workerUrl: "https://ictclubtournament.xu-yangen.workers.dev",
+        greeting: "Ah, pull up a chair. Did I ever tell you about the summer of '68?"
+    };
+</script>
+<script src="assets/game.js"></script>
+</body>
+</html>
