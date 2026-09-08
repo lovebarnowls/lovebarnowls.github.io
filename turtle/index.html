@@ -45,6 +45,15 @@
         background:var(--bg-dark);
         color:var(--accent);
     }
+
+    .no-lessons {
+        font-family:'Consolas','Courier New',monospace;
+        font-size:13px;
+        color:#666;
+        padding:12px 15px;
+        border-top:1px solid #2a2a2a;
+        font-style:italic;
+    }
 </style>
 </head>
 <body>
@@ -59,21 +68,42 @@
 
 <script>
     const container = document.getElementById('lesson-list');
-    for (let w = 1; w <= 7; w++) {
+
+    // Week 1 is now the orientation week — admin only, no lesson pages.
+    const orientationBlock = document.createElement('div');
+    orientationBlock.className = 'week-block';
+
+    const orientationTitle = document.createElement('div');
+    orientationTitle.className = 'week-title';
+    orientationTitle.textContent = 'Week 1';
+    orientationBlock.appendChild(orientationTitle);
+
+    const orientationNote = document.createElement('div');
+    orientationNote.className = 'no-lessons';
+    orientationNote.textContent = 'Orientation week';
+    orientationBlock.appendChild(orientationNote);
+
+    container.appendChild(orientationBlock);
+
+    // Folder names (w1–w7) are unchanged, but the displayed week number
+    // is now offset by one, since orientation occupies Week 1.
+    for (let folder = 1; folder <= 7; folder++) {
+        const displayWeek = folder + 1;
+
         const weekBlock = document.createElement('div');
         weekBlock.className = 'week-block';
 
         const weekTitle = document.createElement('div');
         weekTitle.className = 'week-title';
-        weekTitle.textContent = `Week ${w}`;
+        weekTitle.textContent = `Week ${displayWeek}`;
         weekBlock.appendChild(weekTitle);
 
         const links = document.createElement('div');
         links.className = 'lesson-links';
         for (let l = 1; l <= 2; l++) {
             const a = document.createElement('a');
-            a.href = `https://lovebarnowls.github.io/turtle/w${w}/L${l}`;
-            a.textContent = `Week ${w} Lesson ${l}`;
+            a.href = `https://lovebarnowls.github.io/turtle/w${folder}/L${l}`;
+            a.textContent = `Week ${displayWeek} Lesson ${l}`;
             links.appendChild(a);
         }
         weekBlock.appendChild(links);
