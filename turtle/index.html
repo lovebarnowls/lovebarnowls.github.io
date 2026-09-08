@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 8 Turtle Unit</title>
+<style>
+    :root { --bg-dark:#1e1e1e; --bg-panel:#252526; --border:#333; --accent:#4EC9B0; --text:#d4d4d4; }
+    body,html { margin:0; padding:0; height:100%; font-family:'Segoe UI',sans-serif; background:var(--bg-dark); color:var(--text); }
+
+    .header { height:50px; background:var(--bg-panel); display:flex; align-items:center; padding:0 20px; justify-content:space-between; border-bottom:1px solid var(--border); }
+    .logo { font-weight:bold; color:var(--accent); letter-spacing:1px; display:flex; align-items:center; gap:15px; }
+
+    .main-container { display:flex; flex-direction:column; align-items:center; min-height:calc(100% - 50px); width:100%; box-sizing:border-box; padding:40px 20px; }
+
+    .editor-wrap { width:100%; max-width:700px; background:var(--bg-panel); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+
+    .week-block { border-bottom:1px solid var(--border); }
+    .week-block:last-child { border-bottom:none; }
+
+    .week-title {
+        font-family:'Consolas','Courier New',monospace;
+        font-size:13px;
+        color:#555;
+        background:#1a1a1a;
+        padding:8px 15px;
+        letter-spacing:1px;
+        text-transform:uppercase;
+    }
+
+    .lesson-links { display:flex; flex-direction:column; }
+
+    .lesson-links a {
+        font-family:'Consolas','Courier New',monospace;
+        font-size:14px;
+        line-height:1.5;
+        color:var(--text);
+        text-decoration:none;
+        padding:12px 15px;
+        border-top:1px solid #2a2a2a;
+        transition:0.2s;
+    }
+
+    .lesson-links a:hover {
+        background:var(--bg-dark);
+        color:var(--accent);
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Year 8 Turtle Unit</div>
+</div>
+
+<div class="main-container">
+    <div class="editor-wrap" id="lesson-list"></div>
+</div>
+
+<script>
+    const container = document.getElementById('lesson-list');
+    for (let w = 1; w <= 7; w++) {
+        const weekBlock = document.createElement('div');
+        weekBlock.className = 'week-block';
+
+        const weekTitle = document.createElement('div');
+        weekTitle.className = 'week-title';
+        weekTitle.textContent = `Week ${w}`;
+        weekBlock.appendChild(weekTitle);
+
+        const links = document.createElement('div');
+        links.className = 'lesson-links';
+        for (let l = 1; l <= 2; l++) {
+            const a = document.createElement('a');
+            a.href = `https://lovebarnowls.github.io/turtle/w${w}/L${l}`;
+            a.textContent = `Week ${w} Lesson ${l}`;
+            links.appendChild(a);
+        }
+        weekBlock.appendChild(links);
+        container.appendChild(weekBlock);
+    }
+</script>
+
+</body>
+</html>
