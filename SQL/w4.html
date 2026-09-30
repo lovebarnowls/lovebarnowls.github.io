@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Year 9 Digital Technologies — Week 3 SQL Lab</title>
+<title>Year 9 Digital Technologies — Week 4 SQL Lab</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -132,7 +132,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <div class="header">
-  <div class="logo">⚑ Year 9 DigiTech — Week 3</div>
+  <div class="logo">⚑ Year 9 DigiTech — Week 4</div>
   <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
   <div class="student-badge" id="student-badge">—</div>
   <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
@@ -224,7 +224,7 @@ const LAB_DATA = [
     title: "Introduction",
     questions: [],
     instructions: `
-      <h2>Week 3 — Counting, Grouping and Aggregating</h2>
+      <h2>Week 4 — Counting, Grouping and Aggregating</h2>
       <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:14px 16px;margin-bottom:14px;color:#bbb;font-size:13px;line-height:1.8;">
        This week's dataset: a fictional library with members, books with food-pun titles, and a borrow history. For this week we learn to count rows, group results, and filter those groups — turning raw data into meaningful summaries. <br>
        As mentioned, the lab is for all lessons this week.</div>
@@ -1069,7 +1069,7 @@ function showComplete() {
   const lab    = LAB_DATA[index];
   const isLast = index >= LAB_DATA.length - 1;
   document.getElementById("complete-text").textContent =
-    isLast ? "You have completed all Week 3 labs. Submit your flags via the Microsoft Form."
+    isLast ? "You have completed all Week 4 labs. Submit your flags via the Microsoft Form."
            : (lab.completeText || "Well done! Move on to the next lab.");
   document.getElementById("complete-modal").classList.add("open");
 }
