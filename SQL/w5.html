@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Year 9 Digital Technologies — Week 4 SQL Lab</title>
+<title>Year 9 Digital Technologies — Week 5 SQL Lab</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -118,7 +118,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <div class="header">
-  <div class="logo">⚑ Year 9 DigiTech — Week 4</div>
+  <div class="logo">⚑ Year 9 DigiTech — Week 5</div>
   <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
   <div class="student-badge" id="student-badge">—</div>
   <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
@@ -230,7 +230,7 @@ const LAB_DATA = [
     title: "Introduction",
     questions: [],
     instructions: `
-      <h2>Week 4 — JOIN and Revision</h2>
+      <h2>Week 5 — JOIN and Revision</h2>
       <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:14px 16px;margin-bottom:14px;color:#bbb;font-size:13px;line-height:1.8;">
         This week's dataset: an online grocery store with customers, products, orders, and order line items. All data is fictional.<br> Students can choose to work either on revision labs OR extension labs. <br>This week introduces JOIN to connect tables, plus INSERT to add new data. The RevLabs are revision of all prior weeks on fresh data.]
       </div>
@@ -325,7 +325,7 @@ const LAB_DATA = [
 <div class="task-box">
   <strong>Your task</strong>
   Open the INSERT sandbox via the link below. Complete the guided activity, then return here and click Complete to move on.<br><br>
-  <a href="https://lovebarnowls.github.io/SQL/w4i.html" target="_blank" style="color:var(--accent);font-family:var(--mono);font-size:12px;">lovebarnowls.github.com/SQL/w4insert.html ↗</a>
+  <a href="https://lovebarnowls.github.io/SQL/w5i.html" target="_blank" style="color:var(--accent);font-family:var(--mono);font-size:12px;">lovebarnowls.github.com/SQL/w5i.html ↗</a>
 </div>
     `
   },
@@ -946,7 +946,7 @@ function showComplete() {
   const lab    = LAB_DATA[index];
   const isLast = index >= LAB_DATA.length - 1;
   document.getElementById("complete-text").textContent =
-    isLast ? "You have completed all Week 4 labs. Submit your flags via the Microsoft Form."
+    isLast ? "You have completed all Week 5 labs. Submit your flags via the Microsoft Form."
            : (lab.completeText || "Well done! Move on to the next lab.");
   document.getElementById("complete-modal").classList.add("open");
 }
