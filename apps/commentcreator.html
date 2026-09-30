@@ -228,8 +228,8 @@ function setN(n){
 
 function csvCell(v){ const s = String(v ?? ""); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }
 function toCSV(rows){ return "\ufeff" + rows.map(r => r.map(csvCell).join(",")).join("\r\n"); }
-function download(name, text){
-  const url = URL.createObjectURL(new Blob([text], {type:"text/csv;charset=utf-8"}));
+function download(name, data, mime){
+  const url = URL.createObjectURL(new Blob([data], {type:mime || "text/csv;charset=utf-8"}));
   const a = h("a", {href:url, download:name}); document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
@@ -274,12 +274,86 @@ function applyBank(b){
 function fmtDate(iso){ try { return new Date(iso).toLocaleString("en-AU", {day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit"}); } catch(e){ return ""; } }
 
 /* ---------- bank file import/export ---------- */
-function exportBank(){
-  const rows = [["Section","Label","A","B","C","D","E"]];
-  rows.push(["Opening","", state.opening,"","","",""]);
-  for (const c of state.criteria) rows.push([c.id.toUpperCase(), c.label, c.A, c.B, c.C, c.D, c.E]);
-  rows.push(["Closing","", ...GRADES.map(g => state.closing[g])]);
-  download("comment-bank.csv", toCSV(rows));
+/* Bank file layout (one sheet):
+   Row 1 (optional header): Criterion | A | B | C | D | E
+   One row per criterion, in C1, C2, C3 order: label in column A, then the A to E comments.
+   "Opening" row: each filled cell from column B is one line.
+   "Closing" row: A to E closing lines, chosen by the overall grade.
+   "Order" row: the comment order, e.g. 2 3 4 1. Leave it out to use 1 2 3 4. */
+const BANK_HEADER = ["Criterion (label only, not in comments)","A","B","C","D","E"];
+function bankRows(b){
+  const rows = [BANK_HEADER];
+  const byNum = [...b.criteria].sort((x,y) => num(x.id) - num(y.id));
+  for (const c of byNum) rows.push([c.label, c.A, c.B, c.C, c.D, c.E]);
+  const lines = String(b.opening || "").split("\n");
+  const open = lines.length > 5 ? [...lines.slice(0,4), lines.slice(4).join("\n")] : lines;
+  rows.push(["Opening", ...open]);
+  rows.push(["Closing", ...GRADES.map(g => b.closing[g] || "")]);
+  rows.push(["Order", b.criteria.map(c => num(c.id)).join(" ")]);
+  return rows;
+}
+const HOW_TO = [
+  ["How to fill in the comment bank"],
+  [""],
+  ["Column A is the criterion label. It is only there to help you; it never appears in a comment."],
+  ["Columns B to F are the comments for grades A, B, C, D and E."],
+  ["Criterion rows go in C1, C2, C3 order, matching the grade columns in your student file."],
+  ["Opening row: every filled cell from column B becomes one line at the start of each comment."],
+  ["Closing row: one line per overall grade, A to E."],
+  ["Order row: the order the criteria are joined in, e.g. 2 3 4 1. Delete the row to use 1 2 3 4."],
+  ["[name] is replaced with the student's first name anywhere it appears."],
+  ["A blank comment cell is fine; the page will warn you if a student needs it."],
+  ["Only the first sheet is read, so this sheet can stay or go."]
+];
+function downloadXlsx(name, rows){
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = [{wch:30}, {wch:48}, {wch:48}, {wch:48}, {wch:48}, {wch:48}];
+  const help = XLSX.utils.aoa_to_sheet(HOW_TO); help["!cols"] = [{wch:100}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Comment bank");
+  XLSX.utils.book_append_sheet(wb, help, "How to use");
+  download(name, XLSX.write(wb, {type:"array", bookType:"xlsx"}), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+}
+function exportBank(){ downloadXlsx("comment-bank.xlsx", bankRows(bankSnapshot())); }
+function bankTemplate(count){
+  const n = count || state.n || 4;
+  const sample = [
+    ["Criterion 1", "You [did the task] accurately, with specific and detailed examples.", "You [did the task] effectively, with relevant examples.", "You [did the task], with general examples.", "You partially [did the task], with limited examples.", "Your [task] was incomplete."]
+  ];
+  const criteria = Array.from({length:n}, (_,i) => {
+    const r = i === 0 ? sample[0] : [`Criterion ${i+1}`, "", "", "", "", ""];
+    return {id:"c"+(i+1), label:r[0], A:r[1], B:r[2], C:r[3], D:r[4], E:r[5]};
+  });
+  downloadXlsx(`comment-bank-template-${n}-criteria.xlsx`, bankRows({
+    criteria, opening:"Hi [name],\nThank you for your submission.",
+    closing:{A:"Excellent work, [name]!", B:"Great work, [name]!", C:"Good work, [name]!", D:"Good effort, [name].", E:"Please let me know if you need more help next time, [name]."}
+  }));
+}
+
+function parseSimple(rows){
+  let start = 0;
+  const r0 = rows[0] || [];
+  if (GRADES.every((g,i) => norm(r0[i+1]) === g.toLowerCase())) start = 1;
+  const b = {opening:"", closing:{A:"",B:"",C:"",D:"",E:""}, criteria:[]};
+  let orderText = "";
+  for (const r of rows.slice(start)){
+    if (!r.some(v => String(v).trim())) continue;
+    const key = norm(r[0]);
+    if (key === "opening") b.opening = r.slice(1).filter(v => String(v).trim()).join("\n");
+    else if (key === "closing") GRADES.forEach((g,i) => b.closing[g] = r[i+1] || "");
+    else if (key === "order") orderText = r.slice(1).join(" ");
+    else {
+      const i = b.criteria.length + 1;
+      b.criteria.push({id:"c"+i, label:String(r[0]).trim() || "Criterion "+i, A:r[1]||"",B:r[2]||"",C:r[3]||"",D:r[4]||"",E:r[5]||""});
+    }
+  }
+  if (!b.criteria.length) return null;
+  b.n = b.criteria.length;
+  const nums = orderText.split(/[^0-9]+/).filter(Boolean).map(Number);
+  const one = nums.length === 1 && b.n < 10 && String(nums[0]).length === b.n ? String(nums[0]).split("").map(Number) : nums;
+  if (one.length === b.n && new Set(one).size === b.n && one.every(x => x >= 1 && x <= b.n))
+    b.criteria = one.map(x => b.criteria[x-1]);
+  return b;
 }
 
 function parseBank(rows){
@@ -293,15 +367,22 @@ function parseBank(rows){
       else if (/^c\d+$/.test(sec)) b.criteria.push({oldId:sec, label:r[1]||"", A:r[2]||"",B:r[3]||"",C:r[4]||"",D:r[5]||"",E:r[6]||""});
     }
     if (!b.criteria.length) return null;
-    // renumber c1..cN by original number, keep row order as comment order
     const sorted = [...b.criteria].sort((x,y) => num(x.oldId) - num(y.oldId));
     sorted.forEach((c,i) => c.id = "c"+(i+1));
     b.criteria.forEach(c => delete c.oldId);
     b.n = b.criteria.length;
     return b;
   }
-  // Legacy layout from the old Excel comment creator:
-  // rows 1–6 criteria (A–E in columns A–E, label in column H), row 7 closing, row 8 opening.
+  const r0 = rows[0] || [];
+  const simple = rows.some(r => ["opening","closing","order"].includes(norm(r[0]))) ||
+                 GRADES.every((g,i) => norm(r0[i+1]) === g.toLowerCase());
+  if (simple) return parseSimple(rows);
+  return parseLegacy(rows) || parseSimple(rows);
+}
+
+// Layout of the original Excel comment creator:
+// rows 1–6 criteria (A–E in columns A–E, label in column H), row 7 closing, row 8 opening.
+function parseLegacy(rows){
   const b = {opening:"", closing:{A:"",B:"",C:"",D:"",E:""}, criteria:[]};
   for (let i = 0; i < 6; i++){
     const r = rows[i] || [];
@@ -310,9 +391,9 @@ function parseBank(rows){
                      A:r[0]||"",B:r[1]||"",C:r[2]||"",D:r[3]||"",E:r[4]||""});
   }
   const cl = rows[6] || [], op = rows[7] || [];
+  if (!b.criteria.length || !op.slice(0,5).some(v => /\[name\]/i.test(v)) && !cl.slice(0,5).some(v => /\[name\]/i.test(v))) return null;
   GRADES.forEach((g,i) => b.closing[g] = cl[i] || "");
   b.opening = op.slice(0,5).filter(s => (s||"").trim()).join("\n");
-  if (!b.criteria.length) return null;
   b.n = b.criteria.length;
   return b;
 }
@@ -321,7 +402,7 @@ async function importBankFile(file){
   let t;
   try { t = await readTable(file); } catch(e){ alert("That file could not be read. Use a .csv, .xlsx or .xls file."); return; }
   const b = parseBank(t.rows(t.sheetNames[0]));
-  if (!b){ alert("No comment bank was found in that file. Download a bank from this page to see the expected layout."); return; }
+  if (!b){ alert("No comment bank was found in that file. Use Download template to see the layout."); return; }
   if (state.n !== null && b.n !== state.n){
     const ok = confirm(`This bank has ${b.n} criteria, but you are set up for ${state.n}. Switch to ${b.n}?` +
       (b.n < state.n ? ` Grades for C${b.n+1} onwards will be removed from the student table.` : ""));
@@ -387,7 +468,9 @@ function viewSetup(){
       h("div", {class:"row"},
         saved ? h("button", {class:"btn primary", onclick:() => { applyBank(saved); setN(saved.n); state.bankDirty = false; showTab("bank"); }},
                   `Open saved bank (${saved.n} criteria, saved ${fmtDate(saved.savedAt)})`) : null,
-        h("button", {class:"btn", onclick:() => $("#bankFile").click()}, "Load bank file (.csv, .xlsx, .xls)")))
+        h("button", {class:"btn", onclick:() => $("#bankFile").click()}, "Load bank file (.xlsx, .xls, .csv)"),
+        h("button", {class:"btn quiet", onclick:() => bankTemplate(parseInt(sel.value, 10))}, "Download template")),
+      h("p", {class:"hint"}, "The template has one row per criterion: the label in column A, then the A to E comments. It uses the number of criteria chosen above."))
   );
 }
 
@@ -406,8 +489,9 @@ function viewBank(){
     state.bankDirty ? "Unsaved changes to the bank" : saved ? `Saved on this computer, ${fmtDate(saved.savedAt)}` : "Not saved yet");
   frag.append(h("div", {class:"toolbar"}, status,
     h("button", {class:"btn primary", onclick:e => { if (saveBank()) showTab("bank"); }}, "Save bank on this computer"),
-    h("button", {class:"btn", onclick:exportBank}, "Download bank (.csv)"),
+    h("button", {class:"btn", onclick:exportBank}, "Download bank (.xlsx)"),
     h("button", {class:"btn", onclick:() => $("#bankFile").click()}, "Load bank file"),
+    h("button", {class:"btn quiet", onclick:() => bankTemplate()}, "Download template"),
     saved ? h("button", {class:"btn quiet danger", onclick:() => { if (confirm("Remove the saved bank from this computer? What is on screen stays until you close the tab.")){ forgetBank(); state.bankDirty = true; showTab("bank"); } }}, "Forget saved bank") : null));
 
   frag.append(h("section", {class:"panel opening"},
