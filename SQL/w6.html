@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Year 9 Digital Technologies — Week 5 Formative Assessment</title>
+<title>Year 9 Digital Technologies — Week 6 Formative Assessment</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -141,7 +141,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <div class="header">
-  <div class="logo">⚑ Year 9 DigiTech — Week 5 Formative</div>
+  <div class="logo">⚑ Year 9 DigiTech — Week 6 Formative</div>
   <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
   <div class="student-badge" id="student-badge">—</div>
   <button class="btn btn-complete" onclick="showComplete()">✔ Complete</button>
@@ -233,7 +233,7 @@ const LAB_DATA = [
     title: "Introduction",
     questions: [],
     instructions: `
-      <h2>Week 5 — Formative Assessment</h2>
+      <h2>Week 6 — Formative Assessment</h2>
       <p>This week is different. There are no step-by-step labs. Instead, you are a <strong style="color:var(--accent)">data detective</strong>.</p>
       <p>The database this week contains results from a school swimming carnival. It looks clean. It is not entirely clean. Your job is to investigate it and write up what you find.</p>
 
@@ -859,7 +859,7 @@ function showComplete() {
   const lab    = LAB_DATA[index];
   const isLast = index >= LAB_DATA.length - 1;
   document.getElementById("complete-text").textContent =
-    isLast ? "You have completed all Week 5 tasks. Submit your written findings via the Teams assignment sheet, and your flags via the Microsoft Form."
+    isLast ? "You have completed all Week 6 tasks. Submit your written findings via the Teams assignment sheet, and your flags via the Microsoft Form."
            : (lab.completeText || "Well done! Move on to the next section.");
   document.getElementById("complete-modal").classList.add("open");
 }
