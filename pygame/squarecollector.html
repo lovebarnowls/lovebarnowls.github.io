@@ -164,7 +164,10 @@ MSG_COLLECT = "Collected! Score: "
 
 # ============================================================
 
-#There will be a scary looking warning when you Run the Game. It will say something about no fc_cache font cache. This is to be expected because of the way this IDE is set up. However, if you see ERROR and not WARNING....
+# There will be a scary looking warning when you Run the Game. It will say something about no fc_cache font cache.
+# This is to be expected because of the way this IDE is set up, and you can ignore it.
+# However, if you see an ERROR (not a WARNING), something in your code needs fixing.
+# Read the LAST line of the error first: it usually tells you what went wrong and on which line.
 
 game_running = True
 score = 0
@@ -360,7 +363,7 @@ await main()</textarea>
                 submitCooldownUntil = Date.now() + 60000;
                 startCooldownTimer();
                 closeSubmitModal();
-                log("Submitted for teacher review.", "log-sys");
+                log("Submitted for Teacher Yang's review.", "log-sys");
             } else {
                 document.getElementById("submit-cooldown").textContent = "Error: " + data.error;
             }
@@ -410,6 +413,114 @@ await main()</textarea>
         updateLineNumbers();
     }
 
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
     // ── PYODIDE ───────────────────────────────────────────────────────────────
     let pyodide       = null;
     let isRunning     = false;
@@ -448,6 +559,11 @@ await main()</textarea>
             document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
 
             await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
 
             document.getElementById('progress').style.width = '100%';
 
@@ -496,6 +612,7 @@ await main()</textarea>
 
     async function stopGame() {
         if (!pyodide) return;
+        stopAllSounds();
         try { await pyodide.runPythonAsync("game_running = False"); } catch(e) {}
         isRunning = false;
         document.getElementById('run-btn').disabled  = false;
@@ -505,8 +622,11 @@ await main()</textarea>
     }
 
     async function runGame() {
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
         if (!pyodide) return;
         if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
         document.getElementById('console-output').innerHTML = '';
         log('Starting...', 'log-sys');
         document.getElementById('run-btn').disabled  = true;
@@ -516,6 +636,7 @@ await main()</textarea>
         document.getElementById('canvas').focus();
         const code = document.getElementById('code-editor').value;
         try {
+            installSoundModule();
             await pyodide.runPythonAsync(code);
         } catch (err) {
             log('Error: ' + err, 'log-error');
