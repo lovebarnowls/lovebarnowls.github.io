@@ -254,7 +254,7 @@
                 Press <strong>Render</strong> to preview your page
             </div>
             <iframe id="preview-frame" style="display:none;"
-                sandbox="allow-scripts allow-same-origin"></iframe>
+                sandbox="allow-scripts allow-same-origin" allow="autoplay"></iframe>
         </div>
     </div>
 
@@ -263,7 +263,9 @@
 <script>
 // ── TEMPLATE ──────────────────────────────────────────────────────────────────
 // This is what students see in the editor.
-// Image placeholders __IMAGE_0_DATA__ and __IMAGE_1_DATA__ are injected at export time.
+// Images and sounds are NOT stored in the template. buildFinalHTML() adds them
+// as a small script (window.WRAPPER_ASSETS) just after <head> at render/export
+// time, so nothing in the student's text can be lost in a .txt round trip.
 
 const TEMPLATE = `<!DOCTYPE html>
 <!--
@@ -286,7 +288,10 @@ const TEMPLATE = `<!DOCTYPE html>
   - HTML does NOT show you error messages the same way Python does.
     If your page goes blank or the game does not start, the bug
     is in your pygame code. Go fix it in the Game IDE first.
-  - Audio is not supported in this browser-based environment.
+  - Sound works here exactly as it does in the Game IDE:
+        from sounds import play_sound
+    Only the eight class sounds are available. They are added to
+    your page automatically when you press RENDER or EXPORT .HTML.
   - Use EXPORT .TXT if you want to keep editing next session.
     Re-upload your images when you come back.
   ============================================================
@@ -327,6 +332,7 @@ const TEMPLATE = `<!DOCTYPE html>
        Change what appears on your page here.
        Add your name, a description, move stuff around, whatever you like.
        Make sure you keep the disclaimer about the Game taking time to load so that when you send it to friends and family they don't get frustrated.
+       Also keep the line with id="load-status". It tells players when the game is ready.
   ============================================================ -->
 
   <h1>My Game</h1>
@@ -335,7 +341,7 @@ const TEMPLATE = `<!DOCTYPE html>
 
   <p>&#9203; Game may take about 1 minute to load. Please be patient!</p>
 
-  <p>Click Start to play!</p>
+  <p id="load-status">&#9203; Loading game engine...</p>
 
   <canvas id="canvas" width="800" height="600"></canvas>
   <br>
@@ -418,51 +424,165 @@ await main()
 
   <!-- ============================================================
        DO NOT TOUCH ANYTHING BELOW THIS LINE
-       This section loads the Python engine that runs your game.
+       This section loads the Python engine that runs your game,
+       and Teacher Yang's sound helper.
        If you change anything here your game will likely break.
   ============================================================ -->
+  <script type="text/python" id="sounds-module">
+"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+  <\/script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"><\/script>
   <script>
     let pyodide = null;
+    let isReady = false;
     let isRunning = false;
+    let audioCtx = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+    const assets = window.WRAPPER_ASSETS || { images: [], sounds: {} };
+
+    function setLoadStatus(msg) {
+      const el = document.getElementById("load-status");
+      if (el) el.textContent = msg;
+    }
+
+    function base64ToBytes(b64) {
+      const raw = atob(b64);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      return arr;
+    }
+
+    async function loadSounds() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audioCtx = new AC();
+      const sounds = assets.sounds || {};
+      await Promise.all(Object.keys(sounds).map(async function (name) {
+        try {
+          soundBuffers[name] = await audioCtx.decodeAudioData(base64ToBytes(sounds[name]).buffer);
+        } catch (e) {
+          console.warn("Could not load sound: " + name);
+        }
+      }));
+    }
+
+    function pyPlaySound(name, volume) {
+      if (!audioCtx || !soundBuffers[name]) return false;
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const src = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      src.buffer = soundBuffers[name];
+      gain.gain.value = volume;
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.onended = function () { activeSounds.delete(src); };
+      activeSounds.add(src);
+      src.start();
+      return true;
+    }
+
+    function stopAllSounds() {
+      activeSounds.forEach(function (src) {
+        try { src.stop(); } catch (e) {}
+      });
+      activeSounds.clear();
+    }
 
     async function initPyodide() {
-      pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
-      await pyodide.loadPackage("pygame-ce");
-      pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
-      pyodide.setStdout({ batched: (m) => console.log(m) });
-      pyodide.setStderr({ batched: (m) => console.warn(m) });
+      try {
+        pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
+        await pyodide.loadPackage("pygame-ce");
+        pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+        pyodide.setStdout({ batched: (m) => console.log(m) });
+        pyodide.setStderr({ batched: (m) => console.warn(m) });
 
-      // Write uploaded images into the virtual filesystem
-      const images = __IMAGES_JSON__;
-      for (const img of images) {
-        const raw = atob(img.data);
-        const arr = new Uint8Array(raw.length);
-        for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-        pyodide.FS.writeFile(img.name, arr);
+        // Write uploaded images into the virtual filesystem
+        for (const img of (assets.images || [])) {
+          pyodide.FS.writeFile(img.name, base64ToBytes(img.data));
+        }
+
+        // Sounds and the sounds module
+        await loadSounds();
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", document.getElementById("sounds-module").textContent);
+        pyodide.runPython("import sys; sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None");
+
+        isReady = true;
+        setLoadStatus("✅ Ready! Click Start to play.");
+      } catch (e) {
+        console.error(e);
+        setLoadStatus("❌ The game could not load. Check your internet connection and refresh the page.");
       }
     }
 
     initPyodide();
 
     async function runGame() {
-      if (!pyodide) return;
+      // Unlock audio straight away, while the browser still counts this as a click.
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      if (!isReady) {
+        setLoadStatus("⏳ Still loading. Please wait a moment and press Start again.");
+        return;
+      }
       if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+      stopAllSounds();
       isRunning = true;
       document.getElementById("canvas").focus();
       const code = document.getElementById("game-code").textContent;
-      try { await pyodide.runPythonAsync(code); }
+      try {
+        pyodide.runPython("import sys; sys.modules.pop('sounds', None)");
+        await pyodide.runPythonAsync(code);
+      }
       catch (e) { console.error(e); }
       finally { isRunning = false; }
     }
 
     async function stopGame() {
-      if (!pyodide) return;
+      stopAllSounds();
+      if (!isReady) return;
       try { await pyodide.runPythonAsync("game_running = False"); } catch(e) {}
       isRunning = false;
     }
   <\/script>
- 
+
 
 </body>
 </html>`;
@@ -495,16 +615,68 @@ function clearSlot(slotIndex) {
     document.getElementById('slot-name-' + slotIndex).textContent = '—';
 }
 
+// ── SOUNDS ────────────────────────────────────────────────────────────────────
+// The eight class sounds, fetched once from GitHub Pages and kept as base64
+// so they can be embedded in every render and export.
+const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+const soundData   = {};      // { name: base64 }
+let soundsLoaded  = false;
+let soundsMissing = [];
+
+function bytesToBase64(bytes) {
+    let bin = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+        bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+}
+
+async function loadSoundData() {
+    const missing = [];
+    await Promise.all(SOUND_NAMES.map(async (name) => {
+        try {
+            const resp = await fetch(SOUND_BASE + name + ".mp3");
+            if (!resp.ok) throw new Error("HTTP " + resp.status);
+            soundData[name] = bytesToBase64(new Uint8Array(await resp.arrayBuffer()));
+        } catch (err) {
+            missing.push(name);
+        }
+    }));
+    soundsMissing = missing;
+    soundsLoaded = true;
+    if (missing.length) setStatus('⚠ Sounds missing: ' + missing.join(', '));
+}
+
 // ── BUILD FINAL HTML ──────────────────────────────────────────────────────────
-// Takes the raw editor content and injects image data.
+// Adds the images and sounds as a small script just after <head>.
+// Nothing in the student's text needs a placeholder, so a .txt round trip
+// can never break it.
 function buildFinalHTML(editorContent) {
-    const images = imageSlots.filter(Boolean).map(s => ({ name: s.name, data: s.b64 }));
-    const imagesJSON = JSON.stringify(images);
-    return editorContent.replace('__IMAGES_JSON__', imagesJSON);
+    const assets = {
+        images: imageSlots.filter(Boolean).map(s => ({ name: s.name, data: s.b64 })),
+        sounds: soundData,
+    };
+    // Escape "<" so nothing inside the data can close the script tag early.
+    const json = JSON.stringify(assets).replace(/</g, '\\u003c');
+    const tag  = '<script>window.WRAPPER_ASSETS = ' + json + ';<\/script>';
+    const headTag = /<head(\s[^>]*)?>/i;   // matches <head> but not <header>
+    if (headTag.test(editorContent)) {
+        return editorContent.replace(headTag, m => m + '\n' + tag);
+    }
+    return tag + '\n' + editorContent;
+}
+
+function soundsStillLoading() {
+    if (soundsLoaded) return false;
+    alert("The class sounds are still loading. Please wait a few seconds and try again.");
+    return true;
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function renderPreview() {
+    if (soundsStillLoading()) return;
     const content = document.getElementById('code-editor').value;
     const finalHTML = buildFinalHTML(content);
 
@@ -520,23 +692,25 @@ function renderPreview() {
 
 // ── EXPORT HTML ───────────────────────────────────────────────────────────────
 function exportHTML() {
+    if (soundsStillLoading()) return;
     const content = document.getElementById('code-editor').value;
     const finalHTML = buildFinalHTML(content);
     const name = studentName ? studentName.toLowerCase().replace(/\s+/g, '-') : 'student';
     download(name + '-game-page.html', finalHTML, 'text/html');
-    setStatus('Exported as .html');
+    setStatus(soundsMissing.length
+        ? '⚠ Exported, but these sounds were missing: ' + soundsMissing.join(', ')
+        : 'Exported as .html');
 }
 
 // ── EXPORT TXT ────────────────────────────────────────────────────────────────
-// Strips base64 image data from __IMAGES_JSON__ — keeps code lean for editing.
+// Saves exactly what is in the editor. Images and sounds are never in the
+// editor text, so the file stays small and can be pasted straight back in.
 function exportTXT() {
     let content = document.getElementById('code-editor').value;
-    // Replace image JSON with an empty array so the file is clean
-    content = content.replace('__IMAGES_JSON__', '[]');
-    // Add a reminder comment at top
     const reminder = `<!--
-  NOTE: Images have been removed from this .txt export to keep the file small.
-  Re-upload your images in the IDE when you are ready to export as .html again.
+  NOTE: Your images are not saved in this .txt file, to keep it small.
+  Next session, paste this whole file into the editor and re-upload your images.
+  The class sounds are added automatically when you Render or Export .html.
 -->
 `;
     content = reminder + content;
@@ -624,6 +798,8 @@ function handleTab(e) {
 function setStatus(msg) {
     document.getElementById('status').textContent = msg;
 }
+
+loadSoundData();
 </script>
 </body>
 </html>
