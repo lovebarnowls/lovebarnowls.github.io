@@ -24,6 +24,18 @@
         .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
         .info-modal-actions { text-align:center; }
 
+        .hint-modal-box { background:#252526; color:#d4d4d4; padding:24px 28px; border-radius:10px; max-width:640px; width:92%; max-height:85vh; overflow-y:auto; border:1px solid #f0a500; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .hint-block { border-left:3px solid #f0a500; background:#1e1e1e; padding:10px 14px; margin-bottom:12px; border-radius:0 4px 4px 0; }
+        .hint-block.answer { border-left-color:#4EC9B0; }
+        .hint-block h3 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#f0a500; }
+        .hint-block.answer h3 { color:#4EC9B0; }
+        .hint-text { font-size:14px; line-height:1.65; white-space:pre-wrap; margin:0; }
+        .answer-code-wrap { position:relative; margin-top:10px; }
+        .answer-code { background:#111; color:#d4d4d4; font-family:'Consolas',monospace; font-size:13px; line-height:1.5; padding:12px 14px; border:1px solid #333; border-radius:4px; white-space:pre; overflow-x:auto; margin:0; }
+        .btn-copy { position:absolute; top:6px; right:6px; background:#4EC9B0; color:#1e1e1e; font-size:11px; padding:4px 10px; }
+        .btn-copy:hover:not(:disabled) { background:#3ab89f; }
+        .hint-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
         /* ── CORE ───────────────────────────────────────────────────────────── */
         body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
@@ -111,6 +123,17 @@
   </div>
 </div>
 
+<!-- HINT LADDER MODAL -->
+<div class="info-modal-overlay" id="hint-modal">
+  <div class="hint-modal-box">
+    <div id="hint-modal-content"></div>
+    <div class="hint-modal-actions">
+      <button class="btn-hint" id="hint-next-btn" onclick="showHint()">💡 Next hint</button>
+      <button class="btn-grey" onclick="closeHintModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING SCREEN -->
 <div id="loading-screen">
     <h2 style="color:#ce3c3c; margin:0;">🎮 w1L1 — Variables and Scope</h2>
@@ -125,7 +148,7 @@
     </div>
     <div class="header-controls">
         <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
-        <button class="btn-hdr btn-hint" onclick="showHint()">💡 Hint</button>
+        <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
         <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
         <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
         <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
@@ -172,23 +195,25 @@
 <script>
     // ================================================================
     // LAB DATA
-    // Each lab: title, code (the instructions live in the comments),
-    // hint (shown by the Hint button) and completeText.
+    // Each lab: id (used in the address, e.g. #lab1a), title,
+    // code (the instructions live in the comments), hints (three, each
+    // deeper than the last), answer (explanation and where to paste),
+    // answerCode (the code to paste, optional) and completeText.
     // The last lab can have finalText instead of completeText.
     // ================================================================
     const LESSON = "w1L1";
 
     var LAB_DATA = [
     {
-        id: 1,
+        id: "1a",
 
-        title: "Lab 1: Meet Blip",
+        title: "Lab 1a: Meet Blip",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 1: MEET BLIP
+#  w1L1 LAB 1a: MEET BLIP
 # ============================================================
 # This is Blip. Blip is a square. Blip is not very exciting yet.
 # Press Run to see Blip.
@@ -203,21 +228,9 @@ import asyncio
 # Next lesson we will pull it apart line by line.
 #
 # TASK 1a
-#   Change BLIP_COLOUR to a different colour.
+#   Change Blip's colour.
 #   Colours are (red, green, blue), each from 0 to 255.
 #   Try (255, 0, 255). What colour is that?
-#
-# TASK 1b
-#   Move Blip to the top-left corner of the screen.
-#   You need to change TWO settings!
-#   The screen is 800 wide and 600 tall.
-#   Careful: (0, 0) is the TOP-left, not the bottom-left!
-#
-# EXTENSION (optional)
-#   Move Blip into the bottom-right corner, touching both edges
-#   with no gap. Careful: BLIP_X and BLIP_Y set Blip's TOP-left corner.
-#   Then: can you make Blip stay in that corner whatever BLIP_SIZE is,
-#   so you only ever change BLIP_SIZE? (You may need to move a line.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -247,7 +260,6 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
-
         # flip() shows everything we have drawn.
         # Some pygame tutorials use pygame.display.update() instead.
         pygame.display.flip()
@@ -262,20 +274,95 @@ async def main():
 
 await main()`,
 
-        hint: "Task 1a\nColours are three numbers: (red, green, blue). Each one goes from 0 (none) to 255 (full).\n\nTask 1b\nx counts pixels from the LEFT edge. y counts pixels DOWN from the TOP edge. So (0, 0) is the top-left corner.\n\nExtension\nThe bottom-right corner of the screen is at (800, 600). If Blip's top-left corner went there, where would the rest of Blip be? Python can do sums in a setting, for example  BLIP_X = 800 - 50",
+        hints: [
+            "Look in the STUDENT ZONE: SETTINGS. One of those lines controls Blip's colour.",
+            "The line is  BLIP_COLOUR = (0, 200, 80). The three numbers are red, green and blue, each from 0 to 255. Change the numbers, then press Stop and Run.",
+            "(255, 0, 0) is pure red. (0, 0, 255) is pure blue. (255, 255, 0) is red and green mixed, which makes yellow. Any three numbers from 0 to 255 will work."
+        ],
 
-        completeText: "Great work! You have changed a program just by changing its variables.\nClick OK to move on to Lab 2."
+        answer: "BLIP_COLOUR holds Blip's colour as (red, green, blue). Change the numbers and you change the colour.\n\nReplace the line\n    BLIP_COLOUR = (0, 200, 80)\nwith the line below (it has no indent). Then press Stop and Run.",
+
+        answerCode: `BLIP_COLOUR = (255, 0, 255)`,
+
+        completeText: "You changed a program just by changing a variable.\nClick OK to move on to Lab 1b."
     },
     {
-        id: 2,
+        id: "1b",
 
-        title: "Lab 2: The Mystery Error",
+        title: "Lab 1b: Blip's Starting Position",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 2: THE MYSTERY ERROR
+#  w1L1 LAB 1b: BLIP'S STARTING POSITION
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 1b
+#   Move Blip to the top-left corner of the screen.
+#   You need to change TWO settings!
+#   The screen is 800 wide and 600 tall.
+#   Careful: (0, 0) is the TOP-left, not the bottom-left!
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (255, 0, 255)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Blip's position is stored in two settings. Which two settings have X and Y in their names?",
+            "BLIP_X is how many pixels Blip is from the LEFT edge. BLIP_Y is how many pixels Blip is from the TOP edge. To sit in the top-left corner, how far from each edge should Blip be?",
+            "Zero pixels from the left, and zero pixels from the top."
+        ],
+
+        answer: "(0, 0) is the top-left corner of a pygame screen. x counts across from the left, and y counts DOWN from the top.\n\nReplace the two lines\n    BLIP_X      = 375\n    BLIP_Y      = 275\nwith the two lines below (no indent).",
+
+        answerCode: `BLIP_X      = 0
+BLIP_Y      = 0`,
+
+        completeText: "Blip is in the corner. Remember: y counts DOWN from the top.\nClick OK for Lab 2a."
+    },
+    {
+        id: "2a",
+
+        title: "Lab 2a: The Mystery Error",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 2a: THE MYSTERY ERROR
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
@@ -291,16 +378,7 @@ import asyncio
 # lowercase is for variables that WILL change while the program runs.
 #
 # TASK 2a
-#   Fix the error. Use the Hint button if you are stuck.
-#
-# TASK 2b
-#   Write a function called move_down() that moves Blip
-#   100 pixels down. Call it once, under the two move_blip() lines.
-#
-# EXTENSION (optional)
-#   Write a function called grow() that doubles blip_size.
-#   Call it once. Then look at main() further down: it already
-#   says "global game_running". Can you now explain why?
+#   Fix the error.
 #
 # When you are done, click "Complete" at the top.
 
@@ -344,20 +422,112 @@ async def main():
 
 await main()`,
 
-        hint: "Task 2a\nThe error says Python cannot access the LOCAL variable blip_x.\nInside move_blip(), the line  blip_x = blip_x + 100  CHANGES blip_x. When a function changes a variable, Python assumes it is a brand new local variable that belongs only to that function. That new local blip_x has no value yet, so there is nothing to add 100 to.\nThe fix: the first line inside move_blip() should be\n    global blip_x\n\nTask 2b\nCopy the pattern of your fixed move_blip(), but change blip_y instead.\n\nExtension\nDoubling means multiplying by 2. Ask yourself: does grow() CHANGE a variable from outside?",
+        hints: [
+            "Read the LAST line of the red error. Which variable is it complaining about, and what word does it use to describe that variable?",
+            "Python says blip_x is a LOCAL variable. Inside move_blip(), the line  blip_x = blip_x + 100  CHANGES blip_x, so Python assumes it is a brand new variable that belongs only to move_blip(). That new one has no value yet, so there is nothing to add 100 to.",
+            "You need to tell move_blip() that you mean the blip_x from OUTSIDE the function. There is a keyword for this. Look at main() further down: it uses that keyword for game_running."
+        ],
 
-        completeText: "You fixed your first scope error! Remember: if a function CHANGES a variable from outside, it needs global.\nClick OK to see a cleaner way."
+        answer: "The keyword global tells a function to use the variable from outside, instead of making a new local one.\n\nMake a new empty line straight under\n    def move_blip():\nand paste the line below there. The indent is already included.",
+
+        answerCode: `    global blip_x`,
+
+        completeText: "You fixed your first scope error! If a function CHANGES a variable from outside, it needs global.\nClick OK for Lab 2b."
     },
     {
-        id: 3,
+        id: "2b",
 
-        title: "Lab 3: In and Out",
+        title: "Lab 2b: Move Down",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 3: IN AND OUT
+#  w1L1 LAB 2b: MOVE DOWN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# move_blip() works now. Blip needs another move.
+#
+# TASK 2b
+#   Write a function called move_down() that moves Blip 100 pixels down.
+#   Then call it once, under the two move_blip() lines.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def move_blip():
+    global blip_x
+    blip_x = blip_x + 100
+
+move_blip()
+move_blip()
+print("Blip is at x =", blip_x)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "move_blip() already works. move_down() is almost the same function. What needs to be different?",
+            "move_down() needs to change blip_y instead of blip_x. It changes a variable from outside, so it needs global too.",
+            "Writing a function does not run it. After writing move_down(), you also have to CALL it: write  move_down()  on its own line, under the two move_blip() lines."
+        ],
+
+        answer: "move_down() is a copy of move_blip() that changes blip_y instead. Defining the function is not enough: it only runs when it is called.\n\nReplace everything from\n    def move_blip():\ndown to the second\n    move_blip()\nwith the code below.",
+
+        answerCode: `def move_blip():
+    global blip_x
+    blip_x = blip_x + 100
+
+def move_down():
+    global blip_y
+    blip_y = blip_y + 100
+
+move_blip()
+move_blip()
+move_down()`,
+
+        completeText: "You wrote and called your own function.\nClick OK for Lab 3a."
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: In and Out",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 3a: IN AND OUT
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
@@ -374,22 +544,12 @@ import asyncio
 #     blip_x = moved(blip_x, 100)
 #     ^ the returned answer is stored back in blip_x
 #
-# Notice: no "global" needed. The function never touches blip_x.
-# It just does a calculation and hands back the answer.
+# No "global" needed. The function never touches blip_x.
+# It just does a sum and hands back the answer.
 #
 # TASK 3a
 #   Change the code so Blip moves 3 times, 150 pixels each time.
 #   Where does Blip end up? Check the console.
-#
-# TASK 3b
-#   Write a function bigger(size) that RETURNS size times 2.
-#   Use it to make Blip twice as big:  blip_size = bigger(blip_size)
-#
-# EXTENSION (optional)
-#   Write a function swap_colour(colour) that returns the colour
-#   with red and blue swapped. For example (0, 200, 80) should come
-#   back as (80, 200, 0). Use it on blip_colour.
-#   Hint: you can unpack a colour like this:  r, g, b = colour
 #
 # When you are done, click "Complete" at the top.
 
@@ -433,36 +593,118 @@ async def main():
 
 await main()`,
 
-        hint: "Task 3a\nLook closely at how moved() is used:\n    blip_x = moved(blip_x, 100)\nThe right side runs first: moved() works out the answer and RETURNS it. Then the left side stores that answer back in blip_x. You need three of these lines.\n\nTask 3b\nbigger() follows exactly the same pattern as moved(), with one parameter instead of two.\n\nExtension\nInside swap_colour(), the line  r, g, b = colour  splits the colour into three variables. Then return them in a different order:  return (b, g, r)",
+        hints: [
+            "Find the two lines that use moved(). What two values are being passed in?",
+            "blip_x = moved(blip_x, 100)  moves Blip 100 pixels. To move 150, change the 100. To move 3 times, you need 3 of these lines.",
+            "Blip starts at 100. Three moves of 150 is 450 more. So the console should say x = 550."
+        ],
 
-        completeText: "Parameters in, return values out. That is how most functions in real programs work.\nClick OK for the prediction puzzles."
+        answer: "Each call to moved() returns the new position, and the line stores it back in blip_x.\n\nReplace the two lines\n    blip_x = moved(blip_x, 100)\n    blip_x = moved(blip_x, 100)\nwith the three lines below (no indent).",
+
+        answerCode: `blip_x = moved(blip_x, 150)
+blip_x = moved(blip_x, 150)
+blip_x = moved(blip_x, 150)`,
+
+        completeText: "Parameters in, return values out. That is how most functions in real programs work.\nClick OK for Lab 3b."
     },
     {
-        id: 4,
+        id: "3b",
 
-        title: "Lab 4: Predict the Output",
+        title: "Lab 3b: Bigger",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 3b: BIGGER
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 3b
+#   Write a function bigger(size) that RETURNS size times 2.
+#   Use it to make Blip twice as big:
+#       blip_size = bigger(blip_size)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+blip_colour = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def moved(x, amount):
+    return x + amount
+
+blip_x = moved(blip_x, 150)
+blip_x = moved(blip_x, 150)
+blip_x = moved(blip_x, 150)
+print("Blip is at x =", blip_x)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, blip_colour, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "bigger() takes ONE value in (size) and sends one value back out. Look at moved() for the pattern.",
+            "Inside bigger(), the only line you need is a return. In Python, times is written with *.",
+            "Writing the function is not enough. You must call it AND store the answer:  blip_size = bigger(blip_size)"
+        ],
+
+        answer: "bigger() works out size * 2 and returns it. The line underneath stores that answer in blip_size.\n\nMake a new empty line straight under\n    return x + amount\nand paste the code below there. The indents are already included.",
+
+        answerCode: `def bigger(size):
+    return size * 2
+
+blip_size = bigger(blip_size)`,
+
+        completeText: "Blip is twice the size, and no global was needed.\nClick OK for Lab 4a."
+    },
+    {
+        id: "4a",
+
+        title: "Lab 4a: Predict the Output",
 
         code: `# ============================================================
-#  w1L1 LAB 4: PREDICT THE OUTPUT
+#  w1L1 LAB 4a: PREDICT THE OUTPUT
 # ============================================================
 # No game this time. Just the console.
 #
-# For EACH puzzle below:
+# For each puzzle below:
 #   1. Read the code.
 #   2. Write your prediction in the comment underneath it.
-#   3. Only press Run once you have predicted every puzzle you are doing.
+#   3. Only then press Run, and check.
 #
-# If you were wrong about one, that is the useful part!
+# If you were wrong, that is the useful part!
 # Work out WHY before you click Complete.
 #
 # TASK 4a
-#   Puzzles 1 and 2.
+#   Predict Puzzles 1 and 2, then Run.
 #
-# TASK 4b
-#   Puzzle 3.
-#
-# EXTENSION (optional)
-#   Puzzle 4.
+# When you are done, click "Complete" at the top.
 
 # ---------------- PUZZLE 1 ----------------
 score = 10
@@ -486,8 +728,40 @@ def lose_life():
 lose_life()
 lose_life()
 print("Puzzle 2, lives:", lives)
-# My prediction:  lives = ___
+# My prediction:  lives = ___`,
 
+        hints: [
+            "In Puzzle 1, look inside add_points(). Does it say global?",
+            "Without global,  score = 50  inside add_points() makes a NEW local variable called score. It only exists inside the function. The score outside is a different variable.",
+            "In Puzzle 2, lose_life() DOES say global, so it changes the real lives. Count how many times it is called."
+        ],
+
+        answer: "Puzzle 1 prints  inside: 50  and  outside: 10. add_points() made its own local score, and the outside score never changed.\n\nPuzzle 2 prints  lives: 1. global lives means the function changes the real one, and two calls take it from 3 down to 1.",
+
+        completeText: "Click OK for Lab 4b."
+    },
+    {
+        id: "4b",
+
+        title: "Lab 4b: Predict the Output",
+
+        code: `# ============================================================
+#  w1L1 LAB 4b: PREDICT THE OUTPUT
+# ============================================================
+# No game this time. Just the console.
+#
+# For each puzzle below:
+#   1. Read the code.
+#   2. Write your prediction in the comment underneath it.
+#   3. Only then press Run, and check.
+#
+# If you were wrong, that is the useful part!
+# Work out WHY before you click Complete.
+#
+# TASK 4b
+#   Predict Puzzle 3, then Run.
+#
+# When you are done, click "Complete" at the top.
 
 # ---------------- PUZZLE 3 ----------------
 def double(n):
@@ -497,8 +771,287 @@ def double(n):
 coins = 5
 double(coins)
 print("Puzzle 3, coins:", coins)
-# My prediction:  coins = ___
+# My prediction:  coins = ___`,
 
+        hints: [
+            "double() returns an answer. Follow that answer: where does it go?",
+            "The line  double(coins)  calls the function, but nothing on that line stores what comes back.",
+            "A returned value that is not stored is thrown away. Did coins itself ever change?"
+        ],
+
+        answer: "Puzzle 3 prints  coins: 5. double() worked out 10, but nothing stored the answer, so it was thrown away.\n\nTo keep the answer, the line would need to be  coins = double(coins)",
+
+        completeText: "That is all the core tasks for w1L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+    },
+    {
+        id: "1ext",
+
+        title: "Lab 1ext: Corner Blip (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 1ext: CORNER BLIP (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Move Blip into the bottom-right corner, touching both edges
+#   with no gap. Careful: BLIP_X and BLIP_Y set Blip's TOP-left corner.
+#
+#   Then: can you make Blip stay in that corner whatever BLIP_SIZE is,
+#   so you only ever need to change BLIP_SIZE? (You may need to move a line.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_X      = 0
+BLIP_Y      = 0
+BLIP_SIZE   = 50
+BLIP_COLOUR = (255, 0, 255)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "BLIP_X and BLIP_Y set where Blip's TOP-LEFT corner goes. If that corner went at (800, 600), where would the rest of Blip be?",
+            "Blip is BLIP_SIZE pixels wide. To touch the right edge, Blip's left side must be BLIP_SIZE pixels in from 800. Python can do sums in a setting, for example  BLIP_X = 800 - 50",
+            "To make it work for any size, use BLIP_SIZE itself in the sum. Python reads from top to bottom, so BLIP_SIZE must be set on a line ABOVE the lines that use it."
+        ],
+
+        answer: "Blip's top-left corner has to be BLIP_SIZE pixels in from each edge. Using BLIP_SIZE in the sum means it works for any size. BLIP_SIZE must come first, because Python reads from top to bottom.\n\nReplace the three lines\n    BLIP_X      = 0\n    BLIP_Y      = 0\n    BLIP_SIZE   = 50\nwith the lines below (no indent). Try changing 120 to other sizes.",
+
+        answerCode: `BLIP_SIZE   = 120
+BLIP_X      = 800 - BLIP_SIZE
+BLIP_Y      = 600 - BLIP_SIZE`,
+
+        completeText: "Settings can be calculated from other settings. Click OK for the next extension."
+    },
+    {
+        id: "2ext",
+
+        title: "Lab 2ext: Grow (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 2ext: GROW (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Write a function called grow() that doubles blip_size.
+#   Call it once, under move_down().
+#
+#   Then look at main() further down: it says "global game_running".
+#   Can you explain why it needs that?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def move_blip():
+    global blip_x
+    blip_x = blip_x + 100
+
+def move_down():
+    global blip_y
+    blip_y = blip_y + 100
+
+move_blip()
+move_blip()
+move_down()
+print("Blip is at x =", blip_x)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "grow() is like move_blip(), but it changes blip_size.",
+            "Doubling means multiplying by 2:  blip_size * 2. Does grow() CHANGE a variable from outside? Then what does it need?",
+            "For the question: what does main() do to game_running when the window is closed? Where was game_running first created?"
+        ],
+
+        answer: "grow() changes blip_size, which was created outside the function, so it needs global. main() is the same: it sets game_running to False when the window closes, and game_running was created outside main(). The Stop button changes that same global game_running too.\n\nReplace everything from\n    def move_blip():\ndown to\n    move_down()\nwith the code below.",
+
+        answerCode: `def move_blip():
+    global blip_x
+    blip_x = blip_x + 100
+
+def move_down():
+    global blip_y
+    blip_y = blip_y + 100
+
+def grow():
+    global blip_size
+    blip_size = blip_size * 2
+
+move_blip()
+move_blip()
+move_down()
+grow()`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "3ext",
+
+        title: "Lab 3ext: Swap Colour (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 3ext: SWAP COLOUR (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Write a function swap_colour(colour) that returns the colour
+#   with red and blue swapped. For example (0, 200, 80) should come
+#   back as (80, 200, 0). Use it on blip_colour.
+#   Hint: you can unpack a colour like this:  r, g, b = colour
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+blip_colour = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def moved(x, amount):
+    return x + amount
+
+def bigger(size):
+    return size * 2
+
+blip_size = bigger(blip_size)
+
+blip_x = moved(blip_x, 150)
+blip_x = moved(blip_x, 150)
+blip_x = moved(blip_x, 150)
+print("Blip is at x =", blip_x)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, blip_colour, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "swap_colour() takes one colour in and returns one colour out, just like bigger() takes one size in and returns one size out.",
+            "Inside swap_colour(), the line  r, g, b = colour  splits the colour into three separate variables.",
+            "Now return the three variables in a different order:  return (b, g, r). Then store the answer:  blip_colour = swap_colour(blip_colour)"
+        ],
+
+        answer: "swap_colour() splits the colour into r, g and b, then returns them with r and b swapped.\n\nMake a new empty line straight under\n    blip_size = bigger(blip_size)\nand paste the code below there. The indents are already included.",
+
+        answerCode: `def swap_colour(colour):
+    r, g, b = colour
+    return (b, g, r)
+
+blip_colour = swap_colour(blip_colour)`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "4ext",
+
+        title: "Lab 4ext: Predict the Output (extension)",
+
+        code: `# ============================================================
+#  w1L1 LAB 4ext: PREDICT THE OUTPUT (EXTENSION)
+# ============================================================
+# No game this time. Just the console.
+#
+# For each puzzle below:
+#   1. Read the code.
+#   2. Write your prediction in the comment underneath it.
+#   3. Only then press Run, and check.
+#
+# If you were wrong, that is the useful part!
+# Work out WHY before you click Complete.
+#
+# EXTENSION
+#   Predict Puzzle 4, then Run. Most people get this one wrong!
+#
+# When you are done, click "Complete" at the top.
 
 # ---------------- PUZZLE 4 ----------------
 speed = 2
@@ -511,45 +1064,42 @@ new_speed = boost(speed)
 print("Puzzle 4:", speed, new_speed)
 # My prediction:  ___  ___`,
 
-        hint: "Task 4a\nWhen the function sets a variable, does it say global? If not, the variable inside the function is a separate local one, and the outside one is untouched.\n\nTask 4b\nWhen a function RETURNS a value, does the code that called it store that value anywhere? A returned value that is not stored is thrown away.\n\nExtension\nA parameter is a local variable too, even when it has the same name as a variable outside.",
+        hints: [
+            "boost() has a parameter called speed. There is also a variable called speed outside the function. Are they the same variable?",
+            "A parameter is a local variable. Changing it inside boost() does not change the speed outside.",
+            "Only new_speed stores what boost() returned. What was speed before boost() was called?"
+        ],
 
-        completeText: "If you got them all right first time, you understand scope better than many adults who code!\nClick OK for the extension lab."
+        answer: "Puzzle 4 prints  2 12. The parameter speed is a local variable inside boost(), even though it has the same name as the speed outside. The outside speed stays 2. Only new_speed gets the returned 12.",
+
+        completeText: "Click OK for the last extension."
     },
     {
-        id: 5,
+        id: "5ext",
 
-        title: "Lab 5 (Extension): Global Detox",
+        title: "Lab 5ext: Global Detox (extension)",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 5 (EXTENSION): GLOBAL DETOX
+#  w1L1 LAB 5ext: GLOBAL DETOX (EXTENSION)
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
 # This program works, but it uses "global" three times.
 # Run it and note where Blip ends up. The console tells you.
 #
-# YOUR MISSION: rewrite move_right(), move_down() and grow()
-# so they use PARAMETERS and RETURN values instead of global
-# (just like moved() in Lab 3).
+# EXTENSION
+#   Rewrite move_right(), move_down() and grow() so they use
+#   PARAMETERS and RETURN values instead of global (like moved() in Lab 3a).
 #
-# Rules:
-#   - No "global" anywhere except "global game_running" in main().
-#   - Blip must end up in exactly the same place, at exactly the same size.
-#     The console should still print:  x = 400, y = 250, size = 70
+#   Rules:
+#     - No "global" anywhere except "global game_running" in main().
+#     - Blip must end up in exactly the same place, at exactly the same size.
+#       The console should still print:  x = 400, y = 250, size = 70
 #
-# TASK 5a
-#   Rewrite move_right().
-#
-# TASK 5b
-#   Rewrite all three.
-#
-# EXTENSION (optional)
-#   Replace move_right() and move_down() with ONE function
-#   that can move Blip in any direction, e.g. moved(x, y, dx, dy).
-#   Hint: a function can return two values:  return x, y
+# When you are done, click "Complete" at the top.
 
 # ============================================================
 #  STUDENT ZONE: SETTINGS
@@ -602,9 +1152,29 @@ async def main():
 
 await main()`,
 
-        hint: "Task 5a\nmove_right() needs to take blip_x IN as a parameter and RETURN the new value. Then change where it is called:\n    blip_x = move_right(blip_x)\nRun it and check the console still prints x = 400, y = 250, size = 70.\n\nTask 5b\nDo the same for move_down() and grow(), one at a time, running after each change.\n\nExtension\nA function can return two values at once, and you can store both at once:\n    blip_x, blip_y = moved(blip_x, blip_y, 150, 0)",
+        hints: [
+            "Start with move_right(). Look back at moved() in Lab 3a: it takes a value in and returns the new value, with no global.",
+            "move_right(x) should return x + 150. Then the call changes too:  blip_x = move_right(blip_x). Run after each change and check the console still says x = 400, y = 250, size = 70.",
+            "move_down() and grow() follow exactly the same pattern: move_down(y) returns y + 150, and grow(size) returns size + 30. Every call must store the answer."
+        ],
 
-        finalText: "Congratulations on completing w1L1!\nYou now know variables, local and global scope, parameters and return values. Next lesson, Blip starts moving."
+        answer: "Each function now takes its value in as a parameter and returns the new value. Each call stores the answer back in the right variable, so no global is needed.\n\nReplace everything from\n    def move_right():\ndown to the last\n    move_right()\nwith the code below.",
+
+        answerCode: `def move_right(x):
+    return x + 150
+
+def move_down(y):
+    return y + 150
+
+def grow(size):
+    return size + 30
+
+blip_x = move_right(blip_x)
+blip_y = move_down(blip_y)
+blip_size = grow(blip_size)
+blip_x = move_right(blip_x)`,
+
+        finalText: "Congratulations on completing every lab in w1L1!\nYou know variables, local and global scope, parameters and return values. Next lesson, Blip starts moving."
     }
     ];
 
@@ -638,10 +1208,13 @@ await main()`,
             opt.text = lab.title;
             select.appendChild(opt);
         });
-        // Open a specific lab from the address, e.g. w1l1.html#lab3
-        const m = location.hash.match(/^#lab(\d+)$/i);
-        let start = m ? parseInt(m[1], 10) - 1 : 0;
-        start = Math.max(0, Math.min(LAB_DATA.length - 1, start));
+        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        const m = location.hash.match(/^#lab(.+)$/i);
+        let start = 0;
+        if (m) {
+            const found = LAB_DATA.findIndex(l => l.id.toLowerCase() === m[1].toLowerCase());
+            if (found >= 0) start = found;
+        }
         select.value = start;
         loadLab();
     }
@@ -654,9 +1227,10 @@ await main()`,
         const lab = LAB_DATA[index];
         editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
         editor().scrollTop = 0;
-        try { history.replaceState(null, "", "#lab" + (index + 1)); } catch (e) {}
+        try { history.replaceState(null, "", "#lab" + lab.id); } catch (e) {}
         document.getElementById("console-output").innerHTML = "";
         log("Loaded: " + lab.title, "log-sys");
+        updateHintButton();
         updateLineNumbers();
     }
 
@@ -687,8 +1261,98 @@ await main()`,
         }
     }
 
+    // ── HINT LADDER ───────────────────────────────────────────────────────────
+    // Each press of Hint goes one level deeper: hint 1, 2, 3, then the answer.
+    // Levels are remembered per lab while the page is open.
+    const hintLevels = {};
+
+    function hintLabel(level, total) {
+        if (level < total) return "💡 Hint " + (level + 1) + " of " + total;
+        if (level === total) return "🏳 Show answer";
+        return "🏳 Answer";
+    }
+
+    function updateHintButton() {
+        const lab = LAB_DATA[currentLab];
+        const total = (lab.hints || []).length;
+        const level = hintLevels[currentLab] || 0;
+        document.getElementById("hint-btn").textContent = hintLabel(level, total);
+        const next = document.getElementById("hint-next-btn");
+        next.style.display = level > total ? "none" : "";
+        next.textContent = level < total ? "💡 Next hint" : "🏳 Show answer";
+    }
+
+    function addBlock(parent, heading, text, isAnswer) {
+        const block = document.createElement("div");
+        block.className = "hint-block" + (isAnswer ? " answer" : "");
+        const h = document.createElement("h3");
+        h.textContent = heading;
+        const p = document.createElement("p");
+        p.className = "hint-text";
+        p.textContent = text;
+        block.appendChild(h);
+        block.appendChild(p);
+        parent.appendChild(block);
+        return block;
+    }
+
     function showHint() {
-        openInfoModal("💡", LAB_DATA[currentLab].hint || "There is no hint for this lab. Re-read the comments at the top of the code.", false);
+        const lab = LAB_DATA[currentLab];
+        const hints = lab.hints || [];
+        let level = hintLevels[currentLab] || 0;
+        if (level <= hints.length) level++;          // go one level deeper
+        hintLevels[currentLab] = level;
+
+        const box = document.getElementById("hint-modal-content");
+        box.innerHTML = "";
+        for (let i = 0; i < Math.min(level, hints.length); i++) {
+            addBlock(box, "Hint " + (i + 1) + " of " + hints.length, hints[i], false);
+        }
+        if (level > hints.length) {
+            const block = addBlock(box, "Answer", lab.answer || "", true);
+            if (lab.answerCode) {
+                const wrap = document.createElement("div");
+                wrap.className = "answer-code-wrap";
+                const pre = document.createElement("pre");
+                pre.className = "answer-code";
+                pre.textContent = lab.answerCode;
+                const btn = document.createElement("button");
+                btn.className = "btn-copy";
+                btn.textContent = "Copy";
+                btn.onclick = function () { copyText(lab.answerCode, btn); };
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+                block.appendChild(wrap);
+            }
+        }
+        updateHintButton();
+        document.getElementById("hint-modal").classList.add("open");
+        box.lastChild.scrollIntoView({ block: "nearest" });
+    }
+
+    function closeHintModal() {
+        document.getElementById("hint-modal").classList.remove("open");
+    }
+
+    function copyText(text, btn) {
+        function done() {
+            btn.textContent = "Copied!";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else {
+            fallbackCopy(text); done();
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
     }
 
     function showComplete() {
@@ -703,7 +1367,7 @@ await main()`,
     // ── EXPORT CODE ───────────────────────────────────────────────────────────
     function exportCode() {
         const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
-        const file = name + "-" + LESSON + "-lab" + (currentLab + 1) + ".txt";
+        const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
         a.download = file;
