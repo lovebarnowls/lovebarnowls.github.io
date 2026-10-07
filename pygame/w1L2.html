@@ -24,6 +24,18 @@
         .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
         .info-modal-actions { text-align:center; }
 
+        .hint-modal-box { background:#252526; color:#d4d4d4; padding:24px 28px; border-radius:10px; max-width:640px; width:92%; max-height:85vh; overflow-y:auto; border:1px solid #f0a500; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .hint-block { border-left:3px solid #f0a500; background:#1e1e1e; padding:10px 14px; margin-bottom:12px; border-radius:0 4px 4px 0; }
+        .hint-block.answer { border-left-color:#4EC9B0; }
+        .hint-block h3 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#f0a500; }
+        .hint-block.answer h3 { color:#4EC9B0; }
+        .hint-text { font-size:14px; line-height:1.65; white-space:pre-wrap; margin:0; }
+        .answer-code-wrap { position:relative; margin-top:10px; }
+        .answer-code { background:#111; color:#d4d4d4; font-family:'Consolas',monospace; font-size:13px; line-height:1.5; padding:12px 14px; border:1px solid #333; border-radius:4px; white-space:pre; overflow-x:auto; margin:0; }
+        .btn-copy { position:absolute; top:6px; right:6px; background:#4EC9B0; color:#1e1e1e; font-size:11px; padding:4px 10px; }
+        .btn-copy:hover:not(:disabled) { background:#3ab89f; }
+        .hint-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
         /* ── CORE ───────────────────────────────────────────────────────────── */
         body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
@@ -111,6 +123,17 @@
   </div>
 </div>
 
+<!-- HINT LADDER MODAL -->
+<div class="info-modal-overlay" id="hint-modal">
+  <div class="hint-modal-box">
+    <div id="hint-modal-content"></div>
+    <div class="hint-modal-actions">
+      <button class="btn-hint" id="hint-next-btn" onclick="showHint()">💡 Next hint</button>
+      <button class="btn-grey" onclick="closeHintModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING SCREEN -->
 <div id="loading-screen">
     <h2 style="color:#ce3c3c; margin:0;">🎮 w1L2 — The Frame Cycle</h2>
@@ -125,7 +148,7 @@
     </div>
     <div class="header-controls">
         <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
-        <button class="btn-hdr btn-hint" onclick="showHint()">💡 Hint</button>
+        <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
         <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
         <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
         <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
@@ -172,23 +195,25 @@
 <script>
     // ================================================================
     // LAB DATA
-    // Each lab: title, code (the instructions live in the comments),
-    // hint (shown by the Hint button) and completeText.
+    // Each lab: id (used in the address, e.g. #lab1a), title,
+    // code (the instructions live in the comments), hints (three, each
+    // deeper than the last), answer (explanation and where to paste),
+    // answerCode (the code to paste, optional) and completeText.
     // The last lab can have finalText instead of completeText.
     // ================================================================
     const LESSON = "w1L2";
 
     var LAB_DATA = [
     {
-        id: 1,
+        id: "1a",
 
-        title: "Lab 1: Blip Moves",
+        title: "Lab 1a: Blip Moves",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L2 LAB 1: BLIP MOVES
+#  w1L2 LAB 1a: BLIP MOVES
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
@@ -209,16 +234,8 @@ import asyncio
 # main(), so main() can change it without needing "global".
 #
 # TASK 1a
-#   Change BLIP_SPEED. What happens with a negative number?
-#
-# TASK 1b
-#   Make Blip move diagonally.
-#   Hint: blip_y needs to change every frame too.
-#
-# EXTENSION (optional)
-#   Blip disappears off the right edge forever.
-#   Make Blip reappear on the left instead (a "screen wrap").
-#   Hint: you need an "if" in the UPDATE section.
+#   Change BLIP_SPEED. Try a bigger number.
+#   Then try a negative number. What happens?
 #
 # When you are done, click "Complete" at the top.
 
@@ -264,20 +281,100 @@ async def main():
 
 await main()`,
 
-        hint: "Task 1a\nTry a small negative number like -3. Watch which way Blip goes.\n\nTask 1b\nEvery frame, the UPDATE section adds BLIP_SPEED to blip_x. That is the only reason Blip moves. To move down as well, blip_y needs something added to it every frame too.\n\nExtension\nCheck whether Blip has gone past the right edge (x is bigger than 800). If it has, set blip_x back to a number that puts Blip just off the LEFT edge.",
+        hints: [
+            "Find BLIP_SPEED in the STUDENT ZONE: SETTINGS.",
+            "Every frame, the UPDATE section adds BLIP_SPEED to blip_x. A bigger number means Blip jumps further each frame, so it looks faster.",
+            "Adding a negative number makes blip_x SMALLER every frame. Which direction is smaller x? And where does Blip start?"
+        ],
 
-        completeText: "You have found the four jobs every frame does: handle events, update, draw, flip.\nClick OK to move on."
+        answer: "A negative speed makes blip_x smaller every frame, so Blip moves left. Blip starts at x = 0, so it slides straight off the left edge and is gone.\n\nTo see it, replace the line\n    BLIP_SPEED  = 3\nwith the line below (no indent).",
+
+        answerCode: `BLIP_SPEED  = -3`,
+
+        completeText: "You found the four jobs every frame does: handle events, update, draw, flip.\nClick OK for Lab 1b."
     },
     {
-        id: 2,
+        id: "1b",
 
-        title: "Lab 2: Painting Over",
+        title: "Lab 1b: Diagonal Blip",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L2 LAB 2: PAINTING OVER
+#  w1L2 LAB 1b: DIAGONAL BLIP
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 1b
+#   Make Blip move diagonally: right AND down at the same time.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_SPEED  = 3
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    blip_x = 0
+    blip_y = 275
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Which of the four sections of the loop makes Blip move? Look for the comment with the number 2.",
+            "UPDATE adds BLIP_SPEED to blip_x every frame. Moving diagonally means BOTH blip_x and blip_y change every frame.",
+            "Add a second line in UPDATE that adds something to blip_y. Remember: y gets bigger going DOWN."
+        ],
+
+        answer: "Blip moves diagonally when x and y both change every frame.\n\nMake a new empty line straight under\n    blip_x = blip_x + BLIP_SPEED\nand paste the line below there. The indent is already included.",
+
+        answerCode: `        blip_y = blip_y + 1`,
+
+        completeText: "Click OK for Lab 2a."
+    },
+    {
+        id: "2a",
+
+        title: "Lab 2a: Painting Over",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L2 LAB 2a: PAINTING OVER
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
@@ -290,17 +387,6 @@ import asyncio
 # TASK 2a
 #   Put a # in front of screen.fill(BACKGROUND) to switch it off.
 #   Run it. What happens? Why? Then put the line back.
-#
-# TASK 2b
-#   Right now Blip slides IN FRONT of the wall.
-#   Make Blip slide BEHIND the wall instead.
-#   Hint: things drawn later go on top. Change one thing only.
-#
-# EXTENSION (optional)
-#   Make Blip slowly change colour as it moves.
-#   Hint: make Blip's red value go up by 1 every frame.
-#   A colour value cannot go above 255. What happens if it does?
-#   How could you stop that? (Look up the % operator.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -350,49 +436,116 @@ async def main():
 
 await main()`,
 
-        hint: "Task 2a\nThe screen is like a painting. Nothing is ever rubbed out: each new frame is painted on top of the last one. screen.fill() paints over everything first, so the old Blips disappear.\n\nTask 2b\nPython draws in the order the lines are written. Whatever is drawn LAST ends up on top.\n\nExtension\nYou need a variable for the red value, created before the loop (next to blip_x). Then draw Blip with the colour (red, 200, 80). The % operator gives the remainder after dividing: 256 % 256 is 0, so (red + 1) % 256 counts 254, 255, 0, 1...",
+        hints: [
+            "Find  screen.fill(BACKGROUND)  in the DRAW section.",
+            "Putting # at the start of a line turns it into a comment, so Python skips that line.",
+            "Run it and watch closely. Is the old Blip from the last frame ever rubbed out?"
+        ],
 
-        completeText: "Now you know why every frame starts by painting over the last one, and that draw order matters.\nClick OK for the speed problem."
+        answer: "The screen is like a painting: nothing is ever rubbed out. Each frame is painted on top of the last one. Without screen.fill(), every old Blip stays on the screen, leaving a trail.\n\nTo see it, replace the line\n    screen.fill(BACKGROUND)\nwith the line below. The indent is already included. Then put it back afterwards.",
+
+        answerCode: `        # screen.fill(BACKGROUND)`,
+
+        completeText: "Now you know why every frame starts by painting over the last one.\nClick OK for Lab 2b."
     },
     {
-        id: 3,
+        id: "2b",
 
-        title: "Lab 3: Too Fast?",
+        title: "Lab 2b: In Front or Behind?",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L2 LAB 3: TOO FAST?
+#  w1L2 LAB 2b: IN FRONT OR BEHIND?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 2b
+#   Right now Blip slides IN FRONT of the wall.
+#   Make Blip slide BEHIND the wall instead.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_SPEED  = 3
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+WALL_COLOUR = (120, 120, 160)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    blip_x = 0
+    blip_y = 275
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+        if blip_x > 800:
+            blip_x = -BLIP_SIZE
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, WALL_COLOUR, (375, 150, 50, 300))
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Look at the DRAW section. Which is drawn first, the wall or Blip?",
+            "Python draws in the order the lines are written. Whatever is drawn LAST ends up on top.",
+            "You do not need to write any new code. Just swap two lines around."
+        ],
+
+        answer: "Things drawn later go on top. Drawing the wall AFTER Blip puts the wall in front.\n\nReplace the two lines that draw the wall and Blip with the two lines below. The indents are already included.",
+
+        answerCode: `        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+        pygame.draw.rect(screen, WALL_COLOUR, (375, 150, 50, 300))`,
+
+        completeText: "Draw order matters. Click OK for Lab 3a."
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: How Fast Is Your Computer?",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L2 LAB 3a: HOW FAST IS YOUR COMPUTER?
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
 # Run this. The number in the top-left corner is FPS:
 # how many FRAMES PER SECOND your computer is drawing.
 #
-# Ask someone else what number THEIR computer shows.
-# Is it the same as yours?
-#
 # Blip moves BLIP_SPEED pixels every FRAME, not every second.
 # So a computer drawing 144 frames a second moves Blip more than
 # twice as fast as a computer drawing 60 frames a second.
 # That is a real problem when you send your game to someone else!
-#
-# YOUR MISSION: make this game run at about 60 FPS on every computer.
-#
-# Search for how pygame games limit their frame rate, and try your
-# idea here. Not every idea you find will work in this web IDE.
-# Finding one that does is part of the challenge.
-#
-# TASK 3a
-#   Find out what FPS your computer runs at, and write it here:  ___
-#
-# TASK 3b
-#   Get the game running at about 60 FPS.
-#
-# EXTENSION (optional)
-#   Get it running at about 30 FPS. Blip is now slower.
-#   Change BLIP_SPEED so Blip moves at the same speed as at 60 FPS.
 #
 # NEW WORDS (our class vocabulary):
 #   font.render(...)  turns text into a picture. In our class, RENDER
@@ -400,6 +553,10 @@ import asyncio
 #   screen.blit(picture, (x, y))  copies one picture onto another,
 #                     here onto the screen. Later blits go on top.
 #                     Nothing appears until you FLIP.
+#
+# TASK 3a
+#   Find out what FPS your computer runs at, and write it here:  ___
+#   Then ask someone else what number THEIR computer shows.
 #
 # When you are done, click "Complete" at the top.
 
@@ -463,44 +620,415 @@ async def main():
 
 await main()`,
 
-        hint: "Task 3a\nJust run it and wait a second for the number to appear.\n\nTask 3b\nIdea 1: most pygame tutorials use a Clock:\n    clock = pygame.time.Clock()     (before the loop)\n    clock.tick(60)                  (once every frame)\nTry it. Does it behave in this web IDE?\nIdea 2: every frame, our loop already pauses with  await asyncio.sleep(0). What if it paused for longer? How long is one sixtieth of a second?\n\nExtension\nAt 30 FPS there are half as many frames each second. How far must Blip move each frame to cover the same distance per second?",
+        hints: [
+            "Press Run and look at the top-left corner of the game.",
+            "The number takes one second to appear, because the game counts frames for a whole second first.",
+            "Type the number in the comment, where the ___ is. Most laptops show about 60. Gaming screens can show 120 or more."
+        ],
 
-        completeText: "You have solved a real problem that every game developer faces: the same game must run at the same speed on every computer.\nClick OK for the extension."
+        answer: "There is no single right answer. It depends on your screen. Most laptops show about 60 FPS, and gaming monitors show 120 to 165. That difference is the problem Lab 3b fixes.",
+
+        completeText: "Click OK for Lab 3b."
     },
     {
-        id: 4,
+        id: "3b",
 
-        title: "Lab 4 (Extension): Boing",
+        title: "Lab 3b: Too Fast?",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L2 LAB 4 (EXTENSION): BOING
+#  w1L2 LAB 3b: TOO FAST?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 3b
+#   Make this game run at about 60 FPS on every computer.
+#
+#   Search for how pygame games limit their frame rate, and try your
+#   idea here. Not every idea you find will work in this web IDE.
+#   Finding one that does is part of the challenge.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_SPEED  = 3
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 36)
+
+    blip_x = 0
+    blip_y = 275
+
+    frames = 0
+    fps = 0
+    last_check = pygame.time.get_ticks()   # milliseconds since the game started
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+        if blip_x > 800:
+            blip_x = -BLIP_SIZE
+
+        # Count frames. Once a whole second (1000 ms) has passed,
+        # the count IS the frames per second. Then start counting again.
+        frames = frames + 1
+        now = pygame.time.get_ticks()
+        if now - last_check >= 1000:
+            fps = frames
+            frames = 0
+            last_check = now
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+        label = font.render("FPS: " + str(fps), True, (255, 255, 255))
+        screen.blit(label, (10, 10))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Search for: pygame limit frame rate. What do most tutorials use?",
+            "Most pygame tutorials use a Clock:\n    clock = pygame.time.Clock()     (before the loop)\n    clock.tick(60)                  (once every frame)\nTry it. Does it behave in this web IDE?",
+            "Another idea: every frame, our loop already pauses with  await asyncio.sleep(0). What if it paused for longer? How long is one sixtieth of a second? (Python can do the sum for you: 1 / 60)"
+        ],
+
+        answer: "Our loop pauses for 0 seconds every frame. Pausing for one sixtieth of a second instead gives about 60 frames a second on every computer.\n\nReplace the line\n    await asyncio.sleep(0)\nwith the line below. The indent is already included.",
+
+        answerCode: `        await asyncio.sleep(1 / 60)`,
+
+        completeText: "You solved a real problem every game developer faces: the same game must run at the same speed on every computer.\nThat is all the core tasks for w1L2 done! The labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+    },
+    {
+        id: "1ext",
+
+        title: "Lab 1ext: Screen Wrap (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L2 LAB 1ext: SCREEN WRAP (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Blip disappears off the right edge forever.
+#   Make Blip reappear on the left instead (a "screen wrap").
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_SPEED  = 3
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    blip_x = 0
+    blip_y = 275
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "You need an if in the UPDATE section, to check something every frame.",
+            "Check whether Blip has gone past the right edge: is blip_x bigger than 800?",
+            "If it has, set blip_x back to a number that puts Blip on the left. Setting it to 0 works. Setting it to minus BLIP_SIZE is smoother, because Blip slides in from off the screen."
+        ],
+
+        answer: "Every frame, the if checks whether Blip is off the right edge. When it is, Blip is moved to just off the left edge, so it slides back in.\n\nMake a new empty line straight under\n    blip_x = blip_x + BLIP_SPEED\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        if blip_x > 800:
+            blip_x = -BLIP_SIZE`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "2ext",
+
+        title: "Lab 2ext: Colour Shift (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L2 LAB 2ext: COLOUR SHIFT (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make Blip slowly change colour as it moves.
+#   Hint: make Blip's red value go up by 1 every frame.
+#   A colour value cannot go above 255. What happens if it does?
+#   How could you stop that? (Look up the % operator.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_SPEED  = 3
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+WALL_COLOUR = (120, 120, 160)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    blip_x = 0
+    blip_y = 275
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+        if blip_x > 800:
+            blip_x = -BLIP_SIZE
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, WALL_COLOUR, (375, 150, 50, 300))
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "You need a variable for the red value. Create it before the loop, next to blip_x and blip_y:  red = 0",
+            "In UPDATE, add 1 to red every frame. In DRAW, draw Blip with the colour  (red, 200, 80)  instead of BLIP_COLOUR.",
+            "Without a limit, red reaches 256 and the game crashes. The % operator gives the remainder after dividing: 256 % 256 is 0. So  red = (red + 1) % 256  counts 254, 255, 0, 1, 2..."
+        ],
+
+        answer: "red goes up by 1 every frame, and % 256 wraps it back to 0 before it can pass 255. Blip is drawn with (red, 200, 80), so its colour shifts as red changes.\n\nThe change touches three places, so replace everything from\n    async def main():\ndown to the end of the code with the code below.",
+
+        answerCode: `async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    blip_x = 0
+    blip_y = 275
+    red = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+        if blip_x > 800:
+            blip_x = -BLIP_SIZE
+        red = (red + 1) % 256
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, WALL_COLOUR, (375, 150, 50, 300))
+        pygame.draw.rect(screen, (red, 200, 80), (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "3ext",
+
+        title: "Lab 3ext: Half Speed (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L2 LAB 3ext: HALF SPEED (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Get the game running at about 30 FPS. Blip is now slower.
+#   Change BLIP_SPEED so Blip moves at the same speed as it did at 60 FPS.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_SPEED  = 3
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 36)
+
+    blip_x = 0
+    blip_y = 275
+
+    frames = 0
+    fps = 0
+    last_check = pygame.time.get_ticks()   # milliseconds since the game started
+
+    while game_running:
+        # 1. HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE
+        blip_x = blip_x + BLIP_SPEED
+        if blip_x > 800:
+            blip_x = -BLIP_SIZE
+
+        # Count frames. Once a whole second (1000 ms) has passed,
+        # the count IS the frames per second. Then start counting again.
+        frames = frames + 1
+        now = pygame.time.get_ticks()
+        if now - last_check >= 1000:
+            fps = frames
+            frames = 0
+            last_check = now
+
+        # 3. DRAW
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+        label = font.render("FPS: " + str(fps), True, (255, 255, 255))
+        screen.blit(label, (10, 10))
+
+        # 4. FLIP
+        pygame.display.flip()
+        await asyncio.sleep(1 / 60)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "The game already runs at about 60 FPS because of  await asyncio.sleep(1 / 60). What would you change for 30?",
+            "At 30 FPS there are half as many frames every second. If Blip still moves 3 pixels per frame, it covers half the distance each second.",
+            "Pixels per second = BLIP_SPEED x FPS. At 60 FPS that is 3 x 60 = 180. At 30 FPS, what speed gives 180?"
+        ],
+
+        answer: "Half the frames means each frame must move twice as far: 6 x 30 = 180 pixels per second, the same as 3 x 60.\n\nReplace the line\n    BLIP_SPEED  = 3\nwith the line below (no indent).\n\nThen also replace\n    await asyncio.sleep(1 / 60)\nwith\n    await asyncio.sleep(1 / 30)",
+
+        answerCode: `BLIP_SPEED  = 6`,
+
+        completeText: "Click OK for the last extension."
+    },
+    {
+        id: "4ext",
+
+        title: "Lab 4ext: Boing (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w1L2 LAB 4ext: BOING (EXTENSION)
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
 # Blip now bounces off the left and right walls.
 # Read the UPDATE section to see how:
 #   when Blip hits a wall, speed_x is flipped to the opposite sign,
-#   so  3  becomes  -3  (move left)  and  -3  becomes  3  (move right).
+#   so  4  becomes  -4  (move left)  and  -4  becomes  4  (move right).
 #
 # speed_x is a variable now, not a CAPITAL setting, because it changes.
 #
-# TASK 4a
-#   Make Blip bounce off the top and bottom walls too.
-#   Hint: Blip needs a speed_y, and a second "if" that checks blip_y.
-#
-# TASK 4b
-#   Give Blip a random new colour every time it bounces.
-#   Hint: add "import random" at the top, then
-#   random.randint(0, 255) gives a random number from 0 to 255.
-#
-# EXTENSION (optional)
-#   Make Blip speed up a little every time it bounces,
-#   but never faster than a maximum speed you choose.
-#   Hint: a negative speed is still fast! Check how big it is,
-#   not just whether it is bigger than your maximum.
+# EXTENSION
+#   1. Make Blip bounce off the top and bottom walls too.
+#   2. Give Blip a random new colour every time it bounces.
+#      random.randint(0, 255) gives a random number from 0 to 255.
+#   3. Make Blip speed up a little every time it bounces,
+#      but never faster than a maximum speed you choose.
 #
 # When you are done, click "Complete" at the top.
 
@@ -509,6 +1037,7 @@ import asyncio
 # ============================================================
 START_SPEED = 4
 BLIP_SIZE   = 50
+MAX_SPEED   = 12
 BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
 # ============================================================
@@ -550,9 +1079,31 @@ async def main():
 
 await main()`,
 
-        hint: "Task 4a\nCopy the idea for x. You need a speed_y variable before the loop, a line that adds it to blip_y, and an if that checks the top (0) and bottom (600) edges.\n\nTask 4b\nBuild a colour from three random numbers:\n    colour = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))\nPut that inside the if that detects a bounce.\n\nExtension\nabs() gives the size of a number without its sign: abs(-7) is 7. Only speed up if abs(speed_x) is still below your maximum.",
+        hints: [
+            "Part 1: copy the idea for x. You need a speed_y variable before the loop, a line in UPDATE that adds it to blip_y, and an if that checks the top (0) and bottom (600) edges.",
+            "Part 2: build a colour from three random numbers:\n    colour = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))\nPut that inside an if that only runs when Blip bounces, or Blip will flash every frame.",
+            "Part 3: multiply the speed by a little more than 1 on each bounce, for example speed_x * 1.1. Only do it while the speed is below MAX_SPEED. Careful: a negative speed is still fast! abs() gives the size of a number without its sign: abs(-7) is 7."
+        ],
 
-        finalText: "Congratulations on completing Week 1!\nYou can now make things move, bounce, and run at the same speed on any computer. Next week: the player takes control."
+        answer: "A bounced variable records whether Blip hit any wall this frame. Only then does Blip get a new colour and a little more speed, and abs() stops a fast negative speed slipping past the maximum.\n\nStep 1: make a new empty line straight under\n    speed_x = START_SPEED\nand paste this line there (the indent is included):\n    speed_y = START_SPEED\n\nStep 2: replace the three lines of the UPDATE section with the code below. The indents are already included.",
+
+        answerCode: `        blip_x = blip_x + speed_x
+        blip_y = blip_y + speed_y
+        bounced = False
+        if blip_x <= 0 or blip_x + BLIP_SIZE >= 800:
+            speed_x = -speed_x
+            bounced = True
+        if blip_y <= 0 or blip_y + BLIP_SIZE >= 600:
+            speed_y = -speed_y
+            bounced = True
+        if bounced:
+            colour = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            if abs(speed_x) < MAX_SPEED:
+                speed_x = speed_x * 1.1
+            if abs(speed_y) < MAX_SPEED:
+                speed_y = speed_y * 1.1`,
+
+        finalText: "Congratulations on completing every lab in w1L2!\nYou can make things move, bounce, and run at the same speed on any computer. Next week, the player takes control."
     }
     ];
 
@@ -586,10 +1137,13 @@ await main()`,
             opt.text = lab.title;
             select.appendChild(opt);
         });
-        // Open a specific lab from the address, e.g. w1l1.html#lab3
-        const m = location.hash.match(/^#lab(\d+)$/i);
-        let start = m ? parseInt(m[1], 10) - 1 : 0;
-        start = Math.max(0, Math.min(LAB_DATA.length - 1, start));
+        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        const m = location.hash.match(/^#lab(.+)$/i);
+        let start = 0;
+        if (m) {
+            const found = LAB_DATA.findIndex(l => l.id.toLowerCase() === m[1].toLowerCase());
+            if (found >= 0) start = found;
+        }
         select.value = start;
         loadLab();
     }
@@ -602,9 +1156,10 @@ await main()`,
         const lab = LAB_DATA[index];
         editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
         editor().scrollTop = 0;
-        try { history.replaceState(null, "", "#lab" + (index + 1)); } catch (e) {}
+        try { history.replaceState(null, "", "#lab" + lab.id); } catch (e) {}
         document.getElementById("console-output").innerHTML = "";
         log("Loaded: " + lab.title, "log-sys");
+        updateHintButton();
         updateLineNumbers();
     }
 
@@ -635,8 +1190,98 @@ await main()`,
         }
     }
 
+    // ── HINT LADDER ───────────────────────────────────────────────────────────
+    // Each press of Hint goes one level deeper: hint 1, 2, 3, then the answer.
+    // Levels are remembered per lab while the page is open.
+    const hintLevels = {};
+
+    function hintLabel(level, total) {
+        if (level < total) return "💡 Hint " + (level + 1) + " of " + total;
+        if (level === total) return "🏳 Show answer";
+        return "🏳 Answer";
+    }
+
+    function updateHintButton() {
+        const lab = LAB_DATA[currentLab];
+        const total = (lab.hints || []).length;
+        const level = hintLevels[currentLab] || 0;
+        document.getElementById("hint-btn").textContent = hintLabel(level, total);
+        const next = document.getElementById("hint-next-btn");
+        next.style.display = level > total ? "none" : "";
+        next.textContent = level < total ? "💡 Next hint" : "🏳 Show answer";
+    }
+
+    function addBlock(parent, heading, text, isAnswer) {
+        const block = document.createElement("div");
+        block.className = "hint-block" + (isAnswer ? " answer" : "");
+        const h = document.createElement("h3");
+        h.textContent = heading;
+        const p = document.createElement("p");
+        p.className = "hint-text";
+        p.textContent = text;
+        block.appendChild(h);
+        block.appendChild(p);
+        parent.appendChild(block);
+        return block;
+    }
+
     function showHint() {
-        openInfoModal("💡", LAB_DATA[currentLab].hint || "There is no hint for this lab. Re-read the comments at the top of the code.", false);
+        const lab = LAB_DATA[currentLab];
+        const hints = lab.hints || [];
+        let level = hintLevels[currentLab] || 0;
+        if (level <= hints.length) level++;          // go one level deeper
+        hintLevels[currentLab] = level;
+
+        const box = document.getElementById("hint-modal-content");
+        box.innerHTML = "";
+        for (let i = 0; i < Math.min(level, hints.length); i++) {
+            addBlock(box, "Hint " + (i + 1) + " of " + hints.length, hints[i], false);
+        }
+        if (level > hints.length) {
+            const block = addBlock(box, "Answer", lab.answer || "", true);
+            if (lab.answerCode) {
+                const wrap = document.createElement("div");
+                wrap.className = "answer-code-wrap";
+                const pre = document.createElement("pre");
+                pre.className = "answer-code";
+                pre.textContent = lab.answerCode;
+                const btn = document.createElement("button");
+                btn.className = "btn-copy";
+                btn.textContent = "Copy";
+                btn.onclick = function () { copyText(lab.answerCode, btn); };
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+                block.appendChild(wrap);
+            }
+        }
+        updateHintButton();
+        document.getElementById("hint-modal").classList.add("open");
+        box.lastChild.scrollIntoView({ block: "nearest" });
+    }
+
+    function closeHintModal() {
+        document.getElementById("hint-modal").classList.remove("open");
+    }
+
+    function copyText(text, btn) {
+        function done() {
+            btn.textContent = "Copied!";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else {
+            fallbackCopy(text); done();
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
     }
 
     function showComplete() {
@@ -651,7 +1296,7 @@ await main()`,
     // ── EXPORT CODE ───────────────────────────────────────────────────────────
     function exportCode() {
         const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
-        const file = name + "-" + LESSON + "-lab" + (currentLab + 1) + ".txt";
+        const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
         a.download = file;
