@@ -1,0 +1,2701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>w2L1 Yang's Pygame Lab — Click the Target</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
+
+        .info-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .info-modal-overlay.open { display:flex; }
+        .info-modal-box { background:#252526; color:#d4d4d4; padding:28px 32px; border-radius:10px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid #ce3c3c; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .info-modal-icon { font-size:30px; text-align:center; margin-bottom:12px; }
+        .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
+        .info-modal-actions { text-align:center; }
+
+        .hint-modal-box { background:#252526; color:#d4d4d4; padding:24px 28px; border-radius:10px; max-width:640px; width:92%; max-height:85vh; overflow-y:auto; border:1px solid #f0a500; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .hint-block { border-left:3px solid #f0a500; background:#1e1e1e; padding:10px 14px; margin-bottom:12px; border-radius:0 4px 4px 0; }
+        .hint-block.answer { border-left-color:#4EC9B0; }
+        .hint-block h3 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#f0a500; }
+        .hint-block.answer h3 { color:#4EC9B0; }
+        .hint-text { font-size:14px; line-height:1.65; white-space:pre-wrap; margin:0; }
+        .answer-code-wrap { position:relative; margin-top:10px; }
+        .answer-code { background:#111; color:#d4d4d4; font-family:'Consolas',monospace; font-size:13px; line-height:1.5; padding:12px 14px; border:1px solid #333; border-radius:4px; white-space:pre; overflow-x:auto; margin:0; }
+        .btn-copy { position:absolute; top:6px; right:6px; background:#4EC9B0; color:#1e1e1e; font-size:11px; padding:4px 10px; }
+        .btn-copy:hover:not(:disabled) { background:#3ab89f; }
+        .hint-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        header { background:#252526; padding:6px 16px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; min-height:50px; box-sizing:border-box; flex-shrink:0; gap:10px; flex-wrap:wrap; }
+        .header-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        h1 { margin:0; font-size:17px; color:#ce3c3c; white-space:nowrap; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; }
+        .header-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; min-height:0; }
+
+        /* ── EDITOR ─────────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; overflow:hidden; }
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; min-height:0; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:40px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
+
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; min-height:0; }
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
+
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:8px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
+
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .btn-hdr { font-size:12px; padding:6px 12px; }
+        .btn-grey { background:#3a3a3a; border:1px solid #555; }
+        .btn-grey:hover:not(:disabled) { background:#4a4a4a; }
+        .btn-hint { background:#f0a500; color:#1e1e1e; }
+        .btn-hint:hover:not(:disabled) { background:#d4900a; }
+        .btn-complete { background:#9b59b6; }
+        .btn-complete:hover:not(:disabled) { background:#7d3c98; }
+
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
+
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
+
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 w2L1 Yang's Pygame Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- HINT / COMPLETE MODAL -->
+<div class="info-modal-overlay" id="info-modal">
+  <div class="info-modal-box">
+    <div class="info-modal-icon" id="info-modal-icon">💡</div>
+    <p class="info-modal-text" id="info-modal-text"></p>
+    <div class="info-modal-actions">
+      <button id="info-modal-btn" onclick="closeInfoModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- HINT LADDER MODAL -->
+<div class="info-modal-overlay" id="hint-modal">
+  <div class="hint-modal-box">
+    <div id="hint-modal-content"></div>
+    <div class="hint-modal-actions">
+      <button class="btn-hint" id="hint-next-btn" onclick="showHint()">💡 Next hint</button>
+      <button class="btn-grey" onclick="closeHintModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 w2L1 — Click the Target</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <div class="header-left">
+        <h1>w2L1 — Click the Target</h1>
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
+        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
+        <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
+        <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — read the comments, then edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================================================================
+    // LAB DATA
+    // Each lab: id (used in the address, e.g. #lab1a), title,
+    // code (the instructions live in the comments), hints (three, each
+    // deeper than the last), answer (explanation and where to paste),
+    // answerCode (the code to paste, optional) and completeText.
+    // The last lab can have finalText instead of completeText.
+    // ================================================================
+    const LESSON = "w2L1";
+
+    var LAB_DATA = [
+    {
+        id: "1a",
+
+        title: "Lab 1a: Where Is the Mouse?",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 1a: WHERE IS THE MOUSE?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Welcome to Week 2: Click the Target. This week, Blip becomes a target
+# that you click.
+#
+# First, the mouse. Look at line 62. It says:
+#     mouse_x, mouse_y = pygame.mouse.get_pos()
+# It is in the UPDATE job, so it runs every frame.
+#   pygame.mouse.get_pos()   asks pygame where the mouse pointer is.
+#                            It gives back TWO numbers: x and y.
+#   mouse_x, mouse_y =       two names, separated by a comma. The first
+#                            number is stored in mouse_x, and the second
+#                            in mouse_y.
+#
+# The yellow label next to the pointer shows mouse_x and mouse_y.
+# (It is drawn by show_mouse(), a helper function at the bottom.)
+#
+# TASK 1a
+#   Press Run, then move the mouse over the game screen.
+#   1. What are the numbers at the TOP-LEFT corner of the screen?  ___
+#   2. What are the numbers at the BOTTOM-RIGHT corner?  ___
+#   3. Put the pointer on Blip's top-left corner. What are the numbers?  ___
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_START_X = 375
+BLIP_START_Y = 275
+BLIP_SIZE    = 50
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip_x = BLIP_START_X
+    blip_y = BLIP_START_Y
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+        show_numbers(screen, font, blip_x, blip_y, BLIP_SIZE)
+        show_mouse(screen, font, mouse_x, mouse_y)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_numbers(screen, font, x, y, size):
+    # Writes Blip's numbers just above Blip.
+    label = font.render(f"x = {x}   y = {y}   size = {size}", True, (255, 255, 255))
+    label_x = max(0, min(x, 800 - label.get_width()))
+    label_y = y - 22 if y >= 22 else y + size + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+def show_mouse(screen, font, x, y):
+    # Writes the mouse position next to the mouse pointer.
+    label = font.render(f"mouse_x = {x}   mouse_y = {y}", True, (255, 220, 0))
+    label_x = min(x + 14, 800 - label.get_width())
+    label_y = min(y + 14, 580)
+    screen.blit(label, (label_x, label_y))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Move the pointer slowly into each corner and read the yellow label. The numbers may jump by a few pixels; that is fine.",
+            "The screen is 800 wide and 600 tall, and counting starts at 0.",
+            "Blip starts at BLIP_START_X and BLIP_START_Y (lines 35 and 36)."
+        ],
+
+        answer: "1. About 0, 0.\n2. About 799, 599. The screen is 800 by 600, and counting starts at 0.\n3. About 375, 275: the same numbers as BLIP_START_X and BLIP_START_Y.\n\nThe mouse uses the same x and y as everything else on the screen, including Blip.",
+
+        completeText: "Click OK for Lab 1b."
+    },
+    {
+        id: "1b",
+
+        title: "Lab 1b: Blip Follows the Mouse",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 1b: BLIP FOLLOWS THE MOUSE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# blip_x and blip_y say where Blip is drawn. mouse_x and mouse_y say where
+# the pointer is. So if blip_x and blip_y are set to the mouse position
+# every frame, Blip will follow the mouse.
+#
+# TASK 1b
+#   Make a new line straight under line 52, and type these two lines,
+#   each with 8 spaces in front:
+#       blip_x = mouse_x
+#       blip_y = mouse_y
+#   Press Run and move the mouse. Which part of Blip is stuck to the pointer?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_START_X = 375
+BLIP_START_Y = 275
+BLIP_SIZE    = 50
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip_x = BLIP_START_X
+    blip_y = BLIP_START_Y
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+        show_numbers(screen, font, blip_x, blip_y, BLIP_SIZE)
+        show_mouse(screen, font, mouse_x, mouse_y)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_numbers(screen, font, x, y, size):
+    # Writes Blip's numbers just above Blip.
+    label = font.render(f"x = {x}   y = {y}   size = {size}", True, (255, 255, 255))
+    label_x = max(0, min(x, 800 - label.get_width()))
+    label_y = y - 22 if y >= 22 else y + size + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+def show_mouse(screen, font, x, y):
+    # Writes the mouse position next to the mouse pointer.
+    label = font.render(f"mouse_x = {x}   mouse_y = {y}", True, (255, 220, 0))
+    label_x = min(x + 14, 800 - label.get_width())
+    label_y = min(y + 14, 580)
+    screen.blit(label, (label_x, label_y))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The two new lines go in the UPDATE job, under line 52, with the same 8-space indent.",
+            "blip_x = mouse_x  means: store the value of mouse_x in blip_x. Then do the same for y.",
+            "Watch the label above Blip and the yellow label. They show the same numbers. Which corner of Blip do blip_x and blip_y describe?"
+        ],
+
+        answer: "Blip's TOP-LEFT corner is stuck to the pointer, because blip_x and blip_y always say where Blip's top-left corner is.\n\nMake a new empty line straight under line 52, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        blip_x = mouse_x
+        blip_y = mouse_y`,
+
+        completeText: "Click OK for Lab 1c."
+    },
+    {
+        id: "1c",
+
+        title: "Lab 1c: Centre Blip on the Mouse",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 1c: CENTRE BLIP ON THE MOUSE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# At the moment, the pointer holds Blip by its top-left corner.
+#
+# TASK 1c
+#   Change lines 48 and 49 so the pointer is in the MIDDLE of Blip.
+#   (You did something like this in w1L1 Lab 5b.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_START_X = 375
+BLIP_START_Y = 275
+BLIP_SIZE    = 50
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip_x = BLIP_START_X
+    blip_y = BLIP_START_Y
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        blip_x = mouse_x
+        blip_y = mouse_y
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
+        show_numbers(screen, font, blip_x, blip_y, BLIP_SIZE)
+        show_mouse(screen, font, mouse_x, mouse_y)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_numbers(screen, font, x, y, size):
+    # Writes Blip's numbers just above Blip.
+    label = font.render(f"x = {x}   y = {y}   size = {size}", True, (255, 255, 255))
+    label_x = max(0, min(x, 800 - label.get_width()))
+    label_y = y - 22 if y >= 22 else y + size + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+def show_mouse(screen, font, x, y):
+    # Writes the mouse position next to the mouse pointer.
+    label = font.render(f"mouse_x = {x}   mouse_y = {y}", True, (255, 220, 0))
+    label_x = min(x + 14, 800 - label.get_width())
+    label_y = min(y + 14, 580)
+    screen.blit(label, (label_x, label_y))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Blip is 50 pixels wide (BLIP_SIZE on line 22). How far is the middle of Blip from its left side?",
+            "The middle is 25 pixels right of the left side and 25 pixels down from the top. So Blip's top-left corner must be 25 pixels left of the pointer, and 25 pixels above it.",
+            "blip_x = mouse_x - 25  and  blip_y = mouse_y - 25"
+        ],
+
+        answer: "Taking 25 (half of Blip's size) away from each number moves Blip's top-left corner up and to the left, so the pointer ends up in Blip's middle.\n\nReplace lines 48 and 49, which say\n    blip_x = mouse_x\n    blip_y = mouse_y\nwith the two lines below. The indent is already included.",
+
+        answerCode: `        blip_x = mouse_x - 25
+        blip_y = mouse_y - 25`,
+
+        completeText: "Click OK for Lab 2a."
+    },
+    {
+        id: "2a",
+
+        title: "Lab 2a: One Variable, Four Numbers",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 2a: ONE VARIABLE, FOUR NUMBERS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# We put Blip back in one place and made it bigger, so it is easier to click.
+# We also took the mouse label out.
+#
+# Look at line 51. It says:
+#     blip = pygame.Rect(350, 250, 100, 100)
+# pygame.Rect stores a RECTANGLE: four numbers in ONE variable.
+# The numbers are in the same order as in w1L2 Lab 5b: (x, y, width, height).
+# So instead of blip_x, blip_y and BLIP_SIZE, there is one variable: blip.
+#
+# You can get each number back out with a dot:
+#     blip.x        is 350
+#     blip.y        is 250
+#     blip.width    is 100
+#     blip.height   is 100
+# Line 64 draws it: pygame.draw.rect() accepts a Rect.
+#
+# Why bother? A Rect can answer questions, such as
+# "is this point inside you?". You will use that in Lab 4a.
+#
+# TASK 2a
+#   Change line 51 so Blip is 200 wide and 50 tall.
+#   Keep x and y the same. Check the numbers above Blip.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The four numbers on line 51 are x, y, width and height, in that order.",
+            "Only the last two numbers change. x and y stay as 350 and 250.",
+            "blip = pygame.Rect(350, 250, 200, 50)  (keep the 4 spaces in front)."
+        ],
+
+        answer: "The third number is the width and the fourth is the height, so (350, 250, 200, 50) makes a wide, flat Blip in the same place.\n\nReplace line 51, which says\n    blip = pygame.Rect(350, 250, 100, 100)\nwith the line below. The indent is already included.",
+
+        answerCode: `    blip = pygame.Rect(350, 250, 200, 50)`,
+
+        completeText: "Click OK for Lab 2b."
+    },
+    {
+        id: "2b",
+
+        title: "Lab 2b: Moving a Rect",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 2b: MOVING A RECT
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# blip.x and blip.y work like any other variable: you can change them.
+# Change them every frame, and Blip moves, just like in w1L2.
+#
+# TASK 2b
+#   Make a new line straight under line 47, and type these two lines,
+#   each with 8 spaces in front:
+#       blip.x = blip.x + 2
+#       blip.y = blip.y + 1
+#   Press Run. Which way does Blip move? Watch the numbers above Blip.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new lines go in the UPDATE job, because they change variables.",
+            "blip.x = blip.x + 2  works out blip.x + 2, then stores the answer back in blip.x.",
+            "Blip moves 2 pixels right and 1 pixel down every frame, so it drifts down and to the right. width and height do not change."
+        ],
+
+        answer: "Blip drifts right and slightly down: x goes up by 2 every frame and y by 1. The width and height stay the same.\n\nMake a new empty line straight under line 47, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        blip.x = blip.x + 2
+        blip.y = blip.y + 1`,
+
+        completeText: "Click OK for Lab 3a. Time to click!"
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: Click!",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 3a: CLICK!
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Blip is still again.
+#
+# Look at lines 51 to 53, the HANDLE EVENTS job.
+# Every time the player does something (moves the mouse, presses a key,
+# clicks), pygame makes an EVENT. Line 51 goes through every new event,
+# one at a time, and calls it event. (You will learn how  for  works in Week 3.)
+# Line 52 asks: is this event "the window was closed"?
+#
+# A mouse click is an event too. Its type is  pygame.MOUSEBUTTONDOWN
+# (a mouse button was pressed down).
+#
+# TASK 3a
+#   Make a new line straight under line 53, and type these two lines:
+#       if event.type == pygame.MOUSEBUTTONDOWN:
+#           print("Click at", event.pos)
+#   The if needs 12 spaces in front, the same as line 52.
+#   The print needs 16.
+#   Press Run, click around the game screen, and watch the console.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new if goes INSIDE the for loop, at the same level as line 52. Line them up.",
+            "The print belongs inside the new if, so it gets 4 more spaces than the if: 16 in total.",
+            "event.pos is where the pointer was when you clicked, as (x, y). Each click prints one line."
+        ],
+
+        answer: "Each click makes a MOUSEBUTTONDOWN event. The if spots it, and the print shows event.pos: where you clicked, as (x, y).\n\nMake a new empty line straight under line 53, which says\n    game_running = False\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)`,
+
+        completeText: "Click OK for Lab 3b."
+    },
+    {
+        id: "3b",
+
+        title: "Lab 3b: Counting Clicks",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 3b: COUNTING CLICKS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Look at line 39. It creates a variable called clicks, BEFORE the loop.
+# It must be before the loop. If it were inside the loop, it would be set
+# back to 0 every frame, and it could never count past 1.
+#
+# TASK 3b
+#   Count the clicks:
+#   1. Make a new line straight under line 46 that adds 1 to clicks.
+#   2. Change the print on line 47 so it shows the number of clicks,
+#      like this:  Clicks: 3
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    clicks = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Part 1 works like  frame = frame + 1  in w1L2. It needs 16 spaces in front, because it is inside the click if.",
+            "clicks = clicks + 1  Then the print shows two things, separated by a comma: words in quotes, and a variable.",
+            "The print line should end up as:  print(\"Clicks:\", clicks)"
+        ],
+
+        answer: "Each click runs the two lines inside the if: one adds 1 to clicks, and the other prints the total.\n\nReplace line 47, which says\n    print(\"Click at\", event.pos)\nwith the two lines below. The indent is already included.",
+
+        answerCode: `                clicks = clicks + 1
+                print("Clicks:", clicks)`,
+
+        completeText: "Click OK for Lab 4a."
+    },
+    {
+        id: "4a",
+
+        title: "Lab 4a: Hit or Miss?",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 4a: HIT OR MISS?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# A click anywhere is not much of a game. We only care about clicks ON Blip.
+#
+# A Rect can tell you whether a point is inside it:
+#     blip.collidepoint(event.pos)
+# means: "Is the point event.pos inside blip?" The answer is True or False.
+# Put it in an if, and the lines inside the if only run when the answer is True.
+#
+# TASK 4a
+#   Make a new line straight under line 51, and type these two lines:
+#       if blip.collidepoint(event.pos):
+#           print("Hit!")
+#   The if needs 16 spaces in front (it is inside the click if).
+#   The print needs 20.
+#   Press Run. Click on Blip, then click next to Blip. What is different?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new if goes inside the click if, so line it up with line 51: 16 spaces.",
+            "The print inside it needs 4 more: 20 spaces.",
+            "Every click prints  Click at. Only clicks inside Blip ALSO print  Hit!"
+        ],
+
+        answer: "Every click still prints  Click at. Clicks inside Blip also print  Hit!, because blip.collidepoint(event.pos) is True only when the click is inside Blip.\n\nMake a new empty line straight under line 51, which says\n    print(\"Click at\", event.pos)\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `                if blip.collidepoint(event.pos):
+                    print("Hit!")`,
+
+        completeText: "Click OK for Lab 4b."
+    },
+    {
+        id: "4b",
+
+        title: "Lab 4b: Keeping Score",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 4b: KEEPING SCORE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Line 36 creates a variable called score, before the loop.
+#
+# TASK 4b
+#   Change the code so that every hit adds 1 to score,
+#   and the console shows the score, like this:  Score: 3
+#   Change line 46 into two lines.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    print("Hit!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "This is the same pattern as counting clicks in Lab 3b, but inside the hit if.",
+            "One line adds 1 to score. The other prints it. Both need 20 spaces in front.",
+            "score = score + 1  then  print(\"Score:\", score)"
+        ],
+
+        answer: "Now only hits change the score, because both lines are inside the collidepoint if.\n\nReplace line 46, which says\n    print(\"Hit!\")\nwith the two lines below. The indent is already included.",
+
+        answerCode: `                    score = score + 1
+                    print("Score:", score)`,
+
+        completeText: "Click OK for Lab 4c."
+    },
+    {
+        id: "4c",
+
+        title: "Lab 4c: Missed!",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 4c: MISSED!
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# An if can have an  else. else means "otherwise": its lines run when the
+# if's answer is NO.
+#     if blip.collidepoint(event.pos):
+#         ... runs when the click is inside Blip ...
+#     else:
+#         ... runs when it is not ...
+# else lines up with its if, ends with a colon, and has its own indented lines.
+#
+# TASK 4c
+#   Add an else to the if on line 50, so that every miss prints
+#       Missed!
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The else goes straight after the last line inside the if, which is line 52.",
+            "else must line up with its if on line 50: 16 spaces. The print under it needs 20.",
+            "else:  then, on the next line,  print(\"Missed!\")"
+        ],
+
+        answer: "else runs whenever the if's answer is no, so every click that is not on Blip prints  Missed!\n\nMake a new empty line straight under line 52, which says\n    print(\"Score:\", score)\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `                else:
+                    print("Missed!")`,
+
+        completeText: "Click OK for Lab 5a."
+    },
+    {
+        id: "5a",
+
+        title: "Lab 5a: Score on Screen",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 5a: SCORE ON SCREEN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Players do not look at the console. The score needs to be ON the game screen.
+# Writing text takes two steps:
+#
+#   score_text = font.render(f"Score: {score}", True, SCORE_COLOUR)
+#     font.render()   turns words into a PICTURE of the words.
+#     f"Score: {score}"   is an f-string. The f before the quotes means:
+#                         anything in {curly brackets} is replaced by its
+#                         value. So if score is 3, this is  Score: 3
+#     True            makes the edges of the letters smooth.
+#     SCORE_COLOUR    the colour of the words (line 36).
+#
+#   screen.blit(score_text, (10, 10))
+#     blit copies the picture onto the screen, with its top-left corner
+#     at (10, 10). Remember: nothing shows until flip.
+#
+# TASK 5a
+#   Make a new line straight under line 71, and type the two
+#   lines above, each with 8 spaces in front.
+#   Press Run and click Blip a few times.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The two new lines go in the DRAW job, after Blip is drawn, so the score is drawn on top.",
+            "Type them exactly, including the f before the quotes and the curly brackets around score.",
+            "score_text = font.render(f\"Score: {score}\", True, SCORE_COLOUR)  then  screen.blit(score_text, (10, 10))"
+        ],
+
+        answer: "font.render() makes a picture of the words, using the score at that moment. blit puts the picture in the top-left corner. Because this happens every frame, the number on screen changes as soon as the score does.\n\nMake a new empty line straight under line 71, which says\n    show_rect(screen, font, blip)\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        score_text = font.render(f"Score: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (10, 10))`,
+
+        completeText: "Click OK for Lab 5b."
+    },
+    {
+        id: "5b",
+
+        title: "Lab 5b: Make the Score Yours",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 5b: MAKE THE SCORE YOURS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 5b
+#   Change the score so that:
+#   1. it says  Hits:  instead of  Score:
+#   2. it is yellow: (255, 220, 0)
+#   3. it is near the TOP-RIGHT corner of the screen, at (680, 10).
+#   Three changes, on three different lines.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Score: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The words are inside the f-string on line 59. Change only the word, not {score}.",
+            "The colour is the setting on line 23. The position is the (x, y) on line 60.",
+            "Line 23:  SCORE_COLOUR = (255, 220, 0)   Line 59: f\"Hits: {score}\"   Line 60: (680, 10)"
+        ],
+
+        answer: "The words come from the f-string, the colour from SCORE_COLOUR, and the position from the (x, y) in blit.\n\nStep 1: replace lines 59 and 60, which say\n    score_text = font.render(f\"Score: {score}\", True, SCORE_COLOUR)\n    screen.blit(score_text, (10, 10))\nwith the two lines below. The indent is already included.\n\nStep 2: change line 23 so it says\n    SCORE_COLOUR = (255, 220, 0)",
+
+        answerCode: `        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))`,
+
+        completeText: "Click OK for Lab 6a, the last core lab."
+    },
+    {
+        id: "6a",
+
+        title: "Lab 6a: Make It Yours",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 6a: MAKE IT YOURS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# This is your game now. There is no single right answer for this lab.
+#
+# TASK 6a
+#   Change ALL of these, and Run after each change to check it works:
+#     [ ] Blip's colour                    (line 27)
+#     [ ] the background colour            (line 28)
+#     [ ] where Blip starts, and its size  (line 42)
+#     [ ] the words in the score           (line 65)
+#     [ ] the score's colour and position  (lines 29 and 66)
+#   Tick each box by typing an x between the brackets: [x]
+#
+#   Then check: is your game still playable? Can you see Blip AND the score?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Colours are (red, green, blue), each from 0 to 255. If Blip and the background are too alike, Blip is hard to see (w1L1 Lab 1b).",
+            "The Rect is (x, y, width, height). Keep x + width under 800 and y + height under 600, or part of Blip is off the screen.",
+            "Only change the words inside the f-string. Keep {score} exactly as it is, or the number disappears."
+        ],
+
+        answer: "There is no single right answer. Here is one example:\n    BLIP_COLOUR  = (255, 0, 255)\n    BACKGROUND   = (0, 0, 60)\n    blip = pygame.Rect(100, 400, 60, 60)\n    f\"Points: {score}\"\n\nCheck that Blip stands out from the background, that all of Blip is on the screen, and that the score is not hidden under Blip.",
+
+        completeText: "That is all the core labs for w2L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+    },
+    {
+        id: "1ext",
+
+        title: "Lab 1ext: Jump! (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w2L1 LAB 1ext: JUMP! (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make Blip jump to a RANDOM place every time you hit it.
+#
+#   Line 3 lets us use random numbers.
+#   random.randint(0, 700) picks a random whole number from 0 to 700.
+#
+#   Careful: all of Blip must stay on the screen. Blip's x can be as big as
+#   800 - blip.width, but no bigger. (Why? Think back to w1L1 Lab 2b.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The jump should only happen on a hit, so the new lines go inside the collidepoint if, under line 50, with 20 spaces in front.",
+            "Store a random number in blip.x, and another in blip.y. The smallest is 0. The biggest is 800 - blip.width for x, and 600 - blip.height for y.",
+            "blip.x = random.randint(0, 800 - blip.width)  and  blip.y = random.randint(0, 600 - blip.height)"
+        ],
+
+        answer: "Each hit stores new random numbers in blip.x and blip.y. Using 800 - blip.width and 600 - blip.height as the biggest values keeps all of Blip on the screen.\n\nMake a new empty line straight under line 50, which says\n    score = score + 1\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `                    blip.x = random.randint(0, 800 - blip.width)
+                    blip.y = random.randint(0, 600 - blip.height)`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "2ext",
+
+        title: "Lab 2ext: Shrink! (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w2L1 LAB 2ext: SHRINK! (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Blip already jumps when you hit it (lines 47 and 48).
+#   Now make Blip 10 pixels SMALLER (narrower AND shorter) every time
+#   you hit it, but never smaller than 20 pixels wide.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    blip.x = random.randint(0, 800 - blip.width)
+                    blip.y = random.randint(0, 600 - blip.height)
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Shrinking means taking 10 away from blip.width, and 10 away from blip.height.",
+            "To stop at 20, only shrink while Blip is bigger than 20:  if blip.width > 20:",
+            "Under line 48:  if blip.width > 20:  (20 spaces in front), then  blip.width = blip.width - 10  and  blip.height = blip.height - 10  (24 spaces in front)."
+        ],
+
+        answer: "Each hit takes 10 off the width and the height, but only while Blip is wider than 20. From 100, Blip shrinks to 90, 80, and so on, down to 20.\n\nMake a new empty line straight under line 48, which says\n    blip.y = random.randint(0, 600 - blip.height)\nand paste the three lines below there. The indents are already included.",
+
+        answerCode: `                    if blip.width > 20:
+                        blip.width = blip.width - 10
+                        blip.height = blip.height - 10`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "3ext",
+
+        title: "Lab 3ext: Three Strikes (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w2L1 LAB 3ext: THREE STRIKES (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Line 42 creates a variable called misses.
+#   1. Every miss should add 1 to misses.
+#   2. After 3 misses, the game should end. (Hint: what makes the loop
+#      stop when you close the window?)
+#   3. Show the misses on the screen, next to the hits, like this:
+#          Hits: 4   Misses: 1
+#
+#   Remember:  ==  ASKS whether two things are equal.  =  stores a value.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+    misses = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    blip.x = random.randint(0, 800 - blip.width)
+                    blip.y = random.randint(0, 600 - blip.height)
+                    if blip.width > 20:
+                        blip.width = blip.width - 10
+                        blip.height = blip.height - 10
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Parts 1 and 2 go inside the else, under line 60. The loop stops when game_running becomes False (line 48).",
+            "if misses == 3:  then, indented,  game_running = False. For part 3, an f-string can hold two variables: {score} and {misses}.",
+            "Line 69 becomes:  score_text = font.render(f\"Hits: {score}   Misses: {misses}\", True, SCORE_COLOUR)"
+        ],
+
+        answer: "misses goes up by 1 on every miss. When it reaches 3, game_running becomes False, so the loop stops and the game ends, just as if the window had been closed. (In Week 4 you will make a proper game-over screen instead.)\n\nStep 1: replace lines 59 and 60, which say\n    else:\n        print(\"Missed!\")\nwith the code below. The indents are already included.\n\nStep 2: change line 69 so it says\n    score_text = font.render(f\"Hits: {score}   Misses: {misses}\", True, SCORE_COLOUR)",
+
+        answerCode: `                else:
+                    misses = misses + 1
+                    print("Missed!")
+                    if misses == 3:
+                        game_running = False`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "4ext",
+
+        title: "Lab 4ext: Moving Target (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 4ext: MOVING TARGET (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Combine this week's game with last week's: make Blip move left and
+#   right, and bounce off the edges, while you try to click it.
+#   Line 36 gives you a speed to use. (Look back at w1L2 Lab 2ext.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+    speed_x = 3
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Moving goes in the UPDATE job: add speed_x to blip.x every frame, under line 52.",
+            "Then two ifs flip the sign of speed_x: one for the right edge (800 - blip.width) and one for the left edge (0).",
+            "blip.x = blip.x + speed_x  then  if blip.x > 800 - blip.width:  speed_x = -speed_x  then  if blip.x < 0:  speed_x = -speed_x"
+        ],
+
+        answer: "Blip moves speed_x pixels every frame, and the two ifs turn it round at each edge. Because the click check uses the Rect, it still works wherever Blip is.\n\nMake a new empty line straight under line 52, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        blip.x = blip.x + speed_x
+        if blip.x > 800 - blip.width:
+            speed_x = -speed_x
+        if blip.x < 0:
+            speed_x = -speed_x`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "5ext",
+
+        title: "Lab 5ext: Hover (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 5ext: HOVER (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make Blip light up (turn HOVER_COLOUR, line 22) while the mouse
+#   pointer is over it, and go back to BLIP_COLOUR when it is not.
+#
+#   collidepoint() can also take the two numbers separately:
+#       blip.collidepoint(mouse_x, mouse_y)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+HOVER_COLOUR = (255, 255, 255)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "This is about what Blip LOOKS like, so it goes in the DRAW job, where line 58 draws Blip.",
+            "Use an if and an else: if the mouse is inside Blip, draw Blip in HOVER_COLOUR, else draw it in BLIP_COLOUR.",
+            "if blip.collidepoint(mouse_x, mouse_y):  then, indented, draw with HOVER_COLOUR.  else:  then, indented, draw with BLIP_COLOUR."
+        ],
+
+        answer: "Every frame, the if checks whether the pointer is inside Blip, and draws Blip in the matching colour. This uses mouse_x and mouse_y from line 54, which were updated earlier in the same frame.\n\nReplace line 58, which says\n    pygame.draw.rect(screen, BLIP_COLOUR, blip)\nwith the code below. The indents are already included.",
+
+        answerCode: `        if blip.collidepoint(mouse_x, mouse_y):
+            pygame.draw.rect(screen, HOVER_COLOUR, blip)
+        else:
+            pygame.draw.rect(screen, BLIP_COLOUR, blip)`,
+
+        completeText: "Click OK for the last extension."
+    },
+    {
+        id: "6ext",
+
+        title: "Lab 6ext: The Long Way (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L1 LAB 6ext: THE LONG WAY (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   In Week 4 you will work on a base game called Click the Square.
+#   It checks for a hit WITHOUT collidepoint(). It uses these two lines:
+#       mx, my = event.pos
+#       if x <= mx <= x + SIZE and y <= my <= y + SIZE:
+#     mx, my = event.pos   splits the click position into two variables.
+#     <=                   means "is less than or equal to".
+#     x <= mx <= x + SIZE  means: mx is between x and x + SIZE.
+#     and                  BOTH sides must be True.
+#
+#   Replace line 53 with two lines that do the same job
+#   the long way, using blip.x, blip.y, blip.width and blip.height.
+#   Test it: hits and misses should work exactly as before.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+SCORE_COLOUR = (255, 220, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 250, 100, 100)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Click at", event.pos)
+                if blip.collidepoint(event.pos):
+                    score = score + 1
+                    print("Score:", score)
+                else:
+                    print("Missed!")
+
+        # 2. UPDATE: change the variables
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
+        screen.blit(score_text, (680, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The first new line is  mx, my = event.pos, with 16 spaces in front, the same as line 53.",
+            "In the base game, x is the left side and x + SIZE is the right side. For Blip, those are blip.x and blip.x + blip.width.",
+            "if blip.x <= mx <= blip.x + blip.width and blip.y <= my <= blip.y + blip.height:"
+        ],
+
+        answer: "The click is a hit when mx is between Blip's left and right sides AND my is between its top and bottom. That is exactly the question collidepoint() answers for you, in one short word.\n\nReplace line 53, which says\n    if blip.collidepoint(event.pos):\nwith the two lines below. The indent is already included.",
+
+        answerCode: `                mx, my = event.pos
+                if blip.x <= mx <= blip.x + blip.width and blip.y <= my <= blip.y + blip.height:`,
+
+        finalText: "Congratulations on completing every lab in w2L1!\nYou know the mouse position, Rects, click events, collidepoint(), if and else, and how to put text on the screen."
+    }
+    ];
+
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── LABS ──────────────────────────────────────────────────────────────────
+    // Edits are kept per lab while the page is open, so switching labs
+    // and coming back does not lose work. Refreshing the page does.
+    let currentLab = -1;
+    const labDrafts = {};
+
+    function editor() { return document.getElementById("code-editor"); }
+
+    function initLabs() {
+        const select = document.getElementById("lab-select");
+        LAB_DATA.forEach(function (lab, i) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.text = lab.title;
+            select.appendChild(opt);
+        });
+        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        const m = location.hash.match(/^#lab(.+)$/i);
+        let start = 0;
+        if (m) {
+            const found = LAB_DATA.findIndex(l => l.id.toLowerCase() === m[1].toLowerCase());
+            if (found >= 0) start = found;
+        }
+        select.value = start;
+        loadLab();
+    }
+
+    async function loadLab() {
+        const index = parseInt(document.getElementById("lab-select").value, 10);
+        if (currentLab >= 0) labDrafts[currentLab] = editor().value;
+        if (isRunning) await stopGame();
+        currentLab = index;
+        const lab = LAB_DATA[index];
+        editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
+        editor().scrollTop = 0;
+        try { history.replaceState(null, "", "#lab" + lab.id); } catch (e) {}
+        document.getElementById("console-output").innerHTML = "";
+        log("Loaded: " + lab.title, "log-sys");
+        updateHintButton();
+        updateLineNumbers();
+    }
+
+    function resetLab() {
+        if (!confirm("Reset this lab? Your changes to this lab will be lost unless you have exported them.")) return;
+        delete labDrafts[currentLab];
+        editor().value = LAB_DATA[currentLab].code;
+        editor().scrollTop = 0;
+        updateLineNumbers();
+        log("Lab reset to the starting code.", "log-sys");
+    }
+
+    // ── HINT AND COMPLETE ─────────────────────────────────────────────────────
+    let infoModalAdvances = false;
+
+    function openInfoModal(icon, text, advances) {
+        document.getElementById("info-modal-icon").textContent = icon;
+        document.getElementById("info-modal-text").textContent = text;
+        infoModalAdvances = advances;
+        document.getElementById("info-modal").classList.add("open");
+    }
+
+    function closeInfoModal() {
+        document.getElementById("info-modal").classList.remove("open");
+        if (infoModalAdvances && currentLab < LAB_DATA.length - 1) {
+            document.getElementById("lab-select").value = currentLab + 1;
+            loadLab();
+        }
+    }
+
+    // ── HINT LADDER ───────────────────────────────────────────────────────────
+    // Each press of Hint goes one level deeper: hint 1, 2, 3, then the answer.
+    // Levels are remembered per lab while the page is open.
+    const hintLevels = {};
+
+    function hintLabel(level, total) {
+        if (level < total) return "💡 Hint " + (level + 1) + " of " + total;
+        if (level === total) return "🏳 Show answer";
+        return "🏳 Answer";
+    }
+
+    function updateHintButton() {
+        const lab = LAB_DATA[currentLab];
+        const total = (lab.hints || []).length;
+        const level = hintLevels[currentLab] || 0;
+        document.getElementById("hint-btn").textContent = hintLabel(level, total);
+        const next = document.getElementById("hint-next-btn");
+        next.style.display = level > total ? "none" : "";
+        next.textContent = level < total ? "💡 Next hint" : "🏳 Show answer";
+    }
+
+    function addBlock(parent, heading, text, isAnswer) {
+        const block = document.createElement("div");
+        block.className = "hint-block" + (isAnswer ? " answer" : "");
+        const h = document.createElement("h3");
+        h.textContent = heading;
+        const p = document.createElement("p");
+        p.className = "hint-text";
+        p.textContent = text;
+        block.appendChild(h);
+        block.appendChild(p);
+        parent.appendChild(block);
+        return block;
+    }
+
+    function showHint() {
+        const lab = LAB_DATA[currentLab];
+        const hints = lab.hints || [];
+        let level = hintLevels[currentLab] || 0;
+        if (level <= hints.length) level++;          // go one level deeper
+        hintLevels[currentLab] = level;
+
+        const box = document.getElementById("hint-modal-content");
+        box.innerHTML = "";
+        for (let i = 0; i < Math.min(level, hints.length); i++) {
+            addBlock(box, "Hint " + (i + 1) + " of " + hints.length, hints[i], false);
+        }
+        if (level > hints.length) {
+            const block = addBlock(box, "Answer", lab.answer || "", true);
+            if (lab.answerCode) {
+                const wrap = document.createElement("div");
+                wrap.className = "answer-code-wrap";
+                const pre = document.createElement("pre");
+                pre.className = "answer-code";
+                pre.textContent = lab.answerCode;
+                const btn = document.createElement("button");
+                btn.className = "btn-copy";
+                btn.textContent = "Copy";
+                btn.onclick = function () { copyText(lab.answerCode, btn); };
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+                block.appendChild(wrap);
+            }
+        }
+        updateHintButton();
+        document.getElementById("hint-modal").classList.add("open");
+        box.lastChild.scrollIntoView({ block: "nearest" });
+    }
+
+    function closeHintModal() {
+        document.getElementById("hint-modal").classList.remove("open");
+    }
+
+    function copyText(text, btn) {
+        function done() {
+            btn.textContent = "Copied!";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else {
+            fallbackCopy(text); done();
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+
+    function showComplete() {
+        const lab = LAB_DATA[currentLab];
+        const isLast = currentLab >= LAB_DATA.length - 1;
+        const text = isLast
+            ? (lab.finalText || "Congratulations, you have completed all the labs in this lesson!")
+            : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+        openInfoModal("🎉", text, true);
+    }
+
+    // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    function exportCode() {
+        const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
+        const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
+        a.download = file;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        log("Exported " + file, "log-sys");
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta    = editor();
+        const ln    = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        document.getElementById("line-numbers").scrollTop = editor().scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide       = null;
+    let isRunning     = false;
+    let uploadedFiles = [];
+    let runGlobals    = null;   // a fresh, empty set of variables for every Run
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        for (const file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        updateFileList();
+        input.value = '';
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        stopAllSounds();
+        if (runGlobals) {
+            try { runGlobals.set("game_running", false); } catch (e) {}
+        }
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (!pyodide) return;
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+        document.getElementById('canvas').focus();
+        const code = editor().value;
+        try {
+            installSoundModule();
+            // Fresh variables every Run, so nothing left over from an
+            // earlier Run (or an earlier lab) can hide a mistake.
+            runGlobals = pyodide.runPython("dict(__name__='__main__')");
+            await pyodide.runPythonAsync(code, { globals: runGlobals });
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    initLabs();
+    init();
+</script>
+
+</body>
+</html>
