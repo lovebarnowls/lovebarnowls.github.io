@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>W1L2 Yang's Pygame Lab — The Frame Cycle</title>
+    <title>w1L2 Yang's Pygame Lab — The Frame Cycle</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
         /* ── MODALS ─────────────────────────────────────────────────────────── */
@@ -92,7 +92,7 @@
 <!-- NAME MODAL -->
 <div class="name-modal-overlay" id="name-modal">
   <div class="name-modal-box">
-    <div class="name-modal-title">🎮 W1L2 Yang's Pygame Lab</div>
+    <div class="name-modal-title">🎮 w1L2 Yang's Pygame Lab</div>
     <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
     <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
     <div class="name-modal-error" id="name-modal-error"></div>
@@ -113,14 +113,14 @@
 
 <!-- LOADING SCREEN -->
 <div id="loading-screen">
-    <h2 style="color:#ce3c3c; margin:0;">🎮 W1L2 — The Frame Cycle</h2>
+    <h2 style="color:#ce3c3c; margin:0;">🎮 w1L2 — The Frame Cycle</h2>
     <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
     <div id="loading-text">Loading Python...</div>
 </div>
 
 <header>
     <div class="header-left">
-        <h1>W1L2 — The Frame Cycle</h1>
+        <h1>w1L2 — The Frame Cycle</h1>
         <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
     </div>
     <div class="header-controls">
@@ -176,7 +176,7 @@
     // hint (shown by the Hint button) and completeText.
     // The last lab can have finalText instead of completeText.
     // ================================================================
-    const LESSON = "W1L2";
+    const LESSON = "w1L2";
 
     var LAB_DATA = [
     {
@@ -188,8 +188,10 @@
 import asyncio
 
 # ============================================================
-#  W1L2 LAB 1: BLIP MOVES
+#  w1L2 LAB 1: BLIP MOVES
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # Until now Blip stood still. Now Blip moves.
 #
 # A game is a LOOP that runs over and over, many times a second.
@@ -206,12 +208,17 @@ import asyncio
 # Notice blip_x now lives INSIDE main(). It is a local variable of
 # main(), so main() can change it without needing "global".
 #
-# MILD:   Change BLIP_SPEED. What happens with a negative number?
-# MEDIUM: Make Blip move diagonally.
-#         Hint: blip_y needs to change every frame too.
-# SPICY:  Blip disappears off the right edge forever.
-#         Make Blip reappear on the left instead (a "screen wrap").
-#         Hint: you need an "if" in the UPDATE section.
+# TASK 1a
+#   Change BLIP_SPEED. What happens with a negative number?
+#
+# TASK 1b
+#   Make Blip move diagonally.
+#   Hint: blip_y needs to change every frame too.
+#
+# EXTENSION (optional)
+#   Blip disappears off the right edge forever.
+#   Make Blip reappear on the left instead (a "screen wrap").
+#   Hint: you need an "if" in the UPDATE section.
 #
 # When you are done, click "Complete" at the top.
 
@@ -257,7 +264,7 @@ async def main():
 
 await main()`,
 
-        hint: "Every frame, the UPDATE section adds BLIP_SPEED to blip_x. That is the only reason Blip moves. To move down as well, blip_y needs something added to it every frame too.\n\nSpicy: you need to check whether Blip has gone past the right edge (x is bigger than 800). If it has, set blip_x back to a number that puts Blip just off the LEFT edge.",
+        hint: "Task 1a\nTry a small negative number like -3. Watch which way Blip goes.\n\nTask 1b\nEvery frame, the UPDATE section adds BLIP_SPEED to blip_x. That is the only reason Blip moves. To move down as well, blip_y needs something added to it every frame too.\n\nExtension\nCheck whether Blip has gone past the right edge (x is bigger than 800). If it has, set blip_x back to a number that puts Blip just off the LEFT edge.",
 
         completeText: "You have found the four jobs every frame does: handle events, update, draw, flip.\nClick OK to move on."
     },
@@ -270,23 +277,30 @@ await main()`,
 import asyncio
 
 # ============================================================
-#  W1L2 LAB 2: PAINTING OVER
+#  w1L2 LAB 2: PAINTING OVER
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # Every frame starts with screen.fill(BACKGROUND).
 # Why paint the whole screen every single frame?
 # Time to find out by breaking it.
 #
 # There is also a WALL now. Blip slides past it.
 #
-# MILD:   Put a # in front of screen.fill(BACKGROUND) to switch it off.
-#         Run it. What happens? Why? Then put the line back.
-# MEDIUM: Right now Blip slides IN FRONT of the wall.
-#         Make Blip slide BEHIND the wall instead.
-#         Hint: things drawn later go on top. Change one thing only.
-# SPICY:  Make Blip slowly change colour as it moves.
-#         Hint: make Blip's red value go up by 1 every frame.
-#         A colour value cannot go above 255. What happens if it does?
-#         How could you stop that? (Look up the % operator.)
+# TASK 2a
+#   Put a # in front of screen.fill(BACKGROUND) to switch it off.
+#   Run it. What happens? Why? Then put the line back.
+#
+# TASK 2b
+#   Right now Blip slides IN FRONT of the wall.
+#   Make Blip slide BEHIND the wall instead.
+#   Hint: things drawn later go on top. Change one thing only.
+#
+# EXTENSION (optional)
+#   Make Blip slowly change colour as it moves.
+#   Hint: make Blip's red value go up by 1 every frame.
+#   A colour value cannot go above 255. What happens if it does?
+#   How could you stop that? (Look up the % operator.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -336,7 +350,7 @@ async def main():
 
 await main()`,
 
-        hint: "The screen is like a painting. Nothing is ever rubbed out: each new frame is painted on top of the last one. screen.fill() paints over everything first, so the old Blips disappear.\n\nMedium: Python draws in the order the lines are written. Whatever is drawn LAST ends up on top.\n\nSpicy: you need a variable for the red value, created before the loop (next to blip_x). Then draw Blip with the colour (red, 200, 80). The % operator gives the remainder after dividing: 256 % 256 is 0, so (red + 1) % 256 counts 254, 255, 0, 1...",
+        hint: "Task 2a\nThe screen is like a painting. Nothing is ever rubbed out: each new frame is painted on top of the last one. screen.fill() paints over everything first, so the old Blips disappear.\n\nTask 2b\nPython draws in the order the lines are written. Whatever is drawn LAST ends up on top.\n\nExtension\nYou need a variable for the red value, created before the loop (next to blip_x). Then draw Blip with the colour (red, 200, 80). The % operator gives the remainder after dividing: 256 % 256 is 0, so (red + 1) % 256 counts 254, 255, 0, 1...",
 
         completeText: "Now you know why every frame starts by painting over the last one, and that draw order matters.\nClick OK for the speed problem."
     },
@@ -349,8 +363,10 @@ await main()`,
 import asyncio
 
 # ============================================================
-#  W1L2 LAB 3: TOO FAST?
+#  w1L2 LAB 3: TOO FAST?
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # Run this. The number in the top-left corner is FPS:
 # how many FRAMES PER SECOND your computer is drawing.
 #
@@ -368,10 +384,15 @@ import asyncio
 # idea here. Not every idea you find will work in this web IDE.
 # Finding one that does is part of the challenge.
 #
-# MILD:   Find out what FPS your computer runs at, and write it here:  ___
-# MEDIUM: Get the game running at about 60 FPS.
-# SPICY:  Get it running at about 30 FPS. Blip is now slower.
-#         Change BLIP_SPEED so Blip moves at the same speed as at 60 FPS.
+# TASK 3a
+#   Find out what FPS your computer runs at, and write it here:  ___
+#
+# TASK 3b
+#   Get the game running at about 60 FPS.
+#
+# EXTENSION (optional)
+#   Get it running at about 30 FPS. Blip is now slower.
+#   Change BLIP_SPEED so Blip moves at the same speed as at 60 FPS.
 #
 # NEW WORDS (our class vocabulary):
 #   font.render(...)  turns text into a picture. In our class, RENDER
@@ -442,7 +463,7 @@ async def main():
 
 await main()`,
 
-        hint: "Idea 1: most pygame tutorials use a Clock:\n    clock = pygame.time.Clock()     (before the loop)\n    clock.tick(60)                  (once every frame)\nTry it. Does it behave in this web IDE?\n\nIdea 2: every frame, our loop already pauses with  await asyncio.sleep(0). What if it paused for longer? How long is one sixtieth of a second?\n\nSpicy: at 30 FPS there are half as many frames each second. How far must Blip move each frame to cover the same distance per second?",
+        hint: "Task 3a\nJust run it and wait a second for the number to appear.\n\nTask 3b\nIdea 1: most pygame tutorials use a Clock:\n    clock = pygame.time.Clock()     (before the loop)\n    clock.tick(60)                  (once every frame)\nTry it. Does it behave in this web IDE?\nIdea 2: every frame, our loop already pauses with  await asyncio.sleep(0). What if it paused for longer? How long is one sixtieth of a second?\n\nExtension\nAt 30 FPS there are half as many frames each second. How far must Blip move each frame to cover the same distance per second?",
 
         completeText: "You have solved a real problem that every game developer faces: the same game must run at the same speed on every computer.\nClick OK for the extension."
     },
@@ -455,8 +476,10 @@ await main()`,
 import asyncio
 
 # ============================================================
-#  W1L2 LAB 4 (EXTENSION): BOING
+#  w1L2 LAB 4 (EXTENSION): BOING
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # Blip now bounces off the left and right walls.
 # Read the UPDATE section to see how:
 #   when Blip hits a wall, speed_x is flipped to the opposite sign,
@@ -464,15 +487,20 @@ import asyncio
 #
 # speed_x is a variable now, not a CAPITAL setting, because it changes.
 #
-# MILD:   Make Blip bounce off the top and bottom walls too.
-#         Hint: Blip needs a speed_y, and a second "if" that checks blip_y.
-# MEDIUM: Give Blip a random new colour every time it bounces.
-#         Hint: add "import random" at the top, then
-#         random.randint(0, 255) gives a random number from 0 to 255.
-# SPICY:  Make Blip speed up a little every time it bounces,
-#         but never faster than a maximum speed you choose.
-#         Hint: a negative speed is still fast! Check how big it is,
-#         not just whether it is bigger than your maximum.
+# TASK 4a
+#   Make Blip bounce off the top and bottom walls too.
+#   Hint: Blip needs a speed_y, and a second "if" that checks blip_y.
+#
+# TASK 4b
+#   Give Blip a random new colour every time it bounces.
+#   Hint: add "import random" at the top, then
+#   random.randint(0, 255) gives a random number from 0 to 255.
+#
+# EXTENSION (optional)
+#   Make Blip speed up a little every time it bounces,
+#   but never faster than a maximum speed you choose.
+#   Hint: a negative speed is still fast! Check how big it is,
+#   not just whether it is bigger than your maximum.
 #
 # When you are done, click "Complete" at the top.
 
@@ -522,7 +550,7 @@ async def main():
 
 await main()`,
 
-        hint: "Mild: copy the idea for x. You need a speed_y variable before the loop, a line that adds it to blip_y, and an if that checks the top (0) and bottom (600) edges.\n\nMedium: build a colour from three random numbers:\n    colour = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))\nPut that inside the if that detects a bounce.\n\nSpicy: abs() gives the size of a number without its sign: abs(-7) is 7. Only speed up if abs(speed_x) is still below your maximum.",
+        hint: "Task 4a\nCopy the idea for x. You need a speed_y variable before the loop, a line that adds it to blip_y, and an if that checks the top (0) and bottom (600) edges.\n\nTask 4b\nBuild a colour from three random numbers:\n    colour = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))\nPut that inside the if that detects a bounce.\n\nExtension\nabs() gives the size of a number without its sign: abs(-7) is 7. Only speed up if abs(speed_x) is still below your maximum.",
 
         finalText: "Congratulations on completing Week 1!\nYou can now make things move, bounce, and run at the same speed on any computer. Next week: the player takes control."
     }
@@ -623,7 +651,7 @@ await main()`,
     // ── EXPORT CODE ───────────────────────────────────────────────────────────
     function exportCode() {
         const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
-        const file = name + "-" + LESSON.toLowerCase() + "-lab" + (currentLab + 1) + ".txt";
+        const file = name + "-" + LESSON + "-lab" + (currentLab + 1) + ".txt";
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
         a.download = file;
