@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>W1L1 Yang's Pygame Lab — Variables and Scope</title>
+    <title>w1L1 Yang's Pygame Lab — Variables and Scope</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <style>
         /* ── MODALS ─────────────────────────────────────────────────────────── */
@@ -92,7 +92,7 @@
 <!-- NAME MODAL -->
 <div class="name-modal-overlay" id="name-modal">
   <div class="name-modal-box">
-    <div class="name-modal-title">🎮 W1L1 Yang's Pygame Lab</div>
+    <div class="name-modal-title">🎮 w1L1 Yang's Pygame Lab</div>
     <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
     <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
     <div class="name-modal-error" id="name-modal-error"></div>
@@ -113,14 +113,14 @@
 
 <!-- LOADING SCREEN -->
 <div id="loading-screen">
-    <h2 style="color:#ce3c3c; margin:0;">🎮 W1L1 — Variables and Scope</h2>
+    <h2 style="color:#ce3c3c; margin:0;">🎮 w1L1 — Variables and Scope</h2>
     <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
     <div id="loading-text">Loading Python...</div>
 </div>
 
 <header>
     <div class="header-left">
-        <h1>W1L1 — Variables and Scope</h1>
+        <h1>w1L1 — Variables and Scope</h1>
         <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
     </div>
     <div class="header-controls">
@@ -176,7 +176,7 @@
     // hint (shown by the Hint button) and completeText.
     // The last lab can have finalText instead of completeText.
     // ================================================================
-    const LESSON = "W1L1";
+    const LESSON = "w1L1";
 
     var LAB_DATA = [
     {
@@ -188,10 +188,13 @@
 import asyncio
 
 # ============================================================
-#  W1L1 LAB 1: MEET BLIP
+#  w1L1 LAB 1: MEET BLIP
 # ============================================================
 # This is Blip. Blip is a square. Blip is not very exciting yet.
 # Press Run to see Blip.
+#
+# Your changes only show up when the program starts again.
+# Press Stop, make your change, then press Run.
 #
 # Everything about Blip is stored in VARIABLES (the settings below).
 # A variable is a name that holds a value. Change the value, change Blip.
@@ -199,16 +202,22 @@ import asyncio
 # Do not worry about the code under the settings yet.
 # Next lesson we will pull it apart line by line.
 #
-# MILD:   Change BLIP_COLOUR to a different colour.
-#         Colours are (red, green, blue), each from 0 to 255.
-#         Try (255, 0, 255). What colour is that?
-# MEDIUM: Move Blip to the top-left corner of the screen.
-#         The screen is 800 wide and 600 tall.
-#         Careful: (0, 0) is the TOP-left, not the bottom-left!
-# SPICY:  Move Blip into the bottom-right corner, touching both edges
-#         with no gap. Careful: BLIP_X and BLIP_Y set Blip's TOP-left corner.
-#         Then: can you make Blip stay in that corner whatever BLIP_SIZE is,
-#         so you only ever change BLIP_SIZE? (You may need to move a line.)
+# TASK 1a
+#   Change BLIP_COLOUR to a different colour.
+#   Colours are (red, green, blue), each from 0 to 255.
+#   Try (255, 0, 255). What colour is that?
+#
+# TASK 1b
+#   Move Blip to the top-left corner of the screen.
+#   You need to change TWO settings!
+#   The screen is 800 wide and 600 tall.
+#   Careful: (0, 0) is the TOP-left, not the bottom-left!
+#
+# EXTENSION (optional)
+#   Move Blip into the bottom-right corner, touching both edges
+#   with no gap. Careful: BLIP_X and BLIP_Y set Blip's TOP-left corner.
+#   Then: can you make Blip stay in that corner whatever BLIP_SIZE is,
+#   so you only ever change BLIP_SIZE? (You may need to move a line.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -253,7 +262,7 @@ async def main():
 
 await main()`,
 
-        hint: "Colours are three numbers: (red, green, blue). Each one goes from 0 (none) to 255 (full).\n\nPosition: x counts pixels from the LEFT edge. y counts pixels DOWN from the TOP edge. So (0, 0) is the top-left corner.\n\nSpicy: the bottom-right corner of the screen is at (800, 600). If Blip's top-left corner went there, where would the rest of Blip be? Python can do sums in a setting, for example  BLIP_X = 800 - 50",
+        hint: "Task 1a\nColours are three numbers: (red, green, blue). Each one goes from 0 (none) to 255 (full).\n\nTask 1b\nx counts pixels from the LEFT edge. y counts pixels DOWN from the TOP edge. So (0, 0) is the top-left corner.\n\nExtension\nThe bottom-right corner of the screen is at (800, 600). If Blip's top-left corner went there, where would the rest of Blip be? Python can do sums in a setting, for example  BLIP_X = 800 - 50",
 
         completeText: "Great work! You have changed a program just by changing its variables.\nClick OK to move on to Lab 2."
     },
@@ -266,8 +275,10 @@ await main()`,
 import asyncio
 
 # ============================================================
-#  W1L1 LAB 2: THE MYSTERY ERROR
+#  w1L1 LAB 2: THE MYSTERY ERROR
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # Blip can move now! The function move_blip() moves Blip
 # 100 pixels to the right. We call it twice, so Blip should
 # end up 200 pixels further right.
@@ -279,12 +290,17 @@ import asyncio
 # CAPITALS are for settings that never change.
 # lowercase is for variables that WILL change while the program runs.
 #
-# MILD:   Fix the error. Use the Hint button if you are stuck.
-# MEDIUM: Write a function called move_down() that moves Blip
-#         100 pixels down. Call it once, under the two move_blip() lines.
-# SPICY:  Write a function called grow() that doubles blip_size.
-#         Call it once. Then look at main() further down: it already
-#         says "global game_running". Can you now explain why?
+# TASK 2a
+#   Fix the error. Use the Hint button if you are stuck.
+#
+# TASK 2b
+#   Write a function called move_down() that moves Blip
+#   100 pixels down. Call it once, under the two move_blip() lines.
+#
+# EXTENSION (optional)
+#   Write a function called grow() that doubles blip_size.
+#   Call it once. Then look at main() further down: it already
+#   says "global game_running". Can you now explain why?
 #
 # When you are done, click "Complete" at the top.
 
@@ -328,7 +344,7 @@ async def main():
 
 await main()`,
 
-        hint: "The error says Python cannot access the LOCAL variable blip_x.\n\nInside move_blip(), the line  blip_x = blip_x + 100  CHANGES blip_x. When a function changes a variable, Python assumes it is a brand new local variable that belongs only to that function. That new local blip_x has no value yet, so there is nothing to add 100 to.\n\nThe fix: the first line inside move_blip() should be\n    global blip_x\nThis tells Python \"I mean the blip_x from outside, not a new one.\"",
+        hint: "Task 2a\nThe error says Python cannot access the LOCAL variable blip_x.\nInside move_blip(), the line  blip_x = blip_x + 100  CHANGES blip_x. When a function changes a variable, Python assumes it is a brand new local variable that belongs only to that function. That new local blip_x has no value yet, so there is nothing to add 100 to.\nThe fix: the first line inside move_blip() should be\n    global blip_x\n\nTask 2b\nCopy the pattern of your fixed move_blip(), but change blip_y instead.\n\nExtension\nDoubling means multiplying by 2. Ask yourself: does grow() CHANGE a variable from outside?",
 
         completeText: "You fixed your first scope error! Remember: if a function CHANGES a variable from outside, it needs global.\nClick OK to see a cleaner way."
     },
@@ -341,8 +357,10 @@ await main()`,
 import asyncio
 
 # ============================================================
-#  W1L1 LAB 3: IN AND OUT
+#  w1L1 LAB 3: IN AND OUT
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # "global" works, but programmers try not to use it much.
 # If ANY function can change a variable, then when something
 # goes wrong it is hard to work out which function did it.
@@ -359,14 +377,19 @@ import asyncio
 # Notice: no "global" needed. The function never touches blip_x.
 # It just does a calculation and hands back the answer.
 #
-# MILD:   Change the code so Blip moves 3 times, 150 pixels each time.
-#         Where does Blip end up? Check the console.
-# MEDIUM: Write a function bigger(size) that RETURNS size times 2.
-#         Use it to make Blip twice as big:  blip_size = bigger(blip_size)
-# SPICY:  Write a function swap_colour(colour) that returns the colour
-#         with red and blue swapped. For example (0, 200, 80) should come
-#         back as (80, 200, 0). Use it on blip_colour.
-#         Hint: you can unpack a colour like this:  r, g, b = colour
+# TASK 3a
+#   Change the code so Blip moves 3 times, 150 pixels each time.
+#   Where does Blip end up? Check the console.
+#
+# TASK 3b
+#   Write a function bigger(size) that RETURNS size times 2.
+#   Use it to make Blip twice as big:  blip_size = bigger(blip_size)
+#
+# EXTENSION (optional)
+#   Write a function swap_colour(colour) that returns the colour
+#   with red and blue swapped. For example (0, 200, 80) should come
+#   back as (80, 200, 0). Use it on blip_colour.
+#   Hint: you can unpack a colour like this:  r, g, b = colour
 #
 # When you are done, click "Complete" at the top.
 
@@ -410,7 +433,7 @@ async def main():
 
 await main()`,
 
-        hint: "Look closely at how moved() is used:\n    blip_x = moved(blip_x, 100)\nThe right side runs first: moved() works out the answer and RETURNS it. Then the left side stores that answer back in blip_x.\n\nbigger() follows exactly the same pattern, with one parameter instead of two.\n\nSpicy: inside swap_colour(), the line  r, g, b = colour  splits the colour into three variables. Then return them in a different order:  return (b, g, r)",
+        hint: "Task 3a\nLook closely at how moved() is used:\n    blip_x = moved(blip_x, 100)\nThe right side runs first: moved() works out the answer and RETURNS it. Then the left side stores that answer back in blip_x. You need three of these lines.\n\nTask 3b\nbigger() follows exactly the same pattern as moved(), with one parameter instead of two.\n\nExtension\nInside swap_colour(), the line  r, g, b = colour  splits the colour into three variables. Then return them in a different order:  return (b, g, r)",
 
         completeText: "Parameters in, return values out. That is how most functions in real programs work.\nClick OK for the prediction puzzles."
     },
@@ -420,21 +443,26 @@ await main()`,
         title: "Lab 4: Predict the Output",
 
         code: `# ============================================================
-#  W1L1 LAB 4: PREDICT THE OUTPUT
+#  w1L1 LAB 4: PREDICT THE OUTPUT
 # ============================================================
 # No game this time. Just the console.
 #
 # For EACH puzzle below:
 #   1. Read the code.
 #   2. Write your prediction in the comment underneath it.
-#   3. Only press Run once you have predicted ALL FOUR.
+#   3. Only press Run once you have predicted every puzzle you are doing.
 #
 # If you were wrong about one, that is the useful part!
 # Work out WHY before you click Complete.
 #
-# MILD:   Puzzles 1 and 2.
-# MEDIUM: Puzzle 3.
-# SPICY:  Puzzle 4.
+# TASK 4a
+#   Puzzles 1 and 2.
+#
+# TASK 4b
+#   Puzzle 3.
+#
+# EXTENSION (optional)
+#   Puzzle 4.
 
 # ---------------- PUZZLE 1 ----------------
 score = 10
@@ -483,7 +511,7 @@ new_speed = boost(speed)
 print("Puzzle 4:", speed, new_speed)
 # My prediction:  ___  ___`,
 
-        hint: "Ask yourself these questions for each puzzle:\n\n1. When the function sets a variable, does it say global? If not, the variable inside the function is a separate local one, and the outside one is untouched.\n\n2. When a function RETURNS a value, does the code that called it store that value anywhere? A returned value that is not stored is thrown away.\n\n3. A parameter is a local variable too, even when it has the same name as a variable outside.",
+        hint: "Task 4a\nWhen the function sets a variable, does it say global? If not, the variable inside the function is a separate local one, and the outside one is untouched.\n\nTask 4b\nWhen a function RETURNS a value, does the code that called it store that value anywhere? A returned value that is not stored is thrown away.\n\nExtension\nA parameter is a local variable too, even when it has the same name as a variable outside.",
 
         completeText: "If you got them all right first time, you understand scope better than many adults who code!\nClick OK for the extension lab."
     },
@@ -496,8 +524,10 @@ print("Puzzle 4:", speed, new_speed)
 import asyncio
 
 # ============================================================
-#  W1L1 LAB 5 (EXTENSION): GLOBAL DETOX
+#  w1L1 LAB 5 (EXTENSION): GLOBAL DETOX
 # ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
 # This program works, but it uses "global" three times.
 # Run it and note where Blip ends up. The console tells you.
 #
@@ -510,11 +540,16 @@ import asyncio
 #   - Blip must end up in exactly the same place, at exactly the same size.
 #     The console should still print:  x = 400, y = 250, size = 70
 #
-# MILD:   Rewrite move_right().
-# MEDIUM: Rewrite all three.
-# SPICY:  Replace move_right() and move_down() with ONE function
-#         that can move Blip in any direction, e.g. moved(x, y, dx, dy).
-#         Hint: a function can return two values:  return x, y
+# TASK 5a
+#   Rewrite move_right().
+#
+# TASK 5b
+#   Rewrite all three.
+#
+# EXTENSION (optional)
+#   Replace move_right() and move_down() with ONE function
+#   that can move Blip in any direction, e.g. moved(x, y, dx, dy).
+#   Hint: a function can return two values:  return x, y
 
 # ============================================================
 #  STUDENT ZONE: SETTINGS
@@ -567,9 +602,9 @@ async def main():
 
 await main()`,
 
-        hint: "Start with move_right(). It needs to take blip_x IN as a parameter and RETURN the new value. Then change where it is called:\n    blip_x = move_right(blip_x)\n\nRun it after each change and check the console still prints x = 400, y = 250, size = 70.\n\nSpicy: a function can return two values at once, and you can store both at once:\n    blip_x, blip_y = moved(blip_x, blip_y, 150, 0)",
+        hint: "Task 5a\nmove_right() needs to take blip_x IN as a parameter and RETURN the new value. Then change where it is called:\n    blip_x = move_right(blip_x)\nRun it and check the console still prints x = 400, y = 250, size = 70.\n\nTask 5b\nDo the same for move_down() and grow(), one at a time, running after each change.\n\nExtension\nA function can return two values at once, and you can store both at once:\n    blip_x, blip_y = moved(blip_x, blip_y, 150, 0)",
 
-        finalText: "Congratulations on completing Week 1 Lesson 1!\nYou now know variables, local and global scope, parameters and return values. Next lesson, Blip starts moving."
+        finalText: "Congratulations on completing w1L1!\nYou now know variables, local and global scope, parameters and return values. Next lesson, Blip starts moving."
     }
     ];
 
@@ -668,7 +703,7 @@ await main()`,
     // ── EXPORT CODE ───────────────────────────────────────────────────────────
     function exportCode() {
         const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
-        const file = name + "-" + LESSON.toLowerCase() + "-lab" + (currentLab + 1) + ".txt";
+        const file = name + "-" + LESSON + "-lab" + (currentLab + 1) + ".txt";
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
         a.download = file;
