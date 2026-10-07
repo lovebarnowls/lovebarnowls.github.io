@@ -1028,16 +1028,16 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "If you search online, you will find  clock.tick(60). That is the usual way in pygame on your own computer, but in this web-based IDE we use a different line. Look at line 63. sleep means wait. The 0 means: wait 0 seconds after each frame.",
-            "60 frames every second means each frame should take one sixtieth of a second. In Python,  /  means divide, so one sixtieth is  1 / 60",
-            "Change line 63 so it says  await asyncio.sleep(1 / 60)  (keep the 8 spaces in front)."
+            "pygame has a CLOCK that can slow the loop down to a speed you choose. If you search online, try:  pygame clock tick",
+            "You need two lines. Make the clock ONCE, before the loop starts:  clock = pygame.time.Clock()  Then, inside the loop, tick it once every frame:  clock.tick(60)",
+            "Put  clock = pygame.time.Clock()  on a new line under line 38 (4 spaces in front). Put  clock.tick(60)  on a new line under line 62 (8 spaces in front). Do NOT delete line 63."
         ],
 
-        answer: "await asyncio.sleep(1 / 60) waits one sixtieth of a second after every frame, so the loop cannot run more than 60 times each second, on any computer. Your FPS may show a little under 60 (such as 58), because drawing takes a little time too.\n\nIf you use pygame on your own computer, the usual way is  clock = pygame.time.Clock()  before the loop, and  clock.tick(60)  inside it.\n\nReplace line 63, which says\n    await asyncio.sleep(0)\nwith the line below. The indent is already included.",
+        answer: "clock = pygame.time.Clock() makes a clock, once, before the loop starts. clock.tick(60) runs once every frame: it waits just long enough that the loop never runs more than 60 times each second, on any computer. Your FPS may show a little under 60 (such as 59), which is fine.\n\nKeep line 63 (await asyncio.sleep(0)). This web-based IDE still needs it, because while True does not work here.\n\nStep 1: make a new empty line straight under line 62, which says\n    pygame.display.flip()\nand paste the line below there. The indent is already included.\n\nStep 2: make a new empty line straight under line 38, which says\n    font = pygame.font.SysFont(None, 26)\nand type this there, with 4 spaces in front:\n    clock = pygame.time.Clock()",
 
-        answerCode: `        await asyncio.sleep(1 / 60)`,
+        answerCode: `        clock.tick(60)`,
 
-        completeText: "Your game now runs at the same speed on every computer. From now on, every lab uses  await asyncio.sleep(1 / 60).\nClick OK for Lab 4a."
+        completeText: "Your game now runs at the same speed on every computer. From now on, every lab has  clock = pygame.time.Clock()  and  clock.tick(60).\nClick OK for Lab 4a."
     },
     {
         id: "4a",
@@ -1057,7 +1057,7 @@ import asyncio
 #
 # So far BLIP_SPEED has been a positive number, so blip_x gets BIGGER every
 # frame and Blip moves right.
-# A speed can also be NEGATIVE. If BLIP_SPEED is -3, line 53
+# A speed can also be NEGATIVE. If BLIP_SPEED is -3, line 54
 # works out  blip_x + -3, which is the same as  blip_x - 3.
 #
 # TASK 4a
@@ -1085,6 +1085,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1106,7 +1107,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1177,7 +1179,7 @@ import asyncio
 # but nothing uses it yet.
 #
 # TASK 4b
-#   1. Make a new line straight under line 53, and type
+#   1. Make a new line straight under line 54, and type
 #          blip_y = blip_y + BLIP_SPEED_Y
 #      with 8 spaces in front.
 #   2. Change BLIP_SPEED_X to 0, so Blip ONLY moves up or down.
@@ -1205,6 +1207,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1226,7 +1229,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1266,12 +1270,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "Part 1 is like line 53, but with y instead of x. It goes in the UPDATE job.",
+            "Part 1 is like line 54, but with y instead of x. It goes in the UPDATE job.",
             "Part 2 is on line 27:  BLIP_SPEED_X = 0  Moving 0 pixels sideways each frame means not moving sideways at all.",
             "BLIP_SPEED_Y is 2, so blip_y gets 2 bigger every frame. A bigger y means further DOWN the screen."
         ],
 
-        answer: "Blip moves straight down, because blip_y gets 2 bigger every frame and blip_x does not change.\n\nStep 1: make a new empty line straight under line 53, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the line below there. The indent is already included.\n\nStep 2: change line 27 so it says\n    BLIP_SPEED_X = 0",
+        answer: "Blip moves straight down, because blip_y gets 2 bigger every frame and blip_x does not change.\n\nStep 1: make a new empty line straight under line 54, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the line below there. The indent is already included.\n\nStep 2: change line 27 so it says\n    BLIP_SPEED_X = 0",
 
         answerCode: `        blip_y = blip_y + BLIP_SPEED_Y`,
 
@@ -1321,6 +1325,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1343,7 +1348,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1410,13 +1416,13 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 56. It says:
+# Look at line 57. It says:
 #     screen.fill(BACKGROUND)
 # It is the first line of the DRAW job. Every frame, it paints the WHOLE
 # screen in the background colour.
 #
 # TASK 5a
-#   1. Put a # at the very start of line 56, so Python skips it.
+#   1. Put a # at the very start of line 57, so Python skips it.
 #      Press Run. What happens? Why?
 #   2. Then remove the # again.
 #
@@ -1442,6 +1448,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1464,7 +1471,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1527,7 +1535,7 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # We put Blip back on the left, moving right, and added a wall.
-# Look at lines 64 and 65. They say:
+# Look at lines 65 and 66. They say:
 #     pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
 #     pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))
 # pygame.draw.rect() draws a rectangle. Inside the brackets:
@@ -1565,6 +1573,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1588,7 +1597,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1628,12 +1638,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "Which is drawn first: Blip (line 64) or the wall (line 65)?",
+            "Which is drawn first: Blip (line 65) or the wall (line 66)?",
             "Whatever is drawn LAST ends up in front. Right now the wall is drawn last.",
-            "Swap lines 64 and 65, so the wall is drawn first and Blip is painted on top of it."
+            "Swap lines 65 and 66, so the wall is drawn first and Blip is painted on top of it."
         ],
 
-        answer: "The wall was drawn after Blip, so it was painted over Blip. Drawing the wall first, then Blip, puts Blip in front.\n\nReplace lines 64 and 65, which say\n    pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))\n    pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))\nwith the two lines below. The indent is already included.",
+        answer: "The wall was drawn after Blip, so it was painted over Blip. Drawing the wall first, then Blip, puts Blip in front.\n\nReplace lines 65 and 66, which say\n    pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))\n    pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))\nwith the two lines below. The indent is already included.",
 
         answerCode: `        pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))
         pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))`,
@@ -1653,7 +1663,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Someone has moved line 56. It now comes AFTER the wall and Blip.
+# Someone has moved line 57. It now comes AFTER the wall and Blip.
 #
 # TASK 5c
 #   1. BEFORE you press Run, predict what you will see:  ___
@@ -1683,6 +1693,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1706,7 +1717,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1746,12 +1758,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "Follow the DRAW job in order: first the wall, then Blip, then line 56. What does screen.fill() do to everything already on the screen?",
+            "Follow the DRAW job in order: first the wall, then Blip, then line 57. What does screen.fill() do to everything already on the screen?",
             "screen.fill() paints over the WHOLE screen, so it covers the wall and Blip. The numbers are drawn after it, so they still show.",
             "screen.fill() must be the FIRST line of the DRAW job, straight under the comment  # 3. DRAW"
         ],
 
-        answer: "You only see the numbers sliding across an empty screen. The wall and Blip are drawn, then screen.fill() paints over them, and only then does flip show the frame.\n\nReplace lines 54 to 56, which say\n    pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))\n    pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))\n    screen.fill(BACKGROUND)\nwith the three lines below. The indent is already included.",
+        answer: "You only see the numbers sliding across an empty screen. The wall and Blip are drawn, then screen.fill() paints over them, and only then does flip show the frame.\n\nReplace lines 55 to 57, which say\n    pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))\n    pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))\n    screen.fill(BACKGROUND)\nwith the three lines below. The indent is already included.",
 
         answerCode: `        screen.fill(BACKGROUND)
         pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))
@@ -1831,7 +1843,7 @@ import asyncio
 # TASK 6b
 #   Make Blip come back on the LEFT after it leaves on the right,
 #   like in an old arcade game.
-#   Make a new line straight under line 54, and type these two lines:
+#   Make a new line straight under line 55, and type these two lines:
 #       if blip_x > 800:
 #           blip_x = -50
 #   The if line needs 8 spaces in front (inside main() and the loop).
@@ -1860,6 +1872,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -1882,7 +1895,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -1922,12 +1936,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "The two new lines go in the UPDATE job, straight under line 54.",
-            "Line up the if with line 54 (8 spaces). The line under the if gets 4 more (12 spaces).",
+            "The two new lines go in the UPDATE job, straight under line 55.",
+            "Line up the if with line 55 (8 spaces). The line under the if gets 4 more (12 spaces).",
             "Why -50? Blip is 50 pixels wide. At x = -50, Blip is just off the left edge, so it slides back onto the screen instead of suddenly appearing."
         ],
 
-        answer: "Once blip_x is more than 800, Blip has completely left the screen, so the if puts it back at -50, just off the left edge. Then it slides back in.\n\nMake a new empty line straight under line 54, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the two lines below there. The indents are already included.",
+        answer: "Once blip_x is more than 800, Blip has completely left the screen, so the if puts it back at -50, just off the left edge. Then it slides back in.\n\nMake a new empty line straight under line 55, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        if blip_x > 800:
             blip_x = -50`,
@@ -1951,7 +1965,7 @@ import asyncio
 #   Blip moves BLIP_SPEED_X pixels every frame, at 60 frames each second.
 #   So Blip moves 3 * 60 = 180 pixels each second.
 #
-#   1. Change line 65 so the game runs at 30 FPS.
+#   1. Change line 66 so the game runs at 30 FPS.
 #      Press Run. What happens to Blip's speed?
 #   2. Change BLIP_SPEED_X so Blip moves 180 pixels each second again,
 #      at 30 FPS.
@@ -1979,6 +1993,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -2003,7 +2018,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -2043,14 +2059,14 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "30 FPS means each frame takes one thirtieth of a second:  await asyncio.sleep(1 / 30)",
+            "The number inside clock.tick() is the most frames the loop will run each second:  clock.tick(30)",
             "Half as many frames means Blip moves half as far each second: 3 * 30 = 90 pixels. What number times 30 makes 180?",
             "BLIP_SPEED_X = 6, because 6 * 30 = 180. Blip now jumps 6 pixels at a time, so it looks a little less smooth."
         ],
 
-        answer: "At 30 FPS with the same speed, Blip moves half as far each second. Doubling the speed to 6 brings it back to 180 pixels each second, but Blip now jumps 6 pixels at a time, which looks less smooth.\nPixels per second = speed * FPS.\n\nStep 1: replace line 65, which says\n    await asyncio.sleep(1 / 60)\nwith the line below. The indent is already included.\n\nStep 2: change line 26 so it says\n    BLIP_SPEED_X = 6",
+        answer: "At 30 FPS with the same speed, Blip moves half as far each second. Doubling the speed to 6 brings it back to 180 pixels each second, but Blip now jumps 6 pixels at a time, which looks less smooth.\nPixels per second = speed * FPS.\n\nStep 1: replace line 66, which says\n    clock.tick(60)\nwith the line below. The indent is already included.\n\nStep 2: change line 26 so it says\n    BLIP_SPEED_X = 6",
 
-        answerCode: `        await asyncio.sleep(1 / 30)`,
+        answerCode: `        clock.tick(30)`,
 
         completeText: "Click OK for the next extension."
     },
@@ -2069,15 +2085,15 @@ import asyncio
 #
 # EXTENSION
 #   We want Blip to BOUNCE off the edges. Bouncing changes Blip's speed,
-#   but CAPITALS are for settings that never change. So line 50
+#   but CAPITALS are for settings that never change. So line 51
 #   makes a lowercase copy called speed_x, which CAN change.
-#   Line 59 now uses speed_x.
+#   Line 60 now uses speed_x.
 #
 #   To bounce, flip the sign of the speed:
 #       speed_x = -speed_x
 #   This turns 3 into -3 (now going left), and -3 back into 3.
 #
-#   Replace the two wrap lines (60 and 61) so that:
+#   Replace the two wrap lines (61 and 62) so that:
 #     - when Blip touches the RIGHT edge, it bounces back to the left.
 #     - when Blip touches the LEFT edge (blip_x < 0), it bounces back to the right.
 #   Careful: blip_x is Blip's LEFT side. When does Blip's RIGHT side
@@ -2105,6 +2121,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -2130,7 +2147,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -2175,7 +2193,7 @@ await main()`,
             "if blip_x > 800 - BLIP_SIZE:  then, indented,  speed_x = -speed_x  Then  if blip_x < 0:  then, indented,  speed_x = -speed_x"
         ],
 
-        answer: "Each if checks one edge. Flipping the sign of speed_x turns Blip round.\n\nReplace lines 60 and 61, which say\n    if blip_x > 800:\n        blip_x = -50\nwith the four lines below. The indents are already included.",
+        answer: "Each if checks one edge. Flipping the sign of speed_x turns Blip round.\n\nReplace lines 61 and 62, which say\n    if blip_x > 800:\n        blip_x = -50\nwith the four lines below. The indents are already included.",
 
         answerCode: `        if blip_x > 800 - BLIP_SIZE:
             speed_x = -speed_x
@@ -2198,10 +2216,10 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # EXTENSION
-#   Blip now has a lowercase speed_y as well (line 42).
+#   Blip now has a lowercase speed_y as well (line 43).
 #   BLIP_SPEED_Y is 2, so Blip moves diagonally and falls off the bottom.
 #
-#   Add two more ifs, under line 56, so Blip bounces off
+#   Add two more ifs, under line 57, so Blip bounces off
 #   the TOP and the BOTTOM too.
 #
 # When you are done, click "Complete" at the top.
@@ -2226,6 +2244,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -2254,7 +2273,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -2299,7 +2319,7 @@ await main()`,
             "if blip_y > 600 - BLIP_SIZE:  then, indented,  speed_y = -speed_y  Then  if blip_y < 0:  then, indented,  speed_y = -speed_y"
         ],
 
-        answer: "The y ifs work the same way as the x ones, but use the screen's height (600) instead of its width (800).\n\nMake a new empty line straight under line 56, which says\n    blip_y = blip_y + speed_y\nand paste the four lines below there. The indents are already included.",
+        answer: "The y ifs work the same way as the x ones, but use the screen's height (600) instead of its width (800).\n\nMake a new empty line straight under line 57, which says\n    blip_y = blip_y + speed_y\nand paste the four lines below there. The indents are already included.",
 
         answerCode: `        if blip_y > 600 - BLIP_SIZE:
             speed_y = -speed_y
@@ -2328,8 +2348,8 @@ import random
 #   random.randint(0, 255) picks a random whole number from 0 to 255.
 #   random_colour() picks three of them and returns them as a colour.
 #
-#   Blip's colour is about to change, so line 54 makes a lowercase
-#   copy called blip_colour, and line 76 draws Blip in it.
+#   Blip's colour is about to change, so line 55 makes a lowercase
+#   copy called blip_colour, and line 77 draws Blip in it.
 #
 #   Make Blip change to a random colour EVERY time it bounces.
 #
@@ -2361,6 +2381,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -2394,7 +2415,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -2439,7 +2461,7 @@ await main()`,
             "Put  blip_colour = random_colour()  inside each of the four ifs, under  speed_x = -speed_x  or  speed_y = -speed_y, with the same 12-space indent."
         ],
 
-        answer: "Calling random_colour() inside each if means a new colour is picked only at the moment Blip bounces.\n\nReplace everything from line 64 down to the last  speed_y = -speed_y  with the code below. The indents are already included.",
+        answer: "Calling random_colour() inside each if means a new colour is picked only at the moment Blip bounces.\n\nReplace everything from line 65 down to the last  speed_y = -speed_y  with the code below. The indents are already included.",
 
         answerCode: `        if blip_x > 800 - BLIP_SIZE:
             speed_x = -speed_x
@@ -2511,6 +2533,7 @@ async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
 
     blip_x = BLIP_START_X
     blip_y = BLIP_START_Y
@@ -2548,7 +2571,8 @@ async def main():
 
         # 4. FLIP: show the finished frame
         pygame.display.flip()
-        await asyncio.sleep(1 / 60)
+        clock.tick(60)
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -2593,7 +2617,7 @@ await main()`,
             "Under the right-edge bounce:  if abs(speed_x) < MAX_SPEED:  then, with 16 spaces in front,  speed_x = speed_x - 1  Under the left-edge bounce, the same, but  speed_x = speed_x + 1"
         ],
 
-        answer: "abs(speed_x) is Blip's speed without the sign, so the same check works in both directions. After the right edge, Blip is moving left (negative), so taking 1 away makes it faster. After the left edge, adding 1 makes it faster.\n\nReplace lines 65 to 70 (the two ifs for the left and right edges) with the code below. The indents are already included.",
+        answer: "abs(speed_x) is Blip's speed without the sign, so the same check works in both directions. After the right edge, Blip is moving left (negative), so taking 1 away makes it faster. After the left edge, adding 1 makes it faster.\n\nReplace lines 66 to 71 (the two ifs for the left and right edges) with the code below. The indents are already included.",
 
         answerCode: `        if blip_x > 800 - BLIP_SIZE:
             speed_x = -speed_x
