@@ -1,0 +1,2756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>w2L2 Yang's Pygame Lab — Dodge</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
+
+        .info-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .info-modal-overlay.open { display:flex; }
+        .info-modal-box { background:#252526; color:#d4d4d4; padding:28px 32px; border-radius:10px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid #ce3c3c; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .info-modal-icon { font-size:30px; text-align:center; margin-bottom:12px; }
+        .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
+        .info-modal-actions { text-align:center; }
+
+        .hint-modal-box { background:#252526; color:#d4d4d4; padding:24px 28px; border-radius:10px; max-width:640px; width:92%; max-height:85vh; overflow-y:auto; border:1px solid #f0a500; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .hint-block { border-left:3px solid #f0a500; background:#1e1e1e; padding:10px 14px; margin-bottom:12px; border-radius:0 4px 4px 0; }
+        .hint-block.answer { border-left-color:#4EC9B0; }
+        .hint-block h3 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#f0a500; }
+        .hint-block.answer h3 { color:#4EC9B0; }
+        .hint-text { font-size:14px; line-height:1.65; white-space:pre-wrap; margin:0; }
+        .answer-code-wrap { position:relative; margin-top:10px; }
+        .answer-code { background:#111; color:#d4d4d4; font-family:'Consolas',monospace; font-size:13px; line-height:1.5; padding:12px 14px; border:1px solid #333; border-radius:4px; white-space:pre; overflow-x:auto; margin:0; }
+        .btn-copy { position:absolute; top:6px; right:6px; background:#4EC9B0; color:#1e1e1e; font-size:11px; padding:4px 10px; }
+        .btn-copy:hover:not(:disabled) { background:#3ab89f; }
+        .hint-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        header { background:#252526; padding:6px 16px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; min-height:50px; box-sizing:border-box; flex-shrink:0; gap:10px; flex-wrap:wrap; }
+        .header-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        h1 { margin:0; font-size:17px; color:#ce3c3c; white-space:nowrap; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; }
+        .header-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; min-height:0; }
+
+        /* ── EDITOR ─────────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; overflow:hidden; }
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; min-height:0; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:40px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
+
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; min-height:0; }
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
+
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:8px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
+
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .btn-hdr { font-size:12px; padding:6px 12px; }
+        .btn-grey { background:#3a3a3a; border:1px solid #555; }
+        .btn-grey:hover:not(:disabled) { background:#4a4a4a; }
+        .btn-hint { background:#f0a500; color:#1e1e1e; }
+        .btn-hint:hover:not(:disabled) { background:#d4900a; }
+        .btn-complete { background:#9b59b6; }
+        .btn-complete:hover:not(:disabled) { background:#7d3c98; }
+
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
+
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
+
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 w2L2 Yang's Pygame Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- HINT / COMPLETE MODAL -->
+<div class="info-modal-overlay" id="info-modal">
+  <div class="info-modal-box">
+    <div class="info-modal-icon" id="info-modal-icon">💡</div>
+    <p class="info-modal-text" id="info-modal-text"></p>
+    <div class="info-modal-actions">
+      <button id="info-modal-btn" onclick="closeInfoModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- HINT LADDER MODAL -->
+<div class="info-modal-overlay" id="hint-modal">
+  <div class="hint-modal-box">
+    <div id="hint-modal-content"></div>
+    <div class="hint-modal-actions">
+      <button class="btn-hint" id="hint-next-btn" onclick="showHint()">💡 Next hint</button>
+      <button class="btn-grey" onclick="closeHintModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 w2L2 — Dodge</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <div class="header-left">
+        <h1>w2L2 — Dodge</h1>
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
+        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
+        <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
+        <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — read the comments, then edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================================================================
+    // LAB DATA
+    // Each lab: id (used in the address, e.g. #lab1a), title,
+    // code (the instructions live in the comments), hints (three, each
+    // deeper than the last), answer (explanation and where to paste),
+    // answerCode (the code to paste, optional) and completeText.
+    // The last lab can have finalText instead of completeText.
+    // ================================================================
+    const LESSON = "w2L2";
+
+    var LAB_DATA = [
+    {
+        id: "1a",
+
+        title: "Lab 1a: Arrow Keys",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 1a: ARROW KEYS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Welcome to w2L2: Dodge. This week, YOU control Blip with the keyboard.
+# Later, something called Pogo will bounce around, and you must dodge it.
+#
+# Look at line 61. It says:
+#     keys = pygame.key.get_pressed()
+# Every frame, this asks pygame: "which keys are being HELD DOWN right now?"
+# and stores the answer in keys.
+#
+# Look at lines 62 and 63:
+#     if keys[pygame.K_RIGHT]:
+#         blip.x = blip.x + 5
+# pygame.K_RIGHT is the name of the right arrow key.
+# keys[pygame.K_RIGHT] is True while the right arrow is held down.
+# So every frame the key is held, Blip moves 5 pixels right.
+#
+# Why not use an event, like the clicks in w2L1? A key event happens ONCE,
+# when the key goes down. get_pressed() is checked EVERY frame, so Blip
+# keeps moving for as long as you hold the key.
+#
+# TASK 1a
+#   Press Run, then click on the game screen so it hears your keys.
+#   Hold the right arrow. Then make the LEFT arrow (pygame.K_LEFT) move
+#   Blip left.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + 5
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Copy the shape of lines 62 and 63: an if line, then an indented line under it.",
+            "Change two things: K_RIGHT becomes K_LEFT, and + 5 becomes - 5 (left means x gets smaller).",
+            "if keys[pygame.K_LEFT]:  (8 spaces in front), then  blip.x = blip.x - 5  (12 spaces in front)."
+        ],
+
+        answer: "Holding left makes keys[pygame.K_LEFT] True every frame, and taking 5 away from blip.x moves Blip left.\n\nMake a new empty line straight under line 63, which says\n    blip.x = blip.x + 5\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - 5`,
+
+        completeText: "Click OK for Lab 1b."
+    },
+    {
+        id: "1b",
+
+        title: "Lab 1b: Up and Down",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 1b: UP AND DOWN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 1b
+#   Make the UP arrow (pygame.K_UP) and the DOWN arrow (pygame.K_DOWN)
+#   move Blip up and down, 5 pixels every frame.
+#   Remember: in pygame, y counts DOWN.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + 5
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - 5
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "You need two more ifs, the same shape as the two on lines 43 to 46. This time they change blip.y.",
+            "Up means y gets SMALLER, so up is  - 5. Down is  + 5.",
+            "if keys[pygame.K_UP]:  then  blip.y = blip.y - 5   and   if keys[pygame.K_DOWN]:  then  blip.y = blip.y + 5"
+        ],
+
+        answer: "Up takes 5 away from blip.y and down adds 5, because y counts down the screen. Holding two arrows at once moves Blip diagonally.\n\nMake a new empty line straight under line 46, which says\n    blip.x = blip.x - 5\nand paste the four lines below there. The indents are already included.",
+
+        answerCode: `        if keys[pygame.K_UP]:
+            blip.y = blip.y - 5
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + 5`,
+
+        completeText: "Click OK for Lab 1c."
+    },
+    {
+        id: "1c",
+
+        title: "Lab 1c: BLIP_SPEED",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 1c: BLIP_SPEED
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The number 5 is typed FOUR times. To change Blip's speed, you would have to
+# find and change all four. A setting is better.
+# Line 22 creates one: BLIP_SPEED = 5.
+#
+# TASK 1c
+#   1. Change the four 5s in the UPDATE job to BLIP_SPEED.
+#   2. Change BLIP_SPEED to 8. Is Blip faster?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + 5
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - 5
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - 5
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + 5
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The four 5s are on lines 48, 50, 52 and 54.",
+            "Only change the number. For example,  blip.x = blip.x + 5  becomes  blip.x = blip.x + BLIP_SPEED",
+            "Then line 22 becomes  BLIP_SPEED   = 8"
+        ],
+
+        answer: "Now all four movement lines use the one setting, so changing line 22 changes Blip's speed in every direction at once.\n\nStep 1: replace lines 47 to 54 (the four ifs) with the code below. The indents are already included.\n\nStep 2: change line 22 so it says\n    BLIP_SPEED   = 8",
+
+        answerCode: `        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED`,
+
+        completeText: "Click OK for Lab 2a."
+    },
+    {
+        id: "2a",
+
+        title: "Lab 2a: The Right Wall",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 2a: THE RIGHT WALL
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Hold the right arrow for a while. Blip drives straight off the screen!
+# (We set BLIP_SPEED back to 5.)
+#
+# To stop Blip, check its position AFTER it moves. If it has gone too far,
+# put it back at the edge:
+#     if blip.x > 800 - blip.width:
+#         blip.x = 800 - blip.width
+# 800 - blip.width is the biggest x where all of Blip is still on the screen
+# (you worked this out in w1L1 Lab 2b).
+#
+# TASK 2a
+#   Make a new line straight under line 61, and type the two lines
+#   above. The if needs 8 spaces in front, and the line under it needs 12.
+#   Hold the right arrow. What does the x in the label stop at?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new lines go at the END of the movement code, so they run after Blip has moved, every frame.",
+            "Line up the if with line 60 (8 spaces). The line under it gets 12.",
+            "Blip is 50 wide, so the label should stop at x = 750."
+        ],
+
+        answer: "Every frame, after Blip moves, the if checks whether Blip has gone past the right edge. If it has, it puts Blip back at 800 - blip.width, which is 750. So Blip stops at the wall.\n\nMake a new empty line straight under line 61, which says\n    blip.y = blip.y + BLIP_SPEED\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width`,
+
+        completeText: "Click OK for Lab 2b."
+    },
+    {
+        id: "2b",
+
+        title: "Lab 2b: Four Walls",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 2b: FOUR WALLS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 2b
+#   Lines 51 and 52 stop Blip at the right edge.
+#   Add three more ifs, so Blip also stops at the LEFT, TOP and BOTTOM edges.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The left and top edges are at 0. Blip has gone too far if blip.x < 0, or if blip.y < 0.",
+            "The bottom edge is like the right edge, but uses 600 (the screen's height) and blip.height.",
+            "if blip.x < 0:  blip.x = 0   if blip.y < 0:  blip.y = 0   if blip.y > 600 - blip.height:  blip.y = 600 - blip.height"
+        ],
+
+        answer: "Each if checks one edge, and puts Blip back exactly on that edge if it has gone past.\n\nMake a new empty line straight under line 52, which says\n    blip.x = 800 - blip.width\nand paste the six lines below there. The indents are already included.",
+
+        answerCode: `        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height`,
+
+        completeText: "Blip is trapped on the screen. Time to add something to dodge!\nClick OK for Lab 3a."
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: Meet Pogo",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 3a: MEET POGO
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Meet Pogo, the red square. Pogo bounces around the screen.
+#
+# Pogo is made on lines 46 to 48: a Rect, and two speeds.
+# Lines 74 to 83 move it and bounce it,
+# using exactly the same idea as Boing in w1L2:
+#   - add the speeds to pogo.x and pogo.y every frame;
+#   - if Pogo reaches an edge, flip the sign of that speed (3 becomes -3).
+# Line 88 draws it.
+#
+# TASK 3a
+#   1. Which line makes Pogo bounce off the RIGHT edge?  ___
+#   2. Make Pogo faster: change POGO_SPEED (line 30) to 6.
+#   3. Try to avoid Pogo for 20 seconds. (Nothing happens if it hits you, yet.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Look for the if that compares pogo.x with 800 - pogo.width.",
+            "It is line 76. The line under it flips pogo_speed_x, so Pogo turns round.",
+            "Line 30 should say  POGO_SPEED   = 6"
+        ],
+
+        answer: "1. Line 76 checks the right edge, and the line under it flips pogo_speed_x.\n2. With POGO_SPEED at 6, Pogo moves 6 pixels each way every frame.\n\nReplace line 30, which says\n    POGO_SPEED   = 4\nwith the line below (no indent).",
+
+        answerCode: `POGO_SPEED   = 6`,
+
+        completeText: "Click OK for Lab 3b."
+    },
+    {
+        id: "3b",
+
+        title: "Lab 3b: Ouch!",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 3b: OUCH!
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# We set POGO_SPEED back to 4. Line 51 creates a variable called hits.
+#
+# In w2L1, collidepoint() asked "is this POINT inside the Rect?".
+# colliderect() asks "do these two RECTS overlap?":
+#     blip.colliderect(pogo)
+# is True when any part of Blip is touching any part of Pogo.
+#
+# TASK 3b
+#   1. Make a new line straight under line 86 and type these three lines:
+#          if blip.colliderect(pogo):
+#              hits = hits + 1
+#              print("Hits:", hits)
+#      (8 spaces in front of the if, and 12 in front of the two lines under it.)
+#   2. Run it, and let Pogo hit you ONCE. Look at the console.
+#      How many hits were counted for that one bump? Why?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new lines go at the very end of the UPDATE job, after Pogo has moved.",
+            "One bump usually counts as lots of hits: 5, 10, or more.",
+            "The loop runs 60 times every second. Pogo and Blip stay overlapped for several frames, and colliderect() is True on EVERY one of those frames."
+        ],
+
+        answer: "One bump counts many hits, because the two Rects overlap for several frames in a row, and the if adds 1 on every one of those frames. Lab 3c fixes this.\n\nMake a new empty line straight under line 86, which says\n    pogo_speed_y = -pogo_speed_y\nand paste the three lines below there. The indents are already included.",
+
+        answerCode: `        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)`,
+
+        completeText: "Click OK for Lab 3c, which fixes the too-many-hits problem."
+    },
+    {
+        id: "3c",
+
+        title: "Lab 3c: One Bump, One Hit",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 3c: ONE BUMP, ONE HIT
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# In Lab 3b, one bump counted as many hits, because Blip and Pogo stayed
+# overlapped for several frames.
+#
+# One fix: as soon as Pogo hits, send it back to the TOP-LEFT corner.
+# Then it is no longer touching Blip on the next frame.
+#
+# TASK 3c
+#   Make a new line straight under line 84, and add two lines that move
+#   Pogo back to x = 0 and y = 0. They belong inside the if (12 spaces).
+#   Test it: one bump should now count as one hit.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Moving Pogo means changing pogo.x and pogo.y.",
+            "Both lines need 12 spaces in front, so they only run when there is a hit.",
+            "pogo.x = 0  and  pogo.y = 0"
+        ],
+
+        answer: "On the frame of the hit, Pogo is sent back to the top-left corner, so on the next frame it is no longer touching Blip. One bump, one hit.\n\nMake a new empty line straight under line 84, which says\n    print(\"Hits:\", hits)\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `            pogo.x = 0
+            pogo.y = 0`,
+
+        completeText: "Click OK for Lab 3d."
+    },
+    {
+        id: "3d",
+
+        title: "Lab 3d: Hits on Screen",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 3d: HITS ON SCREEN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The hits are only in the console. Put them on the game screen, like the
+# score in w2L1 Lab 5a. Line 26 gives you a colour to use.
+#
+# TASK 3d
+#   Make a new line straight under line 89, and add two lines that
+#   show  Hits: 3  (with the real number) in the top-left corner, at (10, 10).
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Two steps: font.render() turns the words into a picture, then screen.blit() puts the picture on the screen.",
+            "Use an f-string, so {hits} is replaced by the number:  f\"Hits: {hits}\"",
+            "hits_text = font.render(f\"Hits: {hits}\", True, TEXT_COLOUR)  then  screen.blit(hits_text, (10, 10))  (both with 8 spaces in front)."
+        ],
+
+        answer: "font.render() makes a picture of the words using the current number of hits, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 89, which says\n    show_rect(screen, font, blip)\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))`,
+
+        completeText: "Click OK for Lab 4a."
+    },
+    {
+        id: "4a",
+
+        title: "Lab 4a: WASD",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 4a: WASD
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Many PC games use W, A, S and D instead of the arrow keys.
+# In pygame, letter keys are called pygame.K_ and then the letter, in lowercase:
+#     pygame.K_w    pygame.K_a    pygame.K_s    pygame.K_d
+#
+# TASK 4a
+#   Change the four movement ifs (lines 54 to 61) so that
+#     W moves up,  A moves left,  S moves down,  D moves right.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Only the key names change. The lines that move Blip stay the same.",
+            "Right is D, left is A, up is W and down is S.",
+            "K_RIGHT becomes K_d, K_LEFT becomes K_a, K_UP becomes K_w and K_DOWN becomes K_s."
+        ],
+
+        answer: "Only the key names change: the movement lines underneath stay the same.\n\nReplace lines 54 to 61 (the four ifs) with the code below. The indents are already included.",
+
+        answerCode: `        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED`,
+
+        completeText: "Click OK for Lab 4b: your work sample."
+    },
+    {
+        id: "4b",
+
+        title: "Lab 4b: Make It Yours (Work Sample)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 4b: MAKE IT YOURS (WORK SAMPLE)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# This is your WORK SAMPLE. Make Dodge your own.
+#
+# TASK 4b
+#   1. Make AT LEAST THREE changes from this list. Run after each one.
+#        [ ] Blip's speed                  (line 36)
+#        [ ] Pogo's speed                 (line 38)
+#        [ ] Blip's colour or Pogo's colour
+#        [ ] the background colour
+#        [ ] Blip's size, or Pogo's size  (lines 54 and 55)
+#        [ ] the hits text: its words, colour or position
+#        [ ] which keys move Blip
+#      Tick each box you did by typing an x between the brackets: [x]
+#
+#   2. Check the game still works: Blip moves, stays on the screen, and
+#      hits are counted.
+#
+#   3. Finish this sentence (it is a comment, so it will not break anything):
+#      I changed ___ because ___
+#
+#   4. Click Export Code at the top, and upload the file to Schoolbox,
+#      with your sentence, as your work sample.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Change one thing at a time, and press Run after each change. If something breaks, you will know which change caused it.",
+            "Colours are (red, green, blue), 0 to 255. Rects are (x, y, width, height). Speeds are pixels per frame.",
+            "A good \"because\" talks about the player: for example, \"I made Pogo faster because the game was too easy for my brother.\""
+        ],
+
+        answer: "There is no single right answer. Here is one example:\n    BLIP_SPEED   = 7\n    POGO_SPEED   = 6\n    POGO_COLOUR  = (255, 140, 0)\n\nI changed Pogo's speed because the game was too easy for my brother, and made Pogo orange because it is easier to see.\n\nCheck your game still works, then use Export Code and upload the file to Schoolbox.",
+
+        completeText: "That is all the core labs for w2L2 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+    },
+    {
+        id: "1ext",
+
+        title: "Lab 1ext: Wrap Around (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 1ext: WRAP AROUND (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Instead of stopping at the left and right walls, make Blip go off one
+#   side and come back on the other, like in w1L2 Lab 6b.
+#   Replace the left and right wall ifs (lines 60 to 63).
+#   Keep the top and bottom walls as they are.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Going off the right means blip.x > 800. Then put Blip just off the LEFT edge: blip.x = -blip.width.",
+            "Going off the left means Blip's right side is past 0, so blip.x < -blip.width. Then put Blip at 800.",
+            "if blip.x > 800:  blip.x = -blip.width   then   if blip.x < -blip.width:  blip.x = 800"
+        ],
+
+        answer: "Once all of Blip has left one side, the if moves it just off the other side, so it slides back in.\n\nReplace lines 60 to 63 (the right and left walls) with the code below. The indents are already included.",
+
+        answerCode: `        if blip.x > 800:
+            blip.x = -blip.width
+        if blip.x < -blip.width:
+            blip.x = 800`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "2ext",
+
+        title: "Lab 2ext: Slippery Blip (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 2ext: SLIPPERY BLIP (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make Blip feel like it is on ice: holding D or A should SPEED Blip UP
+#   slowly, and letting go should make it slide to a stop.
+#
+#   Line 50 creates speed_x: Blip's sideways speed, which changes.
+#   ACCELERATION (line 30) is how much the speed grows each frame.
+#   FRICTION (line 31) slows Blip down: speed_x * 0.9 keeps 90% of the
+#   speed each frame, so Blip slows down little by little.
+#
+#   Replace the D and A ifs (lines 64 to 67) so that:
+#     - D adds ACCELERATION to speed_x, and A takes it away;
+#     - every frame, speed_x is multiplied by FRICTION;
+#     - every frame, blip.x moves by speed_x.
+#   Rects can only store whole numbers, so move by  round(speed_x).
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+ACCELERATION = 0.5
+FRICTION     = 0.9
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    speed_x = 0
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The keys now change speed_x, not blip.x:  speed_x = speed_x + ACCELERATION",
+            "After the two ifs (and NOT inside them, so 8 spaces):  speed_x = speed_x * FRICTION  then  blip.x = blip.x + round(speed_x)",
+            "With ACCELERATION 0.5 and FRICTION 0.9, Blip's top speed is about 4.5 pixels per frame. Try other values!"
+        ],
+
+        answer: "The keys now push speed_x up or down a little each frame, friction shrinks it a little each frame, and Blip moves by whatever speed is left. Holding a key builds speed up; letting go makes Blip slide to a stop.\n\nReplace lines 64 to 67 with the code below. The indents are already included.",
+
+        answerCode: `        if keys[pygame.K_d]:
+            speed_x = speed_x + ACCELERATION
+        if keys[pygame.K_a]:
+            speed_x = speed_x - ACCELERATION
+        speed_x = speed_x * FRICTION
+        blip.x = blip.x + round(speed_x)`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "3ext",
+
+        title: "Lab 3ext: Player Two (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 3ext: PLAYER TWO (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   A second player has joined: blip2, the blue square (line 42).
+#   It is already drawn (line 91), but it cannot move yet.
+#
+#   Make the ARROW keys move blip2, while WASD still moves Blip.
+#   Then challenge a friend or family member!
+#   (Harder, if you like: make Pogo hit blip2 as well, with its own hits.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+BLIP2_COLOUR = (80, 160, 255)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    blip2 = pygame.Rect(200, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, BLIP2_COLOUR, blip2)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Copy the four WASD ifs, then change the keys to arrows and blip to blip2.",
+            "The new ifs go in the UPDATE job, straight under the walls (line 71), with 8 spaces in front.",
+            "if keys[pygame.K_LEFT]:  blip2.x = blip2.x - BLIP_SPEED   and the same pattern for K_RIGHT, K_UP and K_DOWN."
+        ],
+
+        answer: "Both players read the same keys list, but each one checks different keys and moves its own Rect.\n\nMake a new empty line straight under line 71, which says\n    blip.y = 600 - blip.height\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        if keys[pygame.K_LEFT]:
+            blip2.x = blip2.x - BLIP_SPEED
+        if keys[pygame.K_RIGHT]:
+            blip2.x = blip2.x + BLIP_SPEED
+        if keys[pygame.K_UP]:
+            blip2.y = blip2.y - BLIP_SPEED
+        if keys[pygame.K_DOWN]:
+            blip2.y = blip2.y + BLIP_SPEED`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "4ext",
+
+        title: "Lab 4ext: Double Pogo (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 4ext: DOUBLE POGO (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   A second Pogo, pogo2, is made on lines 45 to 47. It starts in the
+#   top-RIGHT corner, and it is drawn on line 94, but it does not move.
+#
+#   Make pogo2 move, bounce, and count hits, just like Pogo.
+#   When it hits Blip, send it back to the top-RIGHT corner (x = 760, y = 0).
+#
+#   (In Week 3 you will learn a much shorter way to have LOTS of Pogos.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    pogo2 = pygame.Rect(760, 0, 40, 40)
+    pogo2_speed_x = -POGO_SPEED
+    pogo2_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo2)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Copy lines 74 to the end of the hit if, and paste the copy straight under them.",
+            "In the copy, change every pogo to pogo2 (pogo_speed_x becomes pogo2_speed_x, and so on).",
+            "In the copied hit, send pogo2 back to  pogo2.x = 760  and  pogo2.y = 0."
+        ],
+
+        answer: "pogo2 needs its own copy of every line: moving, bouncing and hitting. That is a lot of copying for one more Pogo, which is exactly the problem lists solve in Week 3.\n\nMake a new empty line straight under line 88, which says\n    pogo.y = 0\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        pogo2.x = pogo2.x + pogo2_speed_x
+        pogo2.y = pogo2.y + pogo2_speed_y
+        if pogo2.x > 800 - pogo2.width:
+            pogo2_speed_x = -pogo2_speed_x
+        if pogo2.x < 0:
+            pogo2_speed_x = -pogo2_speed_x
+        if pogo2.y > 600 - pogo2.height:
+            pogo2_speed_y = -pogo2_speed_y
+        if pogo2.y < 0:
+            pogo2_speed_y = -pogo2_speed_y
+        if blip.colliderect(pogo2):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo2.x = 760
+            pogo2.y = 0`,
+
+        completeText: "Click OK for the last extension."
+    },
+    {
+        id: "5ext",
+
+        title: "Lab 5ext: Angry Pogo (extension)",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w2L2 LAB 5ext: ANGRY POGO (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Every time Pogo hits Blip, make Pogo 1 FASTER.
+#
+#   Careful: after a bounce, a speed can be negative. Adding 1 to -4 makes
+#   it -3, which is SLOWER. Use abs() from w1L2 Lab 5ext: abs(-4) is 4.
+#   Pogo goes back to the top-left corner after a hit, so it should move
+#   right and down (both speeds positive) anyway.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+POGO_SPEED   = 4
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 500, 50, 50)
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+    hits = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_a]:
+            blip.x = blip.x - BLIP_SPEED
+        if keys[pygame.K_w]:
+            blip.y = blip.y - BLIP_SPEED
+        if keys[pygame.K_s]:
+            blip.y = blip.y + BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if blip.y < 0:
+            blip.y = 0
+        if blip.y > 600 - blip.height:
+            blip.y = 600 - blip.height
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+        if blip.colliderect(pogo):
+            hits = hits + 1
+            print("Hits:", hits)
+            pogo.x = 0
+            pogo.y = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        show_rect(screen, font, blip)
+        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
+        screen.blit(hits_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new lines go inside the hit if, under line 84, with 12 spaces in front.",
+            "abs(pogo_speed_x) is the speed without its sign. Add 1 to that, and store it back in pogo_speed_x.",
+            "pogo_speed_x = abs(pogo_speed_x) + 1  and  pogo_speed_y = abs(pogo_speed_y) + 1"
+        ],
+
+        answer: "After each hit, both speeds become positive (right and down, away from the corner) and 1 bigger, so Pogo gets faster every time it catches you.\n\nMake a new empty line straight under line 84, which says\n    pogo.y = 0\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `            pogo_speed_x = abs(pogo_speed_x) + 1
+            pogo_speed_y = abs(pogo_speed_y) + 1`,
+
+        finalText: "Congratulations on completing every lab in w2L2!\nYou know key.get_pressed(), walls, colliderect(), and how to stop one bump counting many times."
+    }
+    ];
+
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── LABS ──────────────────────────────────────────────────────────────────
+    // Edits are kept per lab while the page is open, so switching labs
+    // and coming back does not lose work. Refreshing the page does.
+    let currentLab = -1;
+    const labDrafts = {};
+
+    function editor() { return document.getElementById("code-editor"); }
+
+    function initLabs() {
+        const select = document.getElementById("lab-select");
+        LAB_DATA.forEach(function (lab, i) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.text = lab.title;
+            select.appendChild(opt);
+        });
+        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        const m = location.hash.match(/^#lab(.+)$/i);
+        let start = 0;
+        if (m) {
+            const found = LAB_DATA.findIndex(l => l.id.toLowerCase() === m[1].toLowerCase());
+            if (found >= 0) start = found;
+        }
+        select.value = start;
+        loadLab();
+    }
+
+    async function loadLab() {
+        const index = parseInt(document.getElementById("lab-select").value, 10);
+        if (currentLab >= 0) labDrafts[currentLab] = editor().value;
+        if (isRunning) await stopGame();
+        currentLab = index;
+        const lab = LAB_DATA[index];
+        editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
+        editor().scrollTop = 0;
+        try { history.replaceState(null, "", "#lab" + lab.id); } catch (e) {}
+        document.getElementById("console-output").innerHTML = "";
+        log("Loaded: " + lab.title, "log-sys");
+        updateHintButton();
+        updateLineNumbers();
+    }
+
+    function resetLab() {
+        if (!confirm("Reset this lab? Your changes to this lab will be lost unless you have exported them.")) return;
+        delete labDrafts[currentLab];
+        editor().value = LAB_DATA[currentLab].code;
+        editor().scrollTop = 0;
+        updateLineNumbers();
+        log("Lab reset to the starting code.", "log-sys");
+    }
+
+    // ── HINT AND COMPLETE ─────────────────────────────────────────────────────
+    let infoModalAdvances = false;
+
+    function openInfoModal(icon, text, advances) {
+        document.getElementById("info-modal-icon").textContent = icon;
+        document.getElementById("info-modal-text").textContent = text;
+        infoModalAdvances = advances;
+        document.getElementById("info-modal").classList.add("open");
+    }
+
+    function closeInfoModal() {
+        document.getElementById("info-modal").classList.remove("open");
+        if (infoModalAdvances && currentLab < LAB_DATA.length - 1) {
+            document.getElementById("lab-select").value = currentLab + 1;
+            loadLab();
+        }
+    }
+
+    // ── HINT LADDER ───────────────────────────────────────────────────────────
+    // Each press of Hint goes one level deeper: hint 1, 2, 3, then the answer.
+    // Levels are remembered per lab while the page is open.
+    const hintLevels = {};
+
+    function hintLabel(level, total) {
+        if (level < total) return "💡 Hint " + (level + 1) + " of " + total;
+        if (level === total) return "🏳 Show answer";
+        return "🏳 Answer";
+    }
+
+    function updateHintButton() {
+        const lab = LAB_DATA[currentLab];
+        const total = (lab.hints || []).length;
+        const level = hintLevels[currentLab] || 0;
+        document.getElementById("hint-btn").textContent = hintLabel(level, total);
+        const next = document.getElementById("hint-next-btn");
+        next.style.display = level > total ? "none" : "";
+        next.textContent = level < total ? "💡 Next hint" : "🏳 Show answer";
+    }
+
+    function addBlock(parent, heading, text, isAnswer) {
+        const block = document.createElement("div");
+        block.className = "hint-block" + (isAnswer ? " answer" : "");
+        const h = document.createElement("h3");
+        h.textContent = heading;
+        const p = document.createElement("p");
+        p.className = "hint-text";
+        p.textContent = text;
+        block.appendChild(h);
+        block.appendChild(p);
+        parent.appendChild(block);
+        return block;
+    }
+
+    function showHint() {
+        const lab = LAB_DATA[currentLab];
+        const hints = lab.hints || [];
+        let level = hintLevels[currentLab] || 0;
+        if (level <= hints.length) level++;          // go one level deeper
+        hintLevels[currentLab] = level;
+
+        const box = document.getElementById("hint-modal-content");
+        box.innerHTML = "";
+        for (let i = 0; i < Math.min(level, hints.length); i++) {
+            addBlock(box, "Hint " + (i + 1) + " of " + hints.length, hints[i], false);
+        }
+        if (level > hints.length) {
+            const block = addBlock(box, "Answer", lab.answer || "", true);
+            if (lab.answerCode) {
+                const wrap = document.createElement("div");
+                wrap.className = "answer-code-wrap";
+                const pre = document.createElement("pre");
+                pre.className = "answer-code";
+                pre.textContent = lab.answerCode;
+                const btn = document.createElement("button");
+                btn.className = "btn-copy";
+                btn.textContent = "Copy";
+                btn.onclick = function () { copyText(lab.answerCode, btn); };
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+                block.appendChild(wrap);
+            }
+        }
+        updateHintButton();
+        document.getElementById("hint-modal").classList.add("open");
+        box.lastChild.scrollIntoView({ block: "nearest" });
+    }
+
+    function closeHintModal() {
+        document.getElementById("hint-modal").classList.remove("open");
+    }
+
+    function copyText(text, btn) {
+        function done() {
+            btn.textContent = "Copied!";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else {
+            fallbackCopy(text); done();
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+
+    function showComplete() {
+        const lab = LAB_DATA[currentLab];
+        const isLast = currentLab >= LAB_DATA.length - 1;
+        const text = isLast
+            ? (lab.finalText || "Congratulations, you have completed all the labs in this lesson!")
+            : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+        openInfoModal("🎉", text, true);
+    }
+
+    // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    function exportCode() {
+        const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
+        const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
+        a.download = file;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        log("Exported " + file, "log-sys");
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta    = editor();
+        const ln    = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        document.getElementById("line-numbers").scrollTop = editor().scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide       = null;
+    let isRunning     = false;
+    let uploadedFiles = [];
+    let runGlobals    = null;   // a fresh, empty set of variables for every Run
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        for (const file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        updateFileList();
+        input.value = '';
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        stopAllSounds();
+        if (runGlobals) {
+            try { runGlobals.set("game_running", false); } catch (e) {}
+        }
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (!pyodide) return;
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+        document.getElementById('canvas').focus();
+        const code = editor().value;
+        try {
+            installSoundModule();
+            // Fresh variables every Run, so nothing left over from an
+            // earlier Run (or an earlier lab) can hide a mistake.
+            runGlobals = pyodide.runPython("dict(__name__='__main__')");
+            await pyodide.runPythonAsync(code, { globals: runGlobals });
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    initLabs();
+    init();
+</script>
+
+</body>
+</html>
