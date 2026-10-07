@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>W1L1 Yang's Pygame Lab — Variables and Scope</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
+
+        .info-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .info-modal-overlay.open { display:flex; }
+        .info-modal-box { background:#252526; color:#d4d4d4; padding:28px 32px; border-radius:10px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid #ce3c3c; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .info-modal-icon { font-size:30px; text-align:center; margin-bottom:12px; }
+        .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
+        .info-modal-actions { text-align:center; }
+
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        header { background:#252526; padding:6px 16px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; min-height:50px; box-sizing:border-box; flex-shrink:0; gap:10px; flex-wrap:wrap; }
+        .header-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        h1 { margin:0; font-size:17px; color:#ce3c3c; white-space:nowrap; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; }
+        .header-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; min-height:0; }
+
+        /* ── EDITOR ─────────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; overflow:hidden; }
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; min-height:0; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:40px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
+
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; min-height:0; }
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
+
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:8px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
+
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .btn-hdr { font-size:12px; padding:6px 12px; }
+        .btn-grey { background:#3a3a3a; border:1px solid #555; }
+        .btn-grey:hover:not(:disabled) { background:#4a4a4a; }
+        .btn-hint { background:#f0a500; color:#1e1e1e; }
+        .btn-hint:hover:not(:disabled) { background:#d4900a; }
+        .btn-complete { background:#9b59b6; }
+        .btn-complete:hover:not(:disabled) { background:#7d3c98; }
+
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
+
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
+
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 W1L1 Yang's Pygame Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- HINT / COMPLETE MODAL -->
+<div class="info-modal-overlay" id="info-modal">
+  <div class="info-modal-box">
+    <div class="info-modal-icon" id="info-modal-icon">💡</div>
+    <p class="info-modal-text" id="info-modal-text"></p>
+    <div class="info-modal-actions">
+      <button id="info-modal-btn" onclick="closeInfoModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 W1L1 — Variables and Scope</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <div class="header-left">
+        <h1>W1L1 — Variables and Scope</h1>
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <button class="btn-hdr btn-hint" onclick="showHint()">💡 Hint</button>
+        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
+        <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
+        <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — read the comments, then edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================================================================
+    // LAB DATA
+    // Each lab: title, code (the instructions live in the comments),
+    // hint (shown by the Hint button) and completeText.
+    // The last lab can have finalText instead of completeText.
+    // ================================================================
+    const LESSON = "W1L1";
+
+    var LAB_DATA = [
+    {
+        id: 1,
+
+        title: "Lab 1: Meet Blip",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  W1L1 LAB 1: MEET BLIP
+# ============================================================
+# This is Blip. Blip is a square. Blip is not very exciting yet.
+# Press Run to see Blip.
+#
+# Everything about Blip is stored in VARIABLES (the settings below).
+# A variable is a name that holds a value. Change the value, change Blip.
+#
+# Do not worry about the code under the settings yet.
+# Next lesson we will pull it apart line by line.
+#
+# MILD:   Change BLIP_COLOUR to a different colour.
+#         Colours are (red, green, blue), each from 0 to 255.
+#         Try (255, 0, 255). What colour is that?
+# MEDIUM: Move Blip to the top-left corner of the screen.
+#         The screen is 800 wide and 600 tall.
+#         Careful: (0, 0) is the TOP-left, not the bottom-left!
+# SPICY:  Move Blip into the bottom-right corner, touching both edges
+#         with no gap. Careful: BLIP_X and BLIP_Y set Blip's TOP-left corner.
+#         Then: can you make Blip stay in that corner whatever BLIP_SIZE is,
+#         so you only ever change BLIP_SIZE? (You may need to move a line.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # flip() shows everything we have drawn.
+        # Some pygame tutorials use pygame.display.update() instead.
+        pygame.display.flip()
+
+        # Why "await asyncio.sleep(0)" and not "while True"?
+        # This particular web-based IDE is an emulator, and "while True" does not
+        # work in it, so we use this instead. If you are using your own pygame
+        # on your own computer, you might want to use "while True".
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hint: "Colours are three numbers: (red, green, blue). Each one goes from 0 (none) to 255 (full).\n\nPosition: x counts pixels from the LEFT edge. y counts pixels DOWN from the TOP edge. So (0, 0) is the top-left corner.\n\nSpicy: the bottom-right corner of the screen is at (800, 600). If Blip's top-left corner went there, where would the rest of Blip be? Python can do sums in a setting, for example  BLIP_X = 800 - 50",
+
+        completeText: "Great work! You have changed a program just by changing its variables.\nClick OK to move on to Lab 2."
+    },
+    {
+        id: 2,
+
+        title: "Lab 2: The Mystery Error",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  W1L1 LAB 2: THE MYSTERY ERROR
+# ============================================================
+# Blip can move now! The function move_blip() moves Blip
+# 100 pixels to the right. We call it twice, so Blip should
+# end up 200 pixels further right.
+#
+# Press Run. It breaks. Read the red error in the console.
+# Always read the LAST line of an error first.
+#
+# Notice the settings are now in lowercase.
+# CAPITALS are for settings that never change.
+# lowercase is for variables that WILL change while the program runs.
+#
+# MILD:   Fix the error. Use the Hint button if you are stuck.
+# MEDIUM: Write a function called move_down() that moves Blip
+#         100 pixels down. Call it once, under the two move_blip() lines.
+# SPICY:  Write a function called grow() that doubles blip_size.
+#         Call it once. Then look at main() further down: it already
+#         says "global game_running". Can you now explain why?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def move_blip():
+    blip_x = blip_x + 100
+
+move_blip()
+move_blip()
+print("Blip is at x =", blip_x)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hint: "The error says Python cannot access the LOCAL variable blip_x.\n\nInside move_blip(), the line  blip_x = blip_x + 100  CHANGES blip_x. When a function changes a variable, Python assumes it is a brand new local variable that belongs only to that function. That new local blip_x has no value yet, so there is nothing to add 100 to.\n\nThe fix: the first line inside move_blip() should be\n    global blip_x\nThis tells Python \"I mean the blip_x from outside, not a new one.\"",
+
+        completeText: "You fixed your first scope error! Remember: if a function CHANGES a variable from outside, it needs global.\nClick OK to see a cleaner way."
+    },
+    {
+        id: 3,
+
+        title: "Lab 3: In and Out",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  W1L1 LAB 3: IN AND OUT
+# ============================================================
+# "global" works, but programmers try not to use it much.
+# If ANY function can change a variable, then when something
+# goes wrong it is hard to work out which function did it.
+#
+# A cleaner way: pass the value IN to the function (a PARAMETER),
+# and send the new value back OUT (a RETURN value).
+#
+#     def moved(x, amount):     <- x and amount are parameters
+#         return x + amount     <- the answer goes back out
+#
+#     blip_x = moved(blip_x, 100)
+#     ^ the returned answer is stored back in blip_x
+#
+# Notice: no "global" needed. The function never touches blip_x.
+# It just does a calculation and hands back the answer.
+#
+# MILD:   Change the code so Blip moves 3 times, 150 pixels each time.
+#         Where does Blip end up? Check the console.
+# MEDIUM: Write a function bigger(size) that RETURNS size times 2.
+#         Use it to make Blip twice as big:  blip_size = bigger(blip_size)
+# SPICY:  Write a function swap_colour(colour) that returns the colour
+#         with red and blue swapped. For example (0, 200, 80) should come
+#         back as (80, 200, 0). Use it on blip_colour.
+#         Hint: you can unpack a colour like this:  r, g, b = colour
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+blip_colour = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def moved(x, amount):
+    return x + amount
+
+blip_x = moved(blip_x, 100)
+blip_x = moved(blip_x, 100)
+print("Blip is at x =", blip_x)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, blip_colour, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hint: "Look closely at how moved() is used:\n    blip_x = moved(blip_x, 100)\nThe right side runs first: moved() works out the answer and RETURNS it. Then the left side stores that answer back in blip_x.\n\nbigger() follows exactly the same pattern, with one parameter instead of two.\n\nSpicy: inside swap_colour(), the line  r, g, b = colour  splits the colour into three variables. Then return them in a different order:  return (b, g, r)",
+
+        completeText: "Parameters in, return values out. That is how most functions in real programs work.\nClick OK for the prediction puzzles."
+    },
+    {
+        id: 4,
+
+        title: "Lab 4: Predict the Output",
+
+        code: `# ============================================================
+#  W1L1 LAB 4: PREDICT THE OUTPUT
+# ============================================================
+# No game this time. Just the console.
+#
+# For EACH puzzle below:
+#   1. Read the code.
+#   2. Write your prediction in the comment underneath it.
+#   3. Only press Run once you have predicted ALL FOUR.
+#
+# If you were wrong about one, that is the useful part!
+# Work out WHY before you click Complete.
+#
+# MILD:   Puzzles 1 and 2.
+# MEDIUM: Puzzle 3.
+# SPICY:  Puzzle 4.
+
+# ---------------- PUZZLE 1 ----------------
+score = 10
+
+def add_points():
+    score = 50
+    print("Puzzle 1, inside:", score)
+
+add_points()
+print("Puzzle 1, outside:", score)
+# My prediction:  inside = ___   outside = ___
+
+
+# ---------------- PUZZLE 2 ----------------
+lives = 3
+
+def lose_life():
+    global lives
+    lives = lives - 1
+
+lose_life()
+lose_life()
+print("Puzzle 2, lives:", lives)
+# My prediction:  lives = ___
+
+
+# ---------------- PUZZLE 3 ----------------
+def double(n):
+    n = n * 2
+    return n
+
+coins = 5
+double(coins)
+print("Puzzle 3, coins:", coins)
+# My prediction:  coins = ___
+
+
+# ---------------- PUZZLE 4 ----------------
+speed = 2
+
+def boost(speed):
+    speed = speed + 10
+    return speed
+
+new_speed = boost(speed)
+print("Puzzle 4:", speed, new_speed)
+# My prediction:  ___  ___`,
+
+        hint: "Ask yourself these questions for each puzzle:\n\n1. When the function sets a variable, does it say global? If not, the variable inside the function is a separate local one, and the outside one is untouched.\n\n2. When a function RETURNS a value, does the code that called it store that value anywhere? A returned value that is not stored is thrown away.\n\n3. A parameter is a local variable too, even when it has the same name as a variable outside.",
+
+        completeText: "If you got them all right first time, you understand scope better than many adults who code!\nClick OK for the extension lab."
+    },
+    {
+        id: 5,
+
+        title: "Lab 5 (Extension): Global Detox",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  W1L1 LAB 5 (EXTENSION): GLOBAL DETOX
+# ============================================================
+# This program works, but it uses "global" three times.
+# Run it and note where Blip ends up. The console tells you.
+#
+# YOUR MISSION: rewrite move_right(), move_down() and grow()
+# so they use PARAMETERS and RETURN values instead of global
+# (just like moved() in Lab 3).
+#
+# Rules:
+#   - No "global" anywhere except "global game_running" in main().
+#   - Blip must end up in exactly the same place, at exactly the same size.
+#     The console should still print:  x = 400, y = 250, size = 70
+#
+# MILD:   Rewrite move_right().
+# MEDIUM: Rewrite all three.
+# SPICY:  Replace move_right() and move_down() with ONE function
+#         that can move Blip in any direction, e.g. moved(x, y, dx, dy).
+#         Hint: a function can return two values:  return x, y
+
+# ============================================================
+#  STUDENT ZONE: SETTINGS
+# ============================================================
+blip_x      = 100
+blip_y      = 100
+blip_size   = 40
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+# ============================================================
+
+def move_right():
+    global blip_x
+    blip_x = blip_x + 150
+
+def move_down():
+    global blip_y
+    blip_y = blip_y + 150
+
+def grow():
+    global blip_size
+    blip_size = blip_size + 30
+
+move_right()
+move_down()
+grow()
+move_right()
+print(f"x = {blip_x}, y = {blip_y}, size = {blip_size}")
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hint: "Start with move_right(). It needs to take blip_x IN as a parameter and RETURN the new value. Then change where it is called:\n    blip_x = move_right(blip_x)\n\nRun it after each change and check the console still prints x = 400, y = 250, size = 70.\n\nSpicy: a function can return two values at once, and you can store both at once:\n    blip_x, blip_y = moved(blip_x, blip_y, 150, 0)",
+
+        finalText: "Congratulations on completing Week 1 Lesson 1!\nYou now know variables, local and global scope, parameters and return values. Next lesson, Blip starts moving."
+    }
+    ];
+
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── LABS ──────────────────────────────────────────────────────────────────
+    // Edits are kept per lab while the page is open, so switching labs
+    // and coming back does not lose work. Refreshing the page does.
+    let currentLab = -1;
+    const labDrafts = {};
+
+    function editor() { return document.getElementById("code-editor"); }
+
+    function initLabs() {
+        const select = document.getElementById("lab-select");
+        LAB_DATA.forEach(function (lab, i) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.text = lab.title;
+            select.appendChild(opt);
+        });
+        // Open a specific lab from the address, e.g. w1l1.html#lab3
+        const m = location.hash.match(/^#lab(\d+)$/i);
+        let start = m ? parseInt(m[1], 10) - 1 : 0;
+        start = Math.max(0, Math.min(LAB_DATA.length - 1, start));
+        select.value = start;
+        loadLab();
+    }
+
+    async function loadLab() {
+        const index = parseInt(document.getElementById("lab-select").value, 10);
+        if (currentLab >= 0) labDrafts[currentLab] = editor().value;
+        if (isRunning) await stopGame();
+        currentLab = index;
+        const lab = LAB_DATA[index];
+        editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
+        editor().scrollTop = 0;
+        try { history.replaceState(null, "", "#lab" + (index + 1)); } catch (e) {}
+        document.getElementById("console-output").innerHTML = "";
+        log("Loaded: " + lab.title, "log-sys");
+        updateLineNumbers();
+    }
+
+    function resetLab() {
+        if (!confirm("Reset this lab? Your changes to this lab will be lost unless you have exported them.")) return;
+        delete labDrafts[currentLab];
+        editor().value = LAB_DATA[currentLab].code;
+        editor().scrollTop = 0;
+        updateLineNumbers();
+        log("Lab reset to the starting code.", "log-sys");
+    }
+
+    // ── HINT AND COMPLETE ─────────────────────────────────────────────────────
+    let infoModalAdvances = false;
+
+    function openInfoModal(icon, text, advances) {
+        document.getElementById("info-modal-icon").textContent = icon;
+        document.getElementById("info-modal-text").textContent = text;
+        infoModalAdvances = advances;
+        document.getElementById("info-modal").classList.add("open");
+    }
+
+    function closeInfoModal() {
+        document.getElementById("info-modal").classList.remove("open");
+        if (infoModalAdvances && currentLab < LAB_DATA.length - 1) {
+            document.getElementById("lab-select").value = currentLab + 1;
+            loadLab();
+        }
+    }
+
+    function showHint() {
+        openInfoModal("💡", LAB_DATA[currentLab].hint || "There is no hint for this lab. Re-read the comments at the top of the code.", false);
+    }
+
+    function showComplete() {
+        const lab = LAB_DATA[currentLab];
+        const isLast = currentLab >= LAB_DATA.length - 1;
+        const text = isLast
+            ? (lab.finalText || "Congratulations, you have completed all the labs in this lesson!")
+            : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+        openInfoModal("🎉", text, true);
+    }
+
+    // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    function exportCode() {
+        const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
+        const file = name + "-" + LESSON.toLowerCase() + "-lab" + (currentLab + 1) + ".txt";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
+        a.download = file;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        log("Exported " + file, "log-sys");
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta    = editor();
+        const ln    = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        document.getElementById("line-numbers").scrollTop = editor().scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide       = null;
+    let isRunning     = false;
+    let uploadedFiles = [];
+    let runGlobals    = null;   // a fresh, empty set of variables for every Run
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        for (const file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        updateFileList();
+        input.value = '';
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        stopAllSounds();
+        if (runGlobals) {
+            try { runGlobals.set("game_running", false); } catch (e) {}
+        }
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (!pyodide) return;
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+        document.getElementById('canvas').focus();
+        const code = editor().value;
+        try {
+            installSoundModule();
+            // Fresh variables every Run, so nothing left over from an
+            // earlier Run (or an earlier lab) can hide a mistake.
+            runGlobals = pyodide.runPython("dict(__name__='__main__')");
+            await pyodide.runPythonAsync(code, { globals: runGlobals });
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    initLabs();
+    init();
+</script>
+
+</body>
+</html>
