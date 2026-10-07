@@ -215,33 +215,38 @@ import asyncio
 # ============================================================
 #  w1L1 LAB 1a: MEET BLIP
 # ============================================================
-# This is Blip. Blip is a square. Blip is not very exciting yet.
-# Press Run to see Blip.
+# This is Blip. Blip is a green square.
+# Press Run (under the game screen) to see Blip.
 #
 # Your changes only show up when the program starts again.
-# Press Stop, make your change, then press Run.
+# So every time you change something: press Stop, make your change,
+# then press Run.
 #
-# Everything about Blip is stored in VARIABLES (the settings below).
-# A variable is a name that holds a value. Change the value, change Blip.
+# Look at line 34. It says:
+#     BLIP_COLOUR = (0, 200, 80)
+# This line stores Blip's colour.
 #
-# Do not worry about the code under the settings yet.
-# Next lesson we will pull it apart line by line.
+# A colour is three numbers in brackets: (red, green, blue).
+# Each number goes from 0 (none of that colour) to 255 (as much as possible).
+# (0, 200, 80) means: no red, lots of green, a little blue.
 #
 # TASK 1a
-#   Change Blip's colour.
-#   Colours are (red, green, blue), each from 0 to 255.
-#   Try (255, 0, 255). What colour is that?
+#   On line 34, change the three numbers to (255, 0, 255).
+#   Press Stop, then Run. What colour is Blip now?
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 BLIP_X      = 375
 BLIP_Y      = 275
 BLIP_SIZE   = 50
 BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
 # ============================================================
 
 game_running = True
@@ -252,6 +257,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -260,6 +266,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         # flip() shows everything we have drawn.
         # Some pygame tutorials use pygame.display.update() instead.
         pygame.display.flip()
@@ -275,46 +288,53 @@ async def main():
 await main()`,
 
         hints: [
-            "Look in the STUDENT ZONE: SETTINGS. One of those lines controls Blip's colour.",
-            "The line is  BLIP_COLOUR = (0, 200, 80). The three numbers are red, green and blue, each from 0 to 255. Change the numbers, then press Stop and Run.",
-            "(255, 0, 0) is pure red. (0, 0, 255) is pure blue. (255, 255, 0) is red and green mixed, which makes yellow. Any three numbers from 0 to 255 will work."
+            "Find line 34. The line numbers are down the left-hand side of the code.",
+            "Change only the three numbers inside the brackets. Keep the brackets and the commas.",
+            "The line should end up as:  BLIP_COLOUR = (255, 0, 255)  Then press Stop, then Run."
         ],
 
-        answer: "BLIP_COLOUR holds Blip's colour as (red, green, blue). Change the numbers and you change the colour.\n\nReplace the line\n    BLIP_COLOUR = (0, 200, 80)\nwith the line below (it has no indent). Then press Stop and Run.",
+        answer: "(255, 0, 255) is full red, no green and full blue, which makes magenta (a bright purple-pink).\n\nReplace line 34, which says\n    BLIP_COLOUR = (0, 200, 80)\nwith the line below (it has no indent).",
 
         answerCode: `BLIP_COLOUR = (255, 0, 255)`,
 
-        completeText: "You changed a program just by changing a variable.\nClick OK to move on to Lab 1b."
+        completeText: "You changed a program by changing one value. Click OK for Lab 1b."
     },
     {
         id: "1b",
 
-        title: "Lab 1b: Blip's Starting Position",
+        title: "Lab 1b: Background Colour",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 1b: BLIP'S STARTING POSITION
+#  w1L1 LAB 1b: BACKGROUND COLOUR
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
+# Look at line 28. It says:
+#     BACKGROUND  = (30, 30, 30)
+# This stores the colour of the screen behind Blip.
+# (30, 30, 30) is a little of every colour, which makes dark grey.
+#
 # TASK 1b
-#   Move Blip to the top-left corner of the screen.
-#   You need to change TWO settings!
-#   The screen is 800 wide and 600 tall.
-#   Careful: (0, 0) is the TOP-left, not the bottom-left!
+#   Change the background to white: (255, 255, 255).
+#   Then try to make the background the SAME colour as Blip.
+#   What happens to Blip?
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 BLIP_X      = 375
 BLIP_Y      = 275
 BLIP_SIZE   = 50
 BLIP_COLOUR = (255, 0, 255)
 BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
 # ============================================================
 
 game_running = True
@@ -325,6 +345,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -333,6 +354,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -341,63 +369,63 @@ async def main():
 await main()`,
 
         hints: [
-            "Blip's position is stored in two settings. Which two settings have X and Y in their names?",
-            "BLIP_X is how many pixels Blip is from the LEFT edge. BLIP_Y is how many pixels Blip is from the TOP edge. To sit in the top-left corner, how far from each edge should Blip be?",
-            "Zero pixels from the left, and zero pixels from the top."
+            "The background is on line 28.",
+            "Full red, full green and full blue together make white: (255, 255, 255).",
+            "Blip's colour is on line 27. Copy those three numbers onto line 28."
         ],
 
-        answer: "(0, 0) is the top-left corner of a pygame screen. x counts across from the left, and y counts DOWN from the top.\n\nReplace the two lines\n    BLIP_X      = 375\n    BLIP_Y      = 275\nwith the two lines below (no indent).",
+        answer: "When the background is the same colour as Blip, Blip is still there, but you cannot see it. The computer only does what the numbers say.\n\nReplace line 28, which says\n    BACKGROUND  = (30, 30, 30)\nwith the line below (no indent).",
 
-        answerCode: `BLIP_X      = 0
-BLIP_Y      = 0`,
+        answerCode: `BACKGROUND  = (255, 0, 255)`,
 
-        completeText: "Blip is in the corner. Remember: y counts DOWN from the top.\nClick OK for Lab 2a."
+        completeText: "Click OK for Lab 2a."
     },
     {
         id: "2a",
 
-        title: "Lab 2a: The Mystery Error",
+        title: "Lab 2a: Where Is Blip?",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 2a: THE MYSTERY ERROR
+#  w1L1 LAB 2a: WHERE IS BLIP?
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Blip can move now! The function move_blip() moves Blip
-# 100 pixels to the right. We call it twice, so Blip should
-# end up 200 pixels further right.
+# Look at line 33. It says:
+#     BLIP_X      = 375
 #
-# Press Run. It breaks. Read the red error in the console.
-# Always read the LAST line of an error first.
+# This is a VARIABLE. A variable is a name that stores a value.
+#   BLIP_X  is the name.
+#   375     is the value stored in it.
+#   =       does NOT mean "equals" like in maths.
+#           In Python it means: store the value on the right
+#           in the name on the left.
 #
-# Notice the settings are now in lowercase.
-# CAPITALS are for settings that never change.
-# lowercase is for variables that WILL change while the program runs.
+# BLIP_X stores how many pixels Blip is from the LEFT edge of the screen.
+# (A pixel is one tiny dot on the screen. The screen is 800 pixels wide.)
+#
+# Press Run. Above Blip you can see  x = 375. That is BLIP_X.
 #
 # TASK 2a
-#   Fix the error.
+#   Change BLIP_X to 0. Press Stop, then Run.
+#   Where is Blip now? What does the label above Blip say?
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
-blip_x      = 100
-blip_y      = 275
-blip_size   = 50
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
 BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
+
 # ============================================================
-
-def move_blip():
-    blip_x = blip_x + 100
-
-move_blip()
-move_blip()
-print("Blip is at x =", blip_x)
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -407,6 +435,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -414,7 +443,14 @@ async def main():
                 game_running = False
 
         screen.fill(BACKGROUND)
-        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -423,47 +459,1293 @@ async def main():
 await main()`,
 
         hints: [
-            "Read the LAST line of the red error. Which variable is it complaining about, and what word does it use to describe that variable?",
-            "Python says blip_x is a LOCAL variable. Inside move_blip(), the line  blip_x = blip_x + 100  CHANGES blip_x, so Python assumes it is a brand new variable that belongs only to move_blip(). That new one has no value yet, so there is nothing to add 100 to.",
-            "You need to tell move_blip() that you mean the blip_x from OUTSIDE the function. There is a keyword for this. Look at main() further down: it uses that keyword for game_running."
+            "BLIP_X is on line 33.",
+            "Change only the number after the = sign. Leave BLIP_X and the = alone.",
+            "The line should end up as:  BLIP_X      = 0  (the spaces before the = do not matter)."
         ],
 
-        answer: "The keyword global tells a function to use the variable from outside, instead of making a new local one.\n\nMake a new empty line straight under\n    def move_blip():\nand paste the line below there. The indent is already included.",
+        answer: "BLIP_X = 0 means Blip is 0 pixels from the left edge, so Blip touches the left side of the screen. The label now says x = 0.\n\nReplace line 33, which says\n    BLIP_X      = 375\nwith the line below (no indent).",
 
-        answerCode: `    global blip_x`,
+        answerCode: `BLIP_X      = 0`,
 
-        completeText: "You fixed your first scope error! If a function CHANGES a variable from outside, it needs global.\nClick OK for Lab 2b."
+        completeText: "Click OK for Lab 2b."
     },
     {
         id: "2b",
 
-        title: "Lab 2b: Move Down",
+        title: "Lab 2b: How Far Right?",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 2b: MOVE DOWN
+#  w1L1 LAB 2b: HOW FAR RIGHT?
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# move_blip() works now. Blip needs another move.
+# The screen is 800 pixels wide. Blip is 50 pixels wide.
 #
 # TASK 2b
-#   Write a function called move_down() that moves Blip 100 pixels down.
-#   Then call it once, under the two move_blip() lines.
+#   Change BLIP_X on line 21 to 700. Press Stop, then Run.
+#   Then try 800. Where did Blip go?
+#   What is the BIGGEST value of BLIP_X where you can still see ALL of Blip?
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 0
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Try a few numbers between 700 and 800, and watch the right edge of the screen.",
+            "BLIP_X is where Blip's LEFT side is. Blip's right side is 50 pixels further on.",
+            "If Blip's left side is at 750, its right side is at 750 + 50 = 800, exactly the edge of the screen."
+        ],
+
+        answer: "At 800, Blip's left side is on the very edge, so all of Blip is off the screen. The biggest value where all of Blip shows is 750, because 750 + 50 (Blip's width) = 800.\n\nReplace line 21, which says\n    BLIP_X      = 0\nwith the line below (no indent).",
+
+        answerCode: `BLIP_X      = 750`,
+
+        completeText: "Click OK for Lab 3a."
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: Up and Down",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 3a: UP AND DOWN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Look at line 28. It says:
+#     BLIP_Y      = 275
+# BLIP_Y stores how many pixels Blip is from the TOP of the screen.
+#
+# Surprise: in pygame, y counts DOWNWARDS.
+#   y = 0    is the very TOP of the screen.
+#   y = 600  is the very BOTTOM (the screen is 600 pixels tall).
+# This is upside down compared to graphs in maths!
+#
+# TASK 3a
+#   Change BLIP_Y to 0. Press Stop, then Run.
+#   Where is Blip? Then try 500. Which way did Blip move?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "BLIP_Y is on line 28.",
+            "Change only the number after the = sign.",
+            "With BLIP_Y = 0, Blip touches the top. A bigger y moves Blip DOWN, not up."
+        ],
+
+        answer: "BLIP_Y = 0 puts Blip at the very top. 500 moves Blip near the bottom: in pygame, bigger y means further DOWN.\n\nReplace line 28, which says\n    BLIP_Y      = 275\nwith the line below (no indent).",
+
+        answerCode: `BLIP_Y      = 0`,
+
+        completeText: "Click OK for Lab 3b."
+    },
+    {
+        id: "3b",
+
+        title: "Lab 3b: Corner to Corner",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 3b: CORNER TO CORNER
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# You now know:
+#   BLIP_X  (line 22) moves Blip left and right.
+#   BLIP_Y  (line 23) moves Blip up and down.
+#
+# TASK 3b
+#   Move Blip to the BOTTOM-LEFT corner of the screen,
+#   touching both edges. You need to change TWO lines!
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Bottom-left means touching the LEFT edge and touching the BOTTOM edge.",
+            "Touching the left edge is BLIP_X = 0. Now work out BLIP_Y.",
+            "The screen is 600 tall and Blip is 50 tall. BLIP_Y sets where Blip's TOP is. So Blip's top must be at 600 - 50."
+        ],
+
+        answer: "Bottom-left is BLIP_X = 0 (touching the left) and BLIP_Y = 550 (Blip's top at 550, so its bottom is at 550 + 50 = 600).\n\nReplace lines 22 and 23, which say\n    BLIP_X      = 375\n    BLIP_Y      = 275\nwith the two lines below (no indent).",
+
+        answerCode: `BLIP_X      = 0
+BLIP_Y      = 550`,
+
+        completeText: "Click OK for Lab 4a."
+    },
+    {
+        id: "4a",
+
+        title: "Lab 4a: How Big Is Blip?",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 4a: HOW BIG IS BLIP?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Look at line 25. It says:
+#     BLIP_SIZE   = 50
+# This stores how many pixels wide (and tall) Blip is.
+#
+# TASK 4a
+#   Change BLIP_SIZE to 200. Press Stop, then Run.
+#   Watch carefully: which way does Blip grow?
+#   Did BLIP_X and BLIP_Y change? (Check the label above Blip.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "BLIP_SIZE is on line 25.",
+            "Change 50 to 200, then press Stop and Run.",
+            "Look at Blip's top-left corner. Did it move? Or did Blip grow out to the right and down?"
+        ],
+
+        answer: "Blip grows to the RIGHT and DOWN. BLIP_X and BLIP_Y did not change: they always say where Blip's TOP-LEFT corner is, and the size is measured from there.\n\nReplace line 25, which says\n    BLIP_SIZE   = 50\nwith the line below (no indent).",
+
+        answerCode: `BLIP_SIZE   = 200`,
+
+        completeText: "Click OK for Lab 4b."
+    },
+    {
+        id: "4b",
+
+        title: "Lab 4b: Giant Blip",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 4b: GIANT BLIP
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 4b
+#   Make Blip exactly as tall as the screen (600 pixels),
+#   touching the top AND the bottom.
+#   You need to change TWO lines. Which ones?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "One line sets how big Blip is: line 21.",
+            "BLIP_SIZE = 600 makes Blip 600 tall. But where is Blip's top?",
+            "To touch the top, Blip's top must be at y = 0. That is line 20."
+        ],
+
+        answer: "BLIP_SIZE = 600 makes Blip as tall as the screen, and BLIP_Y = 0 puts Blip's top at the top. (Blip is also 600 wide, so part of it goes off the right edge.)\n\nReplace lines 20 and 21, which say\n    BLIP_Y      = 275\n    BLIP_SIZE   = 50\nwith the two lines below (no indent).",
+
+        answerCode: `BLIP_Y      = 0
+BLIP_SIZE   = 600`,
+
+        completeText: "Click OK for Lab 5a."
+    },
+    {
+        id: "5a",
+
+        title: "Lab 5a: Variables Can Do Sums",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 5a: VARIABLES CAN DO SUMS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Look at line 25. It says:
+#     BLIP_X      = 100 + 50
+# Python works out the sum FIRST, then stores the answer in BLIP_X.
+#
+# In Python:  +  is plus,  -  is minus,  *  is times.
+#
+# TASK 5a
+#   Press Run. What does the label above Blip say x is?
+#   Then change line 25 to  800 - 50  and Run again.
+#   Where is Blip now?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 100 + 50
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Press Run first, before changing anything, and read the label above Blip.",
+            "The label shows the ANSWER to the sum, not the sum itself.",
+            "800 - 50 is 750. That puts Blip touching the right edge, like in Lab 2b."
+        ],
+
+        answer: "The label shows x = 150, because Python works out 100 + 50 before storing it. 800 - 50 = 750, which puts Blip against the right edge.\n\nReplace line 25, which says\n    BLIP_X      = 100 + 50\nwith the line below (no indent).",
+
+        answerCode: `BLIP_X      = 800 - 50`,
+
+        completeText: "Click OK for Lab 5b."
+    },
+    {
+        id: "5b",
+
+        title: "Lab 5b: Dead Centre",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 5b: DEAD CENTRE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The middle of the screen is 400 across and 300 down.
+# But BLIP_X and BLIP_Y set Blip's TOP-LEFT corner, not its middle.
+#
+# TASK 5b
+#   Put Blip exactly in the middle of the screen,
+#   using a sum on line 21 AND a sum on line 22.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 0
+BLIP_Y      = 0
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "If BLIP_X were 400, Blip's LEFT side would be in the middle, so Blip would be too far right.",
+            "Blip is 50 wide, so half of Blip is 25 pixels. Blip's left side needs to be 25 pixels left of the middle.",
+            "BLIP_X = 400 - 25. Do the same for y, using 300."
+        ],
+
+        answer: "To centre Blip, move its top-left corner back by half of Blip's size (25) from the middle of the screen.\n\nReplace lines 21 and 22, which say\n    BLIP_X      = 0\n    BLIP_Y      = 0\nwith the two lines below (no indent).",
+
+        answerCode: `BLIP_X      = 400 - 25
+BLIP_Y      = 300 - 25`,
+
+        completeText: "Click OK for Lab 6a."
+    },
+    {
+        id: "6a",
+
+        title: "Lab 6a: print()",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 6a: PRINT()
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Look at line 33. It says:
+#     print("Blip's x is", BLIP_X)
+#
+# print() shows things in the CONSOLE (the black box at the bottom right).
+# This print shows two things, separated by a comma:
+#   "Blip's x is"   words in quotes are printed exactly as they are.
+#   BLIP_X          a name WITHOUT quotes prints the value stored in it.
+#
+# TASK 6a
+#   Press Run and find the line in the console.
+#   Then change BLIP_X on line 27 to 123 and Run again.
+#   What changed in the console?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+print("Blip's x is", BLIP_X)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "The console is the black box at the bottom right of the page. You may need to scroll it.",
+            "Change line 27 to  BLIP_X      = 123, then press Stop and Run.",
+            "The words stay the same, because they are in quotes. The number changes, because it comes from BLIP_X."
+        ],
+
+        answer: "The console now says  Blip's x is 123. The words in quotes never change, but BLIP_X has no quotes, so print shows whatever value is stored in it.\n\nReplace line 27, which says\n    BLIP_X      = 375\nwith the line below (no indent).",
+
+        answerCode: `BLIP_X      = 123`,
+
+        completeText: "Click OK for Lab 6b."
+    },
+    {
+        id: "6b",
+
+        title: "Lab 6b: Your Own print()",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 6b: YOUR OWN PRINT()
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 6b
+#   Make a new line under line 25 and write your own print
+#   that shows Blip's y, so the console says:
+#       Blip's y is 275
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+print("Blip's x is", BLIP_X)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Copy line 25 and change it.",
+            "Two things need to change: the words in the quotes, and the variable name after the comma.",
+            "print(\"Blip's y is\", BLIP_Y)"
+        ],
+
+        answer: "The words in quotes say what the number is, and BLIP_Y (no quotes) gives the value.\n\nMake a new empty line straight under line 25, which says\n    print(\"Blip's x is\", BLIP_X)\nand paste the line below there (no indent).",
+
+        answerCode: `print("Blip's y is", BLIP_Y)`,
+
+        completeText: "Click OK for Lab 6c."
+    },
+    {
+        id: "6c",
+
+        title: "Lab 6c: Quotes or No Quotes?",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 6c: QUOTES OR NO QUOTES?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Look at lines 30 and 31.
+# They look almost the same. One has quotes, one does not.
+#
+# TASK 6c
+#   BEFORE you press Run, write down what you think each line will show
+#   in the console:
+#       line 30 will show: ___
+#       line 31 will show: ___
+#   Then press Run and check.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_X      = 375
+BLIP_Y      = 275
+BLIP_SIZE   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+print("BLIP_X")
+print(BLIP_X)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Remember from Lab 6a: words in quotes are printed exactly as they are.",
+            "A name WITHOUT quotes is looked up, and its value is printed.",
+            "So one line prints the word BLIP_X, and the other prints the number stored in BLIP_X."
+        ],
+
+        answer: "Line 30 prints the word  BLIP_X, because it is in quotes.\nLine 31 prints  375, because without quotes Python looks up the value stored in BLIP_X.\n\nQuotes mean \"exactly these letters\". No quotes means \"the value stored in this name\".",
+
+        completeText: "Click OK for Lab 7a. Next up: functions!"
+    },
+    {
+        id: "7a",
+
+        title: "Lab 7a: What Is a Function?",
+
+        code: `# ============================================================
+#  w1L1 LAB 7a: WHAT IS A FUNCTION?
+# ============================================================
+# No Blip this time. Just the console.
+#
+# A FUNCTION is a set of instructions with a name.
+# You write the instructions once, then run them whenever you like
+# by using the name.
+#
+# Look at line 29. It says:
+#     def say_hello():
+#   def         means "I am defining (creating) a function".
+#   say_hello   is the function's name (you choose it).
+#   ()          brackets, always needed. (You will see why in Lab 11a.)
+#   :           a colon, which means "the instructions come next".
+#
+# Lines 30 and 31 are INDENTED (moved right by 4 spaces).
+# The indent means: these lines belong INSIDE the function.
+#
+# Line 33 says  say_hello()  with no "def". This CALLS the function:
+# it tells Python "run the instructions in say_hello now".
+#
+# TASK 7a
+#   Press Run. What does the console show?
+#   Then change the message on line 30 to something of your own.
+#
+# When you are done, click "Complete" at the top.
+
+def say_hello():
+    print("Hello from Blip!")
+    print("I am a square.")
+
+say_hello()`,
+
+        hints: [
+            "Press Run and look at the console. There should be two lines.",
+            "Change only the words INSIDE the quotes on line 30. Keep the quotes, the brackets and the 4-space indent.",
+            "For example:  print(\"Blip is the best square\")  (with 4 spaces in front)."
+        ],
+
+        answer: "When say_hello() is called on line 33, Python runs the two indented lines inside the function, so both messages print.\n\nReplace line 30, which says\n    print(\"Hello from Blip!\")\nwith the line below. The indent is already included.",
+
+        answerCode: `    print("Blip is the best square!")`,
+
+        completeText: "Click OK for Lab 7b."
+    },
+    {
+        id: "7b",
+
+        title: "Lab 7b: Calling a Function",
+
+        code: `# ============================================================
+#  w1L1 LAB 7b: CALLING A FUNCTION
+# ============================================================
+# Defining a function (with def) does NOT run it.
+# It only runs when it is CALLED.
+#
+# TASK 7b
+#   1. Put a # at the very start of line 19, so it says  # say_hello()
+#      A # turns a line into a comment, so Python skips it.
+#      Press Run. What happens?
+#   2. Now remove the #, and make the function run THREE times.
+#
+# When you are done, click "Complete" at the top.
+
+def say_hello():
+    print("Hello from Blip!")
+    print("I am a square.")
+
+say_hello()`,
+
+        hints: [
+            "Part 1: with the # in front, the call is switched off. Is anything printed?",
+            "Part 2: each call is one line that says  say_hello()  with no indent.",
+            "You need three lines that each say  say_hello()  under the function."
+        ],
+
+        answer: "With the call switched off, nothing prints at all: the function was defined but never called. Each call runs the whole function once, so three calls print the messages three times.\n\nReplace line 19, which says\n    say_hello()\nwith the three lines below (no indent).",
+
+        answerCode: `say_hello()
+say_hello()
+say_hello()`,
+
+        completeText: "Click OK for Lab 8a."
+    },
+    {
+        id: "8a",
+
+        title: "Lab 8a: Inside or Outside?",
+
+        code: `# ============================================================
+#  w1L1 LAB 8a: INSIDE OR OUTSIDE?
+# ============================================================
+# Indenting decides which lines are INSIDE a function.
+#
+# Look at lines 21 and 22.
+# Line 21 is indented, so it is inside say_hello().
+# Line 22 is NOT indented, so it is outside the function.
+# Python runs lines outside functions straight away, from top to bottom.
+#
+# TASK 8a
+#   BEFORE you press Run, predict what the console will show,
+#   in order. Write it here:
+#       ___
+#   Then Run and check.
+#   Then fix it, so  I am a square.  is printed by the function.
+#
+# When you are done, click "Complete" at the top.
+
+def say_hello():
+    print("Hello from Blip!")
+print("I am a square.")
+
+say_hello()
+say_hello()`,
+
+        hints: [
+            "Python reads from top to bottom. Line 22 is not inside any function, so when does it run?",
+            "Line 22 runs first, once. Then the two calls each print  Hello from Blip!",
+            "To put line 22 inside the function, give it the same 4-space indent as line 21."
+        ],
+
+        answer: "The console shows  I am a square.  once, then  Hello from Blip!  twice. The unindented line runs straight away, and only the indented line belongs to the function.\n\nReplace line 22, which says\n    print(\"I am a square.\")\nwith the line below. The indent is already included.",
+
+        answerCode: `    print("I am a square.")`,
+
+        completeText: "Click OK for Lab 8b."
+    },
+    {
+        id: "8b",
+
+        title: "Lab 8b: Write Your Own Function",
+
+        code: `# ============================================================
+#  w1L1 LAB 8b: WRITE YOUR OWN FUNCTION
+# ============================================================
+# TASK 8b
+#   Write a new function called say_goodbye() that prints  Goodbye!
+#   Put it under say_hello(), with an empty line between them.
+#   Then call it once, at the very end of the code.
+#
+# When you are done, click "Complete" at the top.
+
+def say_hello():
+    print("Hello from Blip!")
+    print("I am a square.")
+
+say_hello()`,
+
+        hints: [
+            "Copy the shape of lines 11 to 13: a def line, then an indented print.",
+            "The def line is  def say_goodbye():  (do not forget the brackets and the colon). The print line under it needs 4 spaces in front.",
+            "Writing the function is not enough. On a new line at the very end, call it:  say_goodbye()"
+        ],
+
+        answer: "A function needs a def line ending in a colon, then its indented instructions. It only runs when it is called.\n\nStep 1: make a new empty line straight under line 13, which says\n    print(\"I am a square.\")\nand paste the code below there. The indent is already included.\n\nStep 2: on a new line at the very end of the code, type\n    say_goodbye()",
+
+        answerCode: `
+def say_goodbye():
+    print("Goodbye!")`,
+
+        completeText: "You wrote your own function. Click OK for Lab 9a."
+    },
+    {
+        id: "9a",
+
+        title: "Lab 9a: The Mystery Error",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 9a: THE MYSTERY ERROR
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Notice the settings for x, y and size are now in lowercase.
+# In Python:
+#   CAPITALS are for settings that never change.
+#   lowercase is for variables that WILL change while the program runs.
+#
+# Look at lines 40 and 41:
+#     def move_blip():
+#         blip_x = blip_x + 100
+# This function is meant to move Blip 100 pixels to the right.
+# The line  blip_x = blip_x + 100  means: work out blip_x + 100,
+# then store the answer back in blip_x.
+#
+# Line 43 calls the function.
+#
+# TASK 9a
+#   Press Run. It breaks! Read the red error in the console.
+#   Always read the LAST line of an error first. What does it say?
+#   Further up, the LAST line that says  File "<exec>", line ___  tells you
+#   where it went wrong. Which line of our code is that?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
 # ============================================================
 blip_x      = 100
 blip_y      = 275
 blip_size   = 50
 BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
+
+def move_blip():
+    blip_x = blip_x + 100
+
+move_blip()
+
 # ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Scroll to the bottom of the red error. The last line starts with  UnboundLocalError.",
+            "Look higher up in the error for lines that start  File \"<exec>\", line  and a number. There are two. The LAST one (it ends with  in move_blip) is where it actually went wrong.",
+            "It points at line 41, the line inside move_blip(). Lab 9b explains why."
+        ],
+
+        answer: "The last line says\n    UnboundLocalError: cannot access local variable 'blip_x' where it is not associated with a value\nand the error points at line 41:  blip_x = blip_x + 100.\n\nThere is nothing to paste for this one. Click Complete to find out why it broke, and how to fix it.",
+
+        completeText: "Click OK for Lab 9b, which fixes it."
+    },
+    {
+        id: "9b",
+
+        title: "Lab 9b: The Fix: global",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 9b: THE FIX: GLOBAL
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Why did Lab 9a break?
+#
+# blip_x was created OUTSIDE the function, on line 33.
+# A variable created outside every function is called a GLOBAL variable.
+#
+# Inside move_blip(), line 40 tries to CHANGE blip_x.
+# When a function changes a variable, Python assumes it is a brand new
+# variable that belongs ONLY to that function. This is called a LOCAL variable.
+# That new local blip_x has no value yet, so there is nothing to add 100 to.
+#
+# The fix is the word  global. Writing
+#     global blip_x
+# inside the function tells Python: "I mean the blip_x from outside."
+#
+# TASK 9b
+#   Make a new line straight under line 39, and type
+#       global blip_x
+#   with 4 spaces in front. Press Run. Where is Blip now?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+def move_blip():
+    blip_x = blip_x + 100
+
+move_blip()
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "The new line goes INSIDE the function, so it needs the 4-space indent, just like line 40.",
+            "It must come BEFORE the line that changes blip_x.",
+            "Lines 39 onwards should become:\n    def move_blip():\n        global blip_x\n        blip_x = blip_x + 100"
+        ],
+
+        answer: "global blip_x tells move_blip() to use the blip_x from outside, instead of making a new local one. Blip now moves from x = 100 to x = 200.\n\nMake a new empty line straight under line 39, which says\n    def move_blip():\nand paste the line below there. The indent is already included.",
+
+        answerCode: `    global blip_x`,
+
+        completeText: "You fixed your first scope error! If a function CHANGES a variable from outside, it needs global.\nClick OK for Lab 10a."
+    },
+    {
+        id: "10a",
+
+        title: "Lab 10a: Move Again",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 10a: MOVE AGAIN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# move_blip() works now. Each call moves Blip 100 pixels right.
+#
+# TASK 10a
+#   Blip starts at x = 100 (line 21).
+#   Make Blip end up at x = 400, by calling move_blip() more times.
+#   Check the label above Blip.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
+
+def move_blip():
+    global blip_x
+    blip_x = blip_x + 100
+
+move_blip()
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+
+    while game_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+await main()`,
+
+        hints: [
+            "Line 31 calls move_blip() once. Each call adds 100.",
+            "From 100 to 400 is 300 more pixels. How many calls of 100 is that?",
+            "You need three lines that each say  move_blip()  (no indent)."
+        ],
+
+        answer: "Each call adds 100, so three calls move Blip from 100 to 400.\n\nMake a new empty line straight under line 31, which says\n    move_blip()\nand paste the two lines below there (no indent).",
+
+        answerCode: `move_blip()
+move_blip()`,
+
+        completeText: "Click OK for Lab 10b."
+    },
+    {
+        id: "10b",
+
+        title: "Lab 10b: Write move_down()",
+
+        code: `import pygame
+import asyncio
+
+# ============================================================
+#  w1L1 LAB 10b: WRITE MOVE_DOWN()
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# TASK 10b
+#   Write a new function called move_down() that moves Blip 100 pixels DOWN.
+#   Put it under move_blip(), with an empty line between them.
+#   Then call it once, under the three move_blip() calls.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+blip_x      = 100
+blip_y      = 275
+blip_size   = 50
+BLIP_COLOUR = (0, 200, 80)
+BACKGROUND  = (30, 30, 30)
 
 def move_blip():
     global blip_x
@@ -471,7 +1753,11 @@ def move_blip():
 
 move_blip()
 move_blip()
-print("Blip is at x =", blip_x)
+move_blip()
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -481,6 +1767,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -489,6 +1776,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -497,12 +1791,12 @@ async def main():
 await main()`,
 
         hints: [
-            "move_blip() already works. move_down() is almost the same function. What needs to be different?",
-            "move_down() needs to change blip_y instead of blip_x. It changes a variable from outside, so it needs global too.",
-            "Writing a function does not run it. After writing move_down(), you also have to CALL it: write  move_down()  on its own line, under the two move_blip() lines."
+            "move_down() is almost a copy of lines 25 to 27. Which variable moves Blip DOWN?",
+            "move_down() changes blip_y, so it needs  global blip_y  and then  blip_y = blip_y + 100, both indented.",
+            "Then, on a new line under the last move_blip(), call it:  move_down()"
         ],
 
-        answer: "move_down() is a copy of move_blip() that changes blip_y instead. Defining the function is not enough: it only runs when it is called.\n\nReplace everything from\n    def move_blip():\ndown to the second\n    move_blip()\nwith the code below.",
+        answer: "move_down() is the same shape as move_blip(), but it changes blip_y. Remember, a function only runs when it is called.\n\nReplace everything from line 25 down to the last  move_blip()  with the code below.",
 
         answerCode: `def move_blip():
     global blip_x
@@ -514,61 +1808,221 @@ def move_down():
 
 move_blip()
 move_blip()
+move_blip()
 move_down()`,
 
-        completeText: "You wrote and called your own function.\nClick OK for Lab 3a."
+        completeText: "Click OK for Lab 11a."
     },
     {
-        id: "3a",
+        id: "11a",
 
-        title: "Lab 3a: In and Out",
+        title: "Lab 11a: Parameters",
+
+        code: `# ============================================================
+#  w1L1 LAB 11a: PARAMETERS
+# ============================================================
+# Back to the console.
+#
+# Look at line 20:
+#     def greet(name):
+# This time there is a word inside the brackets: name.
+# name is a PARAMETER. It is like an empty box that gets filled
+# in every time the function is called.
+#
+# Line 23 calls  greet("Blip"). So inside the function, name is "Blip".
+# Line 24 calls  greet("Sam"). This time, name is "Sam".
+#
+# TASK 11a
+#   Press Run. Then add a third call that greets YOU by name.
+#
+# When you are done, click "Complete" at the top.
+
+def greet(name):
+    print("Hello", name)
+
+greet("Blip")
+greet("Sam")`,
+
+        hints: [
+            "Each call is one line, with no indent, like line 24.",
+            "Put your name in quotes inside the brackets.",
+            "For example, on a new line at the end:  greet(\"Alex\")"
+        ],
+
+        answer: "Each call fills the name parameter with a different value, so the same function prints a different greeting each time.\n\nOn a new line at the very end of the code, paste the line below (no indent), and change Alex to your own name.",
+
+        answerCode: `greet("Alex")`,
+
+        completeText: "Click OK for Lab 11b."
+    },
+    {
+        id: "11b",
+
+        title: "Lab 11b: Two Parameters",
+
+        code: `# ============================================================
+#  w1L1 LAB 11b: TWO PARAMETERS
+# ============================================================
+# A function can have more than one parameter. Look at line 17:
+#     def describe(shape, sides):
+# It has two parameters: shape and sides, separated by a comma.
+#
+# Line 20 calls it with two values:  describe("square", 4)
+# The first value goes into the first parameter (shape = "square"),
+# and the second value goes into the second (sides = 4).
+#
+# TASK 11b
+#   Add a call that prints:  A triangle has 3 sides.
+#
+# When you are done, click "Complete" at the top.
+
+def describe(shape, sides):
+    print("A", shape, "has", sides, "sides.")
+
+describe("square", 4)`,
+
+        hints: [
+            "Copy line 20 onto a new line at the end, and change it.",
+            "The first value is the shape, in quotes. The second value is the number of sides, with no quotes (it is a number).",
+            "describe(\"triangle\", 3)"
+        ],
+
+        answer: "Values are matched to parameters in order: the first value goes to shape, the second to sides.\n\nOn a new line at the very end of the code, paste the line below (no indent).",
+
+        answerCode: `describe("triangle", 3)`,
+
+        completeText: "Click OK for Lab 12a."
+    },
+    {
+        id: "12a",
+
+        title: "Lab 12a: Return Values",
+
+        code: `# ============================================================
+#  w1L1 LAB 12a: RETURN VALUES
+# ============================================================
+# Some functions send an answer BACK. Look at line 21:
+#     return a + b
+# return  means: work out a + b, and send that answer back
+# to the line that called the function.
+#
+# Line 23 says:  answer = add(2, 3)
+#   1. add(2, 3) runs, and sends back 5.
+#   2. The 5 is stored in the variable called answer.
+# Line 24 prints it.
+#
+# TASK 12a
+#   Press Run. Then add lines at the end that work out add(10, 20)
+#   and print the answer.
+#
+# When you are done, click "Complete" at the top.
+
+def add(a, b):
+    return a + b
+
+answer = add(2, 3)
+print(answer)`,
+
+        hints: [
+            "Copy the pattern of lines 23 and 24.",
+            "First store the answer:  answer = add(10, 20)",
+            "Then print it on the next line:  print(answer)"
+        ],
+
+        answer: "add(10, 20) sends back 30, which is stored in answer and then printed.\n\nOn new lines at the very end of the code, paste the two lines below (no indent).",
+
+        answerCode: `answer = add(10, 20)
+print(answer)`,
+
+        completeText: "Click OK for Lab 12b."
+    },
+    {
+        id: "12b",
+
+        title: "Lab 12b: Write a Return Function",
+
+        code: `# ============================================================
+#  w1L1 LAB 12b: WRITE A RETURN FUNCTION
+# ============================================================
+# TASK 12b
+#   Write a function called double(n) that RETURNS n times 2.
+#   Remember: in Python, times is  *
+#   Then print the answer to double(21). It should print 42.
+#
+# When you are done, click "Complete" at the top.
+
+def add(a, b):
+    return a + b
+
+answer = add(2, 3)
+print(answer)`,
+
+        hints: [
+            "Copy the shape of lines 11 and 12. double() has ONE parameter, n.",
+            "def double(n):  then, indented,  return n * 2",
+            "Then at the end:  print(double(21))  (you can put a function call straight inside print)."
+        ],
+
+        answer: "double() takes one value in and returns it times 2. The returned 42 is printed.\n\nOn new lines at the very end of the code, paste the code below. The indent is already included.",
+
+        answerCode: `
+def double(n):
+    return n * 2
+
+print(double(21))`,
+
+        completeText: "Click OK for Lab 13a."
+    },
+    {
+        id: "13a",
+
+        title: "Lab 13a: Moving Without global",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 3a: IN AND OUT
+#  w1L1 LAB 13a: MOVING WITHOUT GLOBAL
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# "global" works, but programmers try not to use it much.
-# If ANY function can change a variable, then when something
-# goes wrong it is hard to work out which function did it.
+# Blip is back! In Lab 9b we moved Blip with global.
+# Programmers try not to use global much: if ANY function can change
+# a variable, it is hard to work out which function caused a problem.
 #
-# A cleaner way: pass the value IN to the function (a PARAMETER),
-# and send the new value back OUT (a RETURN value).
+# Parameters and return values do the same job, more cleanly.
+# Look at line 37:
+#     def moved(x, amount):
+#         return x + amount
+# moved() takes a position and an amount IN, and sends the new position OUT.
 #
-#     def moved(x, amount):     <- x and amount are parameters
-#         return x + amount     <- the answer goes back out
+# Line 40 says:  blip_x = moved(blip_x, 100)
+# It sends blip_x in, and stores the answer back in blip_x. No global needed!
 #
-#     blip_x = moved(blip_x, 100)
-#     ^ the returned answer is stored back in blip_x
-#
-# No "global" needed. The function never touches blip_x.
-# It just does a sum and hands back the answer.
-#
-# TASK 3a
+# TASK 13a
 #   Change the code so Blip moves 3 times, 150 pixels each time.
-#   Where does Blip end up? Check the console.
+#   Blip starts at 100. Where does it end up? Check the label.
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 blip_x      = 100
 blip_y      = 275
 blip_size   = 50
-blip_colour = (0, 200, 80)
+BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
-# ============================================================
 
 def moved(x, amount):
     return x + amount
 
 blip_x = moved(blip_x, 100)
 blip_x = moved(blip_x, 100)
-print("Blip is at x =", blip_x)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -578,6 +2032,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -585,7 +2040,14 @@ async def main():
                 game_running = False
 
         screen.fill(BACKGROUND)
-        pygame.draw.rect(screen, blip_colour, (blip_x, blip_y, blip_size, blip_size))
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -594,48 +2056,47 @@ async def main():
 await main()`,
 
         hints: [
-            "Find the two lines that use moved(). What two values are being passed in?",
-            "blip_x = moved(blip_x, 100)  moves Blip 100 pixels. To move 150, change the 100. To move 3 times, you need 3 of these lines.",
-            "Blip starts at 100. Three moves of 150 is 450 more. So the console should say x = 550."
+            "Lines 40 and the one under it each move Blip once. The 100 is how far.",
+            "Change both 100s to 150, then add a third line the same.",
+            "100 + 150 + 150 + 150 = 550. The label should say x = 550."
         ],
 
-        answer: "Each call to moved() returns the new position, and the line stores it back in blip_x.\n\nReplace the two lines\n    blip_x = moved(blip_x, 100)\n    blip_x = moved(blip_x, 100)\nwith the three lines below (no indent).",
+        answer: "Each line sends blip_x in, gets the new position back, and stores it. Three moves of 150 take Blip from 100 to 550.\n\nReplace lines 40 and 41, which both say\n    blip_x = moved(blip_x, 100)\nwith the three lines below (no indent).",
 
         answerCode: `blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)`,
 
-        completeText: "Parameters in, return values out. That is how most functions in real programs work.\nClick OK for Lab 3b."
+        completeText: "Click OK for Lab 13b."
     },
     {
-        id: "3b",
+        id: "13b",
 
-        title: "Lab 3b: Bigger",
+        title: "Lab 13b: Bigger",
 
         code: `import pygame
 import asyncio
 
 # ============================================================
-#  w1L1 LAB 3b: BIGGER
+#  w1L1 LAB 13b: BIGGER
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# TASK 3b
-#   Write a function bigger(size) that RETURNS size times 2.
-#   Use it to make Blip twice as big:
+# TASK 13b
+#   Write a function called bigger(size) that RETURNS size times 2.
+#   Then use it to make Blip twice as big, without global:
 #       blip_size = bigger(blip_size)
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 blip_x      = 100
 blip_y      = 275
 blip_size   = 50
-blip_colour = (0, 200, 80)
+BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
-# ============================================================
 
 def moved(x, amount):
     return x + amount
@@ -643,7 +2104,10 @@ def moved(x, amount):
 blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)
-print("Blip is at x =", blip_x)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -653,6 +2117,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -660,7 +2125,14 @@ async def main():
                 game_running = False
 
         screen.fill(BACKGROUND)
-        pygame.draw.rect(screen, blip_colour, (blip_x, blip_y, blip_size, blip_size))
+        pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -669,39 +2141,40 @@ async def main():
 await main()`,
 
         hints: [
-            "bigger() takes ONE value in (size) and sends one value back out. Look at moved() for the pattern.",
-            "Inside bigger(), the only line you need is a return. In Python, times is written with *.",
+            "bigger() follows the same pattern as moved() on line 25, but with only ONE parameter.",
+            "def bigger(size):  then, indented,  return size * 2",
             "Writing the function is not enough. You must call it AND store the answer:  blip_size = bigger(blip_size)"
         ],
 
-        answer: "bigger() works out size * 2 and returns it. The line underneath stores that answer in blip_size.\n\nMake a new empty line straight under\n    return x + amount\nand paste the code below there. The indents are already included.",
+        answer: "bigger() works out size * 2 and returns it. The line under it stores the answer in blip_size, so Blip doubles from 50 to 100.\n\nMake a new empty line straight under line 26, which says\n    return x + amount\nand paste the code below there. The indents are already included.",
 
-        answerCode: `def bigger(size):
+        answerCode: `
+def bigger(size):
     return size * 2
 
 blip_size = bigger(blip_size)`,
 
-        completeText: "Blip is twice the size, and no global was needed.\nClick OK for Lab 4a."
+        completeText: "Click OK for Lab 14a: the prediction puzzles."
     },
     {
-        id: "4a",
+        id: "14a",
 
-        title: "Lab 4a: Predict the Output",
+        title: "Lab 14a: Predict the Output",
 
         code: `# ============================================================
-#  w1L1 LAB 4a: PREDICT THE OUTPUT
+#  w1L1 LAB 14a: PREDICT THE OUTPUT
 # ============================================================
-# No game this time. Just the console.
+# No game. Just the console.
 #
-# For each puzzle below:
-#   1. Read the code.
+# For each puzzle:
+#   1. Read the code carefully.
 #   2. Write your prediction in the comment underneath it.
 #   3. Only then press Run, and check.
 #
 # If you were wrong, that is the useful part!
 # Work out WHY before you click Complete.
 #
-# TASK 4a
+# TASK 14a
 #   Predict Puzzles 1 and 2, then Run.
 #
 # When you are done, click "Complete" at the top.
@@ -731,34 +2204,34 @@ print("Puzzle 2, lives:", lives)
 # My prediction:  lives = ___`,
 
         hints: [
-            "In Puzzle 1, look inside add_points(). Does it say global?",
-            "Without global,  score = 50  inside add_points() makes a NEW local variable called score. It only exists inside the function. The score outside is a different variable.",
-            "In Puzzle 2, lose_life() DOES say global, so it changes the real lives. Count how many times it is called."
+            "Puzzle 1: look inside add_points() on line 22. Does it say global?",
+            "Without global,  score = 50  inside the function makes a NEW local variable that only exists inside add_points(). The score outside is a different variable.",
+            "Puzzle 2: lose_life() DOES say global, so it changes the real lives. Count how many times it is called."
         ],
 
-        answer: "Puzzle 1 prints  inside: 50  and  outside: 10. add_points() made its own local score, and the outside score never changed.\n\nPuzzle 2 prints  lives: 1. global lives means the function changes the real one, and two calls take it from 3 down to 1.",
+        answer: "Puzzle 1 prints  inside: 50  then  outside: 10. add_points() made its own local score, and the outside score never changed.\n\nPuzzle 2 prints  lives: 1. global lives means the function changes the real one, and two calls take it from 3 to 1.",
 
-        completeText: "Click OK for Lab 4b."
+        completeText: "Click OK for Lab 14b."
     },
     {
-        id: "4b",
+        id: "14b",
 
-        title: "Lab 4b: Predict the Output",
+        title: "Lab 14b: Predict the Output",
 
         code: `# ============================================================
-#  w1L1 LAB 4b: PREDICT THE OUTPUT
+#  w1L1 LAB 14b: PREDICT THE OUTPUT
 # ============================================================
-# No game this time. Just the console.
+# No game. Just the console.
 #
-# For each puzzle below:
-#   1. Read the code.
+# For each puzzle:
+#   1. Read the code carefully.
 #   2. Write your prediction in the comment underneath it.
 #   3. Only then press Run, and check.
 #
 # If you were wrong, that is the useful part!
 # Work out WHY before you click Complete.
 #
-# TASK 4b
+# TASK 14b
 #   Predict Puzzle 3, then Run.
 #
 # When you are done, click "Complete" at the top.
@@ -775,13 +2248,13 @@ print("Puzzle 3, coins:", coins)
 
         hints: [
             "double() returns an answer. Follow that answer: where does it go?",
-            "The line  double(coins)  calls the function, but nothing on that line stores what comes back.",
+            "Line 25 calls the function, but nothing on that line stores what comes back. Compare it with Lab 12a.",
             "A returned value that is not stored is thrown away. Did coins itself ever change?"
         ],
 
-        answer: "Puzzle 3 prints  coins: 5. double() worked out 10, but nothing stored the answer, so it was thrown away.\n\nTo keep the answer, the line would need to be  coins = double(coins)",
+        answer: "Puzzle 3 prints  coins: 5. double() worked out 10, but nothing stored the answer, so it was thrown away.\n\nTo keep it, line 25 would need to say  coins = double(coins)",
 
-        completeText: "That is all the core tasks for w1L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+        completeText: "That is all the core labs for w1L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
     },
     {
         id: "1ext",
@@ -797,22 +2270,26 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # EXTENSION
-#   Move Blip into the bottom-right corner, touching both edges
-#   with no gap. Careful: BLIP_X and BLIP_Y set Blip's TOP-left corner.
-#
-#   Then: can you make Blip stay in that corner whatever BLIP_SIZE is,
-#   so you only ever need to change BLIP_SIZE? (You may need to move a line.)
+#   1. Using sums, put Blip in the bottom-RIGHT corner,
+#      touching both edges.
+#   2. Now make it work for ANY size: use BLIP_SIZE itself in your sums,
+#      so you only ever need to change BLIP_SIZE.
+#      Careful: Python reads from top to bottom. A variable must be
+#      created BEFORE a line can use it. (You may need to move a line.)
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 BLIP_X      = 0
 BLIP_Y      = 0
 BLIP_SIZE   = 50
-BLIP_COLOUR = (255, 0, 255)
+BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
 # ============================================================
 
 game_running = True
@@ -823,6 +2300,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -831,6 +2309,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (BLIP_X, BLIP_Y, BLIP_SIZE, BLIP_SIZE))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {BLIP_X}   y = {BLIP_Y}   size = {BLIP_SIZE}", True, (255, 255, 255))
+        label_x = max(0, min(BLIP_X, 800 - label.get_width()))
+        label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -839,18 +2324,18 @@ async def main():
 await main()`,
 
         hints: [
-            "BLIP_X and BLIP_Y set where Blip's TOP-LEFT corner goes. If that corner went at (800, 600), where would the rest of Blip be?",
-            "Blip is BLIP_SIZE pixels wide. To touch the right edge, Blip's left side must be BLIP_SIZE pixels in from 800. Python can do sums in a setting, for example  BLIP_X = 800 - 50",
-            "To make it work for any size, use BLIP_SIZE itself in the sum. Python reads from top to bottom, so BLIP_SIZE must be set on a line ABOVE the lines that use it."
+            "Part 1: Blip's top-left corner must be one Blip-width in from the right (800 - 50) and one Blip-height up from the bottom (600 - 50).",
+            "Part 2: replace the 50s in your sums with BLIP_SIZE, for example  BLIP_X = 800 - BLIP_SIZE",
+            "If you get a NameError, BLIP_SIZE is being used before it is created. Move the BLIP_SIZE line ABOVE the BLIP_X line."
         ],
 
-        answer: "Blip's top-left corner has to be BLIP_SIZE pixels in from each edge. Using BLIP_SIZE in the sum means it works for any size. BLIP_SIZE must come first, because Python reads from top to bottom.\n\nReplace the three lines\n    BLIP_X      = 0\n    BLIP_Y      = 0\n    BLIP_SIZE   = 50\nwith the lines below (no indent). Try changing 120 to other sizes.",
+        answer: "Using BLIP_SIZE in the sums means Blip stays in the corner whatever its size. BLIP_SIZE must be created first, because Python reads from top to bottom.\n\nReplace lines 22 to 24, which say\n    BLIP_X      = 0\n    BLIP_Y      = 0\n    BLIP_SIZE   = 50\nwith the three lines below (no indent). Then try changing 120 to other sizes.",
 
         answerCode: `BLIP_SIZE   = 120
 BLIP_X      = 800 - BLIP_SIZE
 BLIP_Y      = 600 - BLIP_SIZE`,
 
-        completeText: "Settings can be calculated from other settings. Click OK for the next extension."
+        completeText: "Click OK for the next extension."
     },
     {
         id: "2ext",
@@ -866,23 +2351,21 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # EXTENSION
-#   Write a function called grow() that doubles blip_size.
-#   Call it once, under move_down().
-#
-#   Then look at main() further down: it says "global game_running".
-#   Can you explain why it needs that?
+#   1. Write a function called grow() that doubles blip_size, using global.
+#      Call it once, at the end of the calls.
+#   2. Scroll down past the line that says you do not need to read below it.
+#      Find  global game_running  inside main(). Why does main() need it?
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 blip_x      = 100
 blip_y      = 275
 blip_size   = 50
 BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
-# ============================================================
 
 def move_blip():
     global blip_x
@@ -894,8 +2377,12 @@ def move_down():
 
 move_blip()
 move_blip()
+move_blip()
 move_down()
-print("Blip is at x =", blip_x)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -905,6 +2392,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -913,6 +2401,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -921,12 +2416,12 @@ async def main():
 await main()`,
 
         hints: [
-            "grow() is like move_blip(), but it changes blip_size.",
-            "Doubling means multiplying by 2:  blip_size * 2. Does grow() CHANGE a variable from outside? Then what does it need?",
-            "For the question: what does main() do to game_running when the window is closed? Where was game_running first created?"
+            "grow() is the same shape as move_down(), but it changes blip_size. Doubling is  * 2.",
+            "def grow():  then  global blip_size  then  blip_size = blip_size * 2  (both indented). Then call  grow()  at the end.",
+            "Part 2: what does main() do to game_running when the window is closed? Where was game_running first created?"
         ],
 
-        answer: "grow() changes blip_size, which was created outside the function, so it needs global. main() is the same: it sets game_running to False when the window closes, and game_running was created outside main(). The Stop button changes that same global game_running too.\n\nReplace everything from\n    def move_blip():\ndown to\n    move_down()\nwith the code below.",
+        answer: "grow() changes blip_size, which was created outside the function, so it needs global. main() is the same: it changes game_running (to False when the window closes), and game_running was created outside main(). The Stop button changes that same global game_running.\n\nReplace everything from line 26 down to  move_down()  with the code below.",
 
         answerCode: `def move_blip():
     global blip_x
@@ -940,6 +2435,7 @@ def grow():
     global blip_size
     blip_size = blip_size * 2
 
+move_blip()
 move_blip()
 move_blip()
 move_down()
@@ -962,21 +2458,21 @@ import asyncio
 #
 # EXTENSION
 #   Write a function swap_colour(colour) that returns the colour
-#   with red and blue swapped. For example (0, 200, 80) should come
-#   back as (80, 200, 0). Use it on blip_colour.
-#   Hint: you can unpack a colour like this:  r, g, b = colour
+#   with red and blue swapped. (0, 200, 80) should come back as (80, 200, 0).
+#   Use it on blip_colour, without global.
+#   Clue: you can split a colour into three variables like this:
+#       r, g, b = colour
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 blip_x      = 100
 blip_y      = 275
 blip_size   = 50
 blip_colour = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
-# ============================================================
 
 def moved(x, amount):
     return x + amount
@@ -989,7 +2485,10 @@ blip_size = bigger(blip_size)
 blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)
-print("Blip is at x =", blip_x)
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -999,6 +2498,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -1007,6 +2507,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, blip_colour, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -1017,12 +2524,13 @@ await main()`,
         hints: [
             "swap_colour() takes one colour in and returns one colour out, just like bigger() takes one size in and returns one size out.",
             "Inside swap_colour(), the line  r, g, b = colour  splits the colour into three separate variables.",
-            "Now return the three variables in a different order:  return (b, g, r). Then store the answer:  blip_colour = swap_colour(blip_colour)"
+            "Return them in a different order:  return (b, g, r). Then store the answer:  blip_colour = swap_colour(blip_colour)"
         ],
 
-        answer: "swap_colour() splits the colour into r, g and b, then returns them with r and b swapped.\n\nMake a new empty line straight under\n    blip_size = bigger(blip_size)\nand paste the code below there. The indents are already included.",
+        answer: "swap_colour() splits the colour into r, g and b, then returns them with r and b swapped.\n\nMake a new empty line straight under line 33, which says\n    blip_size = bigger(blip_size)\nand paste the code below there. The indents are already included.",
 
-        answerCode: `def swap_colour(colour):
+        answerCode: `
+def swap_colour(colour):
     r, g, b = colour
     return (b, g, r)
 
@@ -1038,10 +2546,10 @@ blip_colour = swap_colour(blip_colour)`,
         code: `# ============================================================
 #  w1L1 LAB 4ext: PREDICT THE OUTPUT (EXTENSION)
 # ============================================================
-# No game this time. Just the console.
+# No game. Just the console.
 #
-# For each puzzle below:
-#   1. Read the code.
+# For each puzzle:
+#   1. Read the code carefully.
 #   2. Write your prediction in the comment underneath it.
 #   3. Only then press Run, and check.
 #
@@ -1065,12 +2573,12 @@ print("Puzzle 4:", speed, new_speed)
 # My prediction:  ___  ___`,
 
         hints: [
-            "boost() has a parameter called speed. There is also a variable called speed outside the function. Are they the same variable?",
+            "boost() has a parameter called speed (line 22). There is also a variable called speed outside. Are they the same variable?",
             "A parameter is a local variable. Changing it inside boost() does not change the speed outside.",
             "Only new_speed stores what boost() returned. What was speed before boost() was called?"
         ],
 
-        answer: "Puzzle 4 prints  2 12. The parameter speed is a local variable inside boost(), even though it has the same name as the speed outside. The outside speed stays 2. Only new_speed gets the returned 12.",
+        answer: "Puzzle 4 prints  2 12. The parameter speed is a local variable inside boost(), even though it has the same name as the speed outside. The outside speed stays 2, and only new_speed gets the returned 12.",
 
         completeText: "Click OK for the last extension."
     },
@@ -1087,29 +2595,27 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# This program works, but it uses "global" three times.
-# Run it and note where Blip ends up. The console tells you.
+# This code works, but it uses global three times.
+# Run it and note where Blip ends up: x = 400, y = 250, size = 70.
 #
 # EXTENSION
 #   Rewrite move_right(), move_down() and grow() so they use
-#   PARAMETERS and RETURN values instead of global (like moved() in Lab 3a).
+#   PARAMETERS and RETURN values instead of global, like moved() in Lab 13a.
 #
 #   Rules:
-#     - No "global" anywhere except "global game_running" in main().
-#     - Blip must end up in exactly the same place, at exactly the same size.
-#       The console should still print:  x = 400, y = 250, size = 70
+#     - No global in the student zone.
+#     - Blip must end up at exactly x = 400, y = 250, size = 70.
 #
 # When you are done, click "Complete" at the top.
 
 # ============================================================
-#  STUDENT ZONE: SETTINGS
+#  STUDENT ZONE
 # ============================================================
 blip_x      = 100
 blip_y      = 100
 blip_size   = 40
 BLIP_COLOUR = (0, 200, 80)
 BACKGROUND  = (30, 30, 30)
-# ============================================================
 
 def move_right():
     global blip_x
@@ -1127,7 +2633,10 @@ move_right()
 move_down()
 grow()
 move_right()
-print(f"x = {blip_x}, y = {blip_y}, size = {blip_size}")
+
+# ============================================================
+#  YOU DO NOT NEED TO READ BELOW THIS LINE FOR THIS LAB
+# ============================================================
 
 game_running = True
 
@@ -1137,6 +2646,7 @@ async def main():
 
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
 
     while game_running:
         for event in pygame.event.get():
@@ -1145,6 +2655,13 @@ async def main():
 
         screen.fill(BACKGROUND)
         pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, blip_size, blip_size))
+
+        # Show Blip's numbers next to Blip
+        label = font.render(f"x = {blip_x}   y = {blip_y}   size = {blip_size}", True, (255, 255, 255))
+        label_x = max(0, min(blip_x, 800 - label.get_width()))
+        label_y = blip_y - 22 if blip_y >= 22 else blip_y + blip_size + 6
+        screen.blit(label, (label_x, min(label_y, 580)))
+
         pygame.display.flip()
         await asyncio.sleep(0)
 
@@ -1153,12 +2670,12 @@ async def main():
 await main()`,
 
         hints: [
-            "Start with move_right(). Look back at moved() in Lab 3a: it takes a value in and returns the new value, with no global.",
-            "move_right(x) should return x + 150. Then the call changes too:  blip_x = move_right(blip_x). Run after each change and check the console still says x = 400, y = 250, size = 70.",
-            "move_down() and grow() follow exactly the same pattern: move_down(y) returns y + 150, and grow(size) returns size + 30. Every call must store the answer."
+            "Start with move_right() on line 31. It should take x in and return x + 150, with no global.",
+            "Then the call changes too:  blip_x = move_right(blip_x). Run after each change and check the label still ends at x = 400.",
+            "move_down() and grow() follow the same pattern: move_down(y) returns y + 150, and grow(size) returns size + 30. Every call must store its answer."
         ],
 
-        answer: "Each function now takes its value in as a parameter and returns the new value. Each call stores the answer back in the right variable, so no global is needed.\n\nReplace everything from\n    def move_right():\ndown to the last\n    move_right()\nwith the code below.",
+        answer: "Each function now takes its value in as a parameter and returns the new value. Each call stores the answer back in the right variable, so no global is needed.\n\nReplace everything from line 31 down to the last  move_right()  with the code below.",
 
         answerCode: `def move_right(x):
     return x + 150
@@ -1174,7 +2691,7 @@ blip_y = move_down(blip_y)
 blip_size = grow(blip_size)
 blip_x = move_right(blip_x)`,
 
-        finalText: "Congratulations on completing every lab in w1L1!\nYou know variables, local and global scope, parameters and return values. Next lesson, Blip starts moving."
+        finalText: "Congratulations on completing every lab in w1L1!\nYou know variables, print(), functions, local and global scope, parameters and return values."
     }
     ];
 
