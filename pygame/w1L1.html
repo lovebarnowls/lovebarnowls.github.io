@@ -222,7 +222,7 @@ import asyncio
 # So every time you change something: press Stop, make your change,
 # then press Run.
 #
-# Look at line 34. It says:
+# Look at line 39. It says:
 #     BLIP_COLOUR = (0, 200, 80)
 # This line stores Blip's colour.
 #
@@ -231,8 +231,13 @@ import asyncio
 # (0, 200, 80) means: no red, lots of green, a little blue.
 #
 # TASK 1a
-#   On line 34, change the three numbers to (255, 0, 255).
+#   On line 39, change the three numbers to (255, 0, 255).
 #   Press Stop, then Run. What colour is Blip now?
+#
+# PLAY (optional)
+#   PLAY steps are optional and nobody checks them. They are for you.
+#   Make Blip the UGLIEST colour you can find. Then the most beautiful one.
+#   Which three numbers did you use for each?
 #
 # When you are done, click "Complete" at the top.
 
@@ -273,14 +278,7 @@ async def main():
         label_y = BLIP_Y - 22 if BLIP_Y >= 22 else BLIP_Y + BLIP_SIZE + 6
         screen.blit(label, (label_x, min(label_y, 580)))
 
-        # flip() shows everything we have drawn.
-        # Some pygame tutorials use pygame.display.update() instead.
         pygame.display.flip()
-
-        # Why "await asyncio.sleep(0)" and not "while True"?
-        # This particular web-based IDE is an emulator, and "while True" does not
-        # work in it, so we use this instead. If you are using your own pygame
-        # on your own computer, you might want to use "while True".
         await asyncio.sleep(0)
 
     pygame.quit()
@@ -288,12 +286,12 @@ async def main():
 await main()`,
 
         hints: [
-            "Find line 34. The line numbers are down the left-hand side of the code.",
+            "Find line 39. The line numbers are down the left-hand side of the code.",
             "Change only the three numbers inside the brackets. Keep the brackets and the commas.",
             "The line should end up as:  BLIP_COLOUR = (255, 0, 255)  Then press Stop, then Run."
         ],
 
-        answer: "(255, 0, 255) is full red, no green and full blue, which makes magenta (a bright purple-pink).\n\nReplace line 34, which says\n    BLIP_COLOUR = (0, 200, 80)\nwith the line below (it has no indent).",
+        answer: "(255, 0, 255) is full red, no green and full blue, which makes magenta (a bright purple-pink).\n\nReplace line 39, which says\n    BLIP_COLOUR = (0, 200, 80)\nwith the line below (it has no indent).",
 
         answerCode: `BLIP_COLOUR = (255, 0, 255)`,
 
@@ -312,7 +310,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 28. It says:
+# Look at line 32. It says:
 #     BACKGROUND  = (30, 30, 30)
 # This stores the colour of the screen behind Blip.
 # (30, 30, 30) is a little of every colour, which makes dark grey.
@@ -321,6 +319,10 @@ import asyncio
 #   Change the background to white: (255, 255, 255).
 #   Then try to make the background the SAME colour as Blip.
 #   What happens to Blip?
+#
+# PLAY (optional)
+#   Find a background that makes Blip really hard to see, WITHOUT being
+#   exactly the same colour. How close can you get?
 #
 # When you are done, click "Complete" at the top.
 
@@ -369,12 +371,12 @@ async def main():
 await main()`,
 
         hints: [
-            "The background is on line 28.",
+            "The background is on line 32.",
             "Full red, full green and full blue together make white: (255, 255, 255).",
-            "Blip's colour is on line 27. Copy those three numbers onto line 28."
+            "Blip's colour is on line 31. Copy those three numbers onto line 32."
         ],
 
-        answer: "When the background is the same colour as Blip, Blip is still there, but you cannot see it. The computer only does what the numbers say.\n\nReplace line 28, which says\n    BACKGROUND  = (30, 30, 30)\nwith the line below (no indent).",
+        answer: "When the background is the same colour as Blip, Blip is still there, but you cannot see it. The computer only does what the numbers say.\n\nReplace line 32, which says\n    BACKGROUND  = (30, 30, 30)\nwith the line below (no indent).",
 
         answerCode: `BACKGROUND  = (255, 0, 255)`,
 
@@ -393,7 +395,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 33. It says:
+# Look at line 37. It says:
 #     BLIP_X      = 375
 #
 # This is a VARIABLE. A variable is a name that stores a value.
@@ -411,6 +413,10 @@ import asyncio
 # TASK 2a
 #   Change BLIP_X to 0. Press Stop, then Run.
 #   Where is Blip now? What does the label above Blip say?
+#
+# PLAY (optional)
+#   Put Blip half off the LEFT edge of the screen. (Hint: x can be a
+#   negative number.) Where else could you hide Blip?
 #
 # When you are done, click "Complete" at the top.
 
@@ -459,12 +465,12 @@ async def main():
 await main()`,
 
         hints: [
-            "BLIP_X is on line 33.",
+            "BLIP_X is on line 37.",
             "Change only the number after the = sign. Leave BLIP_X and the = alone.",
             "The line should end up as:  BLIP_X      = 0  (the spaces before the = do not matter)."
         ],
 
-        answer: "BLIP_X = 0 means Blip is 0 pixels from the left edge, so Blip touches the left side of the screen. The label now says x = 0.\n\nReplace line 33, which says\n    BLIP_X      = 375\nwith the line below (no indent).",
+        answer: "BLIP_X = 0 means Blip is 0 pixels from the left edge, so Blip touches the left side of the screen. The label now says x = 0.\n\nReplace line 37, which says\n    BLIP_X      = 375\nwith the line below (no indent).",
 
         answerCode: `BLIP_X      = 0`,
 
@@ -486,9 +492,12 @@ import asyncio
 # The screen is 800 pixels wide. Blip is 50 pixels wide.
 #
 # TASK 2b
-#   Change BLIP_X on line 21 to 700. Press Stop, then Run.
+#   Change BLIP_X on line 24 to 700. Press Stop, then Run.
 #   Then try 800. Where did Blip go?
 #   What is the BIGGEST value of BLIP_X where you can still see ALL of Blip?
+#
+# PLAY (optional)
+#   Try BLIP_X = 100000. Does Python mind? Where is Blip?
 #
 # When you are done, click "Complete" at the top.
 
@@ -542,7 +551,7 @@ await main()`,
             "If Blip's left side is at 750, its right side is at 750 + 50 = 800, exactly the edge of the screen."
         ],
 
-        answer: "At 800, Blip's left side is on the very edge, so all of Blip is off the screen. The biggest value where all of Blip shows is 750, because 750 + 50 (Blip's width) = 800.\n\nReplace line 21, which says\n    BLIP_X      = 0\nwith the line below (no indent).",
+        answer: "At 800, Blip's left side is on the very edge, so all of Blip is off the screen. The biggest value where all of Blip shows is 750, because 750 + 50 (Blip's width) = 800.\n\nReplace line 24, which says\n    BLIP_X      = 0\nwith the line below (no indent).",
 
         answerCode: `BLIP_X      = 750`,
 
@@ -561,7 +570,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 28. It says:
+# Look at line 32. It says:
 #     BLIP_Y      = 275
 # BLIP_Y stores how many pixels Blip is from the TOP of the screen.
 #
@@ -573,6 +582,10 @@ import asyncio
 # TASK 3a
 #   Change BLIP_Y to 0. Press Stop, then Run.
 #   Where is Blip? Then try 500. Which way did Blip move?
+#
+# PLAY (optional)
+#   How negative can BLIP_Y be before Blip disappears completely off the
+#   top? Work it out first, then test it.
 #
 # When you are done, click "Complete" at the top.
 
@@ -621,12 +634,12 @@ async def main():
 await main()`,
 
         hints: [
-            "BLIP_Y is on line 28.",
+            "BLIP_Y is on line 32.",
             "Change only the number after the = sign.",
             "With BLIP_Y = 0, Blip touches the top. A bigger y moves Blip DOWN, not up."
         ],
 
-        answer: "BLIP_Y = 0 puts Blip at the very top. 500 moves Blip near the bottom: in pygame, bigger y means further DOWN.\n\nReplace line 28, which says\n    BLIP_Y      = 275\nwith the line below (no indent).",
+        answer: "BLIP_Y = 0 puts Blip at the very top. 500 moves Blip near the bottom: in pygame, bigger y means further DOWN.\n\nReplace line 32, which says\n    BLIP_Y      = 275\nwith the line below (no indent).",
 
         answerCode: `BLIP_Y      = 0`,
 
@@ -646,12 +659,16 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # You now know:
-#   BLIP_X  (line 22) moves Blip left and right.
-#   BLIP_Y  (line 23) moves Blip up and down.
+#   BLIP_X  (line 26) moves Blip left and right.
+#   BLIP_Y  (line 27) moves Blip up and down.
 #
 # TASK 3b
 #   Move Blip to the BOTTOM-LEFT corner of the screen,
 #   touching both edges. You need to change TWO lines!
+#
+# PLAY (optional)
+#   Put Blip in the corner you think is the HARDEST to get exactly right,
+#   and get it exactly right.
 #
 # When you are done, click "Complete" at the top.
 
@@ -705,7 +722,7 @@ await main()`,
             "The screen is 600 tall and Blip is 50 tall. BLIP_Y sets where Blip's TOP is. So Blip's top must be at 600 - 50."
         ],
 
-        answer: "Bottom-left is BLIP_X = 0 (touching the left) and BLIP_Y = 550 (Blip's top at 550, so its bottom is at 550 + 50 = 600).\n\nReplace lines 22 and 23, which say\n    BLIP_X      = 375\n    BLIP_Y      = 275\nwith the two lines below (no indent).",
+        answer: "Bottom-left is BLIP_X = 0 (touching the left) and BLIP_Y = 550 (Blip's top at 550, so its bottom is at 550 + 50 = 600).\n\nReplace lines 26 and 27, which say\n    BLIP_X      = 375\n    BLIP_Y      = 275\nwith the two lines below (no indent).",
 
         answerCode: `BLIP_X      = 0
 BLIP_Y      = 550`,
@@ -725,7 +742,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 25. It says:
+# Look at line 29. It says:
 #     BLIP_SIZE   = 50
 # This stores how many pixels wide (and tall) Blip is.
 #
@@ -733,6 +750,10 @@ import asyncio
 #   Change BLIP_SIZE to 200. Press Stop, then Run.
 #   Watch carefully: which way does Blip grow?
 #   Did BLIP_X and BLIP_Y change? (Check the label above Blip.)
+#
+# PLAY (optional)
+#   Make Blip so big that it covers the whole screen. Then make it 1
+#   pixel. Can you still find it?
 #
 # When you are done, click "Complete" at the top.
 
@@ -781,12 +802,12 @@ async def main():
 await main()`,
 
         hints: [
-            "BLIP_SIZE is on line 25.",
+            "BLIP_SIZE is on line 29.",
             "Change 50 to 200, then press Stop and Run.",
             "Look at Blip's top-left corner. Did it move? Or did Blip grow out to the right and down?"
         ],
 
-        answer: "Blip grows to the RIGHT and DOWN. BLIP_X and BLIP_Y did not change: they always say where Blip's TOP-LEFT corner is, and the size is measured from there.\n\nReplace line 25, which says\n    BLIP_SIZE   = 50\nwith the line below (no indent).",
+        answer: "Blip grows to the RIGHT and DOWN. BLIP_X and BLIP_Y did not change: they always say where Blip's TOP-LEFT corner is, and the size is measured from there.\n\nReplace line 29, which says\n    BLIP_SIZE   = 50\nwith the line below (no indent).",
 
         answerCode: `BLIP_SIZE   = 200`,
 
@@ -810,6 +831,10 @@ import asyncio
 #   touching the top AND the bottom.
 #   You need to change TWO lines. Which ones?
 #
+# PLAY (optional)
+#   Make Blip as tall as the screen, but standing against the RIGHT edge
+#   instead. Which lines change now?
+#
 # When you are done, click "Complete" at the top.
 
 # ============================================================
@@ -857,12 +882,12 @@ async def main():
 await main()`,
 
         hints: [
-            "One line sets how big Blip is: line 21.",
+            "One line sets how big Blip is: line 25.",
             "BLIP_SIZE = 600 makes Blip 600 tall. But where is Blip's top?",
-            "To touch the top, Blip's top must be at y = 0. That is line 20."
+            "To touch the top, Blip's top must be at y = 0. That is line 24."
         ],
 
-        answer: "BLIP_SIZE = 600 makes Blip as tall as the screen, and BLIP_Y = 0 puts Blip's top at the top. (Blip is also 600 wide, so part of it goes off the right edge.)\n\nReplace lines 20 and 21, which say\n    BLIP_Y      = 275\n    BLIP_SIZE   = 50\nwith the two lines below (no indent).",
+        answer: "BLIP_SIZE = 600 makes Blip as tall as the screen, and BLIP_Y = 0 puts Blip's top at the top. (Blip is also 600 wide, so part of it goes off the right edge.)\n\nReplace lines 24 and 25, which say\n    BLIP_Y      = 275\n    BLIP_SIZE   = 50\nwith the two lines below (no indent).",
 
         answerCode: `BLIP_Y      = 0
 BLIP_SIZE   = 600`,
@@ -882,7 +907,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 25. It says:
+# Look at line 28. It says:
 #     BLIP_X      = 100 + 50
 # Python works out the sum FIRST, then stores the answer in BLIP_X.
 #
@@ -890,8 +915,11 @@ import asyncio
 #
 # TASK 5a
 #   Press Run. What does the label above Blip say x is?
-#   Then change line 25 to  800 - 50  and Run again.
+#   Then change line 28 to  800 - 50  and Run again.
 #   Where is Blip now?
+#
+# PLAY (optional)
+#   Use a sum to make Blip touch the BOTTOM edge:  BLIP_Y = 600 - ___
 #
 # When you are done, click "Complete" at the top.
 
@@ -945,7 +973,7 @@ await main()`,
             "800 - 50 is 750. That puts Blip touching the right edge, like in Lab 2b."
         ],
 
-        answer: "The label shows x = 150, because Python works out 100 + 50 before storing it. 800 - 50 = 750, which puts Blip against the right edge.\n\nReplace line 25, which says\n    BLIP_X      = 100 + 50\nwith the line below (no indent).",
+        answer: "The label shows x = 150, because Python works out 100 + 50 before storing it. 800 - 50 = 750, which puts Blip against the right edge.\n\nReplace line 28, which says\n    BLIP_X      = 100 + 50\nwith the line below (no indent).",
 
         answerCode: `BLIP_X      = 800 - 50`,
 
@@ -969,7 +997,11 @@ import asyncio
 #
 # TASK 5b
 #   Put Blip exactly in the middle of the screen,
-#   using a sum on line 21 AND a sum on line 22.
+#   using a sum on line 25 AND a sum on line 26.
+#
+# PLAY (optional)
+#   Use sums to put Blip in the middle of the TOP edge. Then in the
+#   middle of the RIGHT edge.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1023,7 +1055,7 @@ await main()`,
             "BLIP_X = 400 - 25. Do the same for y, using 300."
         ],
 
-        answer: "To centre Blip, move its top-left corner back by half of Blip's size (25) from the middle of the screen.\n\nReplace lines 21 and 22, which say\n    BLIP_X      = 0\n    BLIP_Y      = 0\nwith the two lines below (no indent).",
+        answer: "To centre Blip, move its top-left corner back by half of Blip's size (25) from the middle of the screen.\n\nReplace lines 25 and 26, which say\n    BLIP_X      = 0\n    BLIP_Y      = 0\nwith the two lines below (no indent).",
 
         answerCode: `BLIP_X      = 400 - 25
 BLIP_Y      = 300 - 25`,
@@ -1043,7 +1075,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 33. It says:
+# Look at line 37. It says:
 #     print("Blip's x is", BLIP_X)
 #
 # print() shows things in the CONSOLE (the black box at the bottom right).
@@ -1053,8 +1085,12 @@ import asyncio
 #
 # TASK 6a
 #   Press Run and find the line in the console.
-#   Then change BLIP_X on line 27 to 123 and Run again.
+#   Then change BLIP_X on line 31 to 123 and Run again.
 #   What changed in the console?
+#
+# PLAY (optional)
+#   Make the console say something silly about Blip, with BLIP_X in the
+#   middle of the sentence.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1106,11 +1142,11 @@ await main()`,
 
         hints: [
             "The console is the black box at the bottom right of the page. You may need to scroll it.",
-            "Change line 27 to  BLIP_X      = 123, then press Stop and Run.",
+            "Change line 31 to  BLIP_X      = 123, then press Stop and Run.",
             "The words stay the same, because they are in quotes. The number changes, because it comes from BLIP_X."
         ],
 
-        answer: "The console now says  Blip's x is 123. The words in quotes never change, but BLIP_X has no quotes, so print shows whatever value is stored in it.\n\nReplace line 27, which says\n    BLIP_X      = 375\nwith the line below (no indent).",
+        answer: "The console now says  Blip's x is 123. The words in quotes never change, but BLIP_X has no quotes, so print shows whatever value is stored in it.\n\nReplace line 31, which says\n    BLIP_X      = 375\nwith the line below (no indent).",
 
         answerCode: `BLIP_X      = 123`,
 
@@ -1130,9 +1166,12 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # TASK 6b
-#   Make a new line under line 25 and write your own print
+#   Make a new line under line 28 and write your own print
 #   that shows Blip's y, so the console says:
 #       Blip's y is 275
+#
+# PLAY (optional)
+#   Write one print that shows all three of Blip's numbers on one line.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1183,12 +1222,12 @@ async def main():
 await main()`,
 
         hints: [
-            "Copy line 25 and change it.",
+            "Copy line 28 and change it.",
             "Two things need to change: the words in the quotes, and the variable name after the comma.",
             "print(\"Blip's y is\", BLIP_Y)"
         ],
 
-        answer: "The words in quotes say what the number is, and BLIP_Y (no quotes) gives the value.\n\nMake a new empty line straight under line 25, which says\n    print(\"Blip's x is\", BLIP_X)\nand paste the line below there (no indent).",
+        answer: "The words in quotes say what the number is, and BLIP_Y (no quotes) gives the value.\n\nMake a new empty line straight under line 28, which says\n    print(\"Blip's x is\", BLIP_X)\nand paste the line below there (no indent).",
 
         answerCode: `print("Blip's y is", BLIP_Y)`,
 
@@ -1207,15 +1246,19 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at lines 30 and 31.
+# Look at lines 34 and 35.
 # They look almost the same. One has quotes, one does not.
 #
 # TASK 6c
 #   BEFORE you press Run, write down what you think each line will show
 #   in the console:
-#       line 30 will show: ___
-#       line 31 will show: ___
+#       line 34 will show: ___
+#       line 35 will show: ___
 #   Then press Run and check.
+#
+# PLAY (optional)
+#   Write a print that shows the word BLIP_SIZE, and another that shows
+#   its value. Which one needs quotes?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1272,7 +1315,7 @@ await main()`,
             "So one line prints the word BLIP_X, and the other prints the number stored in BLIP_X."
         ],
 
-        answer: "Line 30 prints the word  BLIP_X, because it is in quotes.\nLine 31 prints  375, because without quotes Python looks up the value stored in BLIP_X.\n\nQuotes mean \"exactly these letters\". No quotes means \"the value stored in this name\".",
+        answer: "Line 34 prints the word  BLIP_X, because it is in quotes.\nLine 35 prints  375, because without quotes Python looks up the value stored in BLIP_X.\n\nQuotes mean \"exactly these letters\". No quotes means \"the value stored in this name\".",
 
         completeText: "Click OK for Lab 7a. Next up: functions!"
     },
@@ -1290,22 +1333,26 @@ await main()`,
 # You write the instructions once, then run them whenever you like
 # by using the name.
 #
-# Look at line 29. It says:
+# Look at line 33. It says:
 #     def say_hello():
 #   def         means "I am defining (creating) a function".
 #   say_hello   is the function's name (you choose it).
 #   ()          brackets, always needed. (You will see why in Lab 11a.)
 #   :           a colon, which means "the instructions come next".
 #
-# Lines 30 and 31 are INDENTED (moved right by 4 spaces).
+# Lines 34 and 35 are INDENTED (moved right by 4 spaces).
 # The indent means: these lines belong INSIDE the function.
 #
-# Line 33 says  say_hello()  with no "def". This CALLS the function:
+# Line 37 says  say_hello()  with no "def". This CALLS the function:
 # it tells Python "run the instructions in say_hello now".
 #
 # TASK 7a
 #   Press Run. What does the console show?
-#   Then change the message on line 30 to something of your own.
+#   Then change the message on line 34 to something of your own.
+#
+# PLAY (optional)
+#   Make say_hello() tell a joke: one print for the joke, one for the
+#   answer, and one for the groan.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1317,11 +1364,11 @@ say_hello()`,
 
         hints: [
             "Press Run and look at the console. There should be two lines.",
-            "Change only the words INSIDE the quotes on line 30. Keep the quotes, the brackets and the 4-space indent.",
+            "Change only the words INSIDE the quotes on line 34. Keep the quotes, the brackets and the 4-space indent.",
             "For example:  print(\"Blip is the best square\")  (with 4 spaces in front)."
         ],
 
-        answer: "When say_hello() is called on line 33, Python runs the two indented lines inside the function, so both messages print.\n\nReplace line 30, which says\n    print(\"Hello from Blip!\")\nwith the line below. The indent is already included.",
+        answer: "When say_hello() is called on line 37, Python runs the two indented lines inside the function, so both messages print.\n\nReplace line 34, which says\n    print(\"Hello from Blip!\")\nwith the line below. The indent is already included.",
 
         answerCode: `    print("Blip is the best square!")`,
 
@@ -1339,10 +1386,14 @@ say_hello()`,
 # It only runs when it is CALLED.
 #
 # TASK 7b
-#   1. Put a # at the very start of line 19, so it says  # say_hello()
+#   1. Put a # at the very start of line 23, so it says  # say_hello()
 #      A # turns a line into a comment, so Python skips it.
 #      Press Run. What happens?
 #   2. Now remove the #, and make the function run THREE times.
+#
+# PLAY (optional)
+#   Call the function 10 times. Is there a faster way than typing 10
+#   lines? (Not yet. You will meet one in w1L2.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -1358,7 +1409,7 @@ say_hello()`,
             "You need three lines that each say  say_hello()  under the function."
         ],
 
-        answer: "With the call switched off, nothing prints at all: the function was defined but never called. Each call runs the whole function once, so three calls print the messages three times.\n\nReplace line 19, which says\n    say_hello()\nwith the three lines below (no indent).",
+        answer: "With the call switched off, nothing prints at all: the function was defined but never called. Each call runs the whole function once, so three calls print the messages three times.\n\nReplace line 23, which says\n    say_hello()\nwith the three lines below (no indent).",
 
         answerCode: `say_hello()
 say_hello()
@@ -1376,9 +1427,9 @@ say_hello()`,
 # ============================================================
 # Indenting decides which lines are INSIDE a function.
 #
-# Look at lines 21 and 22.
-# Line 21 is indented, so it is inside say_hello().
-# Line 22 is NOT indented, so it is outside the function.
+# Look at lines 25 and 26.
+# Line 25 is indented, so it is inside say_hello().
+# Line 26 is NOT indented, so it is outside the function.
 # Python runs lines outside functions straight away, from top to bottom.
 #
 # TASK 8a
@@ -1387,6 +1438,10 @@ say_hello()`,
 #       ___
 #   Then Run and check.
 #   Then fix it, so  I am a square.  is printed by the function.
+#
+# PLAY (optional)
+#   Take the indent off the last print, so it is OUTSIDE the function,
+#   and call the function twice. How many times does that line print?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1398,12 +1453,12 @@ say_hello()
 say_hello()`,
 
         hints: [
-            "Python reads from top to bottom. Line 22 is not inside any function, so when does it run?",
-            "Line 22 runs first, once. Then the two calls each print  Hello from Blip!",
-            "To put line 22 inside the function, give it the same 4-space indent as line 21."
+            "Python reads from top to bottom. Line 26 is not inside any function, so when does it run?",
+            "Line 26 runs first, once. Then the two calls each print  Hello from Blip!",
+            "To put line 26 inside the function, give it the same 4-space indent as line 25."
         ],
 
-        answer: "The console shows  I am a square.  once, then  Hello from Blip!  twice. The unindented line runs straight away, and only the indented line belongs to the function.\n\nReplace line 22, which says\n    print(\"I am a square.\")\nwith the line below. The indent is already included.",
+        answer: "The console shows  I am a square.  once, then  Hello from Blip!  twice. The unindented line runs straight away, and only the indented line belongs to the function.\n\nReplace line 26, which says\n    print(\"I am a square.\")\nwith the line below. The indent is already included.",
 
         answerCode: `    print("I am a square.")`,
 
@@ -1422,6 +1477,10 @@ say_hello()`,
 #   Put it under say_hello(), with an empty line between them.
 #   Then call it once, at the very end of the code.
 #
+# PLAY (optional)
+#   Write a third function of your own, and call all three in the
+#   silliest order you can.
+#
 # When you are done, click "Complete" at the top.
 
 def say_hello():
@@ -1431,12 +1490,12 @@ def say_hello():
 say_hello()`,
 
         hints: [
-            "Copy the shape of lines 11 to 13: a def line, then an indented print.",
+            "Copy the shape of lines 15 to 17: a def line, then an indented print.",
             "The def line is  def say_goodbye():  (do not forget the brackets and the colon). The print line under it needs 4 spaces in front.",
             "Writing the function is not enough. On a new line at the very end, call it:  say_goodbye()"
         ],
 
-        answer: "A function needs a def line ending in a colon, then its indented instructions. It only runs when it is called.\n\nStep 1: make a new empty line straight under line 13, which says\n    print(\"I am a square.\")\nand paste the code below there. The indent is already included.\n\nStep 2: on a new line at the very end of the code, type\n    say_goodbye()",
+        answer: "A function needs a def line ending in a colon, then its indented instructions. It only runs when it is called.\n\nStep 1: make a new empty line straight under line 17, which says\n    print(\"I am a square.\")\nand paste the code below there. The indent is already included.\n\nStep 2: on a new line at the very end of the code, type\n    say_goodbye()",
 
         answerCode: `
 def say_goodbye():
@@ -1462,20 +1521,24 @@ import asyncio
 #   CAPITALS are for settings that never change.
 #   lowercase is for variables that WILL change while the program runs.
 #
-# Look at lines 40 and 41:
+# Look at lines 44 and 45:
 #     def move_blip():
 #         blip_x = blip_x + 100
 # This function is meant to move Blip 100 pixels to the right.
 # The line  blip_x = blip_x + 100  means: work out blip_x + 100,
 # then store the answer back in blip_x.
 #
-# Line 43 calls the function.
+# Line 47 calls the function.
 #
 # TASK 9a
 #   Press Run. It breaks! Read the red error in the console.
 #   Always read the LAST line of an error first. What does it say?
 #   Further up, the LAST line that says  File "<exec>", line ___  tells you
 #   where it went wrong. Which line of our code is that?
+#
+# PLAY (optional)
+#   Make a different mistake on purpose: change print to pritn on one
+#   line. What does the LAST line of the error say now?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1531,10 +1594,10 @@ await main()`,
         hints: [
             "Scroll to the bottom of the red error. The last line starts with  UnboundLocalError.",
             "Look higher up in the error for lines that start  File \"<exec>\", line  and a number. There are two. The LAST one (it ends with  in move_blip) is where it actually went wrong.",
-            "It points at line 41, the line inside move_blip(). Lab 9b explains why."
+            "It points at line 45, the line inside move_blip(). Lab 9b explains why."
         ],
 
-        answer: "The last line says\n    UnboundLocalError: cannot access local variable 'blip_x' where it is not associated with a value\nand the error points at line 41:  blip_x = blip_x + 100.\n\nThere is nothing to paste for this one. Click Complete to find out why it broke, and how to fix it.",
+        answer: "The last line says\n    UnboundLocalError: cannot access local variable 'blip_x' where it is not associated with a value\nand the error points at line 45:  blip_x = blip_x + 100.\n\nThere is nothing to paste for this one. Click Complete to find out why it broke, and how to fix it.",
 
         completeText: "Click OK for Lab 9b, which fixes it."
     },
@@ -1553,10 +1616,10 @@ import asyncio
 #
 # Why did Lab 9a break?
 #
-# blip_x was created OUTSIDE the function, on line 33.
+# blip_x was created OUTSIDE the function, on line 37.
 # A variable created outside every function is called a GLOBAL variable.
 #
-# Inside move_blip(), line 40 tries to CHANGE blip_x.
+# Inside move_blip(), line 44 tries to CHANGE blip_x.
 # When a function changes a variable, Python assumes it is a brand new
 # variable that belongs ONLY to that function. This is called a LOCAL variable.
 # That new local blip_x has no value yet, so there is nothing to add 100 to.
@@ -1566,9 +1629,13 @@ import asyncio
 # inside the function tells Python: "I mean the blip_x from outside."
 #
 # TASK 9b
-#   Make a new line straight under line 39, and type
+#   Make a new line straight under line 43, and type
 #       global blip_x
 #   with 4 spaces in front. Press Run. Where is Blip now?
+#
+# PLAY (optional)
+#   Change the 100 in move_blip() to 300. Then to -100. Which way does
+#   Blip go?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1622,12 +1689,12 @@ async def main():
 await main()`,
 
         hints: [
-            "The new line goes INSIDE the function, so it needs the 4-space indent, just like line 40.",
+            "The new line goes INSIDE the function, so it needs the 4-space indent, just like line 44.",
             "It must come BEFORE the line that changes blip_x.",
-            "Lines 39 onwards should become:\n    def move_blip():\n        global blip_x\n        blip_x = blip_x + 100"
+            "Lines 43 onwards should become:\n    def move_blip():\n        global blip_x\n        blip_x = blip_x + 100"
         ],
 
-        answer: "global blip_x tells move_blip() to use the blip_x from outside, instead of making a new local one. Blip now moves from x = 100 to x = 200.\n\nMake a new empty line straight under line 39, which says\n    def move_blip():\nand paste the line below there. The indent is already included.",
+        answer: "global blip_x tells move_blip() to use the blip_x from outside, instead of making a new local one. Blip now moves from x = 100 to x = 200.\n\nMake a new empty line straight under line 43, which says\n    def move_blip():\nand paste the line below there. The indent is already included.",
 
         answerCode: `    global blip_x`,
 
@@ -1649,9 +1716,12 @@ import asyncio
 # move_blip() works now. Each call moves Blip 100 pixels right.
 #
 # TASK 10a
-#   Blip starts at x = 100 (line 21).
+#   Blip starts at x = 100 (line 24).
 #   Make Blip end up at x = 400, by calling move_blip() more times.
 #   Check the label above Blip.
+#
+# PLAY (optional)
+#   Call move_blip() 20 times. Where is Blip? Can you still see it?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1706,12 +1776,12 @@ async def main():
 await main()`,
 
         hints: [
-            "Line 31 calls move_blip() once. Each call adds 100.",
+            "Line 34 calls move_blip() once. Each call adds 100.",
             "From 100 to 400 is 300 more pixels. How many calls of 100 is that?",
             "You need three lines that each say  move_blip()  (no indent)."
         ],
 
-        answer: "Each call adds 100, so three calls move Blip from 100 to 400.\n\nMake a new empty line straight under line 31, which says\n    move_blip()\nand paste the two lines below there (no indent).",
+        answer: "Each call adds 100, so three calls move Blip from 100 to 400.\n\nMake a new empty line straight under line 34, which says\n    move_blip()\nand paste the two lines below there (no indent).",
 
         answerCode: `move_blip()
 move_blip()`,
@@ -1736,6 +1806,10 @@ import asyncio
 #   Put it under move_blip(), with an empty line between them.
 #   Then call it once, under the three move_blip() calls.
 #
+# PLAY (optional)
+#   Write move_up(), and call it so many times that Blip vanishes off
+#   the top.
+#
 # When you are done, click "Complete" at the top.
 
 # ============================================================
@@ -1791,12 +1865,12 @@ async def main():
 await main()`,
 
         hints: [
-            "move_down() is almost a copy of lines 25 to 27. Which variable moves Blip DOWN?",
+            "move_down() is almost a copy of lines 29 to 31. Which variable moves Blip DOWN?",
             "move_down() changes blip_y, so it needs  global blip_y  and then  blip_y = blip_y + 100, both indented.",
             "Then, on a new line under the last move_blip(), call it:  move_down()"
         ],
 
-        answer: "move_down() is the same shape as move_blip(), but it changes blip_y. Remember, a function only runs when it is called.\n\nReplace everything from line 25 down to the last  move_blip()  with the code below.",
+        answer: "move_down() is the same shape as move_blip(), but it changes blip_y. Remember, a function only runs when it is called.\n\nReplace everything from line 29 down to the last  move_blip()  with the code below.",
 
         answerCode: `def move_blip():
     global blip_x
@@ -1823,17 +1897,20 @@ move_down()`,
 # ============================================================
 # Back to the console.
 #
-# Look at line 20:
+# Look at line 23:
 #     def greet(name):
 # This time there is a word inside the brackets: name.
 # name is a PARAMETER. It is like an empty box that gets filled
 # in every time the function is called.
 #
-# Line 23 calls  greet("Blip"). So inside the function, name is "Blip".
-# Line 24 calls  greet("Sam"). This time, name is "Sam".
+# Line 26 calls  greet("Blip"). So inside the function, name is "Blip".
+# Line 27 calls  greet("Sam"). This time, name is "Sam".
 #
 # TASK 11a
 #   Press Run. Then add a third call that greets YOU by name.
+#
+# PLAY (optional)
+#   Greet three people using the silliest nicknames you can think of.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1844,7 +1921,7 @@ greet("Blip")
 greet("Sam")`,
 
         hints: [
-            "Each call is one line, with no indent, like line 24.",
+            "Each call is one line, with no indent, like line 27.",
             "Put your name in quotes inside the brackets.",
             "For example, on a new line at the end:  greet(\"Alex\")"
         ],
@@ -1863,16 +1940,19 @@ greet("Sam")`,
         code: `# ============================================================
 #  w1L1 LAB 11b: TWO PARAMETERS
 # ============================================================
-# A function can have more than one parameter. Look at line 17:
+# A function can have more than one parameter. Look at line 20:
 #     def describe(shape, sides):
 # It has two parameters: shape and sides, separated by a comma.
 #
-# Line 20 calls it with two values:  describe("square", 4)
+# Line 23 calls it with two values:  describe("square", 4)
 # The first value goes into the first parameter (shape = "square"),
 # and the second value goes into the second (sides = 4).
 #
 # TASK 11b
 #   Add a call that prints:  A triangle has 3 sides.
+#
+# PLAY (optional)
+#   Describe a shape that does not exist: a  wobble  with 17 sides.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1882,7 +1962,7 @@ def describe(shape, sides):
 describe("square", 4)`,
 
         hints: [
-            "Copy line 20 onto a new line at the end, and change it.",
+            "Copy line 23 onto a new line at the end, and change it.",
             "The first value is the shape, in quotes. The second value is the number of sides, with no quotes (it is a number).",
             "describe(\"triangle\", 3)"
         ],
@@ -1901,19 +1981,22 @@ describe("square", 4)`,
         code: `# ============================================================
 #  w1L1 LAB 12a: RETURN VALUES
 # ============================================================
-# Some functions send an answer BACK. Look at line 21:
+# Some functions send an answer BACK. Look at line 24:
 #     return a + b
 # return  means: work out a + b, and send that answer back
 # to the line that called the function.
 #
-# Line 23 says:  answer = add(2, 3)
+# Line 26 says:  answer = add(2, 3)
 #   1. add(2, 3) runs, and sends back 5.
 #   2. The 5 is stored in the variable called answer.
-# Line 24 prints it.
+# Line 27 prints it.
 #
 # TASK 12a
 #   Press Run. Then add lines at the end that work out add(10, 20)
 #   and print the answer.
+#
+# PLAY (optional)
+#   Add two really, really big numbers. Does Python ever give up?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1924,7 +2007,7 @@ answer = add(2, 3)
 print(answer)`,
 
         hints: [
-            "Copy the pattern of lines 23 and 24.",
+            "Copy the pattern of lines 26 and 27.",
             "First store the answer:  answer = add(10, 20)",
             "Then print it on the next line:  print(answer)"
         ],
@@ -1949,6 +2032,9 @@ print(answer)`,
 #   Remember: in Python, times is  *
 #   Then print the answer to double(21). It should print 42.
 #
+# PLAY (optional)
+#   Predict double(double(5)) first, then print it. Were you right?
+#
 # When you are done, click "Complete" at the top.
 
 def add(a, b):
@@ -1958,7 +2044,7 @@ answer = add(2, 3)
 print(answer)`,
 
         hints: [
-            "Copy the shape of lines 11 and 12. double() has ONE parameter, n.",
+            "Copy the shape of lines 14 and 15. double() has ONE parameter, n.",
             "def double(n):  then, indented,  return n * 2",
             "Then at the end:  print(double(21))  (you can put a function call straight inside print)."
         ],
@@ -1991,17 +2077,20 @@ import asyncio
 # a variable, it is hard to work out which function caused a problem.
 #
 # Parameters and return values do the same job, more cleanly.
-# Look at line 37:
+# Look at line 40:
 #     def moved(x, amount):
 #         return x + amount
 # moved() takes a position and an amount IN, and sends the new position OUT.
 #
-# Line 40 says:  blip_x = moved(blip_x, 100)
+# Line 43 says:  blip_x = moved(blip_x, 100)
 # It sends blip_x in, and stores the answer back in blip_x. No global needed!
 #
 # TASK 13a
 #   Change the code so Blip moves 3 times, 150 pixels each time.
 #   Blip starts at 100. Where does it end up? Check the label.
+#
+# PLAY (optional)
+#   Use ONE call with a negative amount. Where does Blip end up?
 #
 # When you are done, click "Complete" at the top.
 
@@ -2056,12 +2145,12 @@ async def main():
 await main()`,
 
         hints: [
-            "Lines 40 and the one under it each move Blip once. The 100 is how far.",
+            "Lines 43 and the one under it each move Blip once. The 100 is how far.",
             "Change both 100s to 150, then add a third line the same.",
             "100 + 150 + 150 + 150 = 550. The label should say x = 550."
         ],
 
-        answer: "Each line sends blip_x in, gets the new position back, and stores it. Three moves of 150 take Blip from 100 to 550.\n\nReplace lines 40 and 41, which both say\n    blip_x = moved(blip_x, 100)\nwith the three lines below (no indent).",
+        answer: "Each line sends blip_x in, gets the new position back, and stores it. Three moves of 150 take Blip from 100 to 550.\n\nReplace lines 43 and 44, which both say\n    blip_x = moved(blip_x, 100)\nwith the three lines below (no indent).",
 
         answerCode: `blip_x = moved(blip_x, 150)
 blip_x = moved(blip_x, 150)
@@ -2087,6 +2176,10 @@ import asyncio
 #   Then use it to make Blip twice as big, without global:
 #       blip_size = bigger(blip_size)
 #
+# PLAY (optional)
+#   Use bigger() three times. How big is Blip now? Is it still on the
+#   screen?
+#
 # When you are done, click "Complete" at the top.
 
 # ============================================================
@@ -2141,12 +2234,12 @@ async def main():
 await main()`,
 
         hints: [
-            "bigger() follows the same pattern as moved() on line 25, but with only ONE parameter.",
+            "bigger() follows the same pattern as moved() on line 29, but with only ONE parameter.",
             "def bigger(size):  then, indented,  return size * 2",
             "Writing the function is not enough. You must call it AND store the answer:  blip_size = bigger(blip_size)"
         ],
 
-        answer: "bigger() works out size * 2 and returns it. The line under it stores the answer in blip_size, so Blip doubles from 50 to 100.\n\nMake a new empty line straight under line 26, which says\n    return x + amount\nand paste the code below there. The indents are already included.",
+        answer: "bigger() works out size * 2 and returns it. The line under it stores the answer in blip_size, so Blip doubles from 50 to 100.\n\nMake a new empty line straight under line 30, which says\n    return x + amount\nand paste the code below there. The indents are already included.",
 
         answerCode: `
 def bigger(size):
@@ -2177,6 +2270,9 @@ blip_size = bigger(blip_size)`,
 # TASK 14a
 #   Predict Puzzles 1 and 2, then Run.
 #
+# PLAY (optional)
+#   Write your own puzzle like Puzzle 1, and try it on someone else.
+#
 # When you are done, click "Complete" at the top.
 
 # ---------------- PUZZLE 1 ----------------
@@ -2204,7 +2300,7 @@ print("Puzzle 2, lives:", lives)
 # My prediction:  lives = ___`,
 
         hints: [
-            "Puzzle 1: look inside add_points() on line 22. Does it say global?",
+            "Puzzle 1: look inside add_points() on line 25. Does it say global?",
             "Without global,  score = 50  inside the function makes a NEW local variable that only exists inside add_points(). The score outside is a different variable.",
             "Puzzle 2: lose_life() DOES say global, so it changes the real lives. Count how many times it is called."
         ],
