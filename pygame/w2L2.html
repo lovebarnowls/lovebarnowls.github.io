@@ -220,12 +220,12 @@ import asyncio
 # Welcome to w2L2: Dodge. This week, YOU control Blip with the keyboard.
 # Later, something called Pogo will bounce around, and you must dodge it.
 #
-# Look at line 61. It says:
+# Look at line 65. It says:
 #     keys = pygame.key.get_pressed()
 # Every frame, this asks pygame: "which keys are being HELD DOWN right now?"
 # and stores the answer in keys.
 #
-# Look at lines 62 and 63:
+# Look at lines 66 and 67:
 #     if keys[pygame.K_RIGHT]:
 #         blip.x = blip.x + 5
 # pygame.K_RIGHT is the name of the right arrow key.
@@ -240,6 +240,10 @@ import asyncio
 #   Press Run, then click on the game screen so it hears your keys.
 #   Hold the right arrow. Then make the LEFT arrow (pygame.K_LEFT) move
 #   Blip left.
+#
+# PLAY (optional)
+#   Make the LEFT arrow move Blip RIGHT instead. How long does it take
+#   whoever plays it next to notice?
 #
 # When you are done, click "Complete" at the top.
 
@@ -304,12 +308,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "Copy the shape of lines 62 and 63: an if line, then an indented line under it.",
+            "Copy the shape of lines 66 and 67: an if line, then an indented line under it.",
             "Change two things: K_RIGHT becomes K_LEFT, and + 5 becomes - 5 (left means x gets smaller).",
             "if keys[pygame.K_LEFT]:  (8 spaces in front), then  blip.x = blip.x - 5  (12 spaces in front)."
         ],
 
-        answer: "Holding left makes keys[pygame.K_LEFT] True every frame, and taking 5 away from blip.x moves Blip left.\n\nMake a new empty line straight under line 63, which says\n    blip.x = blip.x + 5\nand paste the two lines below there. The indent is already included.",
+        answer: "Holding left makes keys[pygame.K_LEFT] True every frame, and taking 5 away from blip.x moves Blip left.\n\nMake a new empty line straight under line 67, which says\n    blip.x = blip.x + 5\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        if keys[pygame.K_LEFT]:
             blip.x = blip.x - 5`,
@@ -333,6 +337,9 @@ import asyncio
 #   Make the UP arrow (pygame.K_UP) and the DOWN arrow (pygame.K_DOWN)
 #   move Blip up and down, 5 pixels every frame.
 #   Remember: in pygame, y counts DOWN.
+#
+# PLAY (optional)
+#   Make up and down different speeds: up by 1, down by 20.
 #
 # When you are done, click "Complete" at the top.
 
@@ -399,12 +406,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "You need two more ifs, the same shape as the two on lines 43 to 46. This time they change blip.y.",
+            "You need two more ifs, the same shape as the two on lines 46 to 49. This time they change blip.y.",
             "Up means y gets SMALLER, so up is  - 5. Down is  + 5.",
             "if keys[pygame.K_UP]:  then  blip.y = blip.y - 5   and   if keys[pygame.K_DOWN]:  then  blip.y = blip.y + 5"
         ],
 
-        answer: "Up takes 5 away from blip.y and down adds 5, because y counts down the screen. Holding two arrows at once moves Blip diagonally.\n\nMake a new empty line straight under line 46, which says\n    blip.x = blip.x - 5\nand paste the four lines below there. The indents are already included.",
+        answer: "Up takes 5 away from blip.y and down adds 5, because y counts down the screen. Holding two arrows at once moves Blip diagonally.\n\nMake a new empty line straight under line 49, which says\n    blip.x = blip.x - 5\nand paste the four lines below there. The indents are already included.",
 
         answerCode: `        if keys[pygame.K_UP]:
             blip.y = blip.y - 5
@@ -428,11 +435,14 @@ import asyncio
 #
 # The number 5 is typed FOUR times. To change Blip's speed, you would have to
 # find and change all four. A setting is better.
-# Line 22 creates one: BLIP_SPEED = 5.
+# Line 25 creates one: BLIP_SPEED = 5.
 #
 # TASK 1c
 #   1. Change the four 5s in the UPDATE job to BLIP_SPEED.
 #   2. Change BLIP_SPEED to 8. Is Blip faster?
+#
+# PLAY (optional)
+#   Set BLIP_SPEED to 50. Can you still control Blip? Then try 1.
 #
 # When you are done, click "Complete" at the top.
 
@@ -504,12 +514,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "The four 5s are on lines 48, 50, 52 and 54.",
+            "The four 5s are on lines 51, 53, 55 and 57.",
             "Only change the number. For example,  blip.x = blip.x + 5  becomes  blip.x = blip.x + BLIP_SPEED",
-            "Then line 22 becomes  BLIP_SPEED   = 8"
+            "Then line 25 becomes  BLIP_SPEED   = 8"
         ],
 
-        answer: "Now all four movement lines use the one setting, so changing line 22 changes Blip's speed in every direction at once.\n\nStep 1: replace lines 47 to 54 (the four ifs) with the code below. The indents are already included.\n\nStep 2: change line 22 so it says\n    BLIP_SPEED   = 8",
+        answer: "Now all four movement lines use the one setting, so changing line 25 changes Blip's speed in every direction at once.\n\nStep 1: replace lines 50 to 57 (the four ifs) with the code below. The indents are already included.\n\nStep 2: change line 25 so it says\n    BLIP_SPEED   = 8",
 
         answerCode: `        if keys[pygame.K_RIGHT]:
             blip.x = blip.x + BLIP_SPEED
@@ -546,9 +556,13 @@ import asyncio
 # (you worked this out in w1L1 Lab 2b).
 #
 # TASK 2a
-#   Make a new line straight under line 61, and type the two lines
+#   Make a new line straight under line 65, and type the two lines
 #   above. The if needs 8 spaces in front, and the line under it needs 12.
 #   Hold the right arrow. What does the x in the label stop at?
+#
+# PLAY (optional)
+#   Move the right wall to the middle of the screen, so Blip lives in
+#   half a world.
 #
 # When you are done, click "Complete" at the top.
 
@@ -621,11 +635,11 @@ await main()`,
 
         hints: [
             "The new lines go at the END of the movement code, so they run after Blip has moved, every frame.",
-            "Line up the if with line 60 (8 spaces). The line under it gets 12.",
+            "Line up the if with line 64 (8 spaces). The line under it gets 12.",
             "Blip is 50 wide, so the label should stop at x = 750."
         ],
 
-        answer: "Every frame, after Blip moves, the if checks whether Blip has gone past the right edge. If it has, it puts Blip back at 800 - blip.width, which is 750. So Blip stops at the wall.\n\nMake a new empty line straight under line 61, which says\n    blip.y = blip.y + BLIP_SPEED\nand paste the two lines below there. The indents are already included.",
+        answer: "Every frame, after Blip moves, the if checks whether Blip has gone past the right edge. If it has, it puts Blip back at 800 - blip.width, which is 750. So Blip stops at the wall.\n\nMake a new empty line straight under line 65, which says\n    blip.y = blip.y + BLIP_SPEED\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        if blip.x > 800 - blip.width:
             blip.x = 800 - blip.width`,
@@ -646,8 +660,11 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # TASK 2b
-#   Lines 51 and 52 stop Blip at the right edge.
+#   Lines 54 and 55 stop Blip at the right edge.
 #   Add three more ifs, so Blip also stops at the LEFT, TOP and BOTTOM edges.
+#
+# PLAY (optional)
+#   Make Blip's world a small box in the middle of the screen.
 #
 # When you are done, click "Complete" at the top.
 
@@ -726,7 +743,7 @@ await main()`,
             "if blip.x < 0:  blip.x = 0   if blip.y < 0:  blip.y = 0   if blip.y > 600 - blip.height:  blip.y = 600 - blip.height"
         ],
 
-        answer: "Each if checks one edge, and puts Blip back exactly on that edge if it has gone past.\n\nMake a new empty line straight under line 52, which says\n    blip.x = 800 - blip.width\nand paste the six lines below there. The indents are already included.",
+        answer: "Each if checks one edge, and puts Blip back exactly on that edge if it has gone past.\n\nMake a new empty line straight under line 55, which says\n    blip.x = 800 - blip.width\nand paste the six lines below there. The indents are already included.",
 
         answerCode: `        if blip.x < 0:
             blip.x = 0
@@ -752,17 +769,21 @@ import asyncio
 #
 # Meet Pogo, the red square. Pogo bounces around the screen.
 #
-# Pogo is made on lines 46 to 48: a Rect, and two speeds.
-# Lines 74 to 83 move it and bounce it,
+# Pogo is made on lines 50 to 52: a Rect, and two speeds.
+# Lines 78 to 87 move it and bounce it,
 # using exactly the same idea as Boing in w1L2:
 #   - add the speeds to pogo.x and pogo.y every frame;
 #   - if Pogo reaches an edge, flip the sign of that speed (3 becomes -3).
-# Line 88 draws it.
+# Line 92 draws it.
 #
 # TASK 3a
 #   1. Which line makes Pogo bounce off the RIGHT edge?  ___
-#   2. Make Pogo faster: change POGO_SPEED (line 30) to 6.
+#   2. Make Pogo faster: change POGO_SPEED (line 34) to 6.
 #   3. Try to avoid Pogo for 20 seconds. (Nothing happens if it hits you, yet.)
+#
+# PLAY (optional)
+#   Make Pogo so fast that Blip can never escape. What number did it
+#   take?
 #
 # When you are done, click "Complete" at the top.
 
@@ -859,11 +880,11 @@ await main()`,
 
         hints: [
             "Look for the if that compares pogo.x with 800 - pogo.width.",
-            "It is line 76. The line under it flips pogo_speed_x, so Pogo turns round.",
-            "Line 30 should say  POGO_SPEED   = 6"
+            "It is line 80. The line under it flips pogo_speed_x, so Pogo turns round.",
+            "Line 34 should say  POGO_SPEED   = 6"
         ],
 
-        answer: "1. Line 76 checks the right edge, and the line under it flips pogo_speed_x.\n2. With POGO_SPEED at 6, Pogo moves 6 pixels each way every frame.\n\nReplace line 30, which says\n    POGO_SPEED   = 4\nwith the line below (no indent).",
+        answer: "1. Line 80 checks the right edge, and the line under it flips pogo_speed_x.\n2. With POGO_SPEED at 6, Pogo moves 6 pixels each way every frame.\n\nReplace line 34, which says\n    POGO_SPEED   = 4\nwith the line below (no indent).",
 
         answerCode: `POGO_SPEED   = 6`,
 
@@ -882,7 +903,7 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# We set POGO_SPEED back to 4. Line 51 creates a variable called hits.
+# We set POGO_SPEED back to 4. Line 55 creates a variable called hits.
 #
 # In w2L1, collidepoint() asked "is this POINT inside the Rect?".
 # colliderect() asks "do these two RECTS overlap?":
@@ -890,13 +911,17 @@ import asyncio
 # is True when any part of Blip is touching any part of Pogo.
 #
 # TASK 3b
-#   1. Make a new line straight under line 86 and type these three lines:
+#   1. Make a new line straight under line 90 and type these three lines:
 #          if blip.colliderect(pogo):
 #              hits = hits + 1
 #              print("Hits:", hits)
 #      (8 spaces in front of the if, and 12 in front of the two lines under it.)
 #   2. Run it, and let Pogo hit you ONCE. Look at the console.
 #      How many hits were counted for that one bump? Why?
+#
+# PLAY (optional)
+#   Make Blip giant, so Pogo hits on almost every frame. How fast do the
+#   hits climb?
 #
 # When you are done, click "Complete" at the top.
 
@@ -998,7 +1023,7 @@ await main()`,
             "The loop runs 60 times every second. Pogo and Blip stay overlapped for several frames, and colliderect() is True on EVERY one of those frames."
         ],
 
-        answer: "One bump counts many hits, because the two Rects overlap for several frames in a row, and the if adds 1 on every one of those frames. Lab 3c fixes this.\n\nMake a new empty line straight under line 86, which says\n    pogo_speed_y = -pogo_speed_y\nand paste the three lines below there. The indents are already included.",
+        answer: "One bump counts many hits, because the two Rects overlap for several frames in a row, and the if adds 1 on every one of those frames. Lab 3c fixes this.\n\nMake a new empty line straight under line 90, which says\n    pogo_speed_y = -pogo_speed_y\nand paste the three lines below there. The indents are already included.",
 
         answerCode: `        if blip.colliderect(pogo):
             hits = hits + 1
@@ -1026,9 +1051,13 @@ import asyncio
 # Then it is no longer touching Blip on the next frame.
 #
 # TASK 3c
-#   Make a new line straight under line 84, and add two lines that move
+#   Make a new line straight under line 88, and add two lines that move
 #   Pogo back to x = 0 and y = 0. They belong inside the if (12 spaces).
 #   Test it: one bump should now count as one hit.
+#
+# PLAY (optional)
+#   Send Pogo back somewhere evil instead of (0, 0), for example straight
+#   onto Blip. Is that fair?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1133,7 +1162,7 @@ await main()`,
             "pogo.x = 0  and  pogo.y = 0"
         ],
 
-        answer: "On the frame of the hit, Pogo is sent back to the top-left corner, so on the next frame it is no longer touching Blip. One bump, one hit.\n\nMake a new empty line straight under line 84, which says\n    print(\"Hits:\", hits)\nand paste the two lines below there. The indent is already included.",
+        answer: "On the frame of the hit, Pogo is sent back to the top-left corner, so on the next frame it is no longer touching Blip. One bump, one hit.\n\nMake a new empty line straight under line 88, which says\n    print(\"Hits:\", hits)\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `            pogo.x = 0
             pogo.y = 0`,
@@ -1154,11 +1183,14 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # The hits are only in the console. Put them on the game screen, like the
-# score in w2L1 Lab 5a. Line 26 gives you a colour to use.
+# score in w2L1 Lab 5a. Line 29 gives you a colour to use.
 #
 # TASK 3d
-#   Make a new line straight under line 89, and add two lines that
+#   Make a new line straight under line 92, and add two lines that
 #   show  Hits: 3  (with the real number) in the top-left corner, at (10, 10).
+#
+# PLAY (optional)
+#   Change the words to something dramatic, and the colour to red.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1266,7 +1298,7 @@ await main()`,
             "hits_text = font.render(f\"Hits: {hits}\", True, TEXT_COLOUR)  then  screen.blit(hits_text, (10, 10))  (both with 8 spaces in front)."
         ],
 
-        answer: "font.render() makes a picture of the words using the current number of hits, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 89, which says\n    show_rect(screen, font, blip)\nand paste the two lines below there. The indent is already included.",
+        answer: "font.render() makes a picture of the words using the current number of hits, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 92, which says\n    show_rect(screen, font, blip)\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        hits_text = font.render(f"Hits: {hits}", True, TEXT_COLOUR)
         screen.blit(hits_text, (10, 10))`,
@@ -1291,8 +1323,12 @@ import asyncio
 #     pygame.K_w    pygame.K_a    pygame.K_s    pygame.K_d
 #
 # TASK 4a
-#   Change the four movement ifs (lines 54 to 61) so that
+#   Change the four movement ifs (lines 58 to 65) so that
 #     W moves up,  A moves left,  S moves down,  D moves right.
+#
+# PLAY (optional)
+#   Use keys that make no sense, like  I, J, K, L  in the wrong order.
+#   Can whoever plays it next work it out?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1402,7 +1438,7 @@ await main()`,
             "K_RIGHT becomes K_d, K_LEFT becomes K_a, K_UP becomes K_w and K_DOWN becomes K_s."
         ],
 
-        answer: "Only the key names change: the movement lines underneath stay the same.\n\nReplace lines 54 to 61 (the four ifs) with the code below. The indents are already included.",
+        answer: "Only the key names change: the movement lines underneath stay the same.\n\nReplace lines 58 to 65 (the four ifs) with the code below. The indents are already included.",
 
         answerCode: `        if keys[pygame.K_d]:
             blip.x = blip.x + BLIP_SPEED
