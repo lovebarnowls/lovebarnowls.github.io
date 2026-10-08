@@ -216,12 +216,12 @@
 # catches them. Games need SURPRISES, so we start with random numbers.
 # No Blip yet. Just the console.
 #
-# Look at line 28. It says:
+# Look at line 32. It says:
 #     import random
 # Python has extra toolboxes that are not loaded until you ask for them.
 # import random  loads the toolbox for random numbers.
 #
-# Look at line 30. It says:
+# Look at line 34. It says:
 #     roll = random.randint(1, 6)
 #   random.randint   means "the randint tool from the random toolbox".
 #                    randint is short for RANDom INTeger. An integer is
@@ -234,6 +234,10 @@
 #   1. Press Run five times. Does the console show the same number each time?
 #   2. Change the code so it rolls a 20-sided die: any number from 1 to 20.
 #
+# PLAY (optional)
+#   Make a die that can only ever roll 6. Then one that rolls from 100 to
+#   1000. What happens if the smaller number comes second: randint(6, 1)?
+#
 # When you are done, click "Complete" at the top.
 
 import random
@@ -243,11 +247,11 @@ print("You rolled", roll)`,
 
         hints: [
             "Every Run, randint picks again, so the number changes. Sometimes it repeats, just like a real die.",
-            "The two numbers in the brackets on line 30 are the smallest and the biggest it can pick.",
-            "Line 30 should say  roll = random.randint(1, 20)"
+            "The two numbers in the brackets on line 34 are the smallest and the biggest it can pick.",
+            "Line 34 should say  roll = random.randint(1, 20)"
         ],
 
-        answer: "Each Run picks a new number, so the console usually shows something different each time (a repeat is just luck). With (1, 20), randint can pick any whole number from 1 to 20, including 1 and 20.\n\nReplace line 30, which says\n    roll = random.randint(1, 6)\nwith the line below (no indent).",
+        answer: "Each Run picks a new number, so the console usually shows something different each time (a repeat is just luck). With (1, 20), randint can pick any whole number from 1 to 20, including 1 and 20.\n\nReplace line 34, which says\n    roll = random.randint(1, 6)\nwith the line below (no indent).",
 
         answerCode: `roll = random.randint(1, 20)`,
 
@@ -271,6 +275,10 @@ print("You rolled", roll)`,
 #   Run it a few times. What is the smallest total you could ever get?
 #   What is the biggest?
 #
+# PLAY (optional)
+#   Roll THREE dice and print the total. What is the biggest total now?
+#   The smallest?
+#
 # When you are done, click "Complete" at the top.
 
 import random
@@ -284,7 +292,7 @@ print("You rolled", roll)`,
             "The total is  first + second. The smallest total is 2 (1 + 1) and the biggest is 12 (6 + 6)."
         ],
 
-        answer: "Each randint picks its own number, so the two dice are separate. The smallest total is 2 and the biggest is 12.\n\nReplace everything from line 18 down to the last line with the code below (no indent).",
+        answer: "Each randint picks its own number, so the two dice are separate. The smallest total is 2 and the biggest is 12.\n\nReplace everything from line 22 down to the last line with the code below (no indent).",
 
         answerCode: `first = random.randint(1, 6)
 second = random.randint(1, 6)
@@ -307,18 +315,22 @@ import random
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Blip has been flattened into a CATCHER. Line 45 makes it
+# Blip has been flattened into a CATCHER. Line 49 makes it
 # 100 wide and only 20 tall, near the bottom of the screen.
-# Lines 55 to 63 are your code from w2L2: the arrow keys move Blip
+# Lines 59 to 67 are your code from w2L2: the arrow keys move Blip
 # left and right, and the walls keep it on the screen.
 #
-# Line 46 makes the COIN: a gold square, 40 by 40, at the top.
-# Line 29 is a new setting: FALL_SPEED = 5.
+# Line 50 makes the COIN: a gold square, 40 by 40, at the top.
+# Line 33 is a new setting: FALL_SPEED = 5.
 #
 # TASK 2a
 #   Make the coin FALL: every frame, its y should grow by FALL_SPEED.
-#   Make a new line straight under line 63, and type one line that does it
+#   Make a new line straight under line 67, and type one line that does it
 #   (8 spaces in front). Watch the coin's numbers as it falls.
+#
+# PLAY (optional)
+#   Make the coin fall UP. Then make it fall so slowly that whoever plays
+#   it next gives up waiting. Then put FALL_SPEED back.
 #
 # When you are done, click "Complete" at the top.
 
@@ -399,7 +411,7 @@ await main()`,
             "coin.y = coin.y + FALL_SPEED   (8 spaces in front)"
         ],
 
-        answer: "Every frame, 5 is added to coin.y, so the coin moves 5 pixels down the screen. At 60 frames a second, that is 300 pixels a second. Then it falls off the bottom and never comes back. Lab 2b fixes that.\n\nMake a new empty line straight under line 63, which says\n    blip.x = 0\nand paste the line below there. The indent is already included.",
+        answer: "Every frame, 5 is added to coin.y, so the coin moves 5 pixels down the screen. At 60 frames a second, that is 300 pixels a second. Then it falls off the bottom and never comes back. Lab 2b fixes that.\n\nMake a new empty line straight under line 67, which says\n    blip.x = 0\nand paste the line below there. The indent is already included.",
 
         answerCode: `        coin.y = coin.y + FALL_SPEED`,
 
@@ -429,9 +441,13 @@ import random
 # back in from the top (like Blip coming back on in w1L2 Lab 6b).
 #
 # TASK 2b
-#   1. Make a new line straight under line 65, and type the two lines above.
+#   1. Make a new line straight under line 69, and type the two lines above.
 #      (8 spaces in front of the if, and 12 in front of the line under it.)
 #   2. Why -coin.height, and not 0? Try 0 and watch the top of the screen.
+#
+# PLAY (optional)
+#   Send the coin back to y = 300 instead of above the top. What does it
+#   look like? Why does -coin.height look better?
 #
 # When you are done, click "Complete" at the top.
 
@@ -509,11 +525,11 @@ await main()`,
 
         hints: [
             "The if goes straight under the line that makes the coin fall, so the check happens every frame, after the coin moves.",
-            "Line up the if with line 65 (8 spaces). The line under it gets 12.",
+            "Line up the if with line 69 (8 spaces). The line under it gets 12.",
             "With 0, the whole coin suddenly appears at the top. With -40, it starts just out of sight and slides in, which looks smoother."
         ],
 
-        answer: "Every frame, the if checks whether the coin has gone past the bottom. If it has, it puts the coin just above the top, so it falls again, over and over. With 0, the coin pops into view at the top; with -coin.height it slides in smoothly.\n\nMake a new empty line straight under line 65, which says\n    coin.y = coin.y + FALL_SPEED\nand paste the two lines below there. The indents are already included.",
+        answer: "Every frame, the if checks whether the coin has gone past the bottom. If it has, it puts the coin just above the top, so it falls again, over and over. With 0, the coin pops into view at the top; with -coin.height it slides in smoothly.\n\nMake a new empty line straight under line 69, which says\n    coin.y = coin.y + FALL_SPEED\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        if coin.y > 600:
             coin.y = -coin.height`,
@@ -540,9 +556,13 @@ import random
 #
 # TASK 2c
 #   When the coin goes back to the top, give it a RANDOM x as well.
-#   Make a new line straight under line 63, inside the if (12 spaces).
+#   Make a new line straight under line 67, inside the if (12 spaces).
 #   Careful: all of the coin must be on the screen, so the biggest x it may
 #   have is  800 - coin.width.  (Why? Think back to w1L1 Lab 2b.)
+#
+# PLAY (optional)
+#   Make the coins only ever fall on the LEFT half of the screen. Which
+#   number did you change?
 #
 # When you are done, click "Complete" at the top.
 
@@ -626,7 +646,7 @@ await main()`,
             "coin.x = random.randint(0, 800 - coin.width)   (12 spaces in front)"
         ],
 
-        answer: "Each time the coin goes back to the top, randint picks a new x from 0 to 760, so you never know where the next coin will fall.\n\nMake a new empty line straight under line 63, which says\n    coin.y = -coin.height\nand paste the line below there. The indent is already included.",
+        answer: "Each time the coin goes back to the top, randint picks a new x from 0 to 760, so you never know where the next coin will fall.\n\nMake a new empty line straight under line 67, which says\n    coin.y = -coin.height\nand paste the line below there. The indent is already included.",
 
         answerCode: `            coin.x = random.randint(0, 800 - coin.width)`,
 
@@ -647,14 +667,14 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # We took away the coin's numbers, so the screen is tidier.
-# Line 52 creates a variable called score.
+# Line 56 creates a variable called score.
 #
 # Remember w2L2: blip.colliderect(pogo) was True on EVERY frame that the two
 # Rects overlapped, so one bump counted as many hits. The fix was to move
 # Pogo away as soon as it hit. A caught coin must do the same.
 #
 # TASK 3a
-#   Make a new line straight under line 73 (the end of the UPDATE job),
+#   Make a new line straight under line 77 (the end of the UPDATE job),
 #   and add an if (8 spaces in front) that checks whether Blip touches the
 #   coin. Inside it (12 spaces in front):
 #     - add 1 to score;
@@ -662,6 +682,10 @@ import random
 #       from inside the if above);
 #     - print("Score:", score)
 #   Test it: one catch should add exactly 1 to the score.
+#
+# PLAY (optional)
+#   Make each catch worth 100 points. Then make each catch COST a point.
+#   Is it still a game?
 #
 # When you are done, click "Complete" at the top.
 
@@ -730,11 +754,11 @@ await main()`,
 
         hints: [
             "The if is  if blip.colliderect(coin):  with 8 spaces in front, lined up with  if coin.y > 600:",
-            "Inside the if:  score = score + 1  then the two coin lines from lines 72 and 73, then the print.",
+            "Inside the if:  score = score + 1  then the two coin lines from lines 76 and 77, then the print.",
             "if blip.colliderect(coin):\n    score = score + 1\n    coin.y = -coin.height\n    coin.x = random.randint(0, 800 - coin.width)\n    print(\"Score:\", score)"
         ],
 
-        answer: "When Blip touches the coin, the score goes up by 1 and the coin is sent straight back to the top. On the next frame it is no longer touching Blip, so one catch counts once.\n\nMake a new empty line straight under line 73, which says\n    coin.x = random.randint(0, 800 - coin.width)\nand paste the code below there. The indents are already included.",
+        answer: "When Blip touches the coin, the score goes up by 1 and the coin is sent straight back to the top. On the next frame it is no longer touching Blip, so one catch counts once.\n\nMake a new empty line straight under line 77, which says\n    coin.x = random.randint(0, 800 - coin.width)\nand paste the code below there. The indents are already included.",
 
         answerCode: `        if blip.colliderect(coin):
             score = score + 1
@@ -759,11 +783,15 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # The score is only in the console. Put it on the game screen, like the hits in
-# w2L2 Lab 3d. Line 27 gives you a colour to use.
+# w2L2 Lab 3d. Line 31 gives you a colour to use.
 #
 # TASK 3b
-#   Make a new line straight under line 73, and add two lines that
+#   Make a new line straight under line 77, and add two lines that
 #   show  Score: 3  (with the real number) in the top-left corner, at (10, 10).
+#
+# PLAY (optional)
+#   Move the score somewhere silly, like under Blip, where the player
+#   cannot read it. Then put it back.
 #
 # When you are done, click "Complete" at the top.
 
@@ -841,7 +869,7 @@ await main()`,
             "score_text = font.render(f\"Score: {score}\", True, TEXT_COLOUR)  then  screen.blit(score_text, (10, 10))  (both with 8 spaces in front)."
         ],
 
-        answer: "font.render() makes a picture of the words with the current score, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 73, which says\n    pygame.draw.rect(screen, COIN_COLOUR, coin)\nand paste the two lines below there. The indent is already included.",
+        answer: "font.render() makes a picture of the words with the current score, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 77, which says\n    pygame.draw.rect(screen, COIN_COLOUR, coin)\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        score_text = font.render(f"Score: {score}", True, TEXT_COLOUR)
         screen.blit(score_text, (10, 10))`,
@@ -863,13 +891,17 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # A good player wants to know how many coins got away.
-# Line 45 creates a variable called missed.
+# Line 49 creates a variable called missed.
 #
 # TASK 3c
 #   1. Every time a coin falls past the bottom, add 1 to missed.
-#      Make a new line straight under line 64 (inside the if, 12 spaces).
-#   2. Change the words on line 77 so the screen shows, for example:
+#      Make a new line straight under line 68 (inside the if, 12 spaces).
+#   2. Change the words on line 81 so the screen shows, for example:
 #          Score: 4   Missed: 2
+#
+# PLAY (optional)
+#   Make missed go DOWN instead of up. What does the screen say after a
+#   few misses? Then put it back.
 #
 # When you are done, click "Complete" at the top.
 
@@ -945,12 +977,12 @@ async def main():
 await main()`,
 
         hints: [
-            "The if on line 64 runs once each time a coin gets past Blip. That is where missed should grow.",
+            "The if on line 68 runs once each time a coin gets past Blip. That is where missed should grow.",
             "missed = missed + 1  (12 spaces in front). Then add  {missed}  inside the f-string, after the score.",
-            "Line 77 should say:  score_text = font.render(f\"Score: {score}   Missed: {missed}\", True, TEXT_COLOUR)"
+            "Line 81 should say:  score_text = font.render(f\"Score: {score}   Missed: {missed}\", True, TEXT_COLOUR)"
         ],
 
-        answer: "The if on line 64 only runs when a coin gets past Blip, so it is the right place to count a miss. One f-string can hold two numbers.\n\nStep 1: make a new empty line straight under line 64, which says\n    if coin.y > 600:\nand paste the line below there. The indent is already included.\n\nStep 2: change line 78 (it moved down one line in Step 1) so it says\n    score_text = font.render(f\"Score: {score}   Missed: {missed}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
+        answer: "The if on line 68 only runs when a coin gets past Blip, so it is the right place to count a miss. One f-string can hold two numbers.\n\nStep 1: make a new empty line straight under line 68, which says\n    if coin.y > 600:\nand paste the line below there. The indent is already included.\n\nStep 2: change line 82 (it moved down one line in Step 1) so it says\n    score_text = font.render(f\"Score: {score}   Missed: {missed}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
 
         answerCode: `            missed = missed + 1`,
 
@@ -972,22 +1004,26 @@ import random
 #
 # Most catching games give you a time limit. First, we need a clock.
 #
-# Look at line 66. It says:
+# Look at line 70. It says:
 #     now = pygame.time.get_ticks()
 # get_ticks() gives the number of MILLISECONDS since the game started.
 # A millisecond is one thousandth of a second: 1000 milliseconds = 1 second.
 # It is the first line of the UPDATE job, so  now  is the time on every frame.
-# The top-right of the screen shows it (line 94).
+# The top-right of the screen shows it (line 98).
 #
-# Line 57 saves the time ONCE, before the loop, like score = 0.
-# Line 67 works out how long it has been since then.
+# Line 61 saves the time ONCE, before the loop, like score = 0.
+# Line 71 works out how long it has been since then.
 # (Right now start_time is almost 0, so the two numbers look the same. In
 # Week 4, when your game can restart, start_time will matter.)
 #
 # TASK 4a
 #   1. Run the game and watch the number for about 5 seconds.
 #      Roughly what is it after 5 seconds?  ___
-#   2. Change line 94 so it shows time_passed instead of now.
+#   2. Change line 98 so it shows time_passed instead of now.
+#
+# PLAY (optional)
+#   Print now in the console every frame. How fast does the console fill
+#   up? (Take the print out again afterwards!)
 #
 # When you are done, click "Complete" at the top.
 
@@ -1072,10 +1108,10 @@ await main()`,
         hints: [
             "The number goes up by about 1000 every second.",
             "After 5 seconds it is about 5000. Inside the f-string, {now} becomes {time_passed}.",
-            "Line 94 should say:  time_text = font.render(f\"Time: {time_passed}\", True, TEXT_COLOUR)"
+            "Line 98 should say:  time_text = font.render(f\"Time: {time_passed}\", True, TEXT_COLOUR)"
         ],
 
-        answer: "1. About 5000, because there are 1000 milliseconds in a second.\n2. The label now shows how long the game has been running.\n\nReplace line 94, which says\n    time_text = font.render(f\"Time: {now}\", True, TEXT_COLOUR)\nwith the line below. The indent is already included.",
+        answer: "1. About 5000, because there are 1000 milliseconds in a second.\n2. The label now shows how long the game has been running.\n\nReplace line 98, which says\n    time_text = font.render(f\"Time: {now}\", True, TEXT_COLOUR)\nwith the line below. The indent is already included.",
 
         answerCode: `        time_text = font.render(f"Time: {time_passed}", True, TEXT_COLOUR)`,
 
@@ -1103,9 +1139,13 @@ import random
 # // gives a whole number of seconds, which is what a game clock shows.
 #
 # TASK 4b
-#   1. Make a new line straight under line 60, and create a variable
+#   1. Make a new line straight under line 64, and create a variable
 #      called seconds that stores time_passed // 1000. (8 spaces in front.)
-#   2. Change line 87 so it shows seconds instead of time_passed.
+#   2. Change line 91 so it shows seconds instead of time_passed.
+#
+# PLAY (optional)
+#   Try one / instead of // for a moment. What does the screen show?
+#   Then put // back.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1193,7 +1233,7 @@ await main()`,
             "If you see 4.512 on screen, you used one / instead of two."
         ],
 
-        answer: "time_passed // 1000 divides by 1000 and throws away the leftover part, so the label counts 0, 1, 2, 3 ... once a second.\n\nStep 1: make a new empty line straight under line 60, which says\n    time_passed = now - start_time\nand paste the line below there. The indent is already included.\n\nStep 2: change line 88 (it moved down one line in Step 1) so it says\n    time_text = font.render(f\"Time: {seconds}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
+        answer: "time_passed // 1000 divides by 1000 and throws away the leftover part, so the label counts 0, 1, 2, 3 ... once a second.\n\nStep 1: make a new empty line straight under line 64, which says\n    time_passed = now - start_time\nand paste the line below there. The indent is already included.\n\nStep 2: change line 92 (it moved down one line in Step 1) so it says\n    time_text = font.render(f\"Time: {seconds}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
 
         answerCode: `        seconds = time_passed // 1000`,
 
@@ -1214,15 +1254,19 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # Counting UP is fine, but a time limit counts DOWN.
-# Line 28 is a new setting: GAME_LENGTH = 30 (seconds).
+# Line 32 is a new setting: GAME_LENGTH = 30 (seconds).
 #
 # If the game lasts 30 seconds and 4 have passed, then 30 - 4 = 26 are left.
 #
 # TASK 4c
-#   1. Make a new line straight under line 60, and create a variable
+#   1. Make a new line straight under line 64, and create a variable
 #      called time_left: GAME_LENGTH take away seconds. (8 spaces in front.)
-#   2. Change line 87 so the screen shows, for example:
+#   2. Change line 91 so the screen shows, for example:
 #          Time left: 26
+#
+# PLAY (optional)
+#   Set GAME_LENGTH to 5 and give the game to whoever is nearby. Can they
+#   catch anything at all?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1308,10 +1352,10 @@ await main()`,
         hints: [
             "time_left = GAME_LENGTH - seconds",
             "In the f-string, change the words to  Time left:  and {seconds} to {time_left}.",
-            "Line 88 (after your new line) should say:  time_text = font.render(f\"Time left: {time_left}\", True, TEXT_COLOUR)"
+            "Line 92 (after your new line) should say:  time_text = font.render(f\"Time left: {time_left}\", True, TEXT_COLOUR)"
         ],
 
-        answer: "Each second, seconds goes up by 1, so GAME_LENGTH - seconds goes down by 1: 30, 29, 28 ... But at 0 it keeps going: -1, -2 ... Lab 4d stops the game at 0.\n\nStep 1: make a new empty line straight under line 60, which says\n    seconds = time_passed // 1000\nand paste the line below there. The indent is already included.\n\nStep 2: change line 88 (it moved down one line in Step 1) so it says\n    time_text = font.render(f\"Time left: {time_left}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
+        answer: "Each second, seconds goes up by 1, so GAME_LENGTH - seconds goes down by 1: 30, 29, 28 ... But at 0 it keeps going: -1, -2 ... Lab 4d stops the game at 0.\n\nStep 1: make a new empty line straight under line 64, which says\n    seconds = time_passed // 1000\nand paste the line below there. The indent is already included.\n\nStep 2: change line 92 (it moved down one line in Step 1) so it says\n    time_text = font.render(f\"Time left: {time_left}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
 
         answerCode: `        time_left = GAME_LENGTH - seconds`,
 
@@ -1334,19 +1378,23 @@ import random
 # The countdown goes past 0 into -1, -2 ... The game should END at 0.
 # (Set GAME_LENGTH to 10 while you test, so you do not wait too long.)
 #
-# The loop on line 57 keeps going while game_running is True.
+# The loop on line 61 keeps going while game_running is True.
 # So to end the game, set game_running to False.
 #
 # A new sign:  <=  means "is less than OR EQUAL TO".
 #     time_left <= 0   is True when time_left is 0, or -1, or any number below 0.
 #
-# Lines 96 to 98 are already written for you. When the game has
+# Lines 100 to 102 are already written for you. When the game has
 # ended, they show "Game over!" and the score on the very last frame.
 #
 # TASK 4d
-#   Make a new line straight under line 67, and add an if that sets
+#   Make a new line straight under line 71, and add an if that sets
 #   game_running to False when time_left is 0 or less.
 #   (8 spaces in front of the if, 12 in front of the line under it.)
+#
+# PLAY (optional)
+#   Make the game end when time_left reaches 25 instead of 0. Would
+#   anybody play a 5-second game?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1439,7 +1487,7 @@ await main()`,
             "if time_left <= 0:\n    game_running = False"
         ],
 
-        answer: "When time_left reaches 0, game_running becomes False. The rest of that frame still runs, so the Game over! message is drawn and shown, and then the loop stops. The screen freezes on that last frame. (In Week 4 you will make a proper game-over screen with a restart.)\n\nMake a new empty line straight under line 67, which says\n    time_left = GAME_LENGTH - seconds\nand paste the two lines below there. The indents are already included.",
+        answer: "When time_left reaches 0, game_running becomes False. The rest of that frame still runs, so the Game over! message is drawn and shown, and then the loop stops. The screen freezes on that last frame. (In Week 4 you will make a proper game-over screen with a restart.)\n\nMake a new empty line straight under line 71, which says\n    time_left = GAME_LENGTH - seconds\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        if time_left <= 0:
             game_running = False`,
@@ -1463,8 +1511,8 @@ import random
 # A new coin drops the moment the last one is caught or missed. Games often
 # add a short WAIT, so the player can get ready. We use the clock for that.
 #
-# Line 39 is a new setting: SPAWN_DELAY = 1000 (milliseconds, so 1 second).
-# Line 62 creates drop_time: the time when the coin is ALLOWED to fall.
+# Line 43 is a new setting: SPAWN_DELAY = 1000 (milliseconds, so 1 second).
+# Line 66 creates drop_time: the time when the coin is ALLOWED to fall.
 #
 # The idea:
 #   - When a coin is caught or missed, set the next drop time:
@@ -1475,12 +1523,16 @@ import random
 #             coin.y = coin.y + FALL_SPEED
 #
 # TASK 5a
-#   1. Change line 86 into the two lines just above, so the
+#   1. Change line 90 into the two lines just above, so the
 #      coin only falls when now is bigger than drop_time.
 #   2. Add  drop_time = now + SPAWN_DELAY  inside BOTH ifs: the missed if
-#      (line 87) and the catch if (line 91).
+#      (line 91) and the catch if (line 95).
 #      12 spaces in front, each time. (Step 1 moves both ifs down one line.)
 #   Test it: after each catch or miss, the next coin should wait 1 second.
+#
+# PLAY (optional)
+#   Set SPAWN_DELAY to 5000, then to 0. Which one feels worse to play?
+#   What number feels best?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1577,7 +1629,7 @@ await main()`,
             "Try SPAWN_DELAY = 3000 to see the wait clearly. While the coin waits, it sits just above the screen, so you cannot see it."
         ],
 
-        answer: "After each catch or miss, drop_time is set to one second in the future. Until then, now > drop_time is False, so the coin waits just above the screen. Then it falls as before.\n\nReplace lines 86 to 95 (the falling line and both ifs) with the code below. The indents are already included.",
+        answer: "After each catch or miss, drop_time is set to one second in the future. Until then, now > drop_time is False, so the coin waits just above the screen. Then it falls as before.\n\nReplace lines 90 to 99 (the falling line and both ifs) with the code below. The indents are already included.",
 
         answerCode: `        if now > drop_time:
             coin.y = coin.y + FALL_SPEED
@@ -1598,34 +1650,37 @@ await main()`,
     {
         id: "6a",
 
-        title: "Lab 6a: Make It Yours",
+        title: "Lab 6a: Hurry Up, Coin",
 
         code: `import pygame
 import asyncio
 import random
 
 # ============================================================
-#  w3L1 LAB 6a: MAKE IT YOURS
+#  w3L1 LAB 6a: HURRY UP, COIN
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Make Catch your own. Think about who will play it: a younger brother or
-# sister needs a different game from a friend who plays a lot of games.
+# The game works. Now make it FEEL better. Good games show the player what is
+# happening without needing numbers. Make the coin COOL DOWN from gold to red
+# as it falls, so red means "hurry!".
+#
+# A colour is three numbers: (red, green, blue). Gold is (255, 200, 0).
+# Take the green away and it turns orange, then red: (255, 0, 0).
+# So the green part can come from the coin's y:
+#     green = 200 - coin.y // 3
+# At the top, y is about 0, so green is about 200 (gold).
+# At the bottom, y is about 600, so green is 0 (red).
 #
 # TASK 6a
-#   1. Make AT LEAST THREE changes from this list. Run after each one.
-#        [ ] how fast the coin falls        (line 34)
-#        [ ] the wait between coins         (line 35)
-#        [ ] how long the game lasts        (line 36)
-#        [ ] how fast Blip moves            (line 33)
-#        [ ] Blip's size                    (line 53)
-#        [ ] the coin's size                (line 54)
-#        [ ] any colour
-#        [ ] the words on the screen
-#      Tick each box you did by typing an x between the brackets: [x]
+#   Replace line 102 with two lines: the green line above, and a draw
+#   line that uses the colour (255, green, 0) instead of COIN_COLOUR.
+#   (8 spaces in front of both.)
+#   COIN_COLOUR (line 41) is not used any more. You can leave it there.
 #
-#   2. Check the game still works: coins fall, catches count, misses count,
-#      and the game ends when the time runs out.
+# PLAY (optional)
+#   Make the coin start red and turn gold instead, or put green somewhere
+#   else in the colour. Keep every part between 0 and 255.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1720,12 +1775,437 @@ async def main():
 await main()`,
 
         hints: [
-            "Change one thing at a time, and press Run after each change. If something breaks, you will know which change caused it.",
-            "A wide Blip and a slow coin make the game easy. A narrow Blip, a fast coin and a short wait make it hard.",
-            "If you make Blip taller, check its Rect still fits on the screen: y + height must be 600 or less."
+            "The colour is worked out fresh every frame, from where the coin is right now, so it goes in the DRAW job.",
+            "green = 200 - coin.y // 3   (8 spaces in front)",
+            "pygame.draw.rect(screen, (255, green, 0), coin)   (8 spaces in front)"
         ],
 
-        answer: "There is no single right answer. Here is one example, for a younger player:\n    FALL_SPEED   = 3\n    SPAWN_DELAY  = 500\n    GAME_LENGTH  = 45\n    blip = pygame.Rect(325, 550, 150, 20)\n\nCheck the game still works: coins fall, catches and misses are counted, and the game ends at 0.",
+        answer: "Every frame, green is worked out from the coin's y: about 200 at the top (gold) down to 0 at the bottom (red). So the coin changes colour as it falls, and the player can see at a glance how close it is.\n\nReplace line 102, which says\n    pygame.draw.rect(screen, COIN_COLOUR, coin)\nwith the two lines below. The indent is already included.",
+
+        answerCode: `        green = 200 - coin.y // 3
+        pygame.draw.rect(screen, (255, green, 0), coin)`,
+
+        completeText: "Click OK for Lab 6b."
+    },
+    {
+        id: "6b",
+
+        title: "Lab 6b: Growing Blip",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 6b: GROWING BLIP
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Reward the player: every catch makes Blip 10 pixels WIDER, up to 200.
+#
+# TASK 6b
+#   Make a new line straight under line 84, inside the catch if, and add an if
+#   (12 spaces in front) that, while blip.width is less than 200, adds 10 to
+#   blip.width (16 spaces in front).
+#   Do you need to change the walls? Try it and see.
+#
+# PLAY (optional)
+#   Make Blip grow by 100 on each catch, up to 800. What happens when Blip
+#   is as wide as the screen?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        green = 200 - coin.y // 3
+        pygame.draw.rect(screen, (255, green, 0), coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The if asks  blip.width < 200, so Blip stops growing at 200.",
+            "Inside it:  blip.width = blip.width + 10",
+            "The walls already use blip.width, so they still work however wide Blip gets."
+        ],
+
+        answer: "Each catch adds 10 to Blip's width, from 100 up to 200, where the if stops it. The walls already use 800 - blip.width, so a wider Blip still stops at the right edge. (Is a game that gets EASIER as you play a good idea? You decide.)\n\nMake a new empty line straight under line 84, which says\n    score = score + 1\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `            if blip.width < 200:
+                blip.width = blip.width + 10`,
+
+        completeText: "Click OK for Lab 6c."
+    },
+    {
+        id: "6c",
+
+        title: "Lab 6c: TIME UP",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 6c: TIME UP
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Right now, the game just stops with a small line of text. Make the ending
+# impossible to miss: TIME UP in GIANT letters.
+#
+# font (line 58) makes text 26 pixels tall. Giant text needs a
+# second, bigger font:
+#     big_font = pygame.font.SysFont(None, 120)
+# Line 48 is a new setting for the giant text.
+#
+# To put text in the MIDDLE, you need its width. Every picture made by
+# render() has one:  big_text.get_width().  The middle of the screen is
+# x = 400, so start at  400 - big_text.get_width() // 2.
+#
+# TASK 6c
+#   1. Make a new line straight under line 58, and type the big_font line
+#      above (4 spaces in front).
+#   2. Inside the game-over if, straight under the line that says
+#          screen.blit(over_text, (300, 290))
+#      add two lines (12 spaces in front) that render TIME UP with big_font
+#      and BIG_COLOUR, and blit it in the middle, at y = 160.
+#   Test it with GAME_LENGTH = 5.
+#
+# PLAY (optional)
+#   Change TIME UP to something cheeky for whoever plays it next. Does
+#   the centring still work with a longer message?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (255, 200, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            if blip.width < 200:
+                blip.width = blip.width + 10
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        green = 200 - coin.y // 3
+        pygame.draw.rect(screen, (255, green, 0), coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 2 has the same shape as the over_text lines just above it, with big_font instead of font.",
+            "big_text = big_font.render(\"TIME UP\", True, BIG_COLOUR)",
+            "screen.blit(big_text, (400 - big_text.get_width() // 2, 160))"
+        ],
+
+        answer: "big_font is a second font, 120 pixels tall. The TIME UP picture is drawn only on the last frame, inside the game-over if, and get_width() lets you centre it whatever words you use.\n\nStep 1: make a new empty line straight under line 58, which says\n    font = pygame.font.SysFont(None, 26)\nand type this line there, with 4 spaces in front:\n    big_font = pygame.font.SysFont(None, 120)\n\nStep 2: make a new empty line straight under the line that says\n    screen.blit(over_text, (300, 290))\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `            big_text = big_font.render("TIME UP", True, BIG_COLOUR)
+            screen.blit(big_text, (400 - big_text.get_width() // 2, 160))`,
+
+        completeText: "Click OK for Lab 7a."
+    },
+    {
+        id: "7a",
+
+        title: "Lab 7a: Make It Yours",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 7a: MAKE IT YOURS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Make Catch your own. Think about who will play it: a younger brother or
+# sister needs a different game from a friend who plays a lot of games.
+#
+# TASK 7a
+#   1. Make AT LEAST THREE changes from this list. Run after each one.
+#        [ ] how fast the coin falls        (line 35)
+#        [ ] the wait between coins         (line 36)
+#        [ ] how long the game lasts        (line 37)
+#        [ ] how fast Blip moves            (line 34)
+#        [ ] how much Blip grows            (line 95)
+#        [ ] the coin's colours             (line 105)
+#        [ ] the giant words, size or colour
+#        [ ] Blip's size, or the coin's size
+#        [ ] the words on the screen
+#      Tick each box you did by typing an x between the brackets: [x]
+#
+#   2. Check the game still works: coins fall, catches count, misses count,
+#      and the game ends when the time runs out.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (255, 200, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    big_font = pygame.font.SysFont(None, 120)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            if blip.width < 200:
+                blip.width = blip.width + 10
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        green = 200 - coin.y // 3
+        pygame.draw.rect(screen, (255, green, 0), coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            big_text = big_font.render("TIME UP", True, BIG_COLOUR)
+            screen.blit(big_text, (400 - big_text.get_width() // 2, 160))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Change one thing at a time, and press Run after each change. If something breaks, you will know which change caused it.",
+            "A wide Blip and a slow coin make the game easy. A narrow Blip, a fast coin and a short wait make it hard.",
+            "If you change the coin's colour sum, keep every part between 0 and 255, or Python will complain."
+        ],
+
+        answer: "There is no single right answer. Here is one example, for a younger player:\n    FALL_SPEED   = 3\n    SPAWN_DELAY  = 500\n    GAME_LENGTH  = 45\n    big_text = big_font.render(\"WELL DONE\", True, BIG_COLOUR)\n\nCheck the game still works: coins fall, catches and misses are counted, and the game ends at 0.",
 
         completeText: "That is all the core labs for w3L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
     },
