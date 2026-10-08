@@ -217,27 +217,31 @@
 # A game shows a new picture many times every second. To do that, the
 # program has to REPEAT itself. Python repeats things with a LOOP.
 #
-# Look at line 35. It says:
+# Look at line 39. It says:
 #     while count < 6:
 #   while       means "keep repeating the indented lines below, as long as..."
 #   count < 6   is the question Python asks before every repeat.
 #               < means "is less than". So: is count less than 6?
 #   :           a colon, which means "the instructions come next" (like def).
 #
-# Lines 36 and 37 are indented, so they are INSIDE the loop.
-# Line 39 is not indented, so it runs once, after the loop has finished.
+# Lines 40 and 41 are indented, so they are INSIDE the loop.
+# Line 43 is not indented, so it runs once, after the loop has finished.
 #
-# Line 37 adds 1 to count every time round.
+# Line 41 adds 1 to count every time round.
 # When count gets to 6, the answer to "is 6 less than 6?" is no,
 # so the loop stops.
 #
-# WARNING: never delete line 37. Without it, count stays at 1
+# WARNING: never delete line 41. Without it, count stays at 1
 # forever, the loop never stops, and the page freezes. (You would have to
 # refresh the page, and you would lose your work.)
 #
 # TASK 1a
 #   Press Run. What does the console show?
 #   Then change ONE number so the console counts from 1 to 10.
+#
+# PLAY (optional)
+#   Make it count to 100. Then make it count in 2s: count = count + 2.
+#   Does it still stop?
 #
 # When you are done, click "Complete" at the top.
 
@@ -250,12 +254,12 @@ while count < 6:
 print("Done!")`,
 
         hints: [
-            "The number to change is on line 35.",
+            "The number to change is on line 39.",
             "The loop stops as soon as the answer to  count < 6  is no. When count is 6, the loop stops BEFORE it prints 6.",
             "To print 10 and then stop, the loop must stop when count gets to 11:  while count < 11:"
         ],
 
-        answer: "The console shows  Blip says 1  up to  Blip says 5, then  Done!. With 11, it counts up to 10, because the loop stops as soon as the answer to  count < 11  is no.\n\nReplace line 35, which says\n    while count < 6:\nwith the line below (no indent).",
+        answer: "The console shows  Blip says 1  up to  Blip says 5, then  Done!. With 11, it counts up to 10, because the loop stops as soon as the answer to  count < 11  is no.\n\nReplace line 39, which says\n    while count < 6:\nwith the line below (no indent).",
 
         answerCode: `while count < 11:`,
 
@@ -286,6 +290,10 @@ print("Done!")`,
 #   Change all four lines BEFORE you press Run. If the question says  > 0
 #   but count is still going UP, the loop never stops and the page freezes.
 #
+# PLAY (optional)
+#   Make the countdown start at 30 and go down in 3s. What is the last
+#   number before Lift off!?
+#
 # When you are done, click "Complete" at the top.
 
 count = 1
@@ -297,12 +305,12 @@ while count < 11:
 print("Done!")`,
 
         hints: [
-            "Where count starts: line 23 should make count start at 10.",
-            "The question: line 25 should keep going while count is greater than 0:  while count > 0:",
-            "The counting line: line 27 should take 1 away:  count = count - 1  (keep the 4-space indent). Then change  Done!  to  Lift off!"
+            "Where count starts: line 27 should make count start at 10.",
+            "The question: line 29 should keep going while count is greater than 0:  while count > 0:",
+            "The counting line: line 31 should take 1 away:  count = count - 1  (keep the 4-space indent). Then change  Done!  to  Lift off!"
         ],
 
-        answer: "The loop starts at 10, takes 1 away each time round, and stops when the answer to  count > 0  is no (when count is 0).\n\nReplace everything from line 23 down to the last line with the code below. The indent is already included.",
+        answer: "The loop starts at 10, takes 1 away each time round, and stops when the answer to  count > 0  is no (when count is 0).\n\nReplace everything from line 27 down to the last line with the code below. The indent is already included.",
 
         answerCode: `count = 10
 
@@ -331,27 +339,27 @@ import asyncio
 # line that said you did not need to read it. Now we open it up.
 # This lab and the next one are mostly reading. Take your time.
 #
-# Lines 50 to 54 are SETTINGS, in CAPITALS, because they never
+# Lines 54 to 58 are SETTINGS, in CAPITALS, because they never
 # change while the game runs. BLIP_START_X and BLIP_START_Y say where
 # Blip STARTS.
 #
-# Line 58 starts a function called main(). Everything indented under
-# it belongs to main(). Line 113, at the very bottom, calls it.
+# Line 62 starts a function called main(). Everything indented under
+# it belongs to main(). Line 117, at the very bottom, calls it.
 # (Do not worry about the words async and await. This web-based IDE needs them.)
 #
-# Lines 62 to 64 get pygame ready: they start pygame, make an
+# Lines 66 to 68 get pygame ready: they start pygame, make an
 # 800 by 600 screen, and choose a font for writing text.
 #
-# Lines 66 to 68 create three variables INSIDE main().
+# Lines 70 to 72 create three variables INSIDE main().
 # They are lowercase, because they WILL change while the game runs.
 #
-# Line 70 says:
+# Line 74 says:
 #     while game_running:
 # This is a loop, like the one in Lab 1a. It repeats everything indented
 # under it, over and over, until game_running becomes False (when you
 # press Stop). Each time round the loop is called a FRAME.
 #
-# Line 88 says  await asyncio.sleep(0). Many pygame tutorials use
+# Line 92 says  await asyncio.sleep(0). Many pygame tutorials use
 #     while True:
 # for the game loop. This particular web-based IDE is an emulator, and
 # while True  does not work in it, so we use this instead. If you are using
@@ -362,6 +370,10 @@ import asyncio
 #   It shows the value of frame, which goes up by 1 every frame.
 #   Blip is drawn again on EVERY one of those frames.
 #   So why does Blip not look like it is moving?
+#
+# PLAY (optional)
+#   Watch the frame counter for 10 seconds. Roughly how many frames is
+#   that? Is it the same every time you Run?
 #
 # When you are done, click "Complete" at the top.
 
@@ -436,7 +448,7 @@ await main()`,
         hints: [
             "Press Run and watch the frame counter. Then watch Blip. Is Blip drawn in a new place each time?",
             "Blip is drawn at blip_x and blip_y. Does anything in the loop change blip_x or blip_y?",
-            "The only line in the loop that changes a variable is line 77. It changes frame, not blip_x."
+            "The only line in the loop that changes a variable is line 81. It changes frame, not blip_x."
         ],
 
         answer: "Blip is drawn again every frame, but always in exactly the same place, because nothing in the loop changes blip_x or blip_y. The only variable that changes is frame. The frame counter shows that the loop really is running, very fast.",
@@ -575,22 +587,26 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 58. It is in the UPDATE job. Every frame, it adds 1
+# Look at line 62. It is in the UPDATE job. Every frame, it adds 1
 # to frame. That is why the frame counter goes up.
 #
 # We can move Blip the same way: add 1 to blip_x every frame.
 #
-# blip_x is created on line 47, INSIDE main(). So blip_x is a LOCAL
+# blip_x is created on line 51, INSIDE main(). So blip_x is a LOCAL
 # variable that belongs to main(), and main() can change it without global.
 # (In w1L1 Lab 9a, move_blip() could NOT change blip_x without global,
 # because blip_x was created OUTSIDE move_blip().)
 #
 # TASK 2c
-#   Make a new line straight under line 58, and type
+#   Make a new line straight under line 62, and type
 #       blip_x = blip_x + 1
 #   with 8 spaces in front: 4 because it is inside main(), and 4 more
-#   because it is inside the loop. Line 58 has the same indent.
+#   because it is inside the loop. Line 62 has the same indent.
 #   Press Run. What does Blip do? Watch the x in the label.
+#
+# PLAY (optional)
+#   Change + 1 to + 10. Then + 50. When does it stop looking like moving
+#   and start looking like jumping?
 #
 # When you are done, click "Complete" at the top.
 
@@ -662,12 +678,12 @@ def show_frame(screen, font, frame):
 await main()`,
 
         hints: [
-            "The new line goes in the UPDATE job, straight under line 58.",
-            "Line up the start of your new line with the start of line 58. That is 8 spaces.",
+            "The new line goes in the UPDATE job, straight under line 62.",
+            "Line up the start of your new line with the start of line 62. That is 8 spaces.",
             "Your new line is:  blip_x = blip_x + 1  Each frame, it works out blip_x + 1 and stores the answer back in blip_x."
         ],
 
-        answer: "Each frame, blip_x goes up by 1, so Blip is drawn 1 pixel further right than last time. Many frames every second make Blip glide to the right, until it leaves the screen.\n\nMake a new empty line straight under line 58, which says\n    frame = frame + 1\nand paste the line below there. The indent is already included.",
+        answer: "Each frame, blip_x goes up by 1, so Blip is drawn 1 pixel further right than last time. Many frames every second make Blip glide to the right, until it leaves the screen.\n\nMake a new empty line straight under line 62, which says\n    frame = frame + 1\nand paste the line below there. The indent is already included.",
 
         answerCode: `        blip_x = blip_x + 1`,
 
@@ -686,17 +702,20 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 28. It says:
+# Look at line 31. It says:
 #     BLIP_SPEED   = 1
 # This is a new setting: how many pixels Blip moves each frame.
 # Keeping settings at the top means you can find and change them easily,
 # without hunting through main().
 #
 # TASK 2d
-#   1. On line 55, replace the 1 at the end with BLIP_SPEED,
+#   1. On line 58, replace the 1 at the end with BLIP_SPEED,
 #      so the line uses the setting.
-#   2. Change BLIP_SPEED on line 28 to 3.
+#   2. Change BLIP_SPEED on line 31 to 3.
 #   Press Run. Is Blip faster or slower than before?
+#
+# PLAY (optional)
+#   Set BLIP_SPEED to 100. Then 0. Then -1. Describe each one.
 #
 # When you are done, click "Complete" at the top.
 
@@ -770,12 +789,12 @@ def show_frame(screen, font, frame):
 await main()`,
 
         hints: [
-            "Part 1 is on line 55. Only change the 1 at the very end.",
-            "Line 55 should end up as:  blip_x = blip_x + BLIP_SPEED  (keep the 8 spaces in front).",
-            "Part 2: line 28 should end up as:  BLIP_SPEED   = 3  Blip now moves 3 pixels every frame."
+            "Part 1 is on line 58. Only change the 1 at the very end.",
+            "Line 58 should end up as:  blip_x = blip_x + BLIP_SPEED  (keep the 8 spaces in front).",
+            "Part 2: line 31 should end up as:  BLIP_SPEED   = 3  Blip now moves 3 pixels every frame."
         ],
 
-        answer: "Blip is three times as fast, because it now moves 3 pixels every frame instead of 1.\n\nStep 1: replace line 55, which says\n    blip_x = blip_x + 1\nwith the line below. The indent is already included.\n\nStep 2: change line 28 so it says\n    BLIP_SPEED   = 3",
+        answer: "Blip is three times as fast, because it now moves 3 pixels every frame instead of 1.\n\nStep 1: replace line 58, which says\n    blip_x = blip_x + 1\nwith the line below. The indent is already included.\n\nStep 2: change line 31 so it says\n    BLIP_SPEED   = 3",
 
         answerCode: `        blip_x = blip_x + BLIP_SPEED`,
 
@@ -797,7 +816,7 @@ import asyncio
 # Look at the top-right corner of the game: FPS.
 # FPS means FRAMES PER SECOND: how many times the loop runs each second.
 #
-# Line 73 calls show_fps(), a helper function at the bottom. It uses
+# Line 77 calls show_fps(), a helper function at the bottom. It uses
 # pygame.time.get_ticks() (how many milliseconds since the game started)
 # to count the frames in each second. It turns the number into a picture
 # with font.render(), then uses blit to copy that picture onto the screen.
@@ -816,6 +835,10 @@ import asyncio
 #      computer at home). If yours is 60 and theirs is 240,
 #      whose Blip is faster, and how many times faster?  ___
 #   4. Why would that be a problem in a game?  ___
+#
+# PLAY (optional)
+#   Open another tab with a video playing, then come back. Does your FPS
+#   change?
 #
 # When you are done, click "Complete" at the top.
 
@@ -908,7 +931,7 @@ await main()`,
 
         hints: [
             "The FPS number can jump around a little. Use a number near the middle.",
-            "Use the sum BLIP_SPEED * FPS. BLIP_SPEED is 3 (line 39). So if your FPS were 100, Blip would move 3 * 100 = 300 pixels each second.",
+            "Use the sum BLIP_SPEED * FPS. BLIP_SPEED is 3 (line 43). So if your FPS were 100, Blip would move 3 * 100 = 300 pixels each second.",
             "At 60 FPS, Blip moves 3 * 60 = 180 pixels each second. At 240 FPS, it moves 3 * 240 = 720. How many times does 180 go into 720?"
         ],
 
@@ -937,6 +960,10 @@ import asyncio
 #   Try to find a way yourself first. You can search online.
 #   If you are stuck, use the Hint button.
 #   You will know it works when your FPS shows about 60.
+#
+# PLAY (optional)
+#   Once it works: what is the LOWEST frame rate that still looks smooth
+#   to you? Try a few numbers.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1030,10 +1057,10 @@ await main()`,
         hints: [
             "pygame has a CLOCK that can slow the loop down to a speed you choose. If you search online, try:  pygame clock tick",
             "You need two lines. Make the clock ONCE, before the loop starts:  clock = pygame.time.Clock()  Then, inside the loop, tick it once every frame:  clock.tick(60)",
-            "Put  clock = pygame.time.Clock()  on a new line under line 38 (4 spaces in front). Put  clock.tick(60)  on a new line under line 62 (8 spaces in front). Do NOT delete line 63."
+            "Put  clock = pygame.time.Clock()  on a new line under line 42 (4 spaces in front). Put  clock.tick(60)  on a new line under line 66 (8 spaces in front). Do NOT delete line 67."
         ],
 
-        answer: "clock = pygame.time.Clock() makes a clock, once, before the loop starts. clock.tick(60) runs once every frame: it waits just long enough that the loop never runs more than 60 times each second, on any computer. Your FPS may show a little under 60 (such as 59), which is fine.\n\nKeep line 63 (await asyncio.sleep(0)). This web-based IDE still needs it, because while True does not work here.\n\nStep 1: make a new empty line straight under line 62, which says\n    pygame.display.flip()\nand paste the line below there. The indent is already included.\n\nStep 2: make a new empty line straight under line 38, which says\n    font = pygame.font.SysFont(None, 26)\nand type this there, with 4 spaces in front:\n    clock = pygame.time.Clock()",
+        answer: "clock = pygame.time.Clock() makes a clock, once, before the loop starts. clock.tick(60) runs once every frame: it waits just long enough that the loop never runs more than 60 times each second, on any computer. Your FPS may show a little under 60 (such as 59), which is fine.\n\nKeep line 67 (await asyncio.sleep(0)). This web-based IDE still needs it, because while True does not work here.\n\nStep 1: make a new empty line straight under line 66, which says\n    pygame.display.flip()\nand paste the line below there. The indent is already included.\n\nStep 2: make a new empty line straight under line 42, which says\n    font = pygame.font.SysFont(None, 26)\nand type this there, with 4 spaces in front:\n    clock = pygame.time.Clock()",
 
         answerCode: `        clock.tick(60)`,
 
@@ -1057,12 +1084,16 @@ import asyncio
 #
 # So far BLIP_SPEED has been a positive number, so blip_x gets BIGGER every
 # frame and Blip moves right.
-# A speed can also be NEGATIVE. If BLIP_SPEED is -3, line 54
+# A speed can also be NEGATIVE. If BLIP_SPEED is -3, line 58
 # works out  blip_x + -3, which is the same as  blip_x - 3.
 #
 # TASK 4a
 #   Make Blip start near the RIGHT edge (x = 700) and move LEFT.
 #   You need to change two settings.
+#
+# PLAY (optional)
+#   Make Blip cross the whole screen in under one second. What is the
+#   smallest speed that does it? (Remember: about 60 frames a second.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -1148,12 +1179,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "Where Blip starts is set on line 26.",
-            "Change line 26 to 700. Which way Blip moves is set on line 28.",
+            "Where Blip starts is set on line 30.",
+            "Change line 30 to 700. Which way Blip moves is set on line 32.",
             "A negative speed moves Blip left:  BLIP_SPEED   = -3"
         ],
 
-        answer: "Starting at 700 with a speed of -3, blip_x gets 3 SMALLER every frame, so Blip moves left.\n\nReplace lines 26 to 28, which say\n    BLIP_START_X = 100\n    BLIP_START_Y = 275\n    BLIP_SPEED   = 3\nwith the three lines below (no indent).",
+        answer: "Starting at 700 with a speed of -3, blip_x gets 3 SMALLER every frame, so Blip moves left.\n\nReplace lines 30 to 32, which say\n    BLIP_START_X = 100\n    BLIP_START_Y = 275\n    BLIP_SPEED   = 3\nwith the three lines below (no indent).",
 
         answerCode: `BLIP_START_X = 700
 BLIP_START_Y = 275
@@ -1174,16 +1205,20 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# We renamed BLIP_SPEED to BLIP_SPEED_X (line 27), because Blip is about
-# to get a second speed. We also added BLIP_SPEED_Y on line 28,
+# We renamed BLIP_SPEED to BLIP_SPEED_X (line 31), because Blip is about
+# to get a second speed. We also added BLIP_SPEED_Y on line 32,
 # but nothing uses it yet.
 #
 # TASK 4b
-#   1. Make a new line straight under line 54, and type
+#   1. Make a new line straight under line 58, and type
 #          blip_y = blip_y + BLIP_SPEED_Y
 #      with 8 spaces in front.
 #   2. Change BLIP_SPEED_X to 0, so Blip ONLY moves up or down.
 #   Press Run. Which way does Blip move? (Remember: in pygame, y counts DOWN.)
+#
+# PLAY (optional)
+#   Make Blip shoot upwards so fast that whoever plays it next only sees
+#   a flash.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1270,12 +1305,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "Part 1 is like line 54, but with y instead of x. It goes in the UPDATE job.",
-            "Part 2 is on line 27:  BLIP_SPEED_X = 0  Moving 0 pixels sideways each frame means not moving sideways at all.",
+            "Part 1 is like line 58, but with y instead of x. It goes in the UPDATE job.",
+            "Part 2 is on line 31:  BLIP_SPEED_X = 0  Moving 0 pixels sideways each frame means not moving sideways at all.",
             "BLIP_SPEED_Y is 2, so blip_y gets 2 bigger every frame. A bigger y means further DOWN the screen."
         ],
 
-        answer: "Blip moves straight down, because blip_y gets 2 bigger every frame and blip_x does not change.\n\nStep 1: make a new empty line straight under line 54, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the line below there. The indent is already included.\n\nStep 2: change line 27 so it says\n    BLIP_SPEED_X = 0",
+        answer: "Blip moves straight down, because blip_y gets 2 bigger every frame and blip_x does not change.\n\nStep 1: make a new empty line straight under line 58, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the line below there. The indent is already included.\n\nStep 2: change line 31 so it says\n    BLIP_SPEED_X = 0",
 
         answerCode: `        blip_y = blip_y + BLIP_SPEED_Y`,
 
@@ -1302,6 +1337,10 @@ import asyncio
 #
 #   Then, if you like, try other directions.
 #   Which speeds make Blip move UP and to the LEFT?
+#
+# PLAY (optional)
+#   Find two speeds that make Blip leave through EXACTLY the
+#   bottom-right corner. (The screen is not a square.)
 #
 # When you are done, click "Complete" at the top.
 
@@ -1389,12 +1428,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "The top-left corner is x = 0 and y = 0. Those are lines 23 and 24.",
+            "The top-left corner is x = 0 and y = 0. Those are lines 27 and 28.",
             "Diagonal means moving sideways AND down at the same time, so BOTH speeds need to be more than 0.",
             "BLIP_SPEED_X = 3 moves right. BLIP_SPEED_Y = 3 moves down. (For up and left, both speeds are negative, and Blip should start near the bottom-right.)"
         ],
 
-        answer: "Moving 3 right and 3 down every frame makes Blip travel diagonally. For up and left, both speeds are negative.\n\nReplace lines 23 to 26, which say\n    BLIP_START_X = 700\n    BLIP_START_Y = 275\n    BLIP_SPEED_X = 0\n    BLIP_SPEED_Y = 2\nwith the four lines below (no indent).",
+        answer: "Moving 3 right and 3 down every frame makes Blip travel diagonally. For up and left, both speeds are negative.\n\nReplace lines 27 to 30, which say\n    BLIP_START_X = 700\n    BLIP_START_Y = 275\n    BLIP_SPEED_X = 0\n    BLIP_SPEED_Y = 2\nwith the four lines below (no indent).",
 
         answerCode: `BLIP_START_X = 0
 BLIP_START_Y = 0
@@ -1416,15 +1455,19 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 57. It says:
+# Look at line 61. It says:
 #     screen.fill(BACKGROUND)
 # It is the first line of the DRAW job. Every frame, it paints the WHOLE
 # screen in the background colour.
 #
 # TASK 5a
-#   1. Put a # at the very start of line 57, so Python skips it.
+#   1. Put a # at the very start of line 61, so Python skips it.
 #      Press Run. What happens? Why?
 #   2. Then remove the # again.
+#
+# PLAY (optional)
+#   Leave the # in, and change the speeds to paint the best picture you
+#   can with Blip's trail. Then take the # out again.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1535,7 +1578,7 @@ import asyncio
 # (Remember: press Stop, make your change, then press Run.)
 #
 # We put Blip back on the left, moving right, and added a wall.
-# Look at lines 65 and 66. They say:
+# Look at lines 69 and 70. They say:
 #     pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))
 #     pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))
 # pygame.draw.rect() draws a rectangle. Inside the brackets:
@@ -1549,6 +1592,10 @@ import asyncio
 # TASK 5b
 #   Press Run. Blip goes BEHIND the wall. Why?
 #   Change the code so Blip goes IN FRONT of the wall.
+#
+# PLAY (optional)
+#   Make the wall the same colour as the background, so Blip vanishes
+#   behind something invisible.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1638,12 +1685,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "Which is drawn first: Blip (line 65) or the wall (line 66)?",
+            "Which is drawn first: Blip (line 69) or the wall (line 70)?",
             "Whatever is drawn LAST ends up in front. Right now the wall is drawn last.",
-            "Swap lines 65 and 66, so the wall is drawn first and Blip is painted on top of it."
+            "Swap lines 69 and 70, so the wall is drawn first and Blip is painted on top of it."
         ],
 
-        answer: "The wall was drawn after Blip, so it was painted over Blip. Drawing the wall first, then Blip, puts Blip in front.\n\nReplace lines 65 and 66, which say\n    pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))\n    pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))\nwith the two lines below. The indent is already included.",
+        answer: "The wall was drawn after Blip, so it was painted over Blip. Drawing the wall first, then Blip, puts Blip in front.\n\nReplace lines 69 and 70, which say\n    pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))\n    pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))\nwith the two lines below. The indent is already included.",
 
         answerCode: `        pygame.draw.rect(screen, WALL_COLOUR, (400, 150, 60, 300))
         pygame.draw.rect(screen, BLIP_COLOUR, (blip_x, blip_y, BLIP_SIZE, BLIP_SIZE))`,
@@ -1782,14 +1829,14 @@ await main()`,
 # No Blip this time. Just the console.
 #
 # Programs often need to make a choice: do something ONLY IF something
-# is true. Look at line 31. It says:
+# is true. Look at line 34. It says:
 #     if score > 5:
 #   if          means "only run the indented lines below if..."
 #   score > 5   is the question. > means "is greater than".
 #   :           a colon: the instructions come next.
 #
-# Line 32 is indented, so it only runs if the answer is yes.
-# Line 34 is not indented, so it always runs.
+# Line 35 is indented, so it only runs if the answer is yes.
+# Line 37 is not indented, so it always runs.
 #
 # Two more questions you can ask:
 #   <    is less than
@@ -1802,6 +1849,9 @@ await main()`,
 #   2. Add a second if, under the first one, that prints  Keep trying!
 #      when score is less than 5.
 #
+# PLAY (optional)
+#   Make the messages as dramatic as you like for each score.
+#
 # When you are done, click "Complete" at the top.
 
 score = 7
@@ -1812,12 +1862,12 @@ if score > 5:
 print("The end.")`,
 
         hints: [
-            "Part 1: with score = 3, is 3 greater than 5? So does line 32 run?",
-            "Part 2: copy the shape of lines 31 and 32: an if line ending in a colon, then an indented print.",
+            "Part 1: with score = 3, is 3 greater than 5? So does line 35 run?",
+            "Part 2: copy the shape of lines 34 and 35: an if line ending in a colon, then an indented print.",
             "if score < 5:  then, on the next line with 4 spaces in front,  print(\"Keep trying!\")"
         ],
 
-        answer: "With score = 3, the answer to  score > 5  is no, so  Well done!  is skipped.  The end.  always prints, because it is not indented.\n\nMake a new empty line straight under line 32, which says\n    print(\"Well done!\")\nand paste the code below there. The indent is already included.",
+        answer: "With score = 3, the answer to  score > 5  is no, so  Well done!  is skipped.  The end.  always prints, because it is not indented.\n\nMake a new empty line straight under line 35, which says\n    print(\"Well done!\")\nand paste the code below there. The indent is already included.",
 
         answerCode: `
 if score < 5:
@@ -1843,12 +1893,16 @@ import asyncio
 # TASK 6b
 #   Make Blip come back on the LEFT after it leaves on the right,
 #   like in an old arcade game.
-#   Make a new line straight under line 55, and type these two lines:
+#   Make a new line straight under line 59, and type these two lines:
 #       if blip_x > 800:
 #           blip_x = -50
 #   The if line needs 8 spaces in front (inside main() and the loop).
 #   The line under it needs 12 (inside the if as well).
 #   Why -50, and not 0?
+#
+# PLAY (optional)
+#   Make Blip come back somewhere unexpected instead, for example
+#   blip_x = 300. Is that fair?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1936,12 +1990,12 @@ def show_fps(screen, font):
 await main()`,
 
         hints: [
-            "The two new lines go in the UPDATE job, straight under line 55.",
-            "Line up the if with line 55 (8 spaces). The line under the if gets 4 more (12 spaces).",
+            "The two new lines go in the UPDATE job, straight under line 59.",
+            "Line up the if with line 59 (8 spaces). The line under the if gets 4 more (12 spaces).",
             "Why -50? Blip is 50 pixels wide. At x = -50, Blip is just off the left edge, so it slides back onto the screen instead of suddenly appearing."
         ],
 
-        answer: "Once blip_x is more than 800, Blip has completely left the screen, so the if puts it back at -50, just off the left edge. Then it slides back in.\n\nMake a new empty line straight under line 55, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the two lines below there. The indents are already included.",
+        answer: "Once blip_x is more than 800, Blip has completely left the screen, so the if puts it back at -50, just off the left edge. Then it slides back in.\n\nMake a new empty line straight under line 59, which says\n    blip_x = blip_x + BLIP_SPEED_X\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        if blip_x > 800:
             blip_x = -50`,
