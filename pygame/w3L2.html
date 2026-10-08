@@ -216,21 +216,25 @@
 # must dodge them all. In w2L2, one extra Pogo (Double Pogo) needed a copy of
 # every line. This week you learn the better way: a LIST. No Blip yet.
 #
-# Look at line 26. It says:
+# Look at line 30. It says:
 #     names = ["Blip", "Pogo", "Coin"]
 #   [ ]     square brackets make a LIST: one variable that holds many things.
 #   ,       commas go between the things. Each thing is called an ITEM.
 # So names holds three items.
 #
-# Line 27 prints the whole list.
-# Line 28 prints ONE item. The number in square brackets is the
+# Line 31 prints the whole list.
+# Line 32 prints ONE item. The number in square brackets is the
 # item's position, and Python counts positions from 0, not 1:
 #     names[0] is "Blip",  names[1] is "Pogo",  names[2] is "Coin"
-# Line 29 prints len(names): the LENGTH of the list (how many items).
+# Line 33 prints len(names): the LENGTH of the list (how many items).
 #
 # TASK 1a
 #   1. Press Run. What does each of the three lines print?
-#   2. Change line 28 so it prints Coin instead of Blip.
+#   2. Change line 32 so it prints Coin instead of Blip.
+#
+# PLAY (optional)
+#   Make your own list of five favourite things (foods, games, anything).
+#   Print the LAST item. Can you do it with len() instead of counting?
 #
 # When you are done, click "Complete" at the top.
 
@@ -242,10 +246,10 @@ print(len(names))`,
         hints: [
             "Positions start at 0. Count along the list: Blip is 0, Pogo is 1, Coin is ...",
             "Coin is the third item, so its position is 2.",
-            "Line 28 should say  print(names[2])"
+            "Line 32 should say  print(names[2])"
         ],
 
-        answer: "print(names) shows the whole list with its brackets: ['Blip', 'Pogo', 'Coin']. names[0] is Blip, because positions start at 0. len(names) is 3. Coin is at position 2.\n\nReplace line 28, which says\n    print(names[0])\nwith the line below (no indent).",
+        answer: "print(names) shows the whole list with its brackets: ['Blip', 'Pogo', 'Coin']. names[0] is Blip, because positions start at 0. len(names) is 3. Coin is at position 2.\n\nReplace line 32, which says\n    print(names[0])\nwith the line below (no indent).",
 
         answerCode: `print(names[2])`,
 
@@ -261,7 +265,7 @@ print(len(names))`,
 # ============================================================
 # Lists can GROW while the program runs.
 #
-# Look at line 20. It says:
+# Look at line 24. It says:
 #     names.append("Zip")
 # append means "add to the end". The dot works like random.randint:
 # names.append means "the append tool that belongs to the names list".
@@ -269,8 +273,12 @@ print(len(names))`,
 #
 # TASK 1b
 #   1. Press Run. What is the length now?
-#   2. Make a new line straight under line 20, and append YOUR name
+#   2. Make a new line straight under line 24, and append YOUR name
 #      to the list. Then the length should be 5.
+#
+# PLAY (optional)
+#   Append the same name five times. What is the length now?
+#   Can a list hold the same item more than once?
 #
 # When you are done, click "Complete" at the top.
 
@@ -280,12 +288,12 @@ print(names)
 print(len(names))`,
 
         hints: [
-            "Copy the shape of line 20, with a different name in the quotes.",
+            "Copy the shape of line 24, with a different name in the quotes.",
             "The name needs quotes, because it is words, not a variable.",
             "names.append(\"Sam\")  (with your own name, and no spaces in front)"
         ],
 
-        answer: "Each append adds one item to the end, so the list grows from 3 to 4 to 5 items.\n\nMake a new empty line straight under line 20, which says\n    names.append(\"Zip\")\nand paste the line below there (no indent). Change Sam to your own name.",
+        answer: "Each append adds one item to the end, so the list grows from 3 to 4 to 5 items.\n\nMake a new empty line straight under line 24, which says\n    names.append(\"Zip\")\nand paste the line below there (no indent). Change Sam to your own name.",
 
         answerCode: `names.append("Sam")`,
 
@@ -301,7 +309,7 @@ print(len(names))`,
 # ============================================================
 # A list is most useful when you can do something to EVERY item.
 #
-# Look at line 29. It says:
+# Look at line 34. It says:
 #     for name in names:
 #   for ... in names   repeats the indented lines once for EACH item in names.
 #   name               each time round, name holds the next item:
@@ -317,8 +325,13 @@ print(len(names))`,
 #
 # TASK 1c
 #   1. Press Run. How many times does Hello appear? How many times does Done! appear? Why?
-#   2. Make a new line straight under line 30, INSIDE the loop, that prints
+#   2. Make a new line straight under line 35, INSIDE the loop, that prints
 #      Goodbye and the name, for example:  Goodbye Blip
+#
+# PLAY (optional)
+#   Make the loop say something cheeky about every name, for example
+#       Blip smells of cheese
+#   Then add the name of whoever plays it next.
 #
 # When you are done, click "Complete" at the top.
 
@@ -331,11 +344,11 @@ print("Done!")`,
 
         hints: [
             "Hello appears 4 times, once per item. Done! is not indented, so it runs once, after the loop.",
-            "Copy line 30 and change Hello to Goodbye. Keep the 4 spaces in front, so it is inside the loop.",
+            "Copy line 35 and change Hello to Goodbye. Keep the 4 spaces in front, so it is inside the loop.",
             "    print(\"Goodbye\", name)   (4 spaces in front)"
         ],
 
-        answer: "Hello appears 4 times, once for each item, and Done! once, after the loop. With your new line inside the loop, each name gets a Hello and then a Goodbye.\n\nMake a new empty line straight under line 30, which says\n    print(\"Hello\", name)\nand paste the line below there. The indent is already included.",
+        answer: "Hello appears 4 times, once for each item, and Done! once, after the loop. With your new line inside the loop, each name gets a Hello and then a Goodbye.\n\nMake a new empty line straight under line 35, which says\n    print(\"Hello\", name)\nand paste the line below there. The indent is already included.",
 
         answerCode: `    print("Goodbye", name)`,
 
@@ -356,20 +369,24 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # Blip is a square again, at the bottom. The arrow keys move it left and right
-# (lines 62 to 70, your code from w3L1).
+# (lines 66 to 74, your code from w3L1).
 #
-# Line 51 makes an EMPTY list called pogos.
-# Lines 52 and 53 each make a Rect and append it to the list.
-# POGO_SIZE (line 33) is used for the width and the height.
+# Line 55 makes an EMPTY list called pogos.
+# Lines 56 and 57 each make a Rect and append it to the list.
+# POGO_SIZE (line 37) is used for the width and the height.
 #
-# Lines 75 and 76 draw them. For each pogo in the list, draw it.
+# Lines 79 and 80 draw them. For each pogo in the list, draw it.
 # ONE draw line draws EVERY Pogo, however many there are.
-# Line 77 shows len(pogos) in the top-right corner.
+# Line 81 shows len(pogos) in the top-right corner.
 #
 # TASK 2a
 #   Add a THIRD Pogo at x = 650, y = 240.
-#   Make a new line straight under line 53, and append it (4 spaces in front).
+#   Make a new line straight under line 57, and append it (4 spaces in front).
 #   You do NOT need to change the drawing code. Check the top-right says Pogos: 3
+#
+# PLAY (optional)
+#   Put a fourth Pogo where nobody can see it. The top-right still counts
+#   it. Is it still a Pogo if nobody can see it?
 #
 # When you are done, click "Complete" at the top.
 
@@ -438,12 +455,12 @@ async def main():
 await main()`,
 
         hints: [
-            "Copy line 53 and change the two numbers.",
+            "Copy line 57 and change the two numbers.",
             "A Rect is (x, y, width, height). Only x and y change: 650 and 240.",
             "pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))   (4 spaces in front)"
         ],
 
-        answer: "The new line adds a third Rect to the list. The drawing loop runs once for every item, so it draws the new Pogo with no extra drawing code, and len(pogos) is now 3.\n\nMake a new empty line straight under line 53, which says\n    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))\nand paste the line below there. The indent is already included.",
+        answer: "The new line adds a third Rect to the list. The drawing loop runs once for every item, so it draws the new Pogo with no extra drawing code, and len(pogos) is now 3.\n\nMake a new empty line straight under line 57, which says\n    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))\nand paste the line below there. The indent is already included.",
 
         answerCode: `    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))`,
 
@@ -472,8 +489,12 @@ import random
 # Each time round the loop, pogo is the next Rect in the list, so each one moves.
 #
 # TASK 2b
-#   Make a new line straight under line 67, and type the two lines above.
+#   Make a new line straight under line 71, and type the two lines above.
 #   (8 spaces in front of the for, and 12 in front of the line under it.)
+#
+# PLAY (optional)
+#   Make the Pogos fall UP. Then make them fall so slowly that whoever
+#   plays it next falls asleep. Then put FALL_SPEED back.
 #
 # When you are done, click "Complete" at the top.
 
@@ -548,7 +569,7 @@ await main()`,
             "for pogo in pogos:   then   pogo.y = pogo.y + FALL_SPEED"
         ],
 
-        answer: "Every frame, the loop runs once for each Pogo in the list and adds FALL_SPEED to its y, so all three fall together. Then they fall off the bottom and do not come back. Lab 2c fixes that.\n\nMake a new empty line straight under line 67, which says\n    blip.x = 0\nand paste the two lines below there. The indents are already included.",
+        answer: "Every frame, the loop runs once for each Pogo in the list and adds FALL_SPEED to its y, so all three fall together. Then they fall off the bottom and do not come back. Lab 2c fixes that.\n\nMake a new empty line straight under line 71, which says\n    blip.x = 0\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        for pogo in pogos:
             pogo.y = pogo.y + FALL_SPEED`,
@@ -573,16 +594,20 @@ import random
 # Pogos: 3, because they are still in the list. They are just off the screen.
 #
 # In w3L1, the coin went back to the top with an if. Do the same for EVERY
-# Pogo, by putting the if INSIDE the for loop. Line 54 creates dodged,
+# Pogo, by putting the if INSIDE the for loop. Line 58 creates dodged,
 # which counts the Pogos that got past Blip.
 #
 # TASK 2c
-#   Make a new line straight under line 73, inside the loop, and add an if that,
+#   Make a new line straight under line 77, inside the loop, and add an if that,
 #   when the Pogo's y is bigger than 600:
 #     - sends it back just above the top:   pogo.y = -pogo.height
 #     - gives it a random x:                pogo.x = random.randint(0, 800 - pogo.width)
 #     - adds 1 to dodged, and prints it:    print("Dodged:", dodged)
 #   The if needs 12 spaces in front, and the lines inside it need 16.
+#
+# PLAY (optional)
+#   Make every Pogo come back in the SAME place, right where Blip starts
+#   (pogo.x = 375). Is that fair? Is it funny?
 #
 # When you are done, click "Complete" at the top.
 
@@ -655,12 +680,12 @@ async def main():
 await main()`,
 
         hints: [
-            "The if is  if pogo.y > 600:  and it belongs inside the for loop, lined up with line 73 (12 spaces).",
+            "The if is  if pogo.y > 600:  and it belongs inside the for loop, lined up with line 77 (12 spaces).",
             "Four lines inside the if, each with 16 spaces: the two pogo lines, dodged = dodged + 1, and the print.",
             "if pogo.y > 600:\n    pogo.y = -pogo.height\n    pogo.x = random.randint(0, 800 - pogo.width)\n    dodged = dodged + 1\n    print(\"Dodged:\", dodged)"
         ],
 
-        answer: "The if is inside the loop, so it checks every Pogo, every frame. Any Pogo that has gone past the bottom jumps back above the top at a new random x, and counts as dodged.\n\nMake a new empty line straight under line 73, which says\n    pogo.y = pogo.y + FALL_SPEED\nand paste the code below there. The indents are already included.",
+        answer: "The if is inside the loop, so it checks every Pogo, every frame. Any Pogo that has gone past the bottom jumps back above the top at a new random x, and counts as dodged.\n\nMake a new empty line straight under line 77, which says\n    pogo.y = pogo.y + FALL_SPEED\nand paste the code below there. The indents are already included.",
 
         answerCode: `            if pogo.y > 600:
                 pogo.y = -pogo.height
@@ -684,18 +709,22 @@ import random
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Line 31 is a new setting: LIVES = 3.
-# Line 54 creates lives (lowercase, because it changes) and starts it at 3.
+# Line 35 is a new setting: LIVES = 3.
+# Line 58 creates lives (lowercase, because it changes) and starts it at 3.
 #
 # In w2L2, blip.colliderect(pogo) checked ONE Pogo. Inside the for loop,
 # it checks EVERY Pogo, one at a time.
 #
 # TASK 3a
-#   Make a new line straight under line 78, and add another if INSIDE the loop
+#   Make a new line straight under line 82, and add another if INSIDE the loop
 #   (12 spaces in front) that checks whether Blip touches the pogo. If it does:
 #     - take 1 away from lives;
 #     - send that Pogo back to the top at a random x (so one bump counts once);
 #     - print("Lives:", lives)  (16 spaces in front of each line inside the if)
+#
+# PLAY (optional)
+#   Make each hit cost 3 lives. Then make each hit GIVE a life instead.
+#   Which one is still a game?
 #
 # When you are done, click "Complete" at the top.
 
@@ -775,12 +804,12 @@ async def main():
 await main()`,
 
         hints: [
-            "The new if is NOT inside the dodged if. Line it up with line 74 (12 spaces).",
+            "The new if is NOT inside the dodged if. Line it up with line 78 (12 spaces).",
             "if blip.colliderect(pogo):  then, with 16 spaces:  lives = lives - 1, the two pogo lines from the dodged if, and the print.",
             "if blip.colliderect(pogo):\n    lives = lives - 1\n    pogo.y = -pogo.height\n    pogo.x = random.randint(0, 800 - pogo.width)\n    print(\"Lives:\", lives)"
         ],
 
-        answer: "For each Pogo, every frame, colliderect() checks whether it touches Blip. If it does, a life is lost and that Pogo goes back to the top, so it is not touching Blip on the next frame: one bump, one life.\n\nMake a new empty line straight under line 78, which says\n    print(\"Dodged:\", dodged)\nand paste the code below there. The indents are already included.",
+        answer: "For each Pogo, every frame, colliderect() checks whether it touches Blip. If it does, a life is lost and that Pogo goes back to the top, so it is not touching Blip on the next frame: one bump, one life.\n\nMake a new empty line straight under line 82, which says\n    print(\"Dodged:\", dodged)\nand paste the code below there. The indents are already included.",
 
         answerCode: `            if blip.colliderect(pogo):
                 lives = lives - 1
@@ -805,10 +834,14 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # TASK 3b
-#   Make a new line straight under line 84, and add two lines that show
+#   Make a new line straight under line 88, and add two lines that show
 #       Dodged: 7   Lives: 2
 #   (with the real numbers) in the top-left corner, at (10, 10).
-#   Use TEXT_COLOUR (line 28).
+#   Use TEXT_COLOUR (line 32).
+#
+# PLAY (optional)
+#   Make the screen lie: show  Lives: 99  whatever happens. Then put the
+#   real numbers back before you click Complete.
 #
 # When you are done, click "Complete" at the top.
 
@@ -898,7 +931,7 @@ await main()`,
             "status_text = font.render(f\"Dodged: {dodged}   Lives: {lives}\", True, TEXT_COLOUR)  then  screen.blit(status_text, (10, 10))"
         ],
 
-        answer: "font.render() makes a picture of the words with both numbers, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 84, which says\n    screen.blit(count_text, (680, 10))\nand paste the two lines below there. The indent is already included.",
+        answer: "font.render() makes a picture of the words with both numbers, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 88, which says\n    screen.blit(count_text, (680, 10))\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
         screen.blit(status_text, (10, 10))`,
@@ -920,12 +953,16 @@ import random
 # (Remember: press Stop, make your change, then press Run.)
 #
 # Lives go down to 0, then -1, -2 ... The game should end at 0, like w3L1 Lab 4d.
-# Lines 89 to 91 already show "Game over!" on the last frame.
+# Lines 93 to 95 already show "Game over!" on the last frame.
 #
 # TASK 3c
-#   Make a new line straight under line 78, and add an if that ends the game
+#   Make a new line straight under line 82, and add an if that ends the game
 #   when lives is 0 or less. It goes AFTER the loop, not inside it, so it has
 #   8 spaces in front (12 for the line inside the if).
+#
+# PLAY (optional)
+#   Set LIVES to 1 and give the game to someone nearby (or try it
+#   yourself). How many Pogos can they dodge?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1020,7 +1057,7 @@ await main()`,
             "if lives <= 0:   then   game_running = False   (8 and 12 spaces in front)"
         ],
 
-        answer: "After the loop has checked every Pogo, the if checks lives once per frame. At 0, game_running becomes False, the Game over! message is drawn on that last frame, and the loop stops.\n\nMake a new empty line straight under line 78, which says\n    print(\"Lives:\", lives)\nand paste the two lines below there. The indents are already included.",
+        answer: "After the loop has checked every Pogo, the if checks lives once per frame. At 0, game_running becomes False, the Game over! message is drawn on that last frame, and the loop stops.\n\nMake a new empty line straight under line 82, which says\n    print(\"Lives:\", lives)\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `        if lives <= 0:
             game_running = False`,
@@ -1046,11 +1083,15 @@ import random
 # handle every Pogo, so a new Pogo is just ONE line.
 #
 # TASK 4a
-#   Make a new line straight under line 50, and add TWO more Pogos:
+#   Make a new line straight under line 54, and add TWO more Pogos:
 #     one at x = 250, y = -150
 #     one at x = 550, y = -300
 #   (A negative y starts them above the screen, so they arrive a bit later.)
 #   Check the top-right says Pogos: 5.
+#
+# PLAY (optional)
+#   Add Pogos until the game is impossible. How many did it take?
+#   Then take some away until it is just about fair.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1142,48 +1183,49 @@ async def main():
 await main()`,
 
         hints: [
-            "Copy line 50 twice and change the numbers.",
+            "Copy line 54 twice and change the numbers.",
             "The y numbers are negative: -150 and -300. Keep the 4 spaces in front.",
             "pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))  and  pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))"
         ],
 
-        answer: "Two append lines, and the swarm has five Pogos. You did not touch the falling, dodging, hitting or drawing code, because the for loops work on every item in the list, however many there are.\n\nMake a new empty line straight under line 50, which says\n    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))\nand paste the two lines below there. The indent is already included.",
+        answer: "Two append lines, and the swarm has five Pogos. You did not touch the falling, dodging, hitting or drawing code, because the for loops work on every item in the list, however many there are.\n\nMake a new empty line straight under line 54, which says\n    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
     pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))`,
 
-        completeText: "Click OK for Lab 4b."
+        completeText: "Click OK for Lab 5a. Time to add some polish!"
     },
     {
-        id: "4b",
+        id: "5a",
 
-        title: "Lab 4b: Make It Yours",
+        title: "Lab 5a: Shrinking Blip",
 
         code: `import pygame
 import asyncio
 import random
 
 # ============================================================
-#  w3L2 LAB 4b: MAKE IT YOURS
+#  w3L2 LAB 5a: SHRINKING BLIP
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Make Swarm your own. Think about who will play it.
+# The game works. Now make it FEEL better. Good games show the player what
+# is happening, not just with numbers. Each hit should make Blip SMALLER.
 #
-# TASK 4b
-#   1. Make AT LEAST THREE changes from this list. Run after each one.
-#        [ ] how many Pogos                (add or delete append lines)
-#        [ ] how fast they fall            (line 33)
-#        [ ] how big they are              (line 34)
-#        [ ] how many lives                (line 35)
-#        [ ] how fast Blip moves           (line 32)
-#        [ ] Blip's size                   (line 52)
-#        [ ] any colour
-#        [ ] the words on the screen
-#      Tick each box you did by typing an x between the brackets: [x]
+# Remember w1L1: a Rect grows and shrinks from its TOP-LEFT corner. If Blip
+# loses 10 pixels of height, its bottom moves UP 10 pixels and it floats.
+# So when it shrinks, push it DOWN 10 as well:  blip.y = blip.y + 10
 #
-#   2. Check the game still works: the Pogos fall and come back, dodges and
-#      hits are counted, and the game ends at 0 lives.
+# TASK 5a
+#   Make a new line straight under line 87, inside the hit if, and add an if
+#   (16 spaces in front) that, while Blip is wider than 20:
+#     - takes 10 off blip.width and 10 off blip.height;
+#     - adds 10 to blip.y.
+#   (20 spaces in front of the three lines inside it.)
+#
+# PLAY (optional)
+#   Make Blip GROW when it is hit instead of shrinking. How big can it get
+#   before the game is unwinnable?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1277,12 +1319,458 @@ async def main():
 await main()`,
 
         hints: [
+            "The if asks  blip.width > 20, so Blip never shrinks to nothing.",
+            "Inside it:  blip.width = blip.width - 10,  blip.height = blip.height - 10  and  blip.y = blip.y + 10",
+            "if blip.width > 20:\n    blip.width = blip.width - 10\n    blip.height = blip.height - 10\n    blip.y = blip.y + 10"
+        ],
+
+        answer: "Each hit takes 10 off Blip's width and height, so the player can SEE how much trouble they are in: 50, 40, 30, then 20, where the if stops it. Moving Blip down 10 keeps its bottom on the same line.\n\nMake a new empty line straight under line 87, which says\n    lives = lives - 1\nand paste the code below there. The indents are already included.",
+
+        answerCode: `                if blip.width > 20:
+                    blip.width = blip.width - 10
+                    blip.height = blip.height - 10
+                    blip.y = blip.y + 10`,
+
+        completeText: "Click OK for Lab 5b."
+    },
+    {
+        id: "5b",
+
+        title: "Lab 5b: Hot Pogos",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L2 LAB 5b: HOT POGOS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Make the Pogos glow HOTTER as they fall: red at the top, then orange, then
+# yellow near the bottom, so the player can see which ones are closest.
+#
+# A colour is three numbers: (red, green, blue). Red plus more and more
+# green goes red, orange, yellow. So the green part can come from pogo.y:
+#     green = pogo.y // 3
+# At the bottom, y is about 600, so green is 200. But above the screen, y is
+# negative, and a colour cannot be below 0, so:
+#     if green < 0:
+#         green = 0
+#
+# TASK 5b
+#   Replace line 106 (inside the drawing loop) with four lines:
+#   the two green lines, the if, and a draw line that uses the colour
+#   (220, green, 50) instead of POGO_COLOUR.
+#   (12 spaces in front, and 16 for the line inside the if.)
+#   POGO_COLOUR (line 42) is not used any more. You can leave it there.
+#
+# PLAY (optional)
+#   Move green to a different place in the colour, for example
+#   (green, 50, 220). Keep the if, or Python will complain when green is below 0.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        for pogo in pogos:
+            pogo.y = pogo.y + FALL_SPEED
+            if pogo.y > 600:
+                pogo.y = -pogo.height
+                pogo.x = random.randint(0, 800 - pogo.width)
+                dodged = dodged + 1
+                print("Dodged:", dodged)
+            if blip.colliderect(pogo):
+                lives = lives - 1
+                if blip.width > 20:
+                    blip.width = blip.width - 10
+                    blip.height = blip.height - 10
+                    blip.y = blip.y + 10
+                pogo.y = -pogo.height
+                pogo.x = random.randint(0, 800 - pogo.width)
+                print("Lives:", lives)
+        if lives <= 0:
+            game_running = False
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        count_text = font.render(f"Pogos: {len(pogos)}", True, TEXT_COLOUR)
+        screen.blit(count_text, (680, 10))
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Each Pogo gets its OWN green, worked out from its own y, so all four lines go inside the drawing loop.",
+            "green = pogo.y // 3   then   if green < 0:   then   green = 0",
+            "The draw line becomes:  pygame.draw.rect(screen, (220, green, 50), pogo)"
+        ],
+
+        answer: "Inside the loop, each Pogo's colour is worked out from its own y, so every Pogo has its own colour, and it changes every frame as the Pogo falls.\n\nReplace line 106, which says\n    pygame.draw.rect(screen, POGO_COLOUR, pogo)\nwith the code below. The indents are already included.",
+
+        answerCode: `            green = pogo.y // 3
+            if green < 0:
+                green = 0
+            pygame.draw.rect(screen, (220, green, 50), pogo)`,
+
+        completeText: "Click OK for Lab 5c."
+    },
+    {
+        id: "5c",
+
+        title: "Lab 5c: YOU LOSE",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L2 LAB 5c: YOU LOSE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Right now, the game just stops with a small line of text. Make the ending
+# impossible to miss: YOU LOSE in GIANT red letters.
+#
+# font (line 58) makes text 26 pixels tall. Giant text needs a
+# second, bigger font:
+#     big_font = pygame.font.SysFont(None, 120)
+# Line 48 is a new setting for the giant text: red.
+#
+# To put text in the MIDDLE, you need its width. Every picture made by
+# render() has one:  lose_text.get_width().  The middle of the screen is
+# x = 400, so start at  400 - lose_text.get_width() // 2.
+#
+# TASK 5c
+#   1. Make a new line straight under line 58, and type the big_font line
+#      above (4 spaces in front).
+#   2. Inside the game-over if, straight under the line that says
+#          screen.blit(over_text, (300, 290))
+#      add two lines (12 spaces in front) that render YOU LOSE with big_font
+#      and BIG_COLOUR, and blit it in the middle, at y = 160.
+#   Test it with LIVES = 1.
+#
+# PLAY (optional)
+#   Change YOU LOSE to something cheekier for whoever plays it next.
+#   Try a size of 300 instead of 120. Does it still fit on the screen?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (255, 0, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        for pogo in pogos:
+            pogo.y = pogo.y + FALL_SPEED
+            if pogo.y > 600:
+                pogo.y = -pogo.height
+                pogo.x = random.randint(0, 800 - pogo.width)
+                dodged = dodged + 1
+                print("Dodged:", dodged)
+            if blip.colliderect(pogo):
+                lives = lives - 1
+                if blip.width > 20:
+                    blip.width = blip.width - 10
+                    blip.height = blip.height - 10
+                    blip.y = blip.y + 10
+                pogo.y = -pogo.height
+                pogo.x = random.randint(0, 800 - pogo.width)
+                print("Lives:", lives)
+        if lives <= 0:
+            game_running = False
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            green = pogo.y // 3
+            if green < 0:
+                green = 0
+            pygame.draw.rect(screen, (220, green, 50), pogo)
+        count_text = font.render(f"Pogos: {len(pogos)}", True, TEXT_COLOUR)
+        screen.blit(count_text, (680, 10))
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 2 has the same shape as the over_text lines just above it, with big_font instead of font.",
+            "lose_text = big_font.render(\"YOU LOSE\", True, BIG_COLOUR)",
+            "screen.blit(lose_text, (400 - lose_text.get_width() // 2, 160))"
+        ],
+
+        answer: "big_font is a second font, 120 pixels tall. The YOU LOSE picture is drawn only on the last frame, inside the game-over if, and get_width() lets you centre it whatever words you use.\n\nStep 1: make a new empty line straight under line 58, which says\n    font = pygame.font.SysFont(None, 26)\nand type this line there, with 4 spaces in front:\n    big_font = pygame.font.SysFont(None, 120)\n\nStep 2: make a new empty line straight under the line that says\n    screen.blit(over_text, (300, 290))\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `            lose_text = big_font.render("YOU LOSE", True, BIG_COLOUR)
+            screen.blit(lose_text, (400 - lose_text.get_width() // 2, 160))`,
+
+        completeText: "Click OK for Lab 6a."
+    },
+    {
+        id: "6a",
+
+        title: "Lab 6a: Make It Yours",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L2 LAB 6a: MAKE IT YOURS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Make Swarm your own. Think about who will play it.
+#
+# TASK 6a
+#   1. Make AT LEAST THREE changes from this list. Run after each one.
+#        [ ] how many Pogos                (add or delete append lines)
+#        [ ] how fast they fall            (line 34)
+#        [ ] how big they are              (line 35)
+#        [ ] how many lives                (line 36)
+#        [ ] how much Blip shrinks         (line 91)
+#        [ ] the Pogos' hot colours        (line 107)
+#        [ ] the giant words, size or colour
+#        [ ] Blip's speed, size or colour
+#        [ ] the words on the screen
+#      Tick each box you did by typing an x between the brackets: [x]
+#
+#   2. Check the game still works: the Pogos fall and come back, dodges and
+#      hits are counted, Blip shrinks, and the game ends at 0 lives.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (255, 0, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    big_font = pygame.font.SysFont(None, 120)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        for pogo in pogos:
+            pogo.y = pogo.y + FALL_SPEED
+            if pogo.y > 600:
+                pogo.y = -pogo.height
+                pogo.x = random.randint(0, 800 - pogo.width)
+                dodged = dodged + 1
+                print("Dodged:", dodged)
+            if blip.colliderect(pogo):
+                lives = lives - 1
+                if blip.width > 20:
+                    blip.width = blip.width - 10
+                    blip.height = blip.height - 10
+                    blip.y = blip.y + 10
+                pogo.y = -pogo.height
+                pogo.x = random.randint(0, 800 - pogo.width)
+                print("Lives:", lives)
+        if lives <= 0:
+            game_running = False
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            green = pogo.y // 3
+            if green < 0:
+                green = 0
+            pygame.draw.rect(screen, (220, green, 50), pogo)
+        count_text = font.render(f"Pogos: {len(pogos)}", True, TEXT_COLOUR)
+        screen.blit(count_text, (680, 10))
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            lose_text = big_font.render("YOU LOSE", True, BIG_COLOUR)
+            screen.blit(lose_text, (400 - lose_text.get_width() // 2, 160))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
             "Change one thing at a time, and press Run after each change.",
             "More Pogos, faster Pogos and bigger Pogos all make the game harder. More lives makes it easier.",
             "If you add a lot of Pogos, give them different starting y values (0, -100, -200 ...) so they do not all arrive at once."
         ],
 
-        answer: "There is no single right answer. Here is one example, for a harder game:\n    FALL_SPEED   = 6\n    POGO_SIZE    = 40\n    LIVES        = 5\nand two more append lines, at y = -450 and y = -600.\n\nCheck the game still works: the Pogos fall and come back, dodges and hits are counted, and the game ends at 0 lives.",
+        answer: "There is no single right answer. Here is one example, for a harder game:\n    FALL_SPEED   = 6\n    POGO_SIZE    = 40\n    LIVES        = 5\n    lose_text = big_font.render(\"SQUASHED\", True, BIG_COLOUR)\nand two more append lines, at y = -450 and y = -600.\n\nCheck the game still works: the Pogos fall and come back, dodges and hits are counted, and the game ends at 0 lives.",
 
         completeText: "That is all the core labs for w3L2 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
     },
