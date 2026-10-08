@@ -220,7 +220,7 @@ import asyncio
 # Welcome to Week 2: Click the Target. This week, Blip becomes a target
 # that you click.
 #
-# First, the mouse. Look at line 62. It says:
+# First, the mouse. Look at line 66. It says:
 #     mouse_x, mouse_y = pygame.mouse.get_pos()
 # It is in the UPDATE job, so it runs every frame.
 #   pygame.mouse.get_pos()   asks pygame where the mouse pointer is.
@@ -237,6 +237,10 @@ import asyncio
 #   1. What are the numbers at the TOP-LEFT corner of the screen?  ___
 #   2. What are the numbers at the BOTTOM-RIGHT corner?  ___
 #   3. Put the pointer on Blip's top-left corner. What are the numbers?  ___
+#
+# PLAY (optional)
+#   Find the exact middle of the screen with the pointer. Can you get
+#   exactly 400, 300?
 #
 # When you are done, click "Complete" at the top.
 
@@ -313,7 +317,7 @@ await main()`,
         hints: [
             "Move the pointer slowly into each corner and read the yellow label. The numbers may jump by a few pixels; that is fine.",
             "The screen is 800 wide and 600 tall, and counting starts at 0.",
-            "Blip starts at BLIP_START_X and BLIP_START_Y (lines 35 and 36)."
+            "Blip starts at BLIP_START_X and BLIP_START_Y (lines 39 and 40)."
         ],
 
         answer: "1. About 0, 0.\n2. About 799, 599. The screen is 800 by 600, and counting starts at 0.\n3. About 375, 275: the same numbers as BLIP_START_X and BLIP_START_Y.\n\nThe mouse uses the same x and y as everything else on the screen, including Blip.",
@@ -338,11 +342,15 @@ import asyncio
 # every frame, Blip will follow the mouse.
 #
 # TASK 1b
-#   Make a new line straight under line 52, and type these two lines,
+#   Make a new line straight under line 56, and type these two lines,
 #   each with 8 spaces in front:
 #       blip_x = mouse_x
 #       blip_y = mouse_y
 #   Press Run and move the mouse. Which part of Blip is stuck to the pointer?
+#
+# PLAY (optional)
+#   Make Blip run AWAY from the mouse:  blip_x = 800 - mouse_x.
+#   What happens? Try the same with y.
 #
 # When you are done, click "Complete" at the top.
 
@@ -417,12 +425,12 @@ def show_mouse(screen, font, x, y):
 await main()`,
 
         hints: [
-            "The two new lines go in the UPDATE job, under line 52, with the same 8-space indent.",
+            "The two new lines go in the UPDATE job, under line 56, with the same 8-space indent.",
             "blip_x = mouse_x  means: store the value of mouse_x in blip_x. Then do the same for y.",
             "Watch the label above Blip and the yellow label. They show the same numbers. Which corner of Blip do blip_x and blip_y describe?"
         ],
 
-        answer: "Blip's TOP-LEFT corner is stuck to the pointer, because blip_x and blip_y always say where Blip's top-left corner is.\n\nMake a new empty line straight under line 52, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the two lines below there. The indent is already included.",
+        answer: "Blip's TOP-LEFT corner is stuck to the pointer, because blip_x and blip_y always say where Blip's top-left corner is.\n\nMake a new empty line straight under line 56, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        blip_x = mouse_x
         blip_y = mouse_y`,
@@ -445,8 +453,11 @@ import asyncio
 # At the moment, the pointer holds Blip by its top-left corner.
 #
 # TASK 1c
-#   Change lines 48 and 49 so the pointer is in the MIDDLE of Blip.
+#   Change lines 51 and 52 so the pointer is in the MIDDLE of Blip.
 #   (You did something like this in w1L1 Lab 5b.)
+#
+# PLAY (optional)
+#   Make the pointer sit on Blip's BOTTOM-RIGHT corner instead.
 #
 # When you are done, click "Complete" at the top.
 
@@ -523,12 +534,12 @@ def show_mouse(screen, font, x, y):
 await main()`,
 
         hints: [
-            "Blip is 50 pixels wide (BLIP_SIZE on line 22). How far is the middle of Blip from its left side?",
+            "Blip is 50 pixels wide (BLIP_SIZE on line 25). How far is the middle of Blip from its left side?",
             "The middle is 25 pixels right of the left side and 25 pixels down from the top. So Blip's top-left corner must be 25 pixels left of the pointer, and 25 pixels above it.",
             "blip_x = mouse_x - 25  and  blip_y = mouse_y - 25"
         ],
 
-        answer: "Taking 25 (half of Blip's size) away from each number moves Blip's top-left corner up and to the left, so the pointer ends up in Blip's middle.\n\nReplace lines 48 and 49, which say\n    blip_x = mouse_x\n    blip_y = mouse_y\nwith the two lines below. The indent is already included.",
+        answer: "Taking 25 (half of Blip's size) away from each number moves Blip's top-left corner up and to the left, so the pointer ends up in Blip's middle.\n\nReplace lines 51 and 52, which say\n    blip_x = mouse_x\n    blip_y = mouse_y\nwith the two lines below. The indent is already included.",
 
         answerCode: `        blip_x = mouse_x - 25
         blip_y = mouse_y - 25`,
@@ -551,7 +562,7 @@ import asyncio
 # We put Blip back in one place and made it bigger, so it is easier to click.
 # We also took the mouse label out.
 #
-# Look at line 51. It says:
+# Look at line 54. It says:
 #     blip = pygame.Rect(350, 250, 100, 100)
 # pygame.Rect stores a RECTANGLE: four numbers in ONE variable.
 # The numbers are in the same order as in w1L2 Lab 5b: (x, y, width, height).
@@ -562,14 +573,17 @@ import asyncio
 #     blip.y        is 250
 #     blip.width    is 100
 #     blip.height   is 100
-# Line 64 draws it: pygame.draw.rect() accepts a Rect.
+# Line 67 draws it: pygame.draw.rect() accepts a Rect.
 #
 # Why bother? A Rect can answer questions, such as
 # "is this point inside you?". You will use that in Lab 4a.
 #
 # TASK 2a
-#   Change line 51 so Blip is 200 wide and 50 tall.
+#   Change line 54 so Blip is 200 wide and 50 tall.
 #   Keep x and y the same. Check the numbers above Blip.
+#
+# PLAY (optional)
+#   Make Blip a line 1 pixel tall and 800 wide. Then a tall, thin tower.
 #
 # When you are done, click "Complete" at the top.
 
@@ -632,12 +646,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "The four numbers on line 51 are x, y, width and height, in that order.",
+            "The four numbers on line 54 are x, y, width and height, in that order.",
             "Only the last two numbers change. x and y stay as 350 and 250.",
             "blip = pygame.Rect(350, 250, 200, 50)  (keep the 4 spaces in front)."
         ],
 
-        answer: "The third number is the width and the fourth is the height, so (350, 250, 200, 50) makes a wide, flat Blip in the same place.\n\nReplace line 51, which says\n    blip = pygame.Rect(350, 250, 100, 100)\nwith the line below. The indent is already included.",
+        answer: "The third number is the width and the fourth is the height, so (350, 250, 200, 50) makes a wide, flat Blip in the same place.\n\nReplace line 54, which says\n    blip = pygame.Rect(350, 250, 100, 100)\nwith the line below. The indent is already included.",
 
         answerCode: `    blip = pygame.Rect(350, 250, 200, 50)`,
 
@@ -660,11 +674,14 @@ import asyncio
 # Change them every frame, and Blip moves, just like in w1L2.
 #
 # TASK 2b
-#   Make a new line straight under line 47, and type these two lines,
+#   Make a new line straight under line 50, and type these two lines,
 #   each with 8 spaces in front:
 #       blip.x = blip.x + 2
 #       blip.y = blip.y + 1
 #   Press Run. Which way does Blip move? Watch the numbers above Blip.
+#
+# PLAY (optional)
+#   Make Blip drift up and to the left instead.
 #
 # When you are done, click "Complete" at the top.
 
@@ -732,7 +749,7 @@ await main()`,
             "Blip moves 2 pixels right and 1 pixel down every frame, so it drifts down and to the right. width and height do not change."
         ],
 
-        answer: "Blip drifts right and slightly down: x goes up by 2 every frame and y by 1. The width and height stay the same.\n\nMake a new empty line straight under line 47, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the two lines below there. The indent is already included.",
+        answer: "Blip drifts right and slightly down: x goes up by 2 every frame and y by 1. The width and height stay the same.\n\nMake a new empty line straight under line 50, which says\n    mouse_x, mouse_y = pygame.mouse.get_pos()\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        blip.x = blip.x + 2
         blip.y = blip.y + 1`,
@@ -754,22 +771,26 @@ import asyncio
 #
 # Blip is still again.
 #
-# Look at lines 51 to 53, the HANDLE EVENTS job.
+# Look at lines 55 to 57, the HANDLE EVENTS job.
 # Every time the player does something (moves the mouse, presses a key,
-# clicks), pygame makes an EVENT. Line 51 goes through every new event,
+# clicks), pygame makes an EVENT. Line 55 goes through every new event,
 # one at a time, and calls it event. (You will learn how  for  works in Week 3.)
-# Line 52 asks: is this event "the window was closed"?
+# Line 56 asks: is this event "the window was closed"?
 #
 # A mouse click is an event too. Its type is  pygame.MOUSEBUTTONDOWN
 # (a mouse button was pressed down).
 #
 # TASK 3a
-#   Make a new line straight under line 53, and type these two lines:
+#   Make a new line straight under line 57, and type these two lines:
 #       if event.type == pygame.MOUSEBUTTONDOWN:
 #           print("Click at", event.pos)
-#   The if needs 12 spaces in front, the same as line 52.
+#   The if needs 12 spaces in front, the same as line 56.
 #   The print needs 16.
 #   Press Run, click around the game screen, and watch the console.
+#
+# PLAY (optional)
+#   Click as fast as you can for 5 seconds. How many clicks did the
+#   console catch?
 #
 # When you are done, click "Complete" at the top.
 
@@ -832,12 +853,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "The new if goes INSIDE the for loop, at the same level as line 52. Line them up.",
+            "The new if goes INSIDE the for loop, at the same level as line 56. Line them up.",
             "The print belongs inside the new if, so it gets 4 more spaces than the if: 16 in total.",
             "event.pos is where the pointer was when you clicked, as (x, y). Each click prints one line."
         ],
 
-        answer: "Each click makes a MOUSEBUTTONDOWN event. The if spots it, and the print shows event.pos: where you clicked, as (x, y).\n\nMake a new empty line straight under line 53, which says\n    game_running = False\nand paste the two lines below there. The indents are already included.",
+        answer: "Each click makes a MOUSEBUTTONDOWN event. The if spots it, and the print shows event.pos: where you clicked, as (x, y).\n\nMake a new empty line straight under line 57, which says\n    game_running = False\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `            if event.type == pygame.MOUSEBUTTONDOWN:
                 print("Click at", event.pos)`,
@@ -857,15 +878,18 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Look at line 39. It creates a variable called clicks, BEFORE the loop.
+# Look at line 42. It creates a variable called clicks, BEFORE the loop.
 # It must be before the loop. If it were inside the loop, it would be set
 # back to 0 every frame, and it could never count past 1.
 #
 # TASK 3b
 #   Count the clicks:
-#   1. Make a new line straight under line 46 that adds 1 to clicks.
-#   2. Change the print on line 47 so it shows the number of clicks,
+#   1. Make a new line straight under line 49 that adds 1 to clicks.
+#   2. Change the print on line 50 so it shows the number of clicks,
 #      like this:  Clicks: 3
+#
+# PLAY (optional)
+#   Make each click count as 10. Who would ever cheat like that?
 #
 # When you are done, click "Complete" at the top.
 
@@ -936,7 +960,7 @@ await main()`,
             "The print line should end up as:  print(\"Clicks:\", clicks)"
         ],
 
-        answer: "Each click runs the two lines inside the if: one adds 1 to clicks, and the other prints the total.\n\nReplace line 47, which says\n    print(\"Click at\", event.pos)\nwith the two lines below. The indent is already included.",
+        answer: "Each click runs the two lines inside the if: one adds 1 to clicks, and the other prints the total.\n\nReplace line 50, which says\n    print(\"Click at\", event.pos)\nwith the two lines below. The indent is already included.",
 
         answerCode: `                clicks = clicks + 1
                 print("Clicks:", clicks)`,
@@ -964,12 +988,15 @@ import asyncio
 # Put it in an if, and the lines inside the if only run when the answer is True.
 #
 # TASK 4a
-#   Make a new line straight under line 51, and type these two lines:
+#   Make a new line straight under line 54, and type these two lines:
 #       if blip.collidepoint(event.pos):
 #           print("Hit!")
 #   The if needs 16 spaces in front (it is inside the click if).
 #   The print needs 20.
 #   Press Run. Click on Blip, then click next to Blip. What is different?
+#
+# PLAY (optional)
+#   Make Blip tiny (5 by 5). How hard is it to hit now?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1034,12 +1061,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "The new if goes inside the click if, so line it up with line 51: 16 spaces.",
+            "The new if goes inside the click if, so line it up with line 54: 16 spaces.",
             "The print inside it needs 4 more: 20 spaces.",
             "Every click prints  Click at. Only clicks inside Blip ALSO print  Hit!"
         ],
 
-        answer: "Every click still prints  Click at. Clicks inside Blip also print  Hit!, because blip.collidepoint(event.pos) is True only when the click is inside Blip.\n\nMake a new empty line straight under line 51, which says\n    print(\"Click at\", event.pos)\nand paste the two lines below there. The indents are already included.",
+        answer: "Every click still prints  Click at. Clicks inside Blip also print  Hit!, because blip.collidepoint(event.pos) is True only when the click is inside Blip.\n\nMake a new empty line straight under line 54, which says\n    print(\"Click at\", event.pos)\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `                if blip.collidepoint(event.pos):
                     print("Hit!")`,
@@ -1059,12 +1086,15 @@ import asyncio
 # ============================================================
 # (Remember: press Stop, make your change, then press Run.)
 #
-# Line 36 creates a variable called score, before the loop.
+# Line 39 creates a variable called score, before the loop.
 #
 # TASK 4b
 #   Change the code so that every hit adds 1 to score,
 #   and the console shows the score, like this:  Score: 3
-#   Change line 46 into two lines.
+#   Change line 49 into two lines.
+#
+# PLAY (optional)
+#   Make every hit worth 100 points. How long until you reach 1000?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1137,7 +1167,7 @@ await main()`,
             "score = score + 1  then  print(\"Score:\", score)"
         ],
 
-        answer: "Now only hits change the score, because both lines are inside the collidepoint if.\n\nReplace line 46, which says\n    print(\"Hit!\")\nwith the two lines below. The indent is already included.",
+        answer: "Now only hits change the score, because both lines are inside the collidepoint if.\n\nReplace line 49, which says\n    print(\"Hit!\")\nwith the two lines below. The indent is already included.",
 
         answerCode: `                    score = score + 1
                     print("Score:", score)`,
@@ -1166,8 +1196,11 @@ import asyncio
 # else lines up with its if, ends with a colon, and has its own indented lines.
 #
 # TASK 4c
-#   Add an else to the if on line 50, so that every miss prints
+#   Add an else to the if on line 53, so that every miss prints
 #       Missed!
+#
+# PLAY (optional)
+#   Make the Missed! message cheekier (but still polite).
 #
 # When you are done, click "Complete" at the top.
 
@@ -1236,12 +1269,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "The else goes straight after the last line inside the if, which is line 52.",
-            "else must line up with its if on line 50: 16 spaces. The print under it needs 20.",
+            "The else goes straight after the last line inside the if, which is line 55.",
+            "else must line up with its if on line 53: 16 spaces. The print under it needs 20.",
             "else:  then, on the next line,  print(\"Missed!\")"
         ],
 
-        answer: "else runs whenever the if's answer is no, so every click that is not on Blip prints  Missed!\n\nMake a new empty line straight under line 52, which says\n    print(\"Score:\", score)\nand paste the two lines below there. The indents are already included.",
+        answer: "else runs whenever the if's answer is no, so every click that is not on Blip prints  Missed!\n\nMake a new empty line straight under line 55, which says\n    print(\"Score:\", score)\nand paste the two lines below there. The indents are already included.",
 
         answerCode: `                else:
                     print("Missed!")`,
@@ -1270,16 +1303,20 @@ import asyncio
 #                         anything in {curly brackets} is replaced by its
 #                         value. So if score is 3, this is  Score: 3
 #     True            makes the edges of the letters smooth.
-#     SCORE_COLOUR    the colour of the words (line 36).
+#     SCORE_COLOUR    the colour of the words (line 40).
 #
 #   screen.blit(score_text, (10, 10))
 #     blit copies the picture onto the screen, with its top-left corner
 #     at (10, 10). Remember: nothing shows until flip.
 #
 # TASK 5a
-#   Make a new line straight under line 71, and type the two
+#   Make a new line straight under line 75, and type the two
 #   lines above, each with 8 spaces in front.
 #   Press Run and click Blip a few times.
+#
+# PLAY (optional)
+#   Put the score right on top of Blip, so it gets in the way. Then move
+#   it back.
 #
 # When you are done, click "Complete" at the top.
 
@@ -1356,7 +1393,7 @@ await main()`,
             "score_text = font.render(f\"Score: {score}\", True, SCORE_COLOUR)  then  screen.blit(score_text, (10, 10))"
         ],
 
-        answer: "font.render() makes a picture of the words, using the score at that moment. blit puts the picture in the top-left corner. Because this happens every frame, the number on screen changes as soon as the score does.\n\nMake a new empty line straight under line 71, which says\n    show_rect(screen, font, blip)\nand paste the two lines below there. The indent is already included.",
+        answer: "font.render() makes a picture of the words, using the score at that moment. blit puts the picture in the top-left corner. Because this happens every frame, the number on screen changes as soon as the score does.\n\nMake a new empty line straight under line 75, which says\n    show_rect(screen, font, blip)\nand paste the two lines below there. The indent is already included.",
 
         answerCode: `        score_text = font.render(f"Score: {score}", True, SCORE_COLOUR)
         screen.blit(score_text, (10, 10))`,
@@ -1382,6 +1419,10 @@ import asyncio
 #   2. it is yellow: (255, 220, 0)
 #   3. it is near the TOP-RIGHT corner of the screen, at (680, 10).
 #   Three changes, on three different lines.
+#
+# PLAY (optional)
+#   Make the score invisible: the same colour as the background. Can
+#   whoever plays it next work out their score?
 #
 # When you are done, click "Complete" at the top.
 
@@ -1455,12 +1496,12 @@ def show_rect(screen, font, rect):
 await main()`,
 
         hints: [
-            "The words are inside the f-string on line 59. Change only the word, not {score}.",
-            "The colour is the setting on line 23. The position is the (x, y) on line 60.",
-            "Line 23:  SCORE_COLOUR = (255, 220, 0)   Line 59: f\"Hits: {score}\"   Line 60: (680, 10)"
+            "The words are inside the f-string on line 63. Change only the word, not {score}.",
+            "The colour is the setting on line 27. The position is the (x, y) on line 64.",
+            "Line 27:  SCORE_COLOUR = (255, 220, 0)   Line 63: f\"Hits: {score}\"   Line 64: (680, 10)"
         ],
 
-        answer: "The words come from the f-string, the colour from SCORE_COLOUR, and the position from the (x, y) in blit.\n\nStep 1: replace lines 59 and 60, which say\n    score_text = font.render(f\"Score: {score}\", True, SCORE_COLOUR)\n    screen.blit(score_text, (10, 10))\nwith the two lines below. The indent is already included.\n\nStep 2: change line 23 so it says\n    SCORE_COLOUR = (255, 220, 0)",
+        answer: "The words come from the f-string, the colour from SCORE_COLOUR, and the position from the (x, y) in blit.\n\nStep 1: replace lines 63 and 64, which say\n    score_text = font.render(f\"Score: {score}\", True, SCORE_COLOUR)\n    screen.blit(score_text, (10, 10))\nwith the two lines below. The indent is already included.\n\nStep 2: change line 27 so it says\n    SCORE_COLOUR = (255, 220, 0)",
 
         answerCode: `        score_text = font.render(f"Hits: {score}", True, SCORE_COLOUR)
         screen.blit(score_text, (680, 10))`,
