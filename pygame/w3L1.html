@@ -1,0 +1,3010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>w3L1 Yang's Pygame Lab — Catch</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
+
+        .info-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .info-modal-overlay.open { display:flex; }
+        .info-modal-box { background:#252526; color:#d4d4d4; padding:28px 32px; border-radius:10px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid #ce3c3c; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .info-modal-icon { font-size:30px; text-align:center; margin-bottom:12px; }
+        .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
+        .info-modal-actions { text-align:center; }
+
+        .hint-modal-box { background:#252526; color:#d4d4d4; padding:24px 28px; border-radius:10px; max-width:640px; width:92%; max-height:85vh; overflow-y:auto; border:1px solid #f0a500; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .hint-block { border-left:3px solid #f0a500; background:#1e1e1e; padding:10px 14px; margin-bottom:12px; border-radius:0 4px 4px 0; }
+        .hint-block.answer { border-left-color:#4EC9B0; }
+        .hint-block h3 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#f0a500; }
+        .hint-block.answer h3 { color:#4EC9B0; }
+        .hint-text { font-size:14px; line-height:1.65; white-space:pre-wrap; margin:0; }
+        .answer-code-wrap { position:relative; margin-top:10px; }
+        .answer-code { background:#111; color:#d4d4d4; font-family:'Consolas',monospace; font-size:13px; line-height:1.5; padding:12px 14px; border:1px solid #333; border-radius:4px; white-space:pre; overflow-x:auto; margin:0; }
+        .btn-copy { position:absolute; top:6px; right:6px; background:#4EC9B0; color:#1e1e1e; font-size:11px; padding:4px 10px; }
+        .btn-copy:hover:not(:disabled) { background:#3ab89f; }
+        .hint-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        header { background:#252526; padding:6px 16px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; min-height:50px; box-sizing:border-box; flex-shrink:0; gap:10px; flex-wrap:wrap; }
+        .header-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        h1 { margin:0; font-size:17px; color:#ce3c3c; white-space:nowrap; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; }
+        .header-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; min-height:0; }
+
+        /* ── EDITOR ─────────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; overflow:hidden; }
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; min-height:0; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:40px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
+
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; min-height:0; }
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
+
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:8px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
+
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .btn-hdr { font-size:12px; padding:6px 12px; }
+        .btn-grey { background:#3a3a3a; border:1px solid #555; }
+        .btn-grey:hover:not(:disabled) { background:#4a4a4a; }
+        .btn-hint { background:#f0a500; color:#1e1e1e; }
+        .btn-hint:hover:not(:disabled) { background:#d4900a; }
+        .btn-complete { background:#9b59b6; }
+        .btn-complete:hover:not(:disabled) { background:#7d3c98; }
+
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
+
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
+
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 w3L1 Yang's Pygame Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- HINT / COMPLETE MODAL -->
+<div class="info-modal-overlay" id="info-modal">
+  <div class="info-modal-box">
+    <div class="info-modal-icon" id="info-modal-icon">💡</div>
+    <p class="info-modal-text" id="info-modal-text"></p>
+    <div class="info-modal-actions">
+      <button id="info-modal-btn" onclick="closeInfoModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- HINT LADDER MODAL -->
+<div class="info-modal-overlay" id="hint-modal">
+  <div class="hint-modal-box">
+    <div id="hint-modal-content"></div>
+    <div class="hint-modal-actions">
+      <button class="btn-hint" id="hint-next-btn" onclick="showHint()">💡 Next hint</button>
+      <button class="btn-grey" onclick="closeHintModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 w3L1 — Catch</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <div class="header-left">
+        <h1>w3L1 — Catch</h1>
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
+        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
+        <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
+        <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — read the comments, then edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================================================================
+    // LAB DATA
+    // Each lab: id (used in the address, e.g. #lab1a), title,
+    // code (the instructions live in the comments), hints (three, each
+    // deeper than the last), answer (explanation and where to paste),
+    // answerCode (the code to paste, optional) and completeText.
+    // The last lab can have finalText instead of completeText.
+    // ================================================================
+    const LESSON = "w3L1";
+
+    var LAB_DATA = [
+    {
+        id: "1a",
+
+        title: "Lab 1a: Roll the Dice",
+
+        code: `# ============================================================
+#  w3L1 LAB 1a: ROLL THE DICE
+# ============================================================
+# Welcome to w3L1: Catch. This week, coins fall from the sky and Blip
+# catches them. Games need SURPRISES, so we start with random numbers.
+# No Blip yet. Just the console.
+#
+# Look at line 28. It says:
+#     import random
+# Python has extra toolboxes that are not loaded until you ask for them.
+# import random  loads the toolbox for random numbers.
+#
+# Look at line 30. It says:
+#     roll = random.randint(1, 6)
+#   random.randint   means "the randint tool from the random toolbox".
+#                    randint is short for RANDom INTeger. An integer is
+#                    a whole number.
+#   (1, 6)           the smallest and the biggest number it may pick.
+#                    Both ends count, so it picks 1, 2, 3, 4, 5 or 6.
+# The number it picks is stored in roll, like any other variable.
+#
+# TASK 1a
+#   1. Press Run five times. Does the console show the same number each time?
+#   2. Change the code so it rolls a 20-sided die: any number from 1 to 20.
+#
+# When you are done, click "Complete" at the top.
+
+import random
+
+roll = random.randint(1, 6)
+print("You rolled", roll)`,
+
+        hints: [
+            "Every Run, randint picks again, so the number changes. Sometimes it repeats, just like a real die.",
+            "The two numbers in the brackets on line 30 are the smallest and the biggest it can pick.",
+            "Line 30 should say  roll = random.randint(1, 20)"
+        ],
+
+        answer: "Each Run picks a new number, so the console usually shows something different each time (a repeat is just luck). With (1, 20), randint can pick any whole number from 1 to 20, including 1 and 20.\n\nReplace line 30, which says\n    roll = random.randint(1, 6)\nwith the line below (no indent).",
+
+        answerCode: `roll = random.randint(1, 20)`,
+
+        completeText: "Click OK for Lab 1b."
+    },
+    {
+        id: "1b",
+
+        title: "Lab 1b: Two Dice",
+
+        code: `# ============================================================
+#  w3L1 LAB 1b: TWO DICE
+# ============================================================
+# Many board games roll TWO normal dice and add them up.
+#
+# TASK 1b
+#   Change the code so it:
+#     - rolls two normal dice (1 to 6), stored in  first  and  second;
+#     - prints both numbers, for example:  You rolled 4 and 2
+#     - prints the total, for example:     Total: 6
+#   Run it a few times. What is the smallest total you could ever get?
+#   What is the biggest?
+#
+# When you are done, click "Complete" at the top.
+
+import random
+
+roll = random.randint(1, 20)
+print("You rolled", roll)`,
+
+        hints: [
+            "You need two randint lines, one for each die:  first = random.randint(1, 6)  and the same for second.",
+            "print() can show several things if you put commas between them:  print(\"You rolled\", first, \"and\", second)",
+            "The total is  first + second. The smallest total is 2 (1 + 1) and the biggest is 12 (6 + 6)."
+        ],
+
+        answer: "Each randint picks its own number, so the two dice are separate. The smallest total is 2 and the biggest is 12.\n\nReplace everything from line 18 down to the last line with the code below (no indent).",
+
+        answerCode: `first = random.randint(1, 6)
+second = random.randint(1, 6)
+print("You rolled", first, "and", second)
+print("Total:", first + second)`,
+
+        completeText: "Click OK for Lab 2a. Blip is back, and something is falling!"
+    },
+    {
+        id: "2a",
+
+        title: "Lab 2a: Make It Fall",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 2a: MAKE IT FALL
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Blip has been flattened into a CATCHER. Line 45 makes it
+# 100 wide and only 20 tall, near the bottom of the screen.
+# Lines 55 to 63 are your code from w2L2: the arrow keys move Blip
+# left and right, and the walls keep it on the screen.
+#
+# Line 46 makes the COIN: a gold square, 40 by 40, at the top.
+# Line 29 is a new setting: FALL_SPEED = 5.
+#
+# TASK 2a
+#   Make the coin FALL: every frame, its y should grow by FALL_SPEED.
+#   Make a new line straight under line 63, and type one line that does it
+#   (8 spaces in front). Watch the coin's numbers as it falls.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        show_rect(screen, font, coin)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Falling means moving DOWN, and in pygame y counts down. So coin.y must get bigger.",
+            "It is the same idea as  blip.x = blip.x + BLIP_SPEED, but for coin.y and FALL_SPEED.",
+            "coin.y = coin.y + FALL_SPEED   (8 spaces in front)"
+        ],
+
+        answer: "Every frame, 5 is added to coin.y, so the coin moves 5 pixels down the screen. At 60 frames a second, that is 300 pixels a second. Then it falls off the bottom and never comes back. Lab 2b fixes that.\n\nMake a new empty line straight under line 63, which says\n    blip.x = 0\nand paste the line below there. The indent is already included.",
+
+        answerCode: `        coin.y = coin.y + FALL_SPEED`,
+
+        completeText: "Click OK for Lab 2b."
+    },
+    {
+        id: "2b",
+
+        title: "Lab 2b: Back to the Top",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 2b: BACK TO THE TOP
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The coin falls off the bottom and is gone for ever. Watch its y: it keeps
+# growing, 605, 610, 615 ... even though you cannot see it.
+#
+# When the coin has gone past the bottom, put it back ABOVE the top:
+#     if coin.y > 600:
+#         coin.y = -coin.height
+# -coin.height is -40: the coin sits just above the screen, so it slides
+# back in from the top (like Blip coming back on in w1L2 Lab 6b).
+#
+# TASK 2b
+#   1. Make a new line straight under line 65, and type the two lines above.
+#      (8 spaces in front of the if, and 12 in front of the line under it.)
+#   2. Why -coin.height, and not 0? Try 0 and watch the top of the screen.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        show_rect(screen, font, coin)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The if goes straight under the line that makes the coin fall, so the check happens every frame, after the coin moves.",
+            "Line up the if with line 65 (8 spaces). The line under it gets 12.",
+            "With 0, the whole coin suddenly appears at the top. With -40, it starts just out of sight and slides in, which looks smoother."
+        ],
+
+        answer: "Every frame, the if checks whether the coin has gone past the bottom. If it has, it puts the coin just above the top, so it falls again, over and over. With 0, the coin pops into view at the top; with -coin.height it slides in smoothly.\n\nMake a new empty line straight under line 65, which says\n    coin.y = coin.y + FALL_SPEED\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `        if coin.y > 600:
+            coin.y = -coin.height`,
+
+        completeText: "Click OK for Lab 2c."
+    },
+    {
+        id: "2c",
+
+        title: "Lab 2c: A Random Place",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 2c: A RANDOM PLACE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The coin always falls in the SAME place, so catching it is too easy.
+# Line 3 says  import random  (you met it in Lab 1a), so this game can
+# use random numbers too.
+#
+# TASK 2c
+#   When the coin goes back to the top, give it a RANDOM x as well.
+#   Make a new line straight under line 63, inside the if (12 spaces).
+#   Careful: all of the coin must be on the screen, so the biggest x it may
+#   have is  800 - coin.width.  (Why? Think back to w1L1 Lab 2b.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            coin.y = -coin.height
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        show_rect(screen, font, coin)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  HELPER FUNCTIONS WE WROTE FOR YOU
+#  YOU DO NOT NEED TO READ THESE FOR THIS LAB
+# ============================================================
+
+def show_rect(screen, font, rect):
+    # Writes the four numbers stored in a Rect just above it.
+    label = font.render(f"x = {rect.x}   y = {rect.y}   width = {rect.width}   height = {rect.height}", True, (255, 255, 255))
+    label_x = max(0, min(rect.x, 800 - label.get_width()))
+    label_y = rect.y - 22 if rect.y >= 22 else rect.y + rect.height + 6
+    screen.blit(label, (label_x, min(label_y, 580)))
+
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Use random.randint(smallest, biggest) and store the answer in coin.x.",
+            "The smallest x is 0 (the left edge). The biggest is 800 - coin.width, so the coin's right side is still on the screen.",
+            "coin.x = random.randint(0, 800 - coin.width)   (12 spaces in front)"
+        ],
+
+        answer: "Each time the coin goes back to the top, randint picks a new x from 0 to 760, so you never know where the next coin will fall.\n\nMake a new empty line straight under line 63, which says\n    coin.y = -coin.height\nand paste the line below there. The indent is already included.",
+
+        answerCode: `            coin.x = random.randint(0, 800 - coin.width)`,
+
+        completeText: "The coin falls in a new place every time. Time to catch it!\nClick OK for Lab 3a."
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: Catch!",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 3a: CATCH!
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# We took away the coin's numbers, so the screen is tidier.
+# Line 52 creates a variable called score.
+#
+# Remember w2L2: blip.colliderect(pogo) was True on EVERY frame that the two
+# Rects overlapped, so one bump counted as many hits. The fix was to move
+# Pogo away as soon as it hit. A caught coin must do the same.
+#
+# TASK 3a
+#   Make a new line straight under line 73 (the end of the UPDATE job),
+#   and add an if (8 spaces in front) that checks whether Blip touches the
+#   coin. Inside it (12 spaces in front):
+#     - add 1 to score;
+#     - send the coin back to the top at a random x (copy the two lines
+#       from inside the if above);
+#     - print("Score:", score)
+#   Test it: one catch should add exactly 1 to the score.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The if is  if blip.colliderect(coin):  with 8 spaces in front, lined up with  if coin.y > 600:",
+            "Inside the if:  score = score + 1  then the two coin lines from lines 72 and 73, then the print.",
+            "if blip.colliderect(coin):\n    score = score + 1\n    coin.y = -coin.height\n    coin.x = random.randint(0, 800 - coin.width)\n    print(\"Score:\", score)"
+        ],
+
+        answer: "When Blip touches the coin, the score goes up by 1 and the coin is sent straight back to the top. On the next frame it is no longer touching Blip, so one catch counts once.\n\nMake a new empty line straight under line 73, which says\n    coin.x = random.randint(0, 800 - coin.width)\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)`,
+
+        completeText: "Click OK for Lab 3b."
+    },
+    {
+        id: "3b",
+
+        title: "Lab 3b: Score on Screen",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 3b: SCORE ON SCREEN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The score is only in the console. Put it on the game screen, like the hits in
+# w2L2 Lab 3d. Line 27 gives you a colour to use.
+#
+# TASK 3b
+#   Make a new line straight under line 73, and add two lines that
+#   show  Score: 3  (with the real number) in the top-left corner, at (10, 10).
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Two steps: font.render() turns the words into a picture, then screen.blit() puts the picture on the screen.",
+            "Use an f-string, so {score} is replaced by the number:  f\"Score: {score}\"",
+            "score_text = font.render(f\"Score: {score}\", True, TEXT_COLOUR)  then  screen.blit(score_text, (10, 10))  (both with 8 spaces in front)."
+        ],
+
+        answer: "font.render() makes a picture of the words with the current score, and blit puts it in the top-left corner, every frame.\n\nMake a new empty line straight under line 73, which says\n    pygame.draw.rect(screen, COIN_COLOUR, coin)\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        score_text = font.render(f"Score: {score}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))`,
+
+        completeText: "Click OK for Lab 3c."
+    },
+    {
+        id: "3c",
+
+        title: "Lab 3c: Missed!",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 3c: MISSED!
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# A good player wants to know how many coins got away.
+# Line 45 creates a variable called missed.
+#
+# TASK 3c
+#   1. Every time a coin falls past the bottom, add 1 to missed.
+#      Make a new line straight under line 64 (inside the if, 12 spaces).
+#   2. Change the words on line 77 so the screen shows, for example:
+#          Score: 4   Missed: 2
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The if on line 64 runs once each time a coin gets past Blip. That is where missed should grow.",
+            "missed = missed + 1  (12 spaces in front). Then add  {missed}  inside the f-string, after the score.",
+            "Line 77 should say:  score_text = font.render(f\"Score: {score}   Missed: {missed}\", True, TEXT_COLOUR)"
+        ],
+
+        answer: "The if on line 64 only runs when a coin gets past Blip, so it is the right place to count a miss. One f-string can hold two numbers.\n\nStep 1: make a new empty line straight under line 64, which says\n    if coin.y > 600:\nand paste the line below there. The indent is already included.\n\nStep 2: change line 78 (it moved down one line in Step 1) so it says\n    score_text = font.render(f\"Score: {score}   Missed: {missed}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
+
+        answerCode: `            missed = missed + 1`,
+
+        completeText: "Click OK for Lab 4a. Time to add a clock!"
+    },
+    {
+        id: "4a",
+
+        title: "Lab 4a: Milliseconds",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 4a: MILLISECONDS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Most catching games give you a time limit. First, we need a clock.
+#
+# Look at line 66. It says:
+#     now = pygame.time.get_ticks()
+# get_ticks() gives the number of MILLISECONDS since the game started.
+# A millisecond is one thousandth of a second: 1000 milliseconds = 1 second.
+# It is the first line of the UPDATE job, so  now  is the time on every frame.
+# The top-right of the screen shows it (line 94).
+#
+# Line 57 saves the time ONCE, before the loop, like score = 0.
+# Line 67 works out how long it has been since then.
+# (Right now start_time is almost 0, so the two numbers look the same. In
+# Week 4, when your game can restart, start_time will matter.)
+#
+# TASK 4a
+#   1. Run the game and watch the number for about 5 seconds.
+#      Roughly what is it after 5 seconds?  ___
+#   2. Change line 94 so it shows time_passed instead of now.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time: {now}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The number goes up by about 1000 every second.",
+            "After 5 seconds it is about 5000. Inside the f-string, {now} becomes {time_passed}.",
+            "Line 94 should say:  time_text = font.render(f\"Time: {time_passed}\", True, TEXT_COLOUR)"
+        ],
+
+        answer: "1. About 5000, because there are 1000 milliseconds in a second.\n2. The label now shows how long the game has been running.\n\nReplace line 94, which says\n    time_text = font.render(f\"Time: {now}\", True, TEXT_COLOUR)\nwith the line below. The indent is already included.",
+
+        answerCode: `        time_text = font.render(f"Time: {time_passed}", True, TEXT_COLOUR)`,
+
+        completeText: "Click OK for Lab 4b."
+    },
+    {
+        id: "4b",
+
+        title: "Lab 4b: Seconds",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 4b: SECONDS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Milliseconds are hard to read. Players want SECONDS.
+#
+# To turn milliseconds into seconds, divide by 1000. Python has two ways:
+#     4500 / 1000    is 4.5       (/ keeps the decimal part)
+#     4500 // 1000   is 4         (// throws the decimal part away)
+# // gives a whole number of seconds, which is what a game clock shows.
+#
+# TASK 4b
+#   1. Make a new line straight under line 60, and create a variable
+#      called seconds that stores time_passed // 1000. (8 spaces in front.)
+#   2. Change line 87 so it shows seconds instead of time_passed.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time: {time_passed}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The new line is  seconds = ...  and the right-hand side uses time_passed and // 1000.",
+            "seconds = time_passed // 1000  (8 spaces in front). In the f-string, {time_passed} becomes {seconds}.",
+            "If you see 4.512 on screen, you used one / instead of two."
+        ],
+
+        answer: "time_passed // 1000 divides by 1000 and throws away the leftover part, so the label counts 0, 1, 2, 3 ... once a second.\n\nStep 1: make a new empty line straight under line 60, which says\n    time_passed = now - start_time\nand paste the line below there. The indent is already included.\n\nStep 2: change line 88 (it moved down one line in Step 1) so it says\n    time_text = font.render(f\"Time: {seconds}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
+
+        answerCode: `        seconds = time_passed // 1000`,
+
+        completeText: "Click OK for Lab 4c."
+    },
+    {
+        id: "4c",
+
+        title: "Lab 4c: Countdown",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 4c: COUNTDOWN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Counting UP is fine, but a time limit counts DOWN.
+# Line 28 is a new setting: GAME_LENGTH = 30 (seconds).
+#
+# If the game lasts 30 seconds and 4 have passed, then 30 - 4 = 26 are left.
+#
+# TASK 4c
+#   1. Make a new line straight under line 60, and create a variable
+#      called time_left: GAME_LENGTH take away seconds. (8 spaces in front.)
+#   2. Change line 87 so the screen shows, for example:
+#          Time left: 26
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time: {seconds}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "time_left = GAME_LENGTH - seconds",
+            "In the f-string, change the words to  Time left:  and {seconds} to {time_left}.",
+            "Line 88 (after your new line) should say:  time_text = font.render(f\"Time left: {time_left}\", True, TEXT_COLOUR)"
+        ],
+
+        answer: "Each second, seconds goes up by 1, so GAME_LENGTH - seconds goes down by 1: 30, 29, 28 ... But at 0 it keeps going: -1, -2 ... Lab 4d stops the game at 0.\n\nStep 1: make a new empty line straight under line 60, which says\n    seconds = time_passed // 1000\nand paste the line below there. The indent is already included.\n\nStep 2: change line 88 (it moved down one line in Step 1) so it says\n    time_text = font.render(f\"Time left: {time_left}\", True, TEXT_COLOUR)\nwith 8 spaces in front.",
+
+        answerCode: `        time_left = GAME_LENGTH - seconds`,
+
+        completeText: "Click OK for Lab 4d."
+    },
+    {
+        id: "4d",
+
+        title: "Lab 4d: Game Over",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 4d: GAME OVER
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The countdown goes past 0 into -1, -2 ... The game should END at 0.
+# (Set GAME_LENGTH to 10 while you test, so you do not wait too long.)
+#
+# The loop on line 57 keeps going while game_running is True.
+# So to end the game, set game_running to False.
+#
+# A new sign:  <=  means "is less than OR EQUAL TO".
+#     time_left <= 0   is True when time_left is 0, or -1, or any number below 0.
+#
+# Lines 96 to 98 are already written for you. When the game has
+# ended, they show "Game over!" and the score on the very last frame.
+#
+# TASK 4d
+#   Make a new line straight under line 67, and add an if that sets
+#   game_running to False when time_left is 0 or less.
+#   (8 spaces in front of the if, 12 in front of the line under it.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The if asks:  time_left <= 0  and it ends with a colon.",
+            "Inside the if, one line:  game_running = False  (12 spaces in front).",
+            "if time_left <= 0:\n    game_running = False"
+        ],
+
+        answer: "When time_left reaches 0, game_running becomes False. The rest of that frame still runs, so the Game over! message is drawn and shown, and then the loop stops. The screen freezes on that last frame. (In Week 4 you will make a proper game-over screen with a restart.)\n\nMake a new empty line straight under line 67, which says\n    time_left = GAME_LENGTH - seconds\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `        if time_left <= 0:
+            game_running = False`,
+
+        completeText: "Your game has a time limit! Click OK for Lab 5a."
+    },
+    {
+        id: "5a",
+
+        title: "Lab 5a: Wait for It",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 5a: WAIT FOR IT
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# A new coin drops the moment the last one is caught or missed. Games often
+# add a short WAIT, so the player can get ready. We use the clock for that.
+#
+# Line 39 is a new setting: SPAWN_DELAY = 1000 (milliseconds, so 1 second).
+# Line 62 creates drop_time: the time when the coin is ALLOWED to fall.
+#
+# The idea:
+#   - When a coin is caught or missed, set the next drop time:
+#         drop_time = now + SPAWN_DELAY
+#     ("one second from now").
+#   - Only let the coin fall once that time has come:
+#         if now > drop_time:
+#             coin.y = coin.y + FALL_SPEED
+#
+# TASK 5a
+#   1. Change line 86 into the two lines just above, so the
+#      coin only falls when now is bigger than drop_time.
+#   2. Add  drop_time = now + SPAWN_DELAY  inside BOTH ifs: the missed if
+#      (line 87) and the catch if (line 91).
+#      12 spaces in front, each time. (Step 1 moves both ifs down one line.)
+#   Test it: after each catch or miss, the next coin should wait 1 second.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 1: put  if now > drop_time:  (8 spaces) on its own line above the falling line, and push the falling line in to 12 spaces.",
+            "Step 2: in each if, put the new line next to the other coin lines, for example straight under  coin.x = random.randint(0, 800 - coin.width).",
+            "Try SPAWN_DELAY = 3000 to see the wait clearly. While the coin waits, it sits just above the screen, so you cannot see it."
+        ],
+
+        answer: "After each catch or miss, drop_time is set to one second in the future. Until then, now > drop_time is False, so the coin waits just above the screen. Then it falls as before.\n\nReplace lines 86 to 95 (the falling line and both ifs) with the code below. The indents are already included.",
+
+        answerCode: `        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)`,
+
+        completeText: "Click OK for Lab 6a."
+    },
+    {
+        id: "6a",
+
+        title: "Lab 6a: Make It Yours",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 6a: MAKE IT YOURS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Make Catch your own. Think about who will play it: a younger brother or
+# sister needs a different game from a friend who plays a lot of games.
+#
+# TASK 6a
+#   1. Make AT LEAST THREE changes from this list. Run after each one.
+#        [ ] how fast the coin falls        (line 34)
+#        [ ] the wait between coins         (line 35)
+#        [ ] how long the game lasts        (line 36)
+#        [ ] how fast Blip moves            (line 33)
+#        [ ] Blip's size                    (line 53)
+#        [ ] the coin's size                (line 54)
+#        [ ] any colour
+#        [ ] the words on the screen
+#      Tick each box you did by typing an x between the brackets: [x]
+#
+#   2. Check the game still works: coins fall, catches count, misses count,
+#      and the game ends when the time runs out.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Change one thing at a time, and press Run after each change. If something breaks, you will know which change caused it.",
+            "A wide Blip and a slow coin make the game easy. A narrow Blip, a fast coin and a short wait make it hard.",
+            "If you make Blip taller, check its Rect still fits on the screen: y + height must be 600 or less."
+        ],
+
+        answer: "There is no single right answer. Here is one example, for a younger player:\n    FALL_SPEED   = 3\n    SPAWN_DELAY  = 500\n    GAME_LENGTH  = 45\n    blip = pygame.Rect(325, 550, 150, 20)\n\nCheck the game still works: coins fall, catches and misses are counted, and the game ends at 0.",
+
+        completeText: "That is all the core labs for w3L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+    },
+    {
+        id: "1ext",
+
+        title: "Lab 1ext: Faster and Faster (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 1ext: FASTER AND FASTER (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make the game get HARDER: every catch makes the coins fall 1 faster,
+#   but never faster than MAX_SPEED (line 27).
+#
+#   The fall speed now CHANGES, so it needs a lowercase variable:
+#   line 52 creates fall_speed, and line 77 uses it.
+#   (CAPITALS for settings that never change, lowercase for variables that do.)
+#
+#   Add your code inside the catch if, straight under line 84.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+MAX_SPEED    = 12
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+    fall_speed = FALL_SPEED
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + fall_speed
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "You need an if inside the catch if: only speed up while fall_speed is less than MAX_SPEED.",
+            "if fall_speed < MAX_SPEED:  (12 spaces in front), then  fall_speed = fall_speed + 1  (16 spaces in front).",
+            "To check it works, add  print(\"Speed:\", fall_speed)  for a while, and watch it stop at 12."
+        ],
+
+        answer: "Each catch adds 1 to fall_speed, so the coins fall faster and faster: 5, 6, 7 ... up to 12. Once fall_speed is 12, the if stops adding.\n\nMake a new empty line straight under line 84, which says\n    score = score + 1\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `            if fall_speed < MAX_SPEED:
+                fall_speed = fall_speed + 1`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "2ext",
+
+        title: "Lab 2ext: Do Not Catch Pogo (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 2ext: DO NOT CATCH POGO (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Pogo is back, and it is falling too! Catching Pogo costs 3 points.
+#
+#   Pogo is made on line 56. It starts high above the screen (y = -300),
+#   so it arrives a little after the first coin. It is drawn on line 98,
+#   but it does not move yet.
+#
+#   Make a new line straight under line 92 (the end of the UPDATE job), and
+#   make Pogo:
+#     - fall at FALL_SPEED;
+#     - go back to the top at a random x when it falls past the bottom;
+#     - take 3 points away and go back to the top when Blip catches it.
+#   (No wait for Pogo: it falls again straight away.)
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+    pogo = pygame.Rect(200, -300, 40, 40)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "This is the coin's code again, with every coin changed to pogo. Start with  pogo.y = pogo.y + FALL_SPEED  (8 spaces).",
+            "Two ifs: one for  pogo.y > 600  and one for  blip.colliderect(pogo). Both send Pogo back with  pogo.y = -pogo.height  and a random pogo.x.",
+            "In the catch if:  score = score - 3. The score can go below 0. Is that fair? You decide."
+        ],
+
+        answer: "Pogo has its own copy of the falling, missing and catching code, with  score - 3  instead of  score + 1. That is a lot of copying for one more thing that falls, which is exactly the problem lists solve in w3L2.\n\nMake a new empty line straight under line 92, which says\n    print(\"Score:\", score)\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        pogo.y = pogo.y + FALL_SPEED
+        if pogo.y > 600:
+            pogo.y = -pogo.height
+            pogo.x = random.randint(0, 800 - pogo.width)
+        if blip.colliderect(pogo):
+            score = score - 3
+            pogo.y = -pogo.height
+            pogo.x = random.randint(0, 800 - pogo.width)`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "3ext",
+
+        title: "Lab 3ext: Sound (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 3ext: SOUND (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Add sound! This IDE has eight sounds built in:
+#       click  coin  jump  hit  explosion  powerup  win  gameover
+#   To use them, first add this line at the very top, straight under line 3:
+#       from sounds import play_sound
+#   Then, anywhere in the game:
+#       play_sound("coin")         plays the coin sound at full volume
+#       play_sound("coin", 0.5)    plays it at half volume (0.0 to 1.0)
+#
+#   TASK
+#     1. Add the import line.
+#     2. Play "coin" when Blip catches a coin.
+#     3. Play "gameover" when the time runs out.
+#   If the sounds cannot load, the console says so and the game runs silently.
+#   Sound is always optional: your game does not need it.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The import goes at the very top, with no spaces in front, straight under  import random.",
+            "The catch sound goes inside the catch if, for example straight under line 88 (12 spaces in front).",
+            "The game-over sound goes inside  if time_left <= 0:, straight under line 70 (12 spaces in front). That if only runs once, on the last frame, so the sound plays once."
+        ],
+
+        answer: "The import makes play_sound() available. The catch sound plays once per catch, because the catch if only runs once per coin. The game-over sound plays once, on the frame the time runs out.\n\nStep 1: make a new empty line straight under line 3, which says\n    import random\nand paste the line below there (no indent).\n\nStep 2: make a new empty line straight under line 89 (it moved down one line in Step 1), which now says\n    score = score + 1\nand type this line there, with 12 spaces in front:\n    play_sound(\"coin\")\n\nStep 3: make a new empty line straight under the line that says\n    game_running = False\ninside  if time_left <= 0:  and type this line there, with 12 spaces in front:\n    play_sound(\"gameover\")",
+
+        answerCode: `from sounds import play_sound`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "4ext",
+
+        title: "Lab 4ext: Three Strikes (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 4ext: THREE STRIKES (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make the game end EARLY if the player misses 3 coins, even if there is
+#   still time left.
+#
+#   Your code goes inside the missed if, straight under line 74.
+#   Remember how Lab 4d ended the game.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "You need an if that asks whether missed is 3. \"Is equal to\" is  ==  (two equals signs).",
+            "Inside it, end the game the same way as Lab 4d:  game_running = False",
+            "if missed == 3:  (12 spaces in front), then  game_running = False  (16 spaces in front)."
+        ],
+
+        answer: "Each miss adds 1 to missed. On the third miss, the if sets game_running to False, so the Game over! message is shown and the game stops, whatever the clock says.\n\nMake a new empty line straight under line 74, which says\n    missed = missed + 1\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `            if missed == 3:
+                game_running = False`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "5ext",
+
+        title: "Lab 5ext: Surprise Speeds (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 5ext: SURPRISE SPEEDS (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Give every new coin a RANDOM fall speed, from 2 (slow) to 9 (fast).
+#
+#   The fall speed now CHANGES, so it needs a lowercase variable:
+#   line 50 creates fall_speed, and line 75 uses it.
+#
+#   A coin gets a new speed each time it goes back to the top, which happens
+#   in TWO places: when it is missed and when it is caught.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+    fall_speed = FALL_SPEED
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + fall_speed
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Use random.randint(2, 9) and store the answer in fall_speed.",
+            "Add the same line in both ifs: straight under line 77 and straight under line 82, with 12 spaces in front.",
+            "fall_speed = random.randint(2, 9)"
+        ],
+
+        answer: "Each time a coin is sent back to the top, randint picks a new speed for it, so some coins drift down and some race.\n\nStep 1: make a new empty line straight under line 77, which says\n    missed = missed + 1\nand paste the line below there. The indent is already included.\n\nStep 2: make a new empty line straight under line 83 (it moved down one line in Step 1), which now says\n    score = score + 1\nand paste the same line there.",
+
+        answerCode: `            fall_speed = random.randint(2, 9)`,
+
+        completeText: "Click OK for the last extension."
+    },
+    {
+        id: "6ext",
+
+        title: "Lab 6ext: Catch Meets Dodge (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w3L1 LAB 6ext: CATCH MEETS DODGE (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Combine this week's game with last week's! Pogo bounces around the screen,
+#   using your code from w2L2 (lines 92 to 101).
+#
+#   Make a new line straight under line 101 (the end of the UPDATE job), and add
+#   an if so that when Pogo hits Blip:
+#     - the player loses 1 point;
+#     - Pogo goes back to the top-left corner (x = 0, y = 0), so one bump
+#       only counts once (remember w2L2 Lab 3c).
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 5
+SPAWN_DELAY  = 1000
+GAME_LENGTH  = 30
+POGO_SPEED   = 4
+BLIP_COLOUR  = (0, 200, 80)
+COIN_COLOUR  = (255, 200, 0)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(350, 550, 100, 20)
+    coin = pygame.Rect(380, 0, 40, 40)
+    score = 0
+    missed = 0
+    start_time = pygame.time.get_ticks()
+    drop_time = 0
+    pogo = pygame.Rect(0, 0, 40, 40)
+    pogo_speed_x = POGO_SPEED
+    pogo_speed_y = POGO_SPEED
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        now = pygame.time.get_ticks()
+        time_passed = now - start_time
+        seconds = time_passed // 1000
+        time_left = GAME_LENGTH - seconds
+        if time_left <= 0:
+            game_running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT]:
+            blip.x = blip.x + BLIP_SPEED
+        if keys[pygame.K_LEFT]:
+            blip.x = blip.x - BLIP_SPEED
+        if blip.x > 800 - blip.width:
+            blip.x = 800 - blip.width
+        if blip.x < 0:
+            blip.x = 0
+        if now > drop_time:
+            coin.y = coin.y + FALL_SPEED
+        if coin.y > 600:
+            missed = missed + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+        if blip.colliderect(coin):
+            score = score + 1
+            coin.y = -coin.height
+            coin.x = random.randint(0, 800 - coin.width)
+            drop_time = now + SPAWN_DELAY
+            print("Score:", score)
+        pogo.x = pogo.x + pogo_speed_x
+        pogo.y = pogo.y + pogo_speed_y
+        if pogo.x > 800 - pogo.width:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.x < 0:
+            pogo_speed_x = -pogo_speed_x
+        if pogo.y > 600 - pogo.height:
+            pogo_speed_y = -pogo_speed_y
+        if pogo.y < 0:
+            pogo_speed_y = -pogo_speed_y
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        score_text = font.render(f"Score: {score}   Missed: {missed}", True, TEXT_COLOUR)
+        screen.blit(score_text, (10, 10))
+        time_text = font.render(f"Time left: {time_left}", True, TEXT_COLOUR)
+        screen.blit(time_text, (630, 10))
+        if game_running == False:
+            over_text = font.render(f"Game over!   Score: {score}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The if is  if blip.colliderect(pogo):  with 8 spaces in front.",
+            "Inside it (12 spaces):  score = score - 1, then two lines that set pogo.x and pogo.y to 0.",
+            "if blip.colliderect(pogo):\n    score = score - 1\n    pogo.x = 0\n    pogo.y = 0"
+        ],
+
+        answer: "Now Blip has two jobs: catch the coins and dodge Pogo. Sending Pogo back to the corner on a hit means one bump costs exactly 1 point.\n\nMake a new empty line straight under line 101, which says\n    pogo_speed_y = -pogo_speed_y\nand paste the code below there. The indents are already included.",
+
+        answerCode: `        if blip.colliderect(pogo):
+            score = score - 1
+            pogo.x = 0
+            pogo.y = 0`,
+
+        finalText: "Congratulations on completing every lab in w3L1!\nYou know random.randint(), falling objects, get_ticks() timers, countdowns and spawn delays."
+    }
+    ];
+
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── LABS ──────────────────────────────────────────────────────────────────
+    // Edits are kept per lab while the page is open, so switching labs
+    // and coming back does not lose work. Refreshing the page does.
+    let currentLab = -1;
+    const labDrafts = {};
+
+    function editor() { return document.getElementById("code-editor"); }
+
+    function initLabs() {
+        const select = document.getElementById("lab-select");
+        LAB_DATA.forEach(function (lab, i) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.text = lab.title;
+            select.appendChild(opt);
+        });
+        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        const m = location.hash.match(/^#lab(.+)$/i);
+        let start = 0;
+        if (m) {
+            const found = LAB_DATA.findIndex(l => l.id.toLowerCase() === m[1].toLowerCase());
+            if (found >= 0) start = found;
+        }
+        select.value = start;
+        loadLab();
+    }
+
+    async function loadLab() {
+        const index = parseInt(document.getElementById("lab-select").value, 10);
+        if (currentLab >= 0) labDrafts[currentLab] = editor().value;
+        if (isRunning) await stopGame();
+        currentLab = index;
+        const lab = LAB_DATA[index];
+        editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
+        editor().scrollTop = 0;
+        try { history.replaceState(null, "", "#lab" + lab.id); } catch (e) {}
+        document.getElementById("console-output").innerHTML = "";
+        log("Loaded: " + lab.title, "log-sys");
+        updateHintButton();
+        updateLineNumbers();
+    }
+
+    function resetLab() {
+        if (!confirm("Reset this lab? Your changes to this lab will be lost unless you have exported them.")) return;
+        delete labDrafts[currentLab];
+        editor().value = LAB_DATA[currentLab].code;
+        editor().scrollTop = 0;
+        updateLineNumbers();
+        log("Lab reset to the starting code.", "log-sys");
+    }
+
+    // ── HINT AND COMPLETE ─────────────────────────────────────────────────────
+    let infoModalAdvances = false;
+
+    function openInfoModal(icon, text, advances) {
+        document.getElementById("info-modal-icon").textContent = icon;
+        document.getElementById("info-modal-text").textContent = text;
+        infoModalAdvances = advances;
+        document.getElementById("info-modal").classList.add("open");
+    }
+
+    function closeInfoModal() {
+        document.getElementById("info-modal").classList.remove("open");
+        if (infoModalAdvances && currentLab < LAB_DATA.length - 1) {
+            document.getElementById("lab-select").value = currentLab + 1;
+            loadLab();
+        }
+    }
+
+    // ── HINT LADDER ───────────────────────────────────────────────────────────
+    // Each press of Hint goes one level deeper: hint 1, 2, 3, then the answer.
+    // Levels are remembered per lab while the page is open.
+    const hintLevels = {};
+
+    function hintLabel(level, total) {
+        if (level < total) return "💡 Hint " + (level + 1) + " of " + total;
+        if (level === total) return "🏳 Show answer";
+        return "🏳 Answer";
+    }
+
+    function updateHintButton() {
+        const lab = LAB_DATA[currentLab];
+        const total = (lab.hints || []).length;
+        const level = hintLevels[currentLab] || 0;
+        document.getElementById("hint-btn").textContent = hintLabel(level, total);
+        const next = document.getElementById("hint-next-btn");
+        next.style.display = level > total ? "none" : "";
+        next.textContent = level < total ? "💡 Next hint" : "🏳 Show answer";
+    }
+
+    function addBlock(parent, heading, text, isAnswer) {
+        const block = document.createElement("div");
+        block.className = "hint-block" + (isAnswer ? " answer" : "");
+        const h = document.createElement("h3");
+        h.textContent = heading;
+        const p = document.createElement("p");
+        p.className = "hint-text";
+        p.textContent = text;
+        block.appendChild(h);
+        block.appendChild(p);
+        parent.appendChild(block);
+        return block;
+    }
+
+    function showHint() {
+        const lab = LAB_DATA[currentLab];
+        const hints = lab.hints || [];
+        let level = hintLevels[currentLab] || 0;
+        if (level <= hints.length) level++;          // go one level deeper
+        hintLevels[currentLab] = level;
+
+        const box = document.getElementById("hint-modal-content");
+        box.innerHTML = "";
+        for (let i = 0; i < Math.min(level, hints.length); i++) {
+            addBlock(box, "Hint " + (i + 1) + " of " + hints.length, hints[i], false);
+        }
+        if (level > hints.length) {
+            const block = addBlock(box, "Answer", lab.answer || "", true);
+            if (lab.answerCode) {
+                const wrap = document.createElement("div");
+                wrap.className = "answer-code-wrap";
+                const pre = document.createElement("pre");
+                pre.className = "answer-code";
+                pre.textContent = lab.answerCode;
+                const btn = document.createElement("button");
+                btn.className = "btn-copy";
+                btn.textContent = "Copy";
+                btn.onclick = function () { copyText(lab.answerCode, btn); };
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+                block.appendChild(wrap);
+            }
+        }
+        updateHintButton();
+        document.getElementById("hint-modal").classList.add("open");
+        box.lastChild.scrollIntoView({ block: "nearest" });
+    }
+
+    function closeHintModal() {
+        document.getElementById("hint-modal").classList.remove("open");
+    }
+
+    function copyText(text, btn) {
+        function done() {
+            btn.textContent = "Copied!";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else {
+            fallbackCopy(text); done();
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+
+    function showComplete() {
+        const lab = LAB_DATA[currentLab];
+        const isLast = currentLab >= LAB_DATA.length - 1;
+        const text = isLast
+            ? (lab.finalText || "Congratulations, you have completed all the labs in this lesson!")
+            : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+        openInfoModal("🎉", text, true);
+    }
+
+    // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    function exportCode() {
+        const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
+        const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
+        a.download = file;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        log("Exported " + file, "log-sys");
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta    = editor();
+        const ln    = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        document.getElementById("line-numbers").scrollTop = editor().scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide       = null;
+    let isRunning     = false;
+    let uploadedFiles = [];
+    let runGlobals    = null;   // a fresh, empty set of variables for every Run
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        for (const file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        updateFileList();
+        input.value = '';
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        stopAllSounds();
+        if (runGlobals) {
+            try { runGlobals.set("game_running", false); } catch (e) {}
+        }
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (!pyodide) return;
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+        document.getElementById('canvas').focus();
+        const code = editor().value;
+        try {
+            installSoundModule();
+            // Fresh variables every Run, so nothing left over from an
+            // earlier Run (or an earlier lab) can hide a mistake.
+            runGlobals = pyodide.runPython("dict(__name__='__main__')");
+            await pyodide.runPythonAsync(code, { globals: runGlobals });
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    initLabs();
+    init();
+</script>
+
+</body>
+</html>
