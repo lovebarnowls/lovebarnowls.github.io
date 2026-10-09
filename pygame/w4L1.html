@@ -1,0 +1,3733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>w4L1 Yang's Pygame Lab — Start and Game Over</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
+
+        .info-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1500; display:none; align-items:center; justify-content:center; }
+        .info-modal-overlay.open { display:flex; }
+        .info-modal-box { background:#252526; color:#d4d4d4; padding:28px 32px; border-radius:10px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid #ce3c3c; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .info-modal-icon { font-size:30px; text-align:center; margin-bottom:12px; }
+        .info-modal-text { font-size:14px; line-height:1.7; margin:0 0 22px; white-space:pre-wrap; font-family:'Segoe UI',sans-serif; }
+        .info-modal-actions { text-align:center; }
+
+        .hint-modal-box { background:#252526; color:#d4d4d4; padding:24px 28px; border-radius:10px; max-width:640px; width:92%; max-height:85vh; overflow-y:auto; border:1px solid #f0a500; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+        .hint-block { border-left:3px solid #f0a500; background:#1e1e1e; padding:10px 14px; margin-bottom:12px; border-radius:0 4px 4px 0; }
+        .hint-block.answer { border-left-color:#4EC9B0; }
+        .hint-block h3 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#f0a500; }
+        .hint-block.answer h3 { color:#4EC9B0; }
+        .hint-text { font-size:14px; line-height:1.65; white-space:pre-wrap; margin:0; }
+        .answer-code-wrap { position:relative; margin-top:10px; }
+        .answer-code { background:#111; color:#d4d4d4; font-family:'Consolas',monospace; font-size:13px; line-height:1.5; padding:12px 14px; border:1px solid #333; border-radius:4px; white-space:pre; overflow-x:auto; margin:0; }
+        .btn-copy { position:absolute; top:6px; right:6px; background:#4EC9B0; color:#1e1e1e; font-size:11px; padding:4px 10px; }
+        .btn-copy:hover:not(:disabled) { background:#3ab89f; }
+        .hint-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        header { background:#252526; padding:6px 16px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; min-height:50px; box-sizing:border-box; flex-shrink:0; gap:10px; flex-wrap:wrap; }
+        .header-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        h1 { margin:0; font-size:17px; color:#ce3c3c; white-space:nowrap; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; }
+        .header-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; min-height:0; }
+
+        /* ── EDITOR ─────────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; overflow:hidden; }
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; min-height:0; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:40px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
+
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; min-height:0; }
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
+
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:8px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
+
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .btn-hdr { font-size:12px; padding:6px 12px; }
+        .btn-grey { background:#3a3a3a; border:1px solid #555; }
+        .btn-grey:hover:not(:disabled) { background:#4a4a4a; }
+        .btn-hint { background:#f0a500; color:#1e1e1e; }
+        .btn-hint:hover:not(:disabled) { background:#d4900a; }
+        .btn-complete { background:#9b59b6; }
+        .btn-complete:hover:not(:disabled) { background:#7d3c98; }
+
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
+
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
+
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 w4L1 Yang's Pygame Lab</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- HINT / COMPLETE MODAL -->
+<div class="info-modal-overlay" id="info-modal">
+  <div class="info-modal-box">
+    <div class="info-modal-icon" id="info-modal-icon">💡</div>
+    <p class="info-modal-text" id="info-modal-text"></p>
+    <div class="info-modal-actions">
+      <button id="info-modal-btn" onclick="closeInfoModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- HINT LADDER MODAL -->
+<div class="info-modal-overlay" id="hint-modal">
+  <div class="hint-modal-box">
+    <div id="hint-modal-content"></div>
+    <div class="hint-modal-actions">
+      <button class="btn-hint" id="hint-next-btn" onclick="showHint()">💡 Next hint</button>
+      <button class="btn-grey" onclick="closeHintModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 w4L1 — Start and Game Over</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <div class="header-left">
+        <h1>w4L1 — Start and Game Over</h1>
+        <select id="lab-select" class="lab-selector" onchange="loadLab()"></select>
+    </div>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
+        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
+        <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
+        <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — read the comments, then edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"></textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================================================================
+    // LAB DATA
+    // Each lab: id (used in the address, e.g. #lab1a), title,
+    // code (the instructions live in the comments), hints (three, each
+    // deeper than the last), answer (explanation and where to paste),
+    // answerCode (the code to paste, optional) and completeText.
+    // The last lab can have finalText instead of completeText.
+    // ================================================================
+    const LESSON = "w4L1";
+
+    var LAB_DATA = [
+    {
+        id: "1a",
+
+        title: "Lab 1a: elif",
+
+        code: `# ============================================================
+#  w4L1 LAB 1a: ELIF
+# ============================================================
+# Welcome to w4L1: Start and Game Over. Real games have SCREENS: a start
+# screen, the game itself, and a game-over screen with "play again". To choose
+# between more than two things, you need one new word: elif. No Blip yet.
+#
+# You know if and else: if the question is True, do this, else do that.
+# elif is short for "else if". It asks ANOTHER question, but only if the
+# questions above it were False.
+#
+# Look at lines 32 to 37. Python asks the questions from the top down:
+#   line 32   is temperature bigger than 30?  If so, print Hot! and STOP asking.
+#   line 34   if not: is it bigger than 15?  If so, print Warm and stop.
+#   line 36   if none of the questions was True, print Cold.
+# Only ONE of the three prints ever runs.
+#
+# TASK 1a
+#   1. Press Run. What does it print?
+#   2. Change line 30 to 40. 40 is bigger than 30 AND bigger than 15.
+#      Does it print Hot!, Warm, or both? Why?
+#   3. Now change line 30 so it prints Cold.
+#
+# PLAY (optional)
+#   Try temperature = 30 exactly. Which line prints? Why not Hot!?
+#   Then change the words so they only make sense to whoever runs it next.
+#
+# When you are done, click "Complete" at the top.
+
+temperature = 25
+
+if temperature > 30:
+    print("Hot!")
+elif temperature > 15:
+    print("Warm")
+else:
+    print("Cold")`,
+
+        hints: [
+            "With 40, only Hot! is printed. Once one question is True, Python skips every elif and else below it.",
+            "Cold needs a number that is NOT bigger than 30 and NOT bigger than 15.",
+            "Any number of 15 or less works, for example:  temperature = 5"
+        ],
+
+        answer: "25 prints Warm. 40 prints only Hot!: the first True question wins, and Python skips the rest of the if/elif/else. Any number of 15 or less prints Cold (15 itself is not bigger than 15).\n\nReplace line 30, which says\n    temperature = 25\nwith the line below (no indent).",
+
+        answerCode: `temperature = 5`,
+
+        completeText: "Click OK for Lab 1b."
+    },
+    {
+        id: "1b",
+
+        title: "Lab 1b: States",
+
+        code: `# ============================================================
+#  w4L1 LAB 1b: STATES
+# ============================================================
+# A variable can hold WORDS, not just numbers. Words go in quotes.
+# Look at line 29. It says:
+#     state = "start"
+# In games, a variable like this is called the game's STATE: which screen
+# the game is on right now. This lesson uses three states:
+#     "start"     the start screen
+#     "playing"   the game itself
+#     "over"      the game-over screen
+#
+# == works with words too, but the words must match EXACTLY: "Over" with a
+# capital O is not the same as "over".
+#
+# TASK 1b
+#   1. Press Run. Then change line 29 to "playing", and Run again.
+#   2. Make a new line straight under line 34, and add an elif that prints
+#      Game over!  when state is "over". (No spaces in front of the elif, 4 in front
+#      of the print.)
+#   3. Change line 29 to "over" to test it.
+#
+# PLAY (optional)
+#   Set state to "Over" with a capital O. What prints? Now try "over "
+#   with a space at the end. How fussy is ==?
+#
+# When you are done, click "Complete" at the top.
+
+state = "start"
+
+if state == "start":
+    print("Press Space to start")
+elif state == "playing":
+    print("Dodge the Pogos!")`,
+
+        hints: [
+            "Copy the shape of lines 33 and 34: an elif line, then an indented print.",
+            "The elif line is  elif state == \"over\":  with no spaces in front. Do not forget the colon.",
+            "elif state == \"over\":\n    print(\"Game over!\")"
+        ],
+
+        answer: "state holds words, and == checks which words they are. Each state prints its own line, and only one of them runs. With state = \"over\", the first two questions are False, so your elif prints Game over!\n\nMake a new empty line straight under line 34, which says\n    print(\"Dodge the Pogos!\")\nand paste the two lines below there. The indent is already included.\nThen change line 29 to  state = \"over\"  and press Run.",
+
+        answerCode: `elif state == "over":
+    print("Game over!")`,
+
+        completeText: "Click OK for Lab 2a. The swarm is back."
+    },
+    {
+        id: "2a",
+
+        title: "Lab 2a: A Proper Game Over",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 2a: A PROPER GAME OVER
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# This is Swarm from w3L2: Blip dodges five falling Pogos, and has 3 lives.
+#
+# Two things are new:
+#   - Line 66 creates state, and starts it as "playing".
+#   - Line 75 puts the WHOLE update job inside an if. Every line under it
+#     has 4 more spaces than before. The keys, the falling and the hits only
+#     happen while state is "playing".
+#
+# At the moment, when lives reach 0, line 98 sets game_running to False. That
+# stops the loop, so the game freezes and the program ends.
+#
+# From now on, game_running means only "is the window open?" (closing the
+# window sets it to False, on line 72), and state means "which screen?".
+#
+# TASK 2a
+#   Change line 98 so that, instead of ending the game, it sets state to "over".
+#   Run it and lose all 3 lives. What happens to the Pogos now? Lines 107 to 109
+#   show the game-over words. Is the program still running?
+#
+# PLAY (optional)
+#   Set LIVES to 0. Can anybody win? What about LIVES = -5?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "playing"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                game_running = False
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The line to change is inside  if lives <= 0:. Do not change the game_running line inside the QUIT if.",
+            "To change the state, use = (one equals sign) and the word in quotes.",
+            "Line 98 should say  state = \"over\"  (16 spaces in front)"
+        ],
+
+        answer: "When lives reach 0, state becomes \"over\". The update job is inside  if state == \"playing\":, so from the next frame nothing moves: the Pogos stop where they are. But the loop keeps going, so the game keeps drawing every frame, and the game-over words stay on the screen. The program only ends when you press Stop.\n\nReplace line 98, which says\n    game_running = False\nwith the line below. The indent is already included.",
+
+        answerCode: `                state = "over"`,
+
+        completeText: "Click OK for Lab 2b."
+    },
+    {
+        id: "2b",
+
+        title: "Lab 2b: Press Space to Start",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 2b: PRESS SPACE TO START
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Line 66 now starts the game in the "start" state, so the
+# update job is skipped and nothing moves. The player needs a way to start.
+#
+# Lines 73 to 75 are new, inside the events loop:
+#   KEYDOWN       is an event that happens ONCE, when a key goes down (like a click).
+#   event.key     says WHICH key it was. pygame.K_SPACE is the Space bar.
+#
+# Why not keys = pygame.key.get_pressed(), like the arrow keys? get_pressed()
+# asks "is the key held down right now?" every frame, which is right for
+# moving. Starting a game should happen once per press, so it is an event.
+#
+# TASK 2b
+#   1. Press Run, click the game screen, and press Space a few times. Watch the
+#      console. How many Space! lines do you get for each press?
+#   2. Replace line 75 with an if that, when state is "start",
+#      changes state to "playing". (20 spaces in front of the if, 24 in front
+#      of the line inside it.)
+#
+# PLAY (optional)
+#   Before you replace it, press Space as fast as you can for five seconds.
+#   Count the Space! lines. Did Python miss any?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    print("Space!")
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "One press, one Space! line. That is what an event is.",
+            "The if is  if state == \"start\":  (two equals signs: it is a question).",
+            "if state == \"start\":\n    state = \"playing\""
+        ],
+
+        answer: "Each press of Space is ONE KEYDOWN event. When it happens on the start screen, state changes to \"playing\", and from the next frame the update job runs and the Pogos fall.\n\nReplace line 75, which says\n    print(\"Space!\")\nwith the two lines below. The indents are already included.",
+
+        answerCode: `                    if state == "start":
+                        state = "playing"`,
+
+        completeText: "Click OK for Lab 2c."
+    },
+    {
+        id: "2c",
+
+        title: "Lab 2c: Words for Each Screen",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 2c: WORDS FOR EACH SCREEN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The start screen has no words, so the player cannot know to press Space.
+#
+# Look at lines 105 to 107. They draw the game-over words only when state
+# is "over". The start screen needs the same, for "start". Only one screen can
+# show at a time, so use if for the first one and elif for the next.
+#
+# TASK 2c
+#   1. Make a new line straight under line 104, and add an if (8 spaces) that,
+#      when state is "start", renders the words  Press Space to start  with
+#      TEXT_COLOUR and blits them at (310, 290). (12 spaces for the two lines inside.)
+#   2. Change the line that says  if state == "over":  to  elif state == "over":
+#
+# PLAY (optional)
+#   Make the start screen lie to whoever plays it next, for example
+#   "Press Space to win". Then make it tell the truth again.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 1 has the same shape as the over_text lines: an if, a render line and a blit line.",
+            "start_text = font.render(\"Press Space to start\", True, TEXT_COLOUR)  then  screen.blit(start_text, (310, 290))",
+            "if state == \"start\":\n    start_text = font.render(\"Press Space to start\", True, TEXT_COLOUR)\n    screen.blit(start_text, (310, 290))\nThen add  el  in front of  if state == \"over\":"
+        ],
+
+        answer: "Each screen has its own words. The game itself (Blip, the Pogos and the score) is drawn on every screen, and the words for the current state are drawn on top. if and elif make it clear that only one of the screens can show.\n\nStep 1: make a new empty line straight under line 104, which says\n    screen.blit(status_text, (10, 10))\nand paste the code below there. The indents are already included.\n\nStep 2: change the line that says\n    if state == \"over\":\nto\n    elif state == \"over\":",
+
+        answerCode: `        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))`,
+
+        completeText: "Click OK for Lab 3a. Time to play again."
+    },
+    {
+        id: "3a",
+
+        title: "Lab 3a: Play Again?",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 3a: PLAY AGAIN?
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The game-over screen now says  Press Space to play again  (lines 110 and 111),
+# but nothing happens when you press it.
+#
+# Look at lines 68 and 69. Space only does something when state is "start".
+#
+# TASK 3a
+#   1. Make a new line straight under line 69, and add an elif (20 spaces)
+#      that, when state is "over", changes state to "playing" (24 spaces).
+#   2. Run it, lose all 3 lives, and press Space. What happens? Why?
+#      (Look at the numbers in the top-left.)
+#
+# PLAY (optional)
+#   Make Space on the game-over screen go back to "start" instead of
+#   "playing". What happens? Is the start screen useful a second time?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The elif lines up with  if state == \"start\":  (20 spaces), and its line inside has 24.",
+            "elif state == \"over\":\n    state = \"playing\"",
+            "After Space, the game is over again straight away. Look at lives: it is still 0, so on the very first frame,  if lives <= 0:  is True again."
+        ],
+
+        answer: "Space now sends the game back to \"playing\", but the game is over again on the very first frame. Changing the state does not change any other variable: lives is still 0, so  if lives <= 0:  is True straight away. Lab 3b fixes it.\n\nMake a new empty line straight under line 69, which says\n    state = \"playing\"\nand paste the two lines below there. The indents are already included.",
+
+        answerCode: `                    elif state == "over":
+                        state = "playing"`,
+
+        completeText: "Click OK for Lab 3b."
+    },
+    {
+        id: "3b",
+
+        title: "Lab 3b: Reset",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 3b: RESET
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# To play again, some variables must go back to how they were at the start.
+# Look at lines 51 to 60: they set everything up, ONCE, before the loop.
+#
+# Which ones change during a game?
+#   lives    goes down. It must go back to LIVES.
+#   dodged   goes up. It must go back to 0.
+#   blip.x   moves. Put Blip back in the middle: 375.
+#
+# TASK 3b
+#   Make a new line straight under line 71, inside the elif (24 spaces), and add three lines
+#   that reset lives, dodged and blip.x. Then lose all your lives and play again.
+#
+# PLAY (optional)
+#   Make the play-again code give Blip only 1 life. Is a harder second game
+#   fair? What if it gave 10?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Copy the idea of lines 58 and 59: the same lines, again, inside the elif.",
+            "Each line has 24 spaces in front. They must come BEFORE  state = \"playing\", inside the elif.",
+            "lives = LIVES\ndodged = 0\nblip.x = 375"
+        ],
+
+        answer: "When Space is pressed on the game-over screen, lives, dodged and Blip go back to how they started, and then the state changes to \"playing\". The new game has 3 lives and a score of 0.\n\nMake a new empty line straight under line 71, which says\n    elif state == \"over\":\nand paste the three lines below there. The indent is already included.",
+
+        answerCode: `                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375`,
+
+        completeText: "Click OK for Lab 3c."
+    },
+    {
+        id: "3c",
+
+        title: "Lab 3c: Put the Pogos Back",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 3c: PUT THE POGOS BACK
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Play again a few times. The new game starts with the Pogos wherever they
+# froze, so one might be just above Blip's head.
+#
+# The Pogos were made ONCE, before the loop (lines 56 to 60). Do NOT append
+# them again: the list would grow to 10, then 15. Instead, use a for loop to
+# send each Pogo that is ALREADY in the list back above the top:
+#     for pogo in pogos:
+#         pogo.y = random.randint(-600, -pogo.height)
+#         pogo.x = random.randint(0, 800 - pogo.width)
+# A random y from -600 to -30 means each one arrives at a different time.
+#
+# TASK 3c
+#   Make a new line straight under line 77, and type the three lines above
+#   (24 spaces in front of the for, 28 in front of the two lines inside it).
+#
+# PLAY (optional)
+#   Change -600 to -3000. How long does whoever plays next wait before the
+#   first Pogo arrives? Then put it back.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The loop goes inside the elif, after the three reset lines and before  state = \"playing\".",
+            "The two lines inside the loop are like the respawn lines, but y is random as well.",
+            "for pogo in pogos:\n    pogo.y = random.randint(-600, -pogo.height)\n    pogo.x = random.randint(0, 800 - pogo.width)"
+        ],
+
+        answer: "The loop moves every Pogo that is already in the list back above the top, at a random place, so each new game starts fair. The list still has exactly 5 Pogos.\n\nMake a new empty line straight under line 77, which says\n    blip.x = 375\nand paste the code below there. The indents are already included.",
+
+        answerCode: `                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)`,
+
+        completeText: "You can play again and again! Click OK for Lab 4a."
+    },
+    {
+        id: "4a",
+
+        title: "Lab 4a: High Score",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 4a: HIGH SCORE
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Now that the game can be played again and again, it needs a HIGH SCORE:
+# the most Pogos dodged in any game.
+#
+# Where does it go? Look at the reset code (lines 73 to 80). The high score
+# must NOT be reset there, or it would go back to 0 every game. So it is
+# created ONCE, before the loop, and never reset.
+#
+# TASK 4a
+#   1. Make a new line straight under line 62, and create  high_score = 0  (4 spaces).
+#   2. When the game ends (inside  if lives <= 0:), check whether dodged beats
+#      high_score. If it does, store it, and print it:  print("Best:", high_score)
+#      Make a new line straight under line 106, and add an if (16 spaces),
+#      with 20 spaces in front of the two lines inside it.
+#
+# PLAY (optional)
+#   Make high_score start at 1000, so nobody can ever beat it. Then put it
+#   back to 0.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The question is  if dodged > high_score:",
+            "Inside it:  high_score = dodged  and  print(\"Best:\", high_score)",
+            "if dodged > high_score:\n    high_score = dodged\n    print(\"Best:\", high_score)"
+        ],
+
+        answer: "high_score is created once, before the loop, and the reset code never touches it, so it survives from game to game. At the end of each game, if dodged beats it, it takes dodged's value. (Pressing Stop clears every variable, so the high score only lasts while the game is running.)\n\nStep 1: make a new empty line straight under line 62, which says\n    state = \"start\"\nand type this line there, with 4 spaces in front:\n    high_score = 0\n\nStep 2: make a new empty line straight under line 107 (it moved down one line in Step 1), which now says\n    state = \"over\"\nand paste the code below there. The indents are already included.",
+
+        answerCode: `                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)`,
+
+        completeText: "Click OK for Lab 4b."
+    },
+    {
+        id: "4b",
+
+        title: "Lab 4b: Best on Screen",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 4b: BEST ON SCREEN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The high score only shows in the console. Put it on the screen.
+#
+# TASK 4b
+#   Make a new line straight under line 112, and add two lines (8 spaces) that show
+#       Best: 12
+#   (with the real high score) in the top-right corner, at (700, 10).
+#   Use TEXT_COLOUR. Then play three games. Does Best ever go DOWN?
+#
+# PLAY (optional)
+#   Make the Best label boast:  f"Best: {high_score} (Blip: 9999)". Who is
+#   the champion now?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "This is the same as the status_text lines, with different words and a different place.",
+            "best_text = font.render(f\"Best: {high_score}\", True, TEXT_COLOUR)",
+            "screen.blit(best_text, (700, 10))"
+        ],
+
+        answer: "The Best label is drawn on every screen, every frame. It only goes up, because high_score only changes when a game beats it, and the reset code never touches it.\n\nMake a new empty line straight under line 112, which says\n    screen.blit(status_text, (10, 10))\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))`,
+
+        completeText: "Click OK for Lab 5a. Time to add some polish!"
+    },
+    {
+        id: "5a",
+
+        title: "Lab 5a: Title Screen",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 5a: TITLE SCREEN
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# The game works. Now make it FEEL like a real game. The start screen is the
+# first thing a player sees, so give it a giant title, like YOU LOSE in w3L2.
+#
+# Remember: giant text needs a second, bigger font:
+#     big_font = pygame.font.SysFont(None, 120)
+# Line 43 is a new setting for the title: red, like the Pogos.
+# To centre it, start at  400 - title_text.get_width() // 2.
+#
+# TASK 5a
+#   1. Make a new line straight under line 54, and type the big_font line
+#      above (4 spaces in front).
+#   2. Inside the start-screen if, straight under the line that says
+#          screen.blit(start_text, (310, 290))
+#      add two lines (12 spaces in front) that render SWARM with big_font and
+#      BIG_COLOUR, and blit it in the middle, at y = 160.
+#
+# PLAY (optional)
+#   Change SWARM to the name of whoever will play it next. Does a long name
+#   fit? Make it smaller until it does.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (220, 50, 50)
+BEST_COLOUR  = (255, 200, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 2 has the same shape as the start_text lines, with big_font instead of font.",
+            "title_text = big_font.render(\"SWARM\", True, BIG_COLOUR)",
+            "screen.blit(title_text, (400 - title_text.get_width() // 2, 160))"
+        ],
+
+        answer: "The title is drawn only while state is \"start\", so it disappears when the game begins. get_width() centres it, whatever you call your game.\n\nStep 1: make a new empty line straight under line 54, which says\n    font = pygame.font.SysFont(None, 26)\nand type this line there, with 4 spaces in front:\n    big_font = pygame.font.SysFont(None, 120)\n\nStep 2: make a new empty line straight under the line that says\n    screen.blit(start_text, (310, 290))\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `            title_text = big_font.render("SWARM", True, BIG_COLOUR)
+            screen.blit(title_text, (400 - title_text.get_width() // 2, 160))`,
+
+        completeText: "Click OK for Lab 5b."
+    },
+    {
+        id: "5b",
+
+        title: "Lab 5b: NEW HIGH SCORE!",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 5b: NEW HIGH SCORE!
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Beating your best should feel special. Show  NEW HIGH SCORE!  in gold on the
+# game-over screen, but ONLY when the game you just played beat the old best.
+#
+# The game needs to REMEMBER whether that happened. Line 69 creates
+# new_best, which is True or False. It starts as False, and the reset code puts
+# it back to False for every new game (line 83).
+# BEST_COLOUR (line 44) is gold.
+#
+# TASK 5b
+#   1. When a new high score is stored, set new_best to True. Make a new line straight
+#      under line 117 (20 spaces in front).
+#   2. Inside the game-over elif, straight under the line that says
+#          screen.blit(again_text, (290, 320))
+#      add an if (12 spaces) that, when new_best is True, renders  NEW HIGH SCORE!
+#      with font and BEST_COLOUR, and blits it at (320, 350). (16 spaces inside.)
+#
+# PLAY (optional)
+#   Change NEW HIGH SCORE! to something over the top. Make it giant with
+#   big_font. Does it still fit?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (220, 50, 50)
+BEST_COLOUR  = (255, 200, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    big_font = pygame.font.SysFont(None, 120)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    new_best = False
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        new_best = False
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+            title_text = big_font.render("SWARM", True, BIG_COLOUR)
+            screen.blit(title_text, (400 - title_text.get_width() // 2, 160))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 1 is one line:  new_best = True",
+            "Step 2 starts with  if new_best == True:",
+            "if new_best == True:\n    new_text = font.render(\"NEW HIGH SCORE!\", True, BEST_COLOUR)\n    screen.blit(new_text, (320, 350))"
+        ],
+
+        answer: "new_best remembers, for the rest of that game-over screen, that the game beat the old best. The reset code puts it back to False, so a worse game next time does not show it.\n\nStep 1: make a new empty line straight under line 117, which says\n    print(\"Best:\", high_score)\nand type this line there, with 20 spaces in front:\n    new_best = True\n\nStep 2: make a new empty line straight under the line that says\n    screen.blit(again_text, (290, 320))\nand paste the code below there. The indents are already included.",
+
+        answerCode: `            if new_best == True:
+                new_text = font.render("NEW HIGH SCORE!", True, BEST_COLOUR)
+                screen.blit(new_text, (320, 350))`,
+
+        completeText: "Click OK for Lab 6a."
+    },
+    {
+        id: "6a",
+
+        title: "Lab 6a: Make It Yours",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 6a: MAKE IT YOURS
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# Make the game your own. Think about who will play it, and what they see
+# first and last.
+#
+# TASK 6a
+#   1. Make AT LEAST THREE changes from this list. Run after each one.
+#        [ ] the title                     (line 131)
+#        [ ] the start words               (line 129)
+#        [ ] the game-over words           (lines 134 and 136)
+#        [ ] the NEW HIGH SCORE! words     (line 139)
+#        [ ] how many lives                (line 37)
+#        [ ] how fast the Pogos fall       (line 35)
+#        [ ] how many Pogos                (add or delete append lines)
+#        [ ] how long players wait after a restart  (line 85)
+#        [ ] the colours                   (the settings at the top)
+#      Tick each box you did by typing an x between the brackets: [x]
+#
+#   2. Check the game still works: Space starts it, the game ends at 0 lives,
+#      Space plays again with everything reset, and Best only goes up.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+BIG_COLOUR   = (220, 50, 50)
+BEST_COLOUR  = (255, 200, 0)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    big_font = pygame.font.SysFont(None, 120)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    new_best = False
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        new_best = False
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+                    new_best = True
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+            title_text = big_font.render("SWARM", True, BIG_COLOUR)
+            screen.blit(title_text, (400 - title_text.get_width() // 2, 160))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+            if new_best == True:
+                new_text = font.render("NEW HIGH SCORE!", True, BEST_COLOUR)
+                screen.blit(new_text, (320, 350))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Change one thing at a time, and press Run after each change.",
+            "If you change the words, check they still fit. Centre them with  400 - text.get_width() // 2  if you like.",
+            "Longer waits after a restart (for example -1200) give the player a moment to get ready."
+        ],
+
+        answer: "There is no single right answer. Here is one example:\n    LIVES        = 5\n    title_text = big_font.render(\"DODGE!\", True, BIG_COLOUR)\n    start_text = font.render(\"Press Space if you dare\", True, TEXT_COLOUR)\n    pogo.y = random.randint(-1200, -pogo.height)\n\nCheck the game still works: Space starts it, the game ends at 0 lives, Space plays again with everything reset, and Best only goes up.",
+
+        completeText: "That is all the core labs for w4L1 done!\nThe labs below this one in the menu are extensions. Click OK to try the first one, or stop here."
+    },
+    {
+        id: "1ext",
+
+        title: "Lab 1ext: Survival Timer (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 1ext: SURVIVAL TIMER (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Show how many seconds the player has survived, like the countdown in w3L1.
+#   Lines 63 and 64 create the two variables, and lines 120 and 121 show
+#   Time: on the screen.
+#
+#   In w3L1, start_time was saved just before the loop. That will not work here:
+#   the player might sit on the start screen for a minute first, and every
+#   restart needs the clock to start again from 0. So start_time must be saved
+#   at the moment the game STARTS: when Space is pressed.
+#
+#   TASK
+#     1. Straight under line 73, and again straight under line
+#        75, add (24 spaces):  start_time = pygame.time.get_ticks()
+#     2. Inside  if state == "playing":, straight under it, add (12 spaces):
+#            seconds = (pygame.time.get_ticks() - start_time) // 1000
+#   Test it: wait on the start screen for 5 seconds before pressing Space.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    start_time = 0
+    seconds = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        time_text = font.render(f"Time: {seconds}", True, TEXT_COLOUR)
+        screen.blit(time_text, (10, 40))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "start_time is the time when THIS game started. Space starts a game in two places: the start screen and the game-over screen.",
+            "seconds is worked out every frame, but only while state is \"playing\", so it stops counting at game over.",
+            "Step 2 goes straight under  if state == \"playing\":  with 12 spaces in front."
+        ],
+
+        answer: "start_time is saved at the moment Space starts a game, so the time on the start screen does not count, and every restart counts from 0. seconds is only worked out while playing, so the number stays still on the game-over screen.\n\nStep 1: make a new empty line straight under line 73, which says\n    if state == \"start\":\nand type this line there, with 24 spaces in front:\n    start_time = pygame.time.get_ticks()\nThen make a new empty line straight under line 76 (it moved down one line), which now says\n    elif state == \"over\":\nand type the same line there.\n\nStep 2: make a new empty line straight under line 87 (it moved down two lines in Step 1), which now says\n    if state == \"playing\":\nand paste the line below there. The indent is already included.",
+
+        answerCode: `            seconds = (pygame.time.get_ticks() - start_time) // 1000`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "2ext",
+
+        title: "Lab 2ext: Pause (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 2ext: PAUSE (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   A fourth state: "paused". Pressing P should pause the game, and pressing P
+#   again should carry on. Because the update job only runs while state is
+#   "playing", pausing needs no other code: everything just stops.
+#
+#   Lines 78 to 82 are meant to do it, and lines 130 to 132 draw
+#   PAUSED.
+#
+#   TASK
+#     1. Run it, press Space, then press P. Does the game pause?  ___
+#     2. Follow lines 79 to 82 one at a time, with state = "playing". What is
+#        state after line 80? Then what does line 81 ask?
+#     3. Fix it by changing ONE word.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+                if event.key == pygame.K_p:
+                    if state == "playing":
+                        state = "paused"
+                    if state == "paused":
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+        elif state == "paused":
+            paused_text = font.render("PAUSED", True, TEXT_COLOUR)
+            screen.blit(paused_text, (365, 290))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Line 80 changes state to \"paused\". Then line 81 asks: is state \"paused\"? It is, now!",
+            "So the game pauses and un-pauses in the same moment, before any frame is drawn. The second question must only be asked if the first was False.",
+            "Line 81 should start with  elif  instead of  if."
+        ],
+
+        answer: "With two ifs, both questions are asked. The first changes state to \"paused\", and then the second sees \"paused\" and changes it straight back. With elif, the second question is only asked if the first was False, so one press makes exactly one change. This is the most important difference between if and elif.\n\nReplace line 81, which says\n    if state == \"paused\":\nwith the line below. The indent is already included.",
+
+        answerCode: `                    elif state == "paused":`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "3ext",
+
+        title: "Lab 3ext: Levels (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 3ext: LEVELS (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Every 10 Pogos dodged, go up a LEVEL, and make the Pogos fall faster.
+#
+#   Line 62 creates level, and line 63 creates fall_speed (lowercase,
+#   because it changes). Line 95 already uses fall_speed.
+#
+#   Whole-number division does the counting:  dodged // 10  is 0 for 0 to 9
+#   dodged, 1 for 10 to 19, 2 for 20 to 29 ...
+#
+#   TASK
+#     Straight under line 84, add two lines (12 spaces) that work out:
+#       level        dodged // 10, plus 1 (so the first level is 1, not 0)
+#       fall_speed   FALL_SPEED, plus 1 for each level after the first
+#     Then play. What happens to the level when you restart? Why did you not
+#     need to reset it?
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    level = 1
+    fall_speed = FALL_SPEED
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + fall_speed
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        level_text = font.render(f"Level: {level}", True, TEXT_COLOUR)
+        screen.blit(level_text, (10, 40))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "level = dodged // 10 + 1",
+            "fall_speed = FALL_SPEED + level - 1  (level 1 is FALL_SPEED, level 2 is one faster, and so on)",
+            "Both are worked out FROM dodged, every frame. The reset code puts dodged back to 0, so level and fall_speed follow."
+        ],
+
+        answer: "level and fall_speed are worked out from dodged every frame. Every 10 dodges, the level goes up and the Pogos fall 1 pixel a frame faster. You did not need to reset them: the reset code puts dodged back to 0, and level and fall_speed follow it.\n\nMake a new empty line straight under line 84, which says\n    if state == \"playing\":\nand paste the two lines below there. The indent is already included.",
+
+        answerCode: `            level = dodged // 10 + 1
+            fall_speed = FALL_SPEED + level - 1`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "4ext",
+
+        title: "Lab 4ext: 3, 2, 1 ... (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 4ext: 3, 2, 1 ... (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Instead of starting straight away, count down 3, 2, 1 in giant numbers.
+#   That is a new state: "countdown".
+#
+#   Already done for you:
+#     - lines 113 to 116 (in the update job) count down from 3, and change
+#       state to "playing" when they reach 0;
+#     - lines 136 and 137 draw the number.
+#   But nothing ever sets state to "countdown", so you never see it.
+#
+#   TASK
+#     Space sets  state = "playing"  in TWO places: line 75 (the start screen)
+#     and line 83 (the end of the play-again code). Replace each of them with two lines
+#     (24 spaces in front):
+#         state = "countdown"
+#         count_start = pygame.time.get_ticks()
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    big_font = pygame.font.SysFont(None, 120)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    count_start = 0
+    left = 3
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+        elif state == "countdown":
+            left = 3 - (pygame.time.get_ticks() - count_start) // 1000
+            if left <= 0:
+                state = "playing"
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+        elif state == "countdown":
+            count_text = big_font.render(f"{left}", True, TEXT_COLOUR)
+            screen.blit(count_text, (400 - count_text.get_width() // 2, 240))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "count_start works like start_time: it saves the time when the countdown began.",
+            "Both places get the same two lines. The rest of the play-again code (the resets) stays as it is.",
+            "state = \"countdown\"\ncount_start = pygame.time.get_ticks()"
+        ],
+
+        answer: "Space now starts the countdown instead of the game. While state is \"countdown\", the update job works out how many seconds are left, and when it reaches 0 it changes state to \"playing\". The Pogos wait, because the falling code only runs while playing.\n\nStep 1: replace line 75, which says\n    state = \"playing\"\nwith the two lines below. The indent is already included.\n\nStep 2: replace line 84 (it moved down one line in Step 1), which also says\n    state = \"playing\"\nwith the same two lines.",
+
+        answerCode: `                        state = "countdown"
+                        count_start = pygame.time.get_ticks()`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "5ext",
+
+        title: "Lab 5ext: Choose Your Speed (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 5ext: CHOOSE YOUR SPEED (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Let the player choose how hard the game is on the start screen:
+#       1 = slow (3),   2 = medium (5),   3 = fast (8)
+#
+#   Line 58 creates fall_speed (lowercase, because it changes), and line
+#   90 uses it. The number keys are pygame.K_1, pygame.K_2 and pygame.K_3.
+#
+#   TASK
+#     Make a new line straight under line 65, and add an if (16 spaces) that, only on the
+#     start screen, uses if, elif and elif to set fall_speed to 3, 5 or 8,
+#     depending on which number key was pressed.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    fall_speed = FALL_SPEED
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + fall_speed
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        speed_text = font.render(f"Speed: {fall_speed}", True, TEXT_COLOUR)
+        screen.blit(speed_text, (10, 40))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press 1, 2 or 3 for speed, then Space", True, TEXT_COLOUR)
+            screen.blit(start_text, (246, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The outer if is  if state == \"start\":  so the keys do nothing in the middle of a game.",
+            "Inside it (20 spaces):  if event.key == pygame.K_1:  then (24 spaces)  fall_speed = 3",
+            "if state == \"start\":\n    if event.key == pygame.K_1:\n        fall_speed = 3\n    elif event.key == pygame.K_2:\n        fall_speed = 5\n    elif event.key == pygame.K_3:\n        fall_speed = 8"
+        ],
+
+        answer: "On the start screen, each number key is a KEYDOWN event, and the if/elif chain picks a speed for it. The chosen speed stays for every restart, because the reset code does not touch fall_speed.\n\nMake a new empty line straight under line 65, which says\n    if event.type == pygame.KEYDOWN:\nand paste the code below there. The indents are already included.",
+
+        answerCode: `                if state == "start":
+                    if event.key == pygame.K_1:
+                        fall_speed = 3
+                    elif event.key == pygame.K_2:
+                        fall_speed = 5
+                    elif event.key == pygame.K_3:
+                        fall_speed = 8`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "6ext",
+
+        title: "Lab 6ext: Blinking Start (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 6ext: BLINKING START (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Make  Press Space to start  blink on and off, like an arcade machine.
+#
+#   New symbol:  %  gives the REMAINDER after whole-number division.
+#       7 % 2 is 1  (7 // 2 is 3, remainder 1)      8 % 2 is 0
+#   So  number % 2  is 0 for even numbers and 1 for odd numbers.
+#
+#   pygame.time.get_ticks() // 500  counts up by 1 every half a second. Even
+#   half-seconds: show the words. Odd half-seconds: do not.
+#
+#   TASK
+#     Replace line 120 with two lines: an if (12 spaces) that asks
+#         (pygame.time.get_ticks() // 500) % 2 == 0
+#     and, inside it (16 spaces), the same blit line.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The blit line moves inside the if. The render line above it stays where it is.",
+            "if (pygame.time.get_ticks() // 500) % 2 == 0:",
+            "if (pygame.time.get_ticks() // 500) % 2 == 0:\n    screen.blit(start_text, (310, 290))"
+        ],
+
+        answer: "Every half a second, get_ticks() // 500 goes up by 1, and % 2 flips between 0 and 1. The words are only blitted when it is 0, so they show for half a second, then hide for half a second.\n\nReplace line 120, which says\n    screen.blit(start_text, (310, 290))\nwith the two lines below. The indents are already included.",
+
+        answerCode: `            if (pygame.time.get_ticks() // 500) % 2 == 0:
+                screen.blit(start_text, (310, 290))`,
+
+        completeText: "Click OK for the next extension."
+    },
+    {
+        id: "7ext",
+
+        title: "Lab 7ext: Sound (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 7ext: SOUND (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   Add sound, like w3L2 Lab 5ext. The eight sounds are:
+#       click  coin  jump  hit  explosion  powerup  win  gameover
+#
+#   TASK
+#     1. Straight under line 3, add:  from sounds import play_sound
+#     2. Play "click" when Space starts the game from the start screen.
+#     3. Play "hit" when a Pogo hits Blip.
+#     4. Play "gameover" when the lives run out.
+#   If the sounds cannot load, the game runs silently. Sound is always optional.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "The import goes at the very top, with no spaces in front.",
+            "The click goes inside  if state == \"start\":  in the events (24 spaces). The hit goes inside the hit if, under  lives = lives - 1  (20 spaces).",
+            "The game-over sound goes straight under  state = \"over\"  (16 spaces)."
+        ],
+
+        answer: "Each sound is played by the code that already runs once for that moment: the Space event, the hit if, and the line that changes state to \"over\".\n\nStep 1: make a new empty line straight under line 3, which says\n    import random\nand paste the line below there (no indent).\n\nStep 2: make a new empty line straight under the line in the events that says\n    if state == \"start\":\nand type this line there, with 24 spaces in front:\n    play_sound(\"click\")\n\nStep 3: make a new empty line straight under the line that says\n    lives = lives - 1\nand type this line there, with 20 spaces in front:\n    play_sound(\"hit\")\n\nStep 4: make a new empty line straight under the line that says\n    state = \"over\"\nand type this line there, with 16 spaces in front:\n    play_sound(\"gameover\")",
+
+        answerCode: `from sounds import play_sound`,
+
+        completeText: "Click OK for the last extension."
+    },
+    {
+        id: "8ext",
+
+        title: "Lab 8ext: Swarm Meets Catch (extension)",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L1 LAB 8ext: SWARM MEETS CATCH (EXTENSION)
+# ============================================================
+# (Remember: press Stop, make your change, then press Run.)
+#
+# EXTENSION
+#   The gold coin from w3L1 is back (line 59). It falls and comes back to
+#   the top (lines 102 to 105), but catching it does nothing yet.
+#
+#   TASK
+#     1. Make a new line straight under line 105, and add an if (12 spaces) so that
+#        catching the coin gives Blip an EXTRA LIFE and sends the coin back to the
+#        top at a random x.
+#     2. The coin is a new thing that moves, so the play-again code must put it
+#        back too. Straight under the line that says  blip.x = 375, add (24 spaces):
+#            coin.y = -200
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  STUDENT ZONE
+# ============================================================
+BLIP_SPEED   = 8
+FALL_SPEED   = 4
+POGO_SIZE    = 30
+LIVES        = 3
+BLIP_COLOUR  = (0, 200, 80)
+POGO_COLOUR  = (220, 50, 50)
+COIN_COLOUR  = (255, 200, 0)
+BACKGROUND   = (30, 30, 30)
+TEXT_COLOUR  = (255, 255, 255)
+
+game_running = True
+
+async def main():
+    global game_running
+    game_running = True
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    font = pygame.font.SysFont(None, 26)
+    clock = pygame.time.Clock()
+
+    blip = pygame.Rect(375, 530, 50, 50)
+    pogos = []
+    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))
+    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))
+    dodged = 0
+    lives = LIVES
+    state = "start"
+    high_score = 0
+    coin = pygame.Rect(380, -200, 40, 40)
+
+    while game_running:
+        # 1. HANDLE EVENTS: check what the player did
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if state == "start":
+                        state = "playing"
+                    elif state == "over":
+                        lives = LIVES
+                        dodged = 0
+                        blip.x = 375
+                        for pogo in pogos:
+                            pogo.y = random.randint(-600, -pogo.height)
+                            pogo.x = random.randint(0, 800 - pogo.width)
+                        state = "playing"
+
+        # 2. UPDATE: change the variables
+        if state == "playing":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                blip.x = blip.x + BLIP_SPEED
+            if keys[pygame.K_LEFT]:
+                blip.x = blip.x - BLIP_SPEED
+            if blip.x > 800 - blip.width:
+                blip.x = 800 - blip.width
+            if blip.x < 0:
+                blip.x = 0
+            for pogo in pogos:
+                pogo.y = pogo.y + FALL_SPEED
+                if pogo.y > 600:
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    dodged = dodged + 1
+                    print("Dodged:", dodged)
+                if blip.colliderect(pogo):
+                    lives = lives - 1
+                    pogo.y = -pogo.height
+                    pogo.x = random.randint(0, 800 - pogo.width)
+                    print("Lives:", lives)
+            coin.y = coin.y + FALL_SPEED
+            if coin.y > 600:
+                coin.y = -coin.height
+                coin.x = random.randint(0, 800 - coin.width)
+            if lives <= 0:
+                state = "over"
+                if dodged > high_score:
+                    high_score = dodged
+                    print("Best:", high_score)
+
+        # 3. DRAW: put things on the screen
+        screen.fill(BACKGROUND)
+        pygame.draw.rect(screen, BLIP_COLOUR, blip)
+        for pogo in pogos:
+            pygame.draw.rect(screen, POGO_COLOUR, pogo)
+        pygame.draw.rect(screen, COIN_COLOUR, coin)
+        status_text = font.render(f"Dodged: {dodged}   Lives: {lives}", True, TEXT_COLOUR)
+        screen.blit(status_text, (10, 10))
+        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
+        screen.blit(best_text, (700, 10))
+        if state == "start":
+            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
+            screen.blit(start_text, (310, 290))
+        elif state == "over":
+            over_text = font.render(f"Game over!   Dodged: {dodged}", True, TEXT_COLOUR)
+            screen.blit(over_text, (300, 290))
+            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
+            screen.blit(again_text, (290, 320))
+
+        # 4. FLIP: show the finished frame
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+    pygame.quit()
+
+# ============================================================
+#  START THE GAME
+# ============================================================
+await main()`,
+
+        hints: [
+            "Step 1 is w3L2 Lab 6ext again:  if blip.colliderect(coin):  with 12 spaces in front.",
+            "Inside it (16 spaces):  lives = lives + 1, then the two coin lines from lines 104 and 105.",
+            "if blip.colliderect(coin):\n    lives = lives + 1\n    coin.y = -coin.height\n    coin.x = random.randint(0, 800 - coin.width)"
+        ],
+
+        answer: "Each coin is worth an extra life. Every new thing that moves must also be put back when the game restarts, so the play-again code sends the coin back above the top.\n\nStep 1: make a new empty line straight under line 105, which says\n    coin.x = random.randint(0, 800 - coin.width)\nand paste the code below there. The indents are already included.\n\nStep 2: make a new empty line straight under the line that says\n    blip.x = 375\nand type this line there, with 24 spaces in front:\n    coin.y = -200",
+
+        answerCode: `            if blip.colliderect(coin):
+                lives = lives + 1
+                coin.y = -coin.height
+                coin.x = random.randint(0, 800 - coin.width)`,
+
+        finalText: "Congratulations on completing every lab in w4L1!\nYou know elif, game states, KEYDOWN events, restarting, and how to keep a high score."
+    }
+    ];
+
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── LABS ──────────────────────────────────────────────────────────────────
+    // Edits are kept per lab while the page is open, so switching labs
+    // and coming back does not lose work. Refreshing the page does.
+    let currentLab = -1;
+    const labDrafts = {};
+
+    function editor() { return document.getElementById("code-editor"); }
+
+    function initLabs() {
+        const select = document.getElementById("lab-select");
+        LAB_DATA.forEach(function (lab, i) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.text = lab.title;
+            select.appendChild(opt);
+        });
+        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        const m = location.hash.match(/^#lab(.+)$/i);
+        let start = 0;
+        if (m) {
+            const found = LAB_DATA.findIndex(l => l.id.toLowerCase() === m[1].toLowerCase());
+            if (found >= 0) start = found;
+        }
+        select.value = start;
+        loadLab();
+    }
+
+    async function loadLab() {
+        const index = parseInt(document.getElementById("lab-select").value, 10);
+        if (currentLab >= 0) labDrafts[currentLab] = editor().value;
+        if (isRunning) await stopGame();
+        currentLab = index;
+        const lab = LAB_DATA[index];
+        editor().value = (labDrafts[index] !== undefined) ? labDrafts[index] : lab.code;
+        editor().scrollTop = 0;
+        try { history.replaceState(null, "", "#lab" + lab.id); } catch (e) {}
+        document.getElementById("console-output").innerHTML = "";
+        log("Loaded: " + lab.title, "log-sys");
+        updateHintButton();
+        updateLineNumbers();
+    }
+
+    function resetLab() {
+        if (!confirm("Reset this lab? Your changes to this lab will be lost unless you have exported them.")) return;
+        delete labDrafts[currentLab];
+        editor().value = LAB_DATA[currentLab].code;
+        editor().scrollTop = 0;
+        updateLineNumbers();
+        log("Lab reset to the starting code.", "log-sys");
+    }
+
+    // ── HINT AND COMPLETE ─────────────────────────────────────────────────────
+    let infoModalAdvances = false;
+
+    function openInfoModal(icon, text, advances) {
+        document.getElementById("info-modal-icon").textContent = icon;
+        document.getElementById("info-modal-text").textContent = text;
+        infoModalAdvances = advances;
+        document.getElementById("info-modal").classList.add("open");
+    }
+
+    function closeInfoModal() {
+        document.getElementById("info-modal").classList.remove("open");
+        if (infoModalAdvances && currentLab < LAB_DATA.length - 1) {
+            document.getElementById("lab-select").value = currentLab + 1;
+            loadLab();
+        }
+    }
+
+    // ── HINT LADDER ───────────────────────────────────────────────────────────
+    // Each press of Hint goes one level deeper: hint 1, 2, 3, then the answer.
+    // Levels are remembered per lab while the page is open.
+    const hintLevels = {};
+
+    function hintLabel(level, total) {
+        if (level < total) return "💡 Hint " + (level + 1) + " of " + total;
+        if (level === total) return "🏳 Show answer";
+        return "🏳 Answer";
+    }
+
+    function updateHintButton() {
+        const lab = LAB_DATA[currentLab];
+        const total = (lab.hints || []).length;
+        const level = hintLevels[currentLab] || 0;
+        document.getElementById("hint-btn").textContent = hintLabel(level, total);
+        const next = document.getElementById("hint-next-btn");
+        next.style.display = level > total ? "none" : "";
+        next.textContent = level < total ? "💡 Next hint" : "🏳 Show answer";
+    }
+
+    function addBlock(parent, heading, text, isAnswer) {
+        const block = document.createElement("div");
+        block.className = "hint-block" + (isAnswer ? " answer" : "");
+        const h = document.createElement("h3");
+        h.textContent = heading;
+        const p = document.createElement("p");
+        p.className = "hint-text";
+        p.textContent = text;
+        block.appendChild(h);
+        block.appendChild(p);
+        parent.appendChild(block);
+        return block;
+    }
+
+    function showHint() {
+        const lab = LAB_DATA[currentLab];
+        const hints = lab.hints || [];
+        let level = hintLevels[currentLab] || 0;
+        if (level <= hints.length) level++;          // go one level deeper
+        hintLevels[currentLab] = level;
+
+        const box = document.getElementById("hint-modal-content");
+        box.innerHTML = "";
+        for (let i = 0; i < Math.min(level, hints.length); i++) {
+            addBlock(box, "Hint " + (i + 1) + " of " + hints.length, hints[i], false);
+        }
+        if (level > hints.length) {
+            const block = addBlock(box, "Answer", lab.answer || "", true);
+            if (lab.answerCode) {
+                const wrap = document.createElement("div");
+                wrap.className = "answer-code-wrap";
+                const pre = document.createElement("pre");
+                pre.className = "answer-code";
+                pre.textContent = lab.answerCode;
+                const btn = document.createElement("button");
+                btn.className = "btn-copy";
+                btn.textContent = "Copy";
+                btn.onclick = function () { copyText(lab.answerCode, btn); };
+                wrap.appendChild(pre);
+                wrap.appendChild(btn);
+                block.appendChild(wrap);
+            }
+        }
+        updateHintButton();
+        document.getElementById("hint-modal").classList.add("open");
+        box.lastChild.scrollIntoView({ block: "nearest" });
+    }
+
+    function closeHintModal() {
+        document.getElementById("hint-modal").classList.remove("open");
+    }
+
+    function copyText(text, btn) {
+        function done() {
+            btn.textContent = "Copied!";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else {
+            fallbackCopy(text); done();
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+
+    function showComplete() {
+        const lab = LAB_DATA[currentLab];
+        const isLast = currentLab >= LAB_DATA.length - 1;
+        const text = isLast
+            ? (lab.finalText || "Congratulations, you have completed all the labs in this lesson!")
+            : (lab.completeText || "Well done! Click OK to continue to the next lab.");
+        openInfoModal("🎉", text, true);
+    }
+
+    // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    function exportCode() {
+        const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
+        const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([editor().value], { type: "text/plain" }));
+        a.download = file;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        log("Exported " + file, "log-sys");
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta    = editor();
+        const ln    = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        document.getElementById("line-numbers").scrollTop = editor().scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide       = null;
+    let isRunning     = false;
+    let uploadedFiles = [];
+    let runGlobals    = null;   // a fresh, empty set of variables for every Run
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        for (const file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        updateFileList();
+        input.value = '';
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        stopAllSounds();
+        if (runGlobals) {
+            try { runGlobals.set("game_running", false); } catch (e) {}
+        }
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (!pyodide) return;
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+        document.getElementById('canvas').focus();
+        const code = editor().value;
+        try {
+            installSoundModule();
+            // Fresh variables every Run, so nothing left over from an
+            // earlier Run (or an earlier lab) can hide a mistake.
+            runGlobals = pyodide.runPython("dict(__name__='__main__')");
+            await pyodide.runPythonAsync(code, { globals: runGlobals });
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    initLabs();
+    init();
+</script>
+
+</body>
+</html>
