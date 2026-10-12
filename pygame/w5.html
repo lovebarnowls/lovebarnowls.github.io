@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Yang's Game IDE — My Game (Week 5)</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <style>
+        /* ── MODALS ─────────────────────────────────────────────────────────── */
+        .name-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:2000; display:flex; align-items:center; justify-content:center; }
+        .name-modal-overlay.hidden { display:none; }
+        .name-modal-box { background:#252526; border:2px solid #ce3c3c; border-radius:12px; padding:36px 40px; max-width:400px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.7); }
+        .name-modal-title { font-size:16px; font-weight:800; color:#ce3c3c; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+        .name-modal-subtitle { font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.6; }
+        .name-modal-input { width:100%; background:#1e1e1e; border:2px solid #333; border-radius:6px; color:#d4d4d4; font-family:'Consolas',monospace; font-size:15px; padding:10px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; box-sizing:border-box; }
+        .name-modal-input:focus { border-color:#ce3c3c; }
+        .name-modal-error { font-family:'Consolas',monospace; font-size:11px; color:#f05050; margin-bottom:10px; min-height:16px; }
+        .name-modal-btn { background:#ce3c3c; color:#fff; border:none; border-radius:6px; padding:10px 28px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; width:100%; }
+        .name-modal-btn:hover { background:#ff4d4d; }
+
+
+        /* ── CORE ───────────────────────────────────────────────────────────── */
+        body { background:#1e1e1e; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        header { background:#252526; padding:10px 20px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; height:50px; flex-shrink:0; }
+        h1 { margin:0; font-size:18px; color:#ce3c3c; }
+        .header-controls { display:flex; gap:8px; align-items:center; }
+
+        .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; }
+
+        /* ── EDITOR ─────────────────────────────────────────────────────────── */
+        .editor-pane { display:flex; flex-direction:column; border-right:1px solid #333; min-width:0; overflow:hidden; }
+
+        .editor-wrap { flex:1; display:flex; overflow:hidden; background:#1e1e1e; min-height:0; }
+        .line-numbers { width:44px; flex-shrink:0; background:#1a1a1a; border-right:1px solid #2a2a2a; padding:15px 8px 15px 0; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; color:#555; text-align:right; user-select:none; overflow:hidden; white-space:pre; }
+        #code-editor { flex:1; background:#1e1e1e; color:#d4d4d4; font-family:'Consolas',monospace; padding:15px 15px 15px 10px; border:none; font-size:13px; line-height:1.6; resize:none; outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto; overflow-y:auto; }
+
+        /* ── RIGHT COLUMN ───────────────────────────────────────────────────── */
+        .right-column { display:flex; flex-direction:column; height:100%; min-height:0; }
+        .game-pane { flex:2; display:flex; flex-direction:column; background:#252526; align-items:center; justify-content:center; padding:80px 10px 10px 10px; border-bottom:1px solid #333; position:relative; min-height:0; }
+        .console-pane { flex:1; display:flex; flex-direction:column; background:#111; min-height:0; overflow:hidden; }
+
+        .pane-header { background:#2d2d2d; padding:5px 15px; font-size:11px; text-transform:uppercase; color:#aaa; border-bottom:1px solid #333; font-weight:bold; flex-shrink:0; }
+
+        canvas { border:2px solid #444; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.5); cursor:crosshair; display:block; max-width:100%; max-height:100%; object-fit:contain; }
+
+        .controls { margin-top:10px; display:flex; gap:10px; align-items:center; width:100%; justify-content:center; flex-wrap:wrap; }
+
+        .file-upload-wrapper { display:flex; flex-direction:column; align-items:center; gap:5px; background:#2a2a2a; padding:10px; border-radius:4px; border:1px dashed #444; }
+        .file-list { font-size:11px; color:#888; max-height:40px; overflow-y:auto; text-align:center; width:100%; }
+        .file-item { color:#4daafc; margin-right:5px; }
+
+        button { background:#ce3c3c; color:white; border:none; padding:8px 18px; cursor:pointer; border-radius:3px; font-weight:bold; font-size:13px; }
+        button:hover:not(:disabled) { background:#ff4d4d; }
+        button:disabled { background:#555; cursor:not-allowed; color:#888; }
+        button.stop { background:#444; }
+        button.stop:hover:not(:disabled) { background:#666; }
+        .start-select { background:#3a3a3a; border:1px solid #555; color:white; font-size:12px; padding:5px 8px; border-radius:3px; cursor:pointer; }
+        .btn-export-hdr { background:#3a3a3a; border:1px solid #555; color:white; font-size:12px; padding:6px 12px; }
+        .btn-export-hdr:hover:not(:disabled) { background:#4a4a4a; }
+
+        input[type="file"] { display:none; }
+        .custom-file-btn { background:#333; color:#ccc; padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px; border:1px solid #555; }
+        .custom-file-btn:hover { background:#444; color:white; }
+
+        #console-output { flex:1; background:#000; color:#0f0; font-family:'Consolas',monospace; padding:10px; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+        .log-error { color:#ff4d4d; }
+        .log-sys   { color:#888; }
+
+        #loading-screen { position:fixed; inset:0; background:#1e1e1e; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .progress-bar  { width:300px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#ce3c3c; width:0%; transition:width 0.3s; }
+        #loading-text  { color:#aaa; font-size:13px; }
+
+        @media (max-width:1000px) {
+            .container { grid-template-columns:1fr; grid-template-rows:1fr 1fr; overflow-y:auto; }
+            .editor-pane { border-right:none; border-bottom:1px solid #333; height:50vh; }
+            .right-column { height:50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="name-modal-overlay" id="name-modal">
+  <div class="name-modal-box">
+    <div class="name-modal-title">🎮 Yang's Game IDE</div>
+    <div class="name-modal-subtitle">Enter your first name to begin. Your name will appear on your exported code so you know which file is yours.</div>
+    <input type="text" class="name-modal-input" id="name-modal-input" placeholder="Your first name" onkeydown="if(event.key==='Enter') confirmName()" autofocus />
+    <div class="name-modal-error" id="name-modal-error"></div>
+    <button class="name-modal-btn" onclick="confirmName()">Begin ▶</button>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <h2 style="color:#ce3c3c; margin:0;">🎮 Yang's Game IDE — My Game (Week 5)</h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div id="loading-text">Loading Python...</div>
+</div>
+
+<header>
+    <h1>Yang's Game IDE — My Game (Week 5)</h1>
+    <div class="header-controls">
+        <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
+        <select id="start-select" class="start-select" onchange="loadStartingGame(this)" title="Put a starting game below the INSERT line">
+            <option value="">Start from…</option>
+            <option value="Swarm">Swarm</option>
+            <option value="Click">Click</option>
+            <option value="Collector">Collector</option>
+        </select>
+        <button class="btn-export-hdr" onclick="exportCode()">⬇ Export Code</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT: EDITOR WITH LINE NUMBERS -->
+    <div class="editor-pane">
+        <div class="pane-header">main.py — edit here</div>
+        <div class="editor-wrap">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false"
+                oninput="updateLineNumbers()" onscroll="syncScroll()" onkeydown="handleTab(event)"># ============================================================
+#  MY GAME  (Week 5)
+# ============================================================
+# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
+# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
+# the AI to fix it for you.
+# The Stop button only works if your game loop is:  while game_running:
+#
+# 1. Choose one of the three starting games in the "Start from" menu at the
+#    top (Swarm, Click or Collector). It goes below the INSERT line.
+# 2. Make your VARIATIONS (changes), with Copilot or by hand. Run after each one.
+#    When you paste in Copilot's code, paste it below the INSERT line.
+# 3. List every variation below. Then press Export Code and upload the file
+#    to Schoolbox.
+#
+# MY VARIATIONS (one line each: what you changed, and why it makes the game
+# better for the person who will play it)
+#   Started from:
+#   1.
+#   2.
+#   3.
+# ============================================================
+
+## INSERT GAME CODE BELOW THIS LINE ##
+</textarea>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <div class="game-pane">
+            <div class="pane-header" style="width:100%; box-sizing:border-box; position:absolute; top:0; left:0;">Game Output (800x600)</div>
+            <canvas id="canvas" width="800" height="600" tabindex="1"></canvas>
+            <div class="controls">
+                <button id="run-btn"  onclick="runGame()"  disabled>▶ Run Game</button>
+                <button id="stop-btn" onclick="stopGame()" disabled class="stop">■ Stop</button>
+                <div class="file-upload-wrapper">
+                    <label class="custom-file-btn">
+                        📂 Upload Assets
+                        <input type="file" id="img-upload" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="file-list-display" class="file-list">No files uploaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="console-pane">
+            <div class="pane-header">Console Output</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ── NAME MODAL ────────────────────────────────────────────────────────────
+    let studentName = "";
+
+    function confirmName() {
+        const raw = document.getElementById("name-modal-input").value.trim();
+        const err = document.getElementById("name-modal-error");
+        if (!raw || raw.length < 2) {
+            err.textContent = raw ? "Name must be at least 2 characters." : "Please enter your first name.";
+            return;
+        }
+        studentName = raw;
+        document.getElementById("name-modal").classList.add("hidden");
+    }
+
+    // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    // Downloads the code as a .txt file for uploading to Schoolbox.
+    const EXPORT_TAG = "my-game";
+
+    function exportCode() {
+        const code = document.getElementById("code-editor").value;
+        const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([code], { type: "text/plain" }));
+        a.download = name + "-" + EXPORT_TAG + ".txt";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        log("Exported " + a.download, "log-sys");
+    }
+
+
+    // ── WEEK 5: STARTING GAMES AND RUN CHECKS ─────────────────────────────────
+    const MARKER = "## INSERT GAME CODE BELOW THIS LINE ##";
+    const STARTING_GAMES = {
+        "Swarm": "import pygame\nimport asyncio\nimport random\n\n# ============================================================\n#  STUDENT ZONE\n# ============================================================\nBLIP_SPEED   = 8\nFALL_SPEED   = 4\nPOGO_SIZE    = 30\nLIVES        = 3\nBLIP_COLOUR  = (0, 200, 80)\nPOGO_COLOUR  = (220, 50, 50)\nBACKGROUND   = (30, 30, 30)\nTEXT_COLOUR  = (255, 255, 255)\n\ngame_running = True\n\nasync def main():\n    global game_running\n    game_running = True\n\n    pygame.init()\n    screen = pygame.display.set_mode((800, 600))\n    font = pygame.font.SysFont(None, 26)\n    clock = pygame.time.Clock()\n\n    blip = pygame.Rect(375, 530, 50, 50)\n    pogos = []\n    pogos.append(pygame.Rect(100, 0, POGO_SIZE, POGO_SIZE))\n    pogos.append(pygame.Rect(400, 120, POGO_SIZE, POGO_SIZE))\n    pogos.append(pygame.Rect(650, 240, POGO_SIZE, POGO_SIZE))\n    pogos.append(pygame.Rect(250, -150, POGO_SIZE, POGO_SIZE))\n    pogos.append(pygame.Rect(550, -300, POGO_SIZE, POGO_SIZE))\n    dodged = 0\n    lives = LIVES\n    state = \"start\"\n    high_score = 0\n\n    while game_running:\n        # 1. HANDLE EVENTS: check what the player did\n        for event in pygame.event.get():\n            if event.type == pygame.QUIT:\n                game_running = False\n            if event.type == pygame.KEYDOWN:\n                if event.key == pygame.K_SPACE:\n                    if state == \"start\":\n                        state = \"playing\"\n                    elif state == \"over\":\n                        lives = LIVES\n                        dodged = 0\n                        blip.x = 375\n                        for pogo in pogos:\n                            pogo.y = random.randint(-600, -pogo.height)\n                            pogo.x = random.randint(0, 800 - pogo.width)\n                        state = \"playing\"\n\n        # 2. UPDATE: change the variables\n        if state == \"playing\":\n            keys = pygame.key.get_pressed()\n            if keys[pygame.K_RIGHT]:\n                blip.x = blip.x + BLIP_SPEED\n            if keys[pygame.K_LEFT]:\n                blip.x = blip.x - BLIP_SPEED\n            if blip.x > 800 - blip.width:\n                blip.x = 800 - blip.width\n            if blip.x < 0:\n                blip.x = 0\n            for pogo in pogos:\n                pogo.y = pogo.y + FALL_SPEED\n                if pogo.y > 600:\n                    pogo.y = -pogo.height\n                    pogo.x = random.randint(0, 800 - pogo.width)\n                    dodged = dodged + 1\n                    print(\"Dodged:\", dodged)\n                if blip.colliderect(pogo):\n                    lives = lives - 1\n                    pogo.y = -pogo.height\n                    pogo.x = random.randint(0, 800 - pogo.width)\n                    print(\"Lives:\", lives)\n            if lives <= 0:\n                state = \"over\"\n                if dodged > high_score:\n                    high_score = dodged\n                    print(\"Best:\", high_score)\n\n        # 3. DRAW: put things on the screen\n        screen.fill(BACKGROUND)\n        pygame.draw.rect(screen, BLIP_COLOUR, blip)\n        for pogo in pogos:\n            pygame.draw.rect(screen, POGO_COLOUR, pogo)\n        status_text = font.render(f\"Dodged: {dodged}   Lives: {lives}\", True, TEXT_COLOUR)\n        screen.blit(status_text, (10, 10))\n        best_text = font.render(f\"Best: {high_score}\", True, TEXT_COLOUR)\n        screen.blit(best_text, (700, 10))\n        if state == \"start\":\n            start_text = font.render(\"Press Space to start\", True, TEXT_COLOUR)\n            screen.blit(start_text, (310, 290))\n        elif state == \"over\":\n            over_text = font.render(f\"Game over!   Dodged: {dodged}\", True, TEXT_COLOUR)\n            screen.blit(over_text, (300, 290))\n            again_text = font.render(\"Press Space to play again\", True, TEXT_COLOUR)\n            screen.blit(again_text, (290, 320))\n\n        # 4. FLIP: show the finished frame\n        pygame.display.flip()\n        clock.tick(60)\n        await asyncio.sleep(0)\n\n    pygame.quit()\n\n# ============================================================\n#  START THE GAME\n# ============================================================\nawait main()\n",
+        "Click": "import pygame\nimport asyncio\nimport random\n\n# ============================================================\n#  STUDENT ZONE\n# ============================================================\nTARGET_SIZE  = 80\nMAX_MISSES   = 3\nTARGET_COLOUR = (0, 200, 80)\nBACKGROUND   = (30, 30, 30)\nTEXT_COLOUR  = (255, 255, 255)\n\ngame_running = True\n\nasync def main():\n    global game_running\n    game_running = True\n\n    pygame.init()\n    screen = pygame.display.set_mode((800, 600))\n    font = pygame.font.SysFont(None, 26)\n    clock = pygame.time.Clock()\n\n    target = pygame.Rect(360, 380, TARGET_SIZE, TARGET_SIZE)\n    score = 0\n    misses = 0\n    state = \"start\"\n    high_score = 0\n\n    while game_running:\n        # 1. HANDLE EVENTS: check what the player did\n        for event in pygame.event.get():\n            if event.type == pygame.QUIT:\n                game_running = False\n            if event.type == pygame.KEYDOWN:\n                if event.key == pygame.K_SPACE:\n                    if state == \"start\":\n                        state = \"playing\"\n                    elif state == \"over\":\n                        score = 0\n                        misses = 0\n                        state = \"playing\"\n            if event.type == pygame.MOUSEBUTTONDOWN:\n                if state == \"playing\":\n                    if target.collidepoint(event.pos):\n                        score = score + 1\n                        target.x = random.randint(0, 800 - target.width)\n                        target.y = random.randint(40, 600 - target.height)\n                    else:\n                        misses = misses + 1\n\n        # 2. UPDATE: change the variables\n        if state == \"playing\":\n            if misses >= MAX_MISSES:\n                state = \"over\"\n                if score > high_score:\n                    high_score = score\n\n        # 3. DRAW: put things on the screen\n        screen.fill(BACKGROUND)\n        pygame.draw.rect(screen, TARGET_COLOUR, target)\n        status_text = font.render(f\"Score: {score}   Misses: {misses}\", True, TEXT_COLOUR)\n        screen.blit(status_text, (10, 10))\n        best_text = font.render(f\"Best: {high_score}\", True, TEXT_COLOUR)\n        screen.blit(best_text, (700, 10))\n        if state == \"start\":\n            start_text = font.render(\"Press Space to start\", True, TEXT_COLOUR)\n            screen.blit(start_text, (310, 290))\n        elif state == \"over\":\n            over_text = font.render(f\"Game over!   Score: {score}\", True, TEXT_COLOUR)\n            screen.blit(over_text, (300, 290))\n            again_text = font.render(\"Press Space to play again\", True, TEXT_COLOUR)\n            screen.blit(again_text, (290, 320))\n\n        # 4. FLIP: show the finished frame\n        pygame.display.flip()\n        clock.tick(60)\n        await asyncio.sleep(0)\n\n    pygame.quit()\n\n# ============================================================\n#  START THE GAME\n# ============================================================\nawait main()\n",
+        "Collector": "import pygame\nimport asyncio\nimport random\n\n# ============================================================\n#  STUDENT ZONE\n# ============================================================\nBLIP_SPEED   = 5\nCOIN_SIZE    = 20\nGAME_LENGTH  = 30\nBLIP_COLOUR  = (0, 200, 80)\nCOIN_COLOUR  = (255, 200, 0)\nBACKGROUND   = (30, 30, 30)\nTEXT_COLOUR  = (255, 255, 255)\n\ngame_running = True\n\nasync def main():\n    global game_running\n    game_running = True\n\n    pygame.init()\n    screen = pygame.display.set_mode((800, 600))\n    font = pygame.font.SysFont(None, 26)\n    clock = pygame.time.Clock()\n\n    blip = pygame.Rect(380, 280, 40, 40)\n    coin = pygame.Rect(0, 0, COIN_SIZE, COIN_SIZE)\n    coin.x = random.randint(0, 800 - coin.width)\n    coin.y = random.randint(40, 600 - coin.height)\n    score = 0\n    time_left = GAME_LENGTH\n    start_time = 0\n    state = \"start\"\n    high_score = 0\n\n    while game_running:\n        # 1. HANDLE EVENTS: check what the player did\n        for event in pygame.event.get():\n            if event.type == pygame.QUIT:\n                game_running = False\n            if event.type == pygame.KEYDOWN:\n                if event.key == pygame.K_SPACE:\n                    if state == \"start\":\n                        start_time = pygame.time.get_ticks()\n                        state = \"playing\"\n                    elif state == \"over\":\n                        score = 0\n                        blip.x = 380\n                        blip.y = 280\n                        start_time = pygame.time.get_ticks()\n                        state = \"playing\"\n\n        # 2. UPDATE: change the variables\n        if state == \"playing\":\n            keys = pygame.key.get_pressed()\n            if keys[pygame.K_RIGHT]:\n                blip.x = blip.x + BLIP_SPEED\n            if keys[pygame.K_LEFT]:\n                blip.x = blip.x - BLIP_SPEED\n            if keys[pygame.K_DOWN]:\n                blip.y = blip.y + BLIP_SPEED\n            if keys[pygame.K_UP]:\n                blip.y = blip.y - BLIP_SPEED\n            if blip.x > 800 - blip.width:\n                blip.x = 800 - blip.width\n            if blip.x < 0:\n                blip.x = 0\n            if blip.y > 600 - blip.height:\n                blip.y = 600 - blip.height\n            if blip.y < 0:\n                blip.y = 0\n            if blip.colliderect(coin):\n                score = score + 1\n                coin.x = random.randint(0, 800 - coin.width)\n                coin.y = random.randint(40, 600 - coin.height)\n            time_left = GAME_LENGTH - (pygame.time.get_ticks() - start_time) // 1000\n            if time_left <= 0:\n                state = \"over\"\n                if score > high_score:\n                    high_score = score\n\n        # 3. DRAW: put things on the screen\n        screen.fill(BACKGROUND)\n        pygame.draw.rect(screen, COIN_COLOUR, coin)\n        pygame.draw.rect(screen, BLIP_COLOUR, blip)\n        status_text = font.render(f\"Score: {score}   Time: {time_left}\", True, TEXT_COLOUR)\n        screen.blit(status_text, (10, 10))\n        best_text = font.render(f\"Best: {high_score}\", True, TEXT_COLOUR)\n        screen.blit(best_text, (700, 10))\n        if state == \"start\":\n            start_text = font.render(\"Press Space to start\", True, TEXT_COLOUR)\n            screen.blit(start_text, (310, 290))\n        elif state == \"over\":\n            over_text = font.render(f\"Time up!   Score: {score}\", True, TEXT_COLOUR)\n            screen.blit(over_text, (300, 290))\n            again_text = font.render(\"Press Space to play again\", True, TEXT_COLOUR)\n            screen.blit(again_text, (290, 320))\n\n        # 4. FLIP: show the finished frame\n        pygame.display.flip()\n        clock.tick(60)\n        await asyncio.sleep(0)\n\n    pygame.quit()\n\n# ============================================================\n#  START THE GAME\n# ============================================================\nawait main()\n"
+};
+
+    // Put a starting game below the INSERT line. Everything above the line is kept.
+    function loadStartingGame(sel) {
+        const name = sel.value;
+        sel.value = "";
+        if (!name) return;
+        const ta = document.getElementById("code-editor");
+        const parts = ta.value.split(MARKER);
+        const above = parts.length > 1 ? parts[0] : ta.value.trimEnd() + "\n\n";
+        const below = parts.length > 1 ? parts.slice(1).join(MARKER) : "";
+        if (below.trim() !== "" &&
+            !confirm("This will replace the game below the INSERT line with " + name + ". Your variations list above the line is kept. Carry on?")) return;
+        ta.value = above + MARKER + "\n" + STARTING_GAMES[name];
+        ta.scrollTop = 0;
+        updateLineNumbers();
+        log("Loaded the " + name + " starting game. Press Run to play it.", "log-sys");
+    }
+
+    // Returns a message if the code should not be run, or "" if it is fine.
+    function checkBeforeRun(code) {
+        if (/^[ \t]*while[ \t]+True[ \t]*:/m.test(code)) {
+            return "Your code has  while True:  in it. This IDE is an emulator of pygame, and while True will not work (it freezes the page). " +
+                   "Use  while game_running:  with  await asyncio.sleep(0)  inside the loop instead. " +
+                   "You can ask Copilot: \"Change while True to while game_running, and keep await asyncio.sleep(0) in the loop, because this runs in a browser emulator.\"";
+        }
+        const parts = code.split(MARKER);
+        if (parts.length > 1 && parts.slice(1).join(MARKER).trim() === "") {
+            return "There is no game below the INSERT line yet. Choose a game in the \"Start from\" menu at the top, or paste your game below the line.";
+        }
+        return "";
+    }
+
+    // ── LINE NUMBERS ──────────────────────────────────────────────────────────
+    function updateLineNumbers() {
+        const ta    = document.getElementById("code-editor");
+        const ln    = document.getElementById("line-numbers");
+        const lines = ta.value.split("\n").length;
+        ln.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+        syncScroll();
+    }
+
+    function syncScroll() {
+        const ta = document.getElementById("code-editor");
+        const ln = document.getElementById("line-numbers");
+        ln.scrollTop = ta.scrollTop;
+    }
+
+    function handleTab(e) {
+        if (e.key !== "Tab") return;
+        e.preventDefault();
+        const ta    = e.target;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        updateLineNumbers();
+    }
+
+    // ── SOUNDS ────────────────────────────────────────────────────────────────
+    // The eight class sounds, hosted on Teacher Yang's GitHub Pages.
+    // Students use them with:  from sounds import play_sound
+    const SOUND_BASE  = "https://lovebarnowls.github.io/pygame/";
+    const SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"];
+
+    let audioCtx       = null;
+    const soundBuffers = {};
+    const activeSounds = new Set();
+
+    // The Python module students import. Rebuilt fresh on every Run.
+    const SOUNDS_PY = `"""
+Teacher Yang's sound helper. You do not need to edit this file.
+
+How to use it in your game:
+    from sounds import play_sound
+    play_sound("coin")         # full volume
+    play_sound("coin", 0.5)    # half volume (0.0 is silent, 1.0 is full)
+"""
+import js
+
+SOUND_NAMES = ["click", "coin", "jump", "hit", "explosion", "powerup", "win", "gameover"]
+_warned = set()
+
+
+def _warn_once(key, *lines):
+    # Only print each warning once, so a mistake inside the game loop
+    # does not flood the console 60 times a second.
+    if key in _warned:
+        return
+    _warned.add(key)
+    for line in lines:
+        print(line)
+
+
+def play_sound(name, volume=1.0):
+    if name not in SOUND_NAMES:
+        _warn_once(("name", repr(name)),
+                   f"play_sound: there is no sound called {name!r}.",
+                   "The sounds you can use are: " + ", ".join(SOUND_NAMES))
+        return
+    try:
+        volume = float(volume)
+    except (TypeError, ValueError):
+        _warn_once(("volume", repr(volume)),
+                   f"play_sound: volume must be a number from 0.0 to 1.0, not {volume!r}.")
+        return
+    volume = max(0.0, min(1.0, volume))
+    if not js.pyPlaySound(name, volume):
+        _warn_once(("missing", name),
+                   f"play_sound: the sound {name!r} has not loaded, so it will be silent.")
+`;
+
+    async function loadSounds() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) {
+            log("This browser cannot play sounds. Your game will run silently.", "log-error");
+            return;
+        }
+        audioCtx = new AC();
+        const missing = [];
+        await Promise.all(SOUND_NAMES.map(async (name) => {
+            try {
+                const resp = await fetch(SOUND_BASE + name + ".mp3");
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                const data = await resp.arrayBuffer();
+                soundBuffers[name] = await audioCtx.decodeAudioData(data);
+            } catch (err) {
+                missing.push(name);
+            }
+        }));
+        if (missing.length) {
+            log("Some sounds could not load: " + missing.join(", "), "log-error");
+        }
+    }
+
+    // Called from Python through the sounds module. Returns false if the sound is not loaded.
+    function pyPlaySound(name, volume) {
+        if (!audioCtx || !soundBuffers[name]) return false;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const src  = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        src.buffer = soundBuffers[name];
+        gain.gain.value = volume;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.onended = () => activeSounds.delete(src);
+        activeSounds.add(src);   // overlapping plays are allowed
+        src.start();
+        return true;
+    }
+
+    function stopAllSounds() {
+        for (const src of activeSounds) {
+            try { src.stop(); } catch (e) {}
+        }
+        activeSounds.clear();
+    }
+
+    function installSoundModule() {
+        pyodide.FS.mkdirTree("/yang_lib");
+        pyodide.FS.writeFile("/yang_lib/sounds.py", SOUNDS_PY);
+        pyodide.runPython(
+            "import sys; sys.modules.pop('sounds', None); " +
+            "sys.path.insert(0, '/yang_lib') if '/yang_lib' not in sys.path else None"
+        );
+    }
+
+    // ── PYODIDE ───────────────────────────────────────────────────────────────
+    let pyodide       = null;
+    let isRunning     = false;
+    let uploadedFiles = [];
+
+    function log(msg, cls = '') {
+        const out = document.getElementById('console-output');
+        const d   = document.createElement('div');
+        d.textContent = '> ' + msg;
+        if (cls) d.className = cls;
+        out.appendChild(d);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function updateFileList() {
+        const listDiv = document.getElementById('file-list-display');
+        listDiv.innerHTML = uploadedFiles.length === 0
+            ? "No files uploaded"
+            : uploadedFiles.map(f => `<span class="file-item">📄 ${f}</span>`).join('<br>');
+    }
+
+    async function init() {
+        try {
+            document.getElementById('progress').style.width = '20%';
+            document.getElementById('loading-text').textContent = 'Loading Pyodide...';
+
+            pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+            });
+
+            document.getElementById('progress').style.width = '60%';
+            document.getElementById('loading-text').textContent = 'Loading pygame-ce...';
+
+            await pyodide.loadPackage("pygame-ce");
+
+            document.getElementById('progress').style.width = '80%';
+            document.getElementById('loading-text').textContent = 'Loading sounds...';
+
+            await loadSounds();
+
+            document.getElementById('progress').style.width = '100%';
+
+            pyodide.canvas.setCanvas2D(document.getElementById("canvas"));
+            pyodide.setStdout({ batched: (msg) => log(msg) });
+            pyodide.setStderr({ batched: (msg) => log(msg, 'log-error') });
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('run-btn').disabled = false;
+            setStatus('Ready');
+            log('Engine ready. Hit Run.', 'log-sys');
+            updateLineNumbers();
+
+        } catch (err) {
+            document.getElementById('loading-text').textContent = 'Failed: ' + err.message;
+            log('Load failed: ' + err, 'log-error');
+        }
+    }
+
+    async function handleImageUpload(input) {
+        if (!pyodide || !input.files) return;
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        log(`Processing ${files.length} file(s)...`, 'log-sys');
+        for (const file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    try {
+                        pyodide.FS.writeFile(file.name, data);
+                        if (!uploadedFiles.includes(file.name)) uploadedFiles.push(file.name);
+                        log(`Uploaded: ${file.name}`, 'log-sys');
+                    } catch(err) {
+                        log(`Failed to save ${file.name}: ${err}`, 'log-error');
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { log(`Error reading ${file.name}`, 'log-error'); resolve(); };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        updateFileList();
+        input.value = '';
+    }
+
+    async function stopGame() {
+        if (!pyodide) return;
+        stopAllSounds();
+        try { await pyodide.runPythonAsync("game_running = False"); } catch(e) {}
+        isRunning = false;
+        document.getElementById('run-btn').disabled  = false;
+        document.getElementById('stop-btn').disabled = true;
+        setStatus('Stopped');
+        log('Stopped.', 'log-sys');
+    }
+
+    async function runGame() {
+        // Week 5: refuse while True (it freezes this IDE) and an empty game.
+        const problem = checkBeforeRun(document.getElementById('code-editor').value);
+        if (problem) { log(problem, 'log-error'); return; }
+        // Unlock audio straight away, while the browser still counts this as a click.
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if (!pyodide) return;
+        if (isRunning) { await stopGame(); await new Promise(r => setTimeout(r, 200)); }
+        stopAllSounds();
+        document.getElementById('console-output').innerHTML = '';
+        log('Starting...', 'log-sys');
+        document.getElementById('run-btn').disabled  = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRunning = true;
+        setStatus('Running');
+        document.getElementById('canvas').focus();
+        const code = document.getElementById('code-editor').value;
+        try {
+            installSoundModule();
+            await pyodide.runPythonAsync(code);
+        } catch (err) {
+            log('Error: ' + err, 'log-error');
+        } finally {
+            isRunning = false;
+            document.getElementById('run-btn').disabled  = false;
+            document.getElementById('stop-btn').disabled = true;
+            setStatus('Ready');
+            log('Finished.', 'log-sys');
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
