@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Press Start</title>
+<style>
+  :root {
+    --bg: #1e1e1e;
+    --panel: #252526;
+    --panel-hover: #2d2d2e;
+    --line: #333;
+    --text: #e8e8e8;
+    --muted: #9a9a9a;
+    --accent: #ce3c3c;
+    --accent-hover: #ff4d4d;
+    --blip: #00c850;
+    --coin: #ffc800;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 16px 64px; }
+
+  header { margin-bottom: 36px; }
+  .title {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: clamp(36px, 8vw, 64px);
+    font-weight: 800;
+    letter-spacing: 4px;
+    margin: 0;
+    color: var(--accent);
+  }
+  .title .cursor {
+    display: inline-block;
+    width: 0.55em; height: 0.8em;
+    background: var(--blip);
+    margin-left: 0.15em;
+    vertical-align: baseline;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .title .cursor { animation: none; } }
+  .subtitle { color: var(--muted); margin: 8px 0 0; font-size: 15px; }
+
+  .week { margin-bottom: 28px; }
+  .week-label {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin: 0 0 10px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+
+  a.card {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+    color: inherit;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  a.card:hover, a.card:focus-visible { background: var(--panel-hover); border-left-color: var(--accent-hover); outline: none; }
+  a.card:focus-visible { box-shadow: 0 0 0 2px var(--accent-hover); }
+  .code {
+    flex-shrink: 0;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: #1a1a1a;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 3px 7px;
+    min-width: 56px;
+    text-align: center;
+  }
+  .card-name { font-weight: 700; font-size: 16px; display: block; }
+  .card-desc { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #1e1e1e;
+    background: var(--coin);
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: 2px;
+  }
+  a.card.big { border-left-color: var(--blip); }
+  a.card.big .code { color: var(--blip); }
+  a.card.big:hover, a.card.big:focus-visible { border-left-color: var(--blip); }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1 class="title">PRESS START<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="subtitle">Make a game in Python, wrap it in a webpage, and send it to your family and friends.</p>
+  </header>
+
+  <main>
+    <section class="week">
+      <h2 class="week-label">Week 1</h2>
+      <div class="cards">
+        <a class="card" href="w1L1.html"><span class="code">w1L1</span><span><span class="card-name">Variables and Scope</span><span class="card-desc">Meet Blip. Variables, print, functions and scope.</span></span></a>
+        <a class="card" href="w1L2.html"><span class="code">w1L2</span><span><span class="card-name">The Frame Cycle</span><span class="card-desc">Loops, moving Blip, frame rate and bouncing.</span></span></a>
+      </div>
+    </section>
+
+    <section class="week">
+      <h2 class="week-label">Week 2</h2>
+      <div class="cards">
+        <a class="card" href="w2L1.html"><span class="code">w2L1</span><span><span class="card-name">Click the Target</span><span class="card-desc">The mouse, rectangles, clicks and a score.</span></span></a>
+        <a class="card" href="w2L2.html"><span class="code">w2L2</span><span><span class="card-name">Dodge <span class="tag">Work sample</span></span><span class="card-desc">Arrow keys, walls, and dodging Pogo.</span></span></a>
+      </div>
+    </section>
+
+    <section class="week">
+      <h2 class="week-label">Week 3</h2>
+      <div class="cards">
+        <a class="card" href="w3L1.html"><span class="code">w3L1</span><span><span class="card-name">Catch</span><span class="card-desc">Falling coins, random numbers and a countdown.</span></span></a>
+        <a class="card" href="w3L2.html"><span class="code">w3L2</span><span><span class="card-name">Swarm</span><span class="card-desc">Lists, for loops and a swarm of Pogos.</span></span></a>
+      </div>
+    </section>
+
+    <section class="week">
+      <h2 class="week-label">Week 4</h2>
+      <div class="cards">
+        <a class="card" href="w4L1.html"><span class="code">w4L1</span><span><span class="card-name">Start and Game Over</span><span class="card-desc">Game states, play again and a high score.</span></span></a>
+        <a class="card" href="w4L2.html"><span class="code">w4L2</span><span><span class="card-name">Ask the AI</span><span class="card-desc">Use Copilot to fix and change three games.</span></span></a>
+      </div>
+    </section>
+
+    <section class="week">
+      <h2 class="week-label">Week 5</h2>
+      <div class="cards">
+        <a class="card big" href="w5.html"><span class="code">w5</span><span><span class="card-name">My Game <span class="tag">Assessment</span></span><span class="card-desc">Start from Swarm, Click or Collector, and make it your own.</span></span></a>
+      </div>
+    </section>
+
+    <section class="week">
+      <h2 class="week-label">Week 6 onwards</h2>
+      <div class="cards">
+        <a class="card big" href="wrapper.html"><span class="code">wrapper</span><span><span class="card-name">Wrap Your Game</span><span class="card-desc">Put your game in a webpage, style it, and send it to family and friends.</span></span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>Press Start: the Pygame unit. Remember to press Export Code before you close a page: refreshing loses your work.</footer>
+</div>
+</body>
+</html>
