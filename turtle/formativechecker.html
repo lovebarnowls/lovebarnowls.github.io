@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flag formative checker</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--text:#1c2430;--muted:#5d6877;--line:#d5dae1;--accent:#1f5fbf;--accent-text:#fff;--ok:#1d7a3e;--bad:#b3261e;--code:#f0f2f5}
+@media (prefers-color-scheme:dark){:root{--bg:#14181f;--panel:#1c222b;--text:#e6e9ee;--muted:#9aa5b4;--line:#323a46;--accent:#6aa3f0;--accent-text:#0d1420;--ok:#5fcf86;--bad:#ff8a80;--code:#10141a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px}
+main{max-width:900px;margin:0 auto}
+h1{font-size:1.5rem;margin:0 0 4px}
+p.sub{margin:0 0 20px;color:var(--muted);max-width:70ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:600;margin-bottom:6px}
+input[type=text],textarea{width:100%;border:1px solid var(--line);border-radius:6px;background:var(--code);color:var(--text);padding:10px;font:inherit}
+textarea{font-family:ui-monospace,Consolas,monospace;font-size:.9rem;min-height:300px;resize:vertical;tab-size:4}
+input[type=text]{max-width:320px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;font-weight:600;padding:9px 16px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-text);cursor:pointer}
+button.alt{background:transparent;color:var(--accent)}
+button:disabled{opacity:.5;cursor:wait}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#status{color:var(--muted);font-size:.9rem}
+#out{display:none}
+#msg{white-space:pre-wrap;min-height:120px;font-family:inherit}
+ul.checks{list-style:none;margin:0;padding:0}
+ul.checks li{padding:4px 0;border-bottom:1px solid var(--line)}
+ul.checks li:last-child{border:0}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.note{color:var(--muted);font-size:.9rem;margin:10px 0 0}
+h2{font-size:1.05rem;margin:0 0 8px}
+</style>
+</head>
+<body>
+<main>
+<h1>Flag formative checker</h1>
+<p class="sub">Paste a student's Year 8 turtle submission. The code is run here in your browser with a pretend turtle and tested against all five flags. Nothing is uploaded or stored.</p>
+
+<div class="panel">
+  <label for="name">Student first name (optional)</label>
+  <input type="text" id="name" autocomplete="off">
+  <label for="code" style="margin-top:14px">Student code</label>
+  <textarea id="code" spellcheck="false" placeholder="Paste the student's code here"></textarea>
+  <div class="row">
+    <button id="go" disabled>Check code</button>
+    <button id="clear" class="alt">Clear</button>
+    <span id="status" role="status">Loading Python (first load takes a few seconds)…</span>
+  </div>
+</div>
+
+<div id="out">
+  <div class="panel">
+    <h2>Feedback to send</h2>
+    <textarea id="msg" aria-label="Feedback message"></textarea>
+    <div class="row"><button id="copy">Copy feedback</button><span id="copied" role="status" class="note"></span></div>
+    <p class="note">You can edit the text above before copying. Please skim the student's code yourself as well: this tool checks results, not style or effort.</p>
+  </div>
+  <div class="panel">
+    <h2>What was tested</h2>
+    <ul class="checks" id="checks"></ul>
+    <p class="note" id="notes"></p>
+  </div>
+</div>
+</main>
+
+<script type="text/plain" id="py">
+import sys, types, math, re, json, io
+
+NAMED = set("""black white red green blue yellow orange purple pink brown grey gray cyan magenta
+gold silver navy maroon violet turquoise crimson tan beige ivory khaki lime teal olive indigo coral
+salmon skyblue lightblue darkblue darkgreen lightgreen darkred darkorange orangered lightyellow
+lightgrey lightgray darkgrey darkgray royalblue steelblue firebrick chocolate sienna plum orchid
+lavender aquamarine seagreen forestgreen limegreen hotpink deeppink tomato wheat linen azure
+midnightblue slateblue slategray dodgerblue cornflowerblue springgreen yellowgreen goldenrod""".split())
+
+
+class TurtleGraphicsError(Exception):
+    pass
+
+
+class Stop(Exception):
+    pass
+
+
+class Rec:
+    def __init__(self):
+        self.fills = []
+        self.steps = 0
+
+
+REC = Rec()
+
+
+def _chk(c):
+    if isinstance(c, str):
+        k = c.replace(" ", "").lower()
+        if k in NAMED or re.fullmatch(r"#([0-9a-f]{3}|[0-9a-f]{6})", k) or re.fullmatch(r"gr[ae]y\d{1,3}", k):
+            return k
+        raise TurtleGraphicsError("bad color string: " + c)
+    return str(tuple(c)) if isinstance(c, (tuple, list)) else str(c)
+
+
+class Quiet:
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError(name)
+        return lambda *a, **k: None
+
+
+class Turtle:
+    def __init__(self, *a, **k):
+        self.x = self.y = self.h = 0.0
+        self.pc = self.fc = "black"
+        self.pts = None
+
+    def _tick(self):
+        REC.steps += 1
+        if REC.steps > 100000:
+            raise Stop("the program kept drawing without finishing (possible endless loop)")
+
+    def _move(self, x, y):
+        self._tick()
+        self.x, self.y = x, y
+        if self.pts is not None:
+            self.pts.append((x, y))
+
+    def forward(self, d):
+        r = math.radians(self.h)
+        self._move(self.x + d * math.cos(r), self.y + d * math.sin(r))
+    fd = forward
+
+    def backward(self, d):
+        self.forward(-d)
+    bk = back = backward
+
+    def right(self, a):
+        self._tick()
+        self.h = (self.h - a) % 360
+    rt = right
+
+    def left(self, a):
+        self._tick()
+        self.h = (self.h + a) % 360
+    lt = left
+
+    def goto(self, x, y=None):
+        if y is None:
+            x, y = x
+        self._move(x, y)
+    setpos = setposition = goto
+
+    def setx(self, x):
+        self._move(x, self.y)
+
+    def sety(self, y):
+        self._move(self.x, y)
+
+    def setheading(self, a):
+        self.h = a % 360
+    seth = setheading
+
+    def xcor(self):
+        return self.x
+
+    def ycor(self):
+        return self.y
+
+    def pos(self):
+        return (self.x, self.y)
+    position = pos
+
+    def heading(self):
+        return self.h
+
+    def _col(self, a):
+        return str(tuple(a)) if len(a) == 3 else _chk(a[0])
+
+    def color(self, *a):
+        if not a:
+            return (self.pc, self.fc)
+        if len(a) == 2:
+            self.pc, self.fc = _chk(a[0]), _chk(a[1])
+        else:
+            self.pc = self.fc = self._col(a)
+
+    def pencolor(self, *a):
+        if a:
+            self.pc = self._col(a)
+
+    def fillcolor(self, *a):
+        if a:
+            self.fc = self._col(a)
+
+    def begin_fill(self):
+        self.pts = [(self.x, self.y)]
+
+    def end_fill(self):
+        if self.pts:
+            xs = [p[0] for p in self.pts]
+            ys = [p[1] for p in self.pts]
+            REC.fills.append(dict(colour=self.fc, x0=round(min(xs)), x1=round(max(xs)),
+                                  y0=round(min(ys)), y1=round(max(ys))))
+        self.pts = None
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError(name)
+        return lambda *a, **k: None
+
+
+def make_module():
+    m = types.ModuleType("turtle")
+    default = []
+
+    def dt():
+        if not default:
+            default.append(Turtle())
+        return default[0]
+    m.Turtle = Turtle
+    m.RawTurtle = Turtle
+    m.Screen = lambda: Quiet()
+    m.TurtleGraphicsError = TurtleGraphicsError
+    m.__getattr__ = lambda name: getattr(dt(), name)
+    return m
+
+
+def describe(e, tb_file="<student>"):
+    line = None
+    tb = e.__traceback__
+    while tb:
+        if tb.tb_frame.f_code.co_filename == tb_file:
+            line = tb.tb_lineno
+        tb = tb.tb_next
+    pre = "Line %d: " % line if line else ""
+    if isinstance(e, Stop):
+        return pre + str(e)
+    if isinstance(e, TurtleGraphicsError):
+        return pre + "'%s' is not a valid colour name (check the spelling)" % str(e).replace("bad color string: ", "")
+    if isinstance(e, NameError):
+        return pre + "'%s' is not defined (check the spelling of the name)" % getattr(e, "name", "?")
+    return pre + "%s: %s" % (type(e).__name__, e)
+
+
+def run(code, answers):
+    global REC
+    REC = Rec()
+    sys.modules["turtle"] = make_module()
+    it = iter(answers)
+
+    def fake_input(prompt=""):
+        try:
+            return next(it)
+        except StopIteration:
+            raise Stop("the program asks for more inputs than expected")
+    ns = {"__name__": "__main__", "input": fake_input}
+    cnt = [0]
+
+    def tracer(frame, event, arg):
+        if frame.f_code.co_filename != "<student>":
+            return None
+        if event == "line":
+            cnt[0] += 1
+            if cnt[0] > 200000:
+                raise Stop("the program ran too long (possible endless loop)")
+        return tracer
+
+    out, err = sys.stdout, None
+    sys.stdout = io.StringIO()
+    sys.settrace(tracer)
+    try:
+        exec(code, ns)
+    except BaseException as e:
+        err = describe(e)
+    finally:
+        sys.settrace(None)
+        sys.stdout = out
+    return dict(err=err, fills=REC.fills)
+
+
+FLAGS = [
+    ("Belgium", 1, ["black", "yellow", "red"], ["belgium"]),
+    ("Ivory Coast", 1, ["orange", "white", "green"],
+     ["ivory coast", "ivorycoast", "ivory_coast", "côte d'ivoire", "cote d'ivoire"]),
+    ("Romania", 1, ["blue", "yellow", "red"], ["romania"]),
+    ("Estonia", 2, ["blue", "black", "white"], ["estonia"]),
+    ("Lithuania", 2, ["yellow", "green", "red"], ["lithuania"]),
+]
+
+
+def split_fills(fills):
+    big = [f for f in fills if f["x1"] - f["x0"] >= 500 and f["y1"] - f["y0"] >= 500]
+    return big, [f for f in fills if f not in big]
+
+
+def evaluate(grp, exp, r):
+    if r["err"]:
+        return False, r["err"]
+    big, st = split_fills(r["fills"])
+    if len(st) != 3:
+        return False, "%d stripes were drawn instead of 3 (check the country name matches what is typed in)" % len(st)
+    if grp == 1:
+        st.sort(key=lambda f: f["x0"])
+        if len({f["x0"] for f in st}) < 3:
+            return False, "the stripes should sit side by side (vertical flag)"
+    else:
+        st.sort(key=lambda f: -f["y1"])
+        if len({f["y1"] for f in st}) < 3:
+            return False, "the stripes should be stacked top to bottom (horizontal flag)"
+    seq = [f["colour"] for f in st]
+    if seq != exp:
+        return False, "stripes were %s but should be %s" % (", ".join(seq), ", ".join(exp))
+    return True, None
+
+
+def check_code(src):
+    issues, notes, results = [], [], []
+
+    def add(lst, s):
+        if s not in lst:
+            lst.append(s)
+    try:
+        code = compile(src, "<student>", "exec")
+    except SyntaxError as e:
+        kind = "indentation problem" if isinstance(e, IndentationError) else "syntax error"
+        return json.dumps(dict(issues=["Line %s: %s (%s)" % (e.lineno, kind, e.msg)], notes=[], results=[]))
+    for i, (fname, grp, exp, aliases) in enumerate(FLAGS):
+        bg = "1" if i % 2 else "2"
+        best = None
+        for al in aliases:
+            r = run(code, [bg, str(grp), al])
+            ok, prob = evaluate(grp, exp, r)
+            if ok:
+                best = (al, r, True, None)
+                break
+            if best is None:
+                best = (al, r, False, prob)
+        al, r, ok, prob = best
+        big, _ = split_fills(r["fills"])
+        want = "black" if bg == "1" else "white"
+        if not r["err"] and (not big or big[0]["colour"] != want):
+            add(issues, "the background colour does not follow the choice (1 = Black, 2 = White)")
+        if ok:
+            r2 = run(code, [bg, str(grp), al.title()])
+            ok2, _ = evaluate(grp, exp, r2)
+            if not ok2:
+                add(issues, "typing a country with capital letters (for example 'Belgium') does not work: add .lower() to the end of the country input line")
+        else:
+            add(issues, prob if r["err"] else "%s: %s" % (fname, prob))
+        results.append(dict(flag=fname, ok=ok, text="stripes: " + ", ".join(exp) if ok else prob))
+    old = [n + 1 for n, l in enumerate(src.splitlines())
+           if re.search(r"\b(france|ireland|italy|germany|netherlands)\b", l, re.I)]
+    if old:
+        add(notes, "Old flag names still appear on line(s) %s (for example the input prompt)." % ", ".join(map(str, old)))
+    return json.dumps(dict(issues=issues, notes=notes, results=results))
+
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+let checker;
+(async () => {
+  try {
+    const py = await loadPyodide();
+    py.runPython($('py').textContent);
+    checker = py.globals.get('check_code');
+    $('go').disabled = false;
+    $('status').textContent = 'Ready.';
+  } catch (e) {
+    $('status').textContent = 'Python could not load. Check the internet connection and refresh.';
+  }
+})();
+
+$('go').onclick = () => {
+  const src = $('code').value.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ');
+  if (!src.trim()) { $('status').textContent = 'Paste some code first.'; return; }
+  $('go').disabled = true; $('status').textContent = 'Checking…';
+  setTimeout(() => {
+    try {
+      const r = JSON.parse(checker(src));
+      show(r);
+      $('status').textContent = 'Done.';
+    } catch (e) {
+      $('status').textContent = 'The checker hit an unexpected problem: ' + e.message;
+    }
+    $('go').disabled = false;
+  }, 30);
+};
+
+function show(r) {
+  const n = $('name').value.trim();
+  const hello = n ? `Hello ${n},` : 'Hello,';
+  $('msg').value = r.issues.length
+    ? `${hello} thank you for your submission. Your code doesn't work due to:\n${r.issues.map(i => '- ' + i).join('\n')}\nPlease do learn to read the code so you are in a better shape for your final assessment`
+    : `${hello} thank you for your submission. Your code works and I look forward to your summative submission.`;
+  const ul = $('checks'); ul.innerHTML = '';
+  if (!r.results.length) ul.innerHTML = '<li>The code could not be run, so no flags were tested.</li>';
+  r.results.forEach(x => {
+    const li = document.createElement('li');
+    const s = document.createElement('span'); s.className = x.ok ? 'ok' : 'bad'; s.textContent = x.ok ? 'Pass ' : 'Fail ';
+    li.append(s, document.createTextNode(x.flag + ': ' + x.text));
+    ul.append(li);
+  });
+  $('notes').textContent = r.notes.join(' ');
+  $('copied').textContent = '';
+  $('out').style.display = 'block';
+  $('out').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('msg').value); $('copied').textContent = 'Copied.'; }
+  catch (e) { $('msg').select(); $('copied').textContent = 'Press Ctrl+C to copy.'; }
+};
+$('clear').onclick = () => { $('code').value = ''; $('name').value = ''; $('out').style.display = 'none'; $('status').textContent = 'Ready.'; };
+</script>
+</body>
+</html>
