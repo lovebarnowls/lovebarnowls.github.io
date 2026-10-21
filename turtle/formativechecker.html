@@ -347,8 +347,19 @@ def check_code(src):
             if not ok2:
                 add(issues, "typing a country with capital letters (for example 'Belgium') does not work: add .lower() to the end of the country input line")
         else:
-            add(issues, prob if r["err"] else "%s: %s" % (fname, prob))
-        results.append(dict(flag=fname, ok=ok, text="stripes: " + ", ".join(exp) if ok else prob))
+            msg = prob if r["err"] else "%s: %s" % (fname, prob)
+            if not r["err"]:
+                for a in aliases:
+                    for v in {a.title(), a.upper()} - {a}:
+                        hits = [n + 1 for n, l in enumerate(src.splitlines())
+                                if re.search(r"""(["'])%s\1""" % re.escape(v), l)]
+                        if hits:
+                            msg = ("%s: line %s compares against '%s' with capital letters, but the typed country is "
+                                   "converted to lowercase, so it never matches. Use '%s' instead"
+                                   % (fname, ", ".join(map(str, hits)), v, a))
+                            prob = msg.split(": ", 1)[1]
+            add(issues, msg)
+        results.append(dict(flag=fname, ok=ok, text=("stripes: " + ", ".join(exp)) if ok else prob))
     old = [n + 1 for n, l in enumerate(src.splitlines())
            if re.search(r"\b(france|ireland|italy|germany|netherlands)\b", l, re.I)]
     if old:
