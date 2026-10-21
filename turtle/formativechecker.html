@@ -39,6 +39,8 @@ h2{font-size:1.05rem;margin:0 0 8px}
 <p class="sub">Paste a student's Year 8 turtle submission. The code is run here in your browser with a pretend turtle and tested against all five flags. Nothing is uploaded or stored.</p>
 
 <div class="panel">
+  <label for="name">Student first name (optional)</label>
+  <input type="text" id="name" autocomplete="off">
   <label for="code" style="margin-top:14px">Student code</label>
   <textarea id="code" spellcheck="false" placeholder="Paste the student's code here"></textarea>
   <div class="row">
@@ -391,7 +393,7 @@ $('go').onclick = () => {
       show(r);
       $('status').textContent = 'Done.';
     } catch (e) {
-      $('status').textContent = 'The checker hit an unexpected problem: ' + e.message;
+      console.error(e); $('status').textContent = 'The checker hit an unexpected problem: ' + e.message + ' [' + ((e.stack || '').split('\n')[1] || '').trim().slice(0, 140) + ']';
     }
     $('go').disabled = false;
   }, 30);
