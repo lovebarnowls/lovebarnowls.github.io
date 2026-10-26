@@ -45,6 +45,14 @@
         background:var(--bg-dark);
         color:var(--accent);
     }
+
+    .lesson-links a .hint {
+        display:block;
+        font-family:'Segoe UI',sans-serif;
+        font-size:12px;
+        color:#777;
+        margin-top:2px;
+    }
 </style>
 </head>
 <body>
@@ -79,6 +87,28 @@
         weekBlock.appendChild(links);
         container.appendChild(weekBlock);
     }
+
+    // Helper tools (standalone pages)
+    const toolsBlock = document.createElement('div');
+    toolsBlock.className = 'week-block';
+
+    const toolsTitle = document.createElement('div');
+    toolsTitle.className = 'week-title';
+    toolsTitle.textContent = 'Helper Tools';
+    toolsBlock.appendChild(toolsTitle);
+
+    const toolsLinks = document.createElement('div');
+    toolsLinks.className = 'lesson-links';
+
+    const gridLink = document.createElement('a');
+    gridLink.href = 'https://lovebarnowls.github.io/turtle/grid.html';
+    gridLink.target = '_blank';
+    gridLink.rel = 'noopener';
+    gridLink.innerHTML = 'Grid Overlay<span class="hint">A grid to help you visualise where the turtle will go</span>';
+    toolsLinks.appendChild(gridLink);
+
+    toolsBlock.appendChild(toolsLinks);
+    container.appendChild(toolsBlock);
 </script>
 
 </body>
