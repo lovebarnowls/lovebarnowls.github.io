@@ -42,7 +42,7 @@
         header { background:#252526; padding:6px 16px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; min-height:50px; box-sizing:border-box; flex-shrink:0; gap:10px; flex-wrap:wrap; }
         .header-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
         h1 { margin:0; font-size:17px; color:#ce3c3c; white-space:nowrap; }
-        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; }
+        .lab-selector { background:#333; color:white; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:13px; max-width:360px; }
         .header-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
         .container { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr; flex:1; overflow:hidden; min-height:0; }
@@ -149,7 +149,7 @@
     <div class="header-controls">
         <div id="status" style="font-size:12px; color:#888;">Initialising...</div>
         <button class="btn-hdr btn-hint" id="hint-btn" onclick="showHint()">💡 Hint 1 of 3</button>
-        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset Lab</button>
+        <button class="btn-hdr btn-grey" onclick="resetLab()">↺ Reset</button>
         <button class="btn-hdr btn-grey" onclick="exportCode()">⬇ Export Code</button>
         <button class="btn-hdr btn-complete" onclick="showComplete()">✔ Complete</button>
     </div>
@@ -195,57 +195,19 @@
 <script>
     // ================================================================
     // LAB DATA
-    // Each lab: id (used in the address, e.g. #lab1a), title,
-    // code (the instructions live in the comments), hints (three, each
-    // deeper than the last), answer (explanation and where to paste),
-    // answerCode (the code to paste, optional) and completeText.
-    // The last lab can have finalText instead of completeText.
+    // Each entry: id (used in the address, e.g. #lab2a), group (the
+    // heading in the menu), title, code (the instructions live in the
+    // comments), hints (three, each deeper than the last), answer
+    // (explanation), answerCode (code or plan to paste, optional) and
+    // completeText. Optional: noRun (planning only, Run does nothing)
+    // and next (the id Complete should go to, instead of the next entry).
+    // The last entry can have finalText instead of completeText.
     // ================================================================
     const LESSON = "w4L2";
 
-    var LAB_DATA = [
-    {
-        id: "1a",
-
-        title: "Lab 1a: Can Copilot Fix It?",
-
-        code: `import pygame
-import asyncio
-import random
-
-# ============================================================
-#  w4L2 LAB 1a: CAN COPILOT FIX IT?
-# ============================================================
-# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
-# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
-# the AI to fix it for you.
-#
-# (Remember: press Stop, make your change, then press Run.)
-#
-# Welcome to w4L2: Ask the AI. This week you start using an AI to help with
-# your game. The school AI is Microsoft Copilot. Sign in with your SCHOOL account.
-#
-# This is Swarm from w4L1, but it has THREE problems. It SHOULD:
-#   1. start a fresh game with 3 lives when you press Space on the game-over screen;
-#   2. never let Blip leave the screen;
-#   3. never let Best go DOWN.
-# Play it a few times first, and find each problem yourself.
-#
-# TASK 1a
-#   1. Copy ALL of the code in this lab (click in the code, press Ctrl+A, then Ctrl+C).
-#   2. Paste it into Copilot, and ask it to fix the problems. You decide what to
-#      type. You can tell it what the game should do.
-#   3. Copy the code Copilot gives you, paste it here over ALL of the old code
-#      (Ctrl+A, then Ctrl+V), and press Run.
-#   4. Check all three problems. Which ones did Copilot fix? Did it change
-#      anything you did not ask for?
-#
-# AI answers are different every time, so Copilot might NOT fix everything.
-# That is part of what you are finding out.
-#
-# When you are done, click "Complete" at the top.
-
-# ============================================================
+    // The three games are shared between labs, so each is written once.
+    // A lab is its own header (the instructions) followed by a game.
+    const SWARM_BUGGY = `# ============================================================
 #  STUDENT ZONE
 # ============================================================
 BLIP_SPEED   = 8
@@ -350,60 +312,9 @@ async def main():
 # ============================================================
 #  START THE GAME
 # ============================================================
-await main()`,
+await main()`;
 
-        hints: [
-            "Copilot only knows what you tell it. Telling it what the game SHOULD do (the three numbered points above) usually works better than just \"fix it\".",
-            "If Copilot fixed some problems but not all, you do not have to start again. Tell it which one is still wrong, and what happens when you play.",
-            "If the page froze or the game will not start, look for  while True:  in Copilot's code. Ask it again, and tell it the game runs in a browser emulator, so it must keep  async def main()  and  await asyncio.sleep(0)."
-        ],
-
-        answer: "The three problems, and how to fix them by hand. These steps fix the ORIGINAL code, so press Reset Lab first if Copilot changed yours.\n\n1. The play-again code resets dodged and Blip, but not lives, so the new game is over straight away (the w4L1 Lab 3a bug).\n2. Blip has a wall on the right, but the left wall is missing.\n3. When the game ends, high_score is ALWAYS set to dodged, even when dodged is smaller, so Best can go down. It needs the if from w4L1 Lab 4a.\n\nStep 1: make a new empty line straight under line 81, which says\n    elif state == \"over\":\nand type this line there, with 24 spaces in front:\n    lives = LIVES\n\nStep 2: make a new empty line straight under line 98 (it moved down one line in Step 1), which now says\n    blip.x = 800 - blip.width\nand type these two lines there, with 12 spaces in front of the if and 16 in front of the line inside it:\n    if blip.x < 0:\n        blip.x = 0\n\nStep 3: replace line 115 (it moved down three lines in Steps 1 and 2), which now says\n    high_score = dodged\nwith the two lines below. The indents are already included.",
-
-        answerCode: `                if dodged > high_score:
-                    high_score = dodged`,
-
-        completeText: "Click OK for Lab 2a: a different game."
-    },
-    {
-        id: "2a",
-
-        title: "Lab 2a: Fix One Line",
-
-        code: `import pygame
-import asyncio
-import random
-
-# ============================================================
-#  w4L2 LAB 2a: FIX ONE LINE
-# ============================================================
-# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
-# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
-# the AI to fix it for you.
-#
-# (Remember: press Stop, make your change, then press Run.)
-#
-# This is a new game: CLICK. It is the Click the Target game from w2L1, now
-# with a start screen, play again and a high score, like Swarm. Click Blip to
-# score. Blip jumps somewhere new. Every click that misses Blip is a miss, and
-# after MAX_MISSES misses (line 38), the game is over.
-#
-# But press Run: it crashes straight away. Read the LAST line of the error in the
-# console. It says which line went wrong, and why.
-#
-# Pasting the WHOLE game into Copilot is not always the best way. When you know
-# which line is wrong, you can ask about just that line.
-#
-# TASK 2a
-#   1. Copy ONLY line 92, and the last line of the error.
-#   2. Paste them into Copilot, and ask it to fix that ONE line.
-#   3. Paste Copilot's line over line 92 (keep the 8 spaces in front),
-#      and press Run. Then play a game: do the score and misses show?
-#   4. Did Copilot explain WHY the line was wrong? Could you explain it to someone else?
-#
-# When you are done, click "Complete" at the top.
-
-# ============================================================
+    const CLICK_BUGGY = `# ============================================================
 #  STUDENT ZONE
 # ============================================================
 TARGET_SIZE  = 80
@@ -484,56 +395,9 @@ async def main():
 # ============================================================
 #  START THE GAME
 # ============================================================
-await main()`,
+await main()`;
 
-        hints: [
-            "The error ends with something like:  TypeError: can only concatenate str (not \"int\") to str.  Copy that whole last line for Copilot.",
-            "\"str\" means words (text) and \"int\" means a whole number. The + sign cannot join words and a number together.",
-            "You met the fix in w2L1 Lab 5a: an f-string, with the numbers in curly brackets."
-        ],
-
-        answer: "+ can join words to words, or add numbers to numbers, but it cannot join words to a number, so Python stops with a TypeError. An f-string puts the numbers inside the words for you. (Copilot might use str(score) instead. That works too.)\n\nReplace line 92, which says\n    status_text = font.render(\"Score: \" + score + \"   Misses: \" + misses, True, TEXT_COLOUR)\nwith the line below. The indent is already included.",
-
-        answerCode: `        status_text = font.render(f"Score: {score}   Misses: {misses}", True, TEXT_COLOUR)`,
-
-        completeText: "Click OK for Lab 3a: the third game."
-    },
-    {
-        id: "3a",
-
-        title: "Lab 3a: Make It Better?",
-
-        code: `import pygame
-import asyncio
-import random
-
-# ============================================================
-#  w4L2 LAB 3a: MAKE IT BETTER?
-# ============================================================
-# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
-# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
-# the AI to fix it for you.
-#
-# (Remember: press Stop, make your change, then press Run.)
-#
-# This is the third game: COLLECTOR, rebuilt from the Square Collector game.
-# The arrow keys move Blip in all four directions. Collect as many gold coins as
-# you can before the time runs out (GAME_LENGTH, line 36, in seconds).
-#
-# Play it once. Then see what happens when you ask Copilot for something VAGUE.
-#
-# TASK 3a
-#   1. Copy ALL of the code, paste it into Copilot, and type only:
-#          Make this game better.
-#   2. Paste what it gives you over all of the old code, and press Run.
-#   3. Answer these in your head, or as comments at the bottom of the code:
-#        - What did Copilot change?  Can you find EVERY change?
-#        - Is it the change YOU would have wanted?
-#        - Would you be able to explain the new code to someone else?
-#
-# When you are done, click "Complete" at the top.
-
-# ============================================================
+    const COLLECTOR = `# ============================================================
 #  STUDENT ZONE
 # ============================================================
 BLIP_SPEED   = 5
@@ -638,37 +502,1199 @@ async def main():
 # ============================================================
 #  START THE GAME
 # ============================================================
-await main()`,
+await main()`;
+
+    const REMINDER = `# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
+# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
+# the AI to fix it for you.
+#
+# (Remember: press Stop, make your change, then press Run.)
+#
+`;
+
+    var LAB_DATA = [
+    {
+        id: "plan0",
+        group: "Start here",
+
+        title: "Plan 0: Plan Before You Prompt",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 PLAN 0: PLAN BEFORE YOU PROMPT
+# ============================================================
+# Nothing in this lab runs. Read it, then click "Complete".
+#
+# WHY PLAN?
+# In this lesson you will ask an AI to fix and change games. An AI does what you SAY, not what you MEAN. A plan
+# written BEFORE you ask makes your request exact. It also gives you something
+# to check the AI's answer against.
+#
+# TWO WAYS TO PLAN
+#   PSEUDOCODE: the steps of your game in plain English, one per line, with
+#               indents to show what is inside an IF or a loop. It is not
+#               real Python, so there is no wrong spelling.
+#   FLOWCHART : the same steps drawn as shapes joined by arrows. In this IDE we
+#               draw them with text, and we label every shape (a), (b), (c)...
+#               so that you can talk about them.
+#
+# ------------------------------------------------------------
+#  IMPORTANT: CHOOSE ONE
+# ------------------------------------------------------------
+# For your formative assessment you do the PSEUDOCODE labs OR the FLOWCHART labs.
+# You do NOT do both. The two tracks are the same size and the same difficulty,
+# so choose the one that suits how you think.
+#   [Pseudocode] Plan 1a, 1b, 1c, 1d
+#   [Flowchart]  Plan 1a, 1b, 1c, 1d
+# Plans 1a to 1c get harder each time. Plan 1d is your own variation: export that
+# file and hand it in.
+# ------------------------------------------------------------
+#
+# PSEUDOCODE WORDS (use capitals so that they stand out)
+#   SET x TO 5            ADD 1 TO x            TAKE 1 FROM x
+#   IF ... / ELSE IF ... / ELSE ... / END IF
+#   WHILE ... / END WHILE         FOR EACH ... / END FOR
+#   DRAW ...              PLAY SOUND ...
+#
+# FLOWCHART SHAPES (the brackets stand for the real shapes, and each shape names itself)
+#   ( Terminator )     rounded: START or END
+#   [ Process ]        rectangle: a step that DOES something
+#   < Decision >       diamond: a YES or NO question, with two arrows out
+#   / Input/Output /   parallelogram: something comes IN or goes OUT
+#                      (a key press, a click, DRAW, PLAY SOUND)
+#   | v +--            arrows
+#
+# ============================================================
+#  EXAMPLE 1: SWARM (Blip), in PSEUDOCODE
+#  Moving Blip and keeping it on the screen.
+# ============================================================
+#   IF the RIGHT key is held
+#       ADD BLIP_SPEED TO Blip's x
+#   END IF
+#   IF the LEFT key is held
+#       TAKE BLIP_SPEED FROM Blip's x
+#   END IF
+#   IF Blip's x is bigger than 800 minus Blip's width
+#       SET Blip's x TO 800 minus Blip's width
+#   END IF
+#   IF Blip's x is less than 0
+#       SET Blip's x TO 0
+#   END IF
+#
+# ============================================================
+#  EXAMPLE 2: CLICK, as a FLOWCHART
+#  What happens each time the mouse is clicked.
+# ============================================================
+#                  ( Terminator: START, the mouse is clicked )
+#                                       |
+#                                       v
+#                   < (a) Decision: Is the state "playing"? >--NO-----+
+#                                       | YES                         |
+#                                       v                             |
+#                 < (b) Decision: Is the click on the target? >       |
+#                       | YES                           | NO          |
+#                       v                               v             |
+#            [ (c) Process: Add 1 to         [ (f) Process: Add 1 to  |
+#              score ]                         misses ]               |
+#                       |                               |             |
+#                       v                               |             |
+#            [ (d) Process: Move the                    |             |
+#              target ]                                 |             |
+#                       |                               |             |
+#                       v                               |             |
+#           / (e) Input/Output: PLAY                    |             |
+#             SOUND "coin" /                            |             |
+#                       |                               |             |
+#                       +---------------+---------------+-------------+
+#                                       |
+#                                       v
+#                              ( Terminator: END )
+#   (This version also plays a sound, to show you the Input/Output shape.)
+#
+# ============================================================
+#  EXAMPLE 3: COLLECTOR, in PSEUDOCODE
+#  The whole game, in outline.
+# ============================================================
+#   SET score TO 0
+#   SET state TO "start"
+#   WHILE the game is running
+#       IF Space is pressed AND state is "start" or "over"
+#           SET score TO 0
+#           SET the start time TO now
+#           SET state TO "playing"
+#       END IF
+#       IF state is "playing"
+#           MOVE Blip with the arrow keys
+#           IF Blip touches the coin
+#               ADD 1 TO score
+#               MOVE the coin somewhere random
+#           END IF
+#           SET time left TO GAME_LENGTH minus the seconds since the start time
+#           IF time left is 0 or less
+#               SET state TO "over"
+#           END IF
+#       END IF
+#       DRAW everything for this state
+#   END WHILE
+#
+# Notice: every example is short, every line does ONE thing, and the indents
+# (or the YES and NO arrows) show what belongs inside what.`,
 
         hints: [
-            "To find the changes, look at the settings at the top first, then the four jobs in main(). Copilot often adds new settings or new variables.",
-            "Copilot had to GUESS what \"better\" means. Different people (and different tries) get different guesses.",
-            "If the new game crashes or freezes, that is useful to know too. Press Reset Lab to get the original game back."
+            "Not sure which to choose? Pseudocode suits people who like to write things out in words. Flowcharts suit people who like to see every path at once.",
+            "Pseudocode can be pasted straight into Copilot later. A flowchart shows every path clearly, but you will need to put it into words when you ask Copilot.",
+            "Your Plan 1a to 1c work is practice. The piece you hand in is the export from Plan 1d of your track."
         ],
 
-        answer: "There is no single right answer: every student will get something different. The point is that \"make it better\" makes Copilot guess. It may change many things at once, which makes it hard to check what changed, hard to explain, and hard to undo if something breaks. Lab 3b asks for ONE exact change instead.\n\nPress Reset Lab to get the original Collector game back before Lab 3b.",
+        answer: "There is nothing to find in this lab: it is a set of worked examples. Read all three, then click Complete and begin your track.",
 
-        completeText: "Click OK for Lab 3b."
+        completeText: "Click OK for [Pseudocode] Plan 1a.\n\nIf you chose flowcharts, click OK, then choose [Flowchart] Plan 1a from the menu at the top instead."
     },
     {
-        id: "3b",
+        id: "p1a",
+        group: "Plan: PSEUDOCODE track (choose ONE track)",
 
-        title: "Lab 3b: Ask Exactly",
+        title: "[Pseudocode] Plan 1a: Steps in Order",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 [PSEUDOCODE] PLAN 1a: STEPS IN ORDER
+# ============================================================
+# CHOOSE ONE: you do the PSEUDOCODE labs OR the FLOWCHART labs, not both.
+# You are on the PSEUDOCODE track. (For flowcharts, choose a [Flowchart] Plan
+# from the menu at the top.)
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# THE GAME: Swarm. After "Game over!", the player presses Space to play again.
+# That one moment has to put everything back to how a new game starts.
+#
+# TASK 1a
+#   1. Write pseudocode for what happens when Space is pressed on the game
+#      over screen. One step per line, in the right order.
+#   2. The first line and the last two lines are done for you. Write the steps between them
+#      (aim for 5 to 8 lines).
+#   3. Think about each of these: lives, dodged, Blip's place, the pogos'
+#      places, and Best. Which ones must be reset, and which one must NOT be?
+#   4. Write it yourself FIRST. Then you may ask Copilot: "Here is my plan. Is
+#      any step missing or in the wrong order?" Do not just copy its answer.
+#      Decide whether it is right.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  YOUR PLAN
+# ============================================================
+# WHEN Space is pressed on the game over screen
+#
+#
+#
+#
+#
+# SET state TO "playing"
+# PLAY SOUND "powerup"`,
+
+        hints: [
+            "Look at everything the player can see on the screen: Dodged, Lives, Blip, the pogos, Best. Each thing that belongs to the OLD game needs a step.",
+            "The pogos are a list, so you must do something to EACH pogo. Use  FOR EACH pogo ... END FOR  and indent the line inside it.",
+            "Best is the high score across all games. If you reset it, the player loses their record, so leave it out."
+        ],
+
+        answer: "Four things belong to the old game, and one does not.\n\nlives, dodged, Blip's place and every pogo's place must be reset. Best must NOT be reset, because it remembers the player's record across games.\n\nThe pogos are a list, so the reset goes inside a FOR EACH. Your steps might be in a slightly different order, and that is fine, as long as nothing is missing and the state changes last.",
+
+        answerCode: `# WHEN Space is pressed on the game over screen
+# SET lives TO LIVES
+# SET dodged TO 0
+# SET Blip's x TO 375
+# FOR EACH pogo
+#     SET the pogo's y TO a random number above the screen
+#     SET the pogo's x TO a random number across the screen
+# END FOR
+# SET state TO "playing"
+# PLAY SOUND "powerup"`,
+
+        completeText: "Click OK for [Pseudocode] Plan 1b: decisions."
+    },
+    {
+        id: "p1b",
+        group: "Plan: PSEUDOCODE track (choose ONE track)",
+
+        title: "[Pseudocode] Plan 1b: Make a Decision",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 [PSEUDOCODE] PLAN 1b: MAKE A DECISION
+# ============================================================
+# CHOOSE ONE: you do the PSEUDOCODE labs OR the FLOWCHART labs, not both.
+# You are on the PSEUDOCODE track.
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# THE GAME: Swarm. Every frame while the game is playing, each pogo falls.
+# These are the rules:
+#   - A pogo that falls past the bottom of the screen (below 600) has been
+#     dodged. Add 1 to dodged, and put the pogo back above the top of the
+#     screen at a new random x.
+#   - A pogo that touches Blip takes 1 life. Put the pogo back above the top
+#     of the screen at a new random x.
+#   - After all the pogos have moved, if lives are 0 or less the game is over.
+#     Best only changes if dodged is bigger than Best.
+#
+# TASK 1b
+#   1. Fill in every ______ below. Some blanks are a question for an IF, and
+#      some are a step. Keep the indents: they show what is inside what.
+#   2. Match each rule above to one IF.
+#   3. Check yourself: could someone who has never seen the game follow your
+#      plan?
+#   4. Write it yourself FIRST. Then you may ask Copilot to check it.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  YOUR PLAN
+# ============================================================
+# FOR EACH pogo
+#     MOVE the pogo down by FALL_SPEED
+#     IF ______________________________
+#         ______________________________
+#         ______________________________
+#         ______________________________
+#     END IF
+#     IF ______________________________
+#         ______________________________
+#         ______________________________
+#         ______________________________
+#     END IF
+# END FOR
+# IF ______________________________
+#     SET state TO "over"
+#     IF ______________________________
+#         ______________________________
+#     END IF
+# END IF`,
+
+        hints: [
+            "Two of the IF lines are about one pogo, and the other two are about the whole game. Match each rule above to one IF.",
+            "The bottom of the screen is 600. A pogo has gone past it when its y is bigger than 600.",
+            "The IF inside the game over IF is the high score rule from w4L1 Lab 4a: only change Best when dodged is bigger than it."
+        ],
+
+        answer: "The two IFs inside the FOR EACH handle ONE pogo (dodged, or hit). The two IFs after it handle the WHOLE game (game over, then Best).\n\nThe nested IF matters: Best is only checked at the moment the game ends, and only changes when dodged is bigger. Your wording can differ, but the conditions must mean the same thing.",
+
+        answerCode: `# FOR EACH pogo
+#     MOVE the pogo down by FALL_SPEED
+#     IF the pogo's y is bigger than 600
+#         ADD 1 TO dodged
+#         SET the pogo's y TO just above the top of the screen
+#         SET the pogo's x TO a random number across the screen
+#     END IF
+#     IF Blip touches the pogo
+#         TAKE 1 FROM lives
+#         SET the pogo's y TO just above the top of the screen
+#         SET the pogo's x TO a random number across the screen
+#     END IF
+# END FOR
+# IF lives is 0 or less
+#     SET state TO "over"
+#     IF dodged is bigger than Best
+#         SET Best TO dodged
+#     END IF
+# END IF`,
+
+        completeText: "Click OK for [Pseudocode] Plan 1c: a whole game."
+    },
+    {
+        id: "p1c",
+        group: "Plan: PSEUDOCODE track (choose ONE track)",
+
+        title: "[Pseudocode] Plan 1c: A Whole Game",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 [PSEUDOCODE] PLAN 1c: A WHOLE GAME
+# ============================================================
+# CHOOSE ONE: you do the PSEUDOCODE labs OR the FLOWCHART labs, not both.
+# You are on the PSEUDOCODE track.
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# THE GAME: Click. A target sits on the screen. Click it to score, and it jumps
+# somewhere random. Click anywhere else and that is a miss. After MAX_MISSES
+# misses the game is over. Space starts the game, and restarts it after game
+# over. Best is kept between games.
+#
+# TASK 1c
+#   1. Plan the WHOLE game. Only the four jobs of the game loop are given. Every
+#      other line is yours.
+#   2. Use WHILE, FOR EACH, IF, ELSE IF, ELSE and END IF, with indents.
+#   3. Check that every IF has an END IF, and that Best is NOT reset on restart.
+#   4. Write it yourself FIRST. Then you may ask Copilot to check it.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  YOUR PLAN
+# ============================================================
+# SETUP (happens once, before the loop)
+#
+#
+# WHILE the game is running
+#
+#     1. HANDLE EVENTS
+#
+#
+#     2. UPDATE
+#
+#
+#     3. DRAW
+#
+#
+# END WHILE`,
+
+        hints: [
+            "SETUP is every variable the game needs before it starts: score, misses, high score, state, and where the target is.",
+            "EVENTS has two kinds of event: a key (Space) and a mouse click. A click only counts when the state is \"playing\", and then there are two outcomes: hit or miss.",
+            "UPDATE is where the game checks whether misses has reached MAX_MISSES, and where Best changes. DRAW needs a different message for \"start\" and for \"over\"."
+        ],
+
+        answer: "Compare the shape, not the exact words. A good plan has: all the variables in SETUP; a FOR EACH over the events with the Space rules and the click rules; the game over check and the Best check in UPDATE; and one message per state in DRAW.\n\nThe usual mistakes are resetting Best on restart, counting clicks when the state is not \"playing\", and forgetting the END IF lines.",
+
+        answerCode: `# SETUP
+# SET score TO 0
+# SET misses TO 0
+# SET high score TO 0
+# SET state TO "start"
+# PUT the target in its starting place
+#
+# WHILE the game is running
+#     1. HANDLE EVENTS
+#     FOR EACH event
+#         IF Space is pressed
+#             IF state is "start"
+#                 SET state TO "playing"
+#             ELSE IF state is "over"
+#                 SET score TO 0
+#                 SET misses TO 0
+#                 SET state TO "playing"
+#             END IF
+#         END IF
+#         IF the mouse is clicked AND state is "playing"
+#             IF the click is on the target
+#                 ADD 1 TO score
+#                 MOVE the target somewhere random
+#             ELSE
+#                 ADD 1 TO misses
+#             END IF
+#         END IF
+#     END FOR
+#
+#     2. UPDATE
+#     IF state is "playing" AND misses is MAX_MISSES or more
+#         SET state TO "over"
+#         IF score is bigger than high score
+#             SET high score TO score
+#         END IF
+#     END IF
+#
+#     3. DRAW
+#     DRAW the background, the target, and the score, misses and Best text
+#     IF state is "start"
+#         DRAW "Press Space to start"
+#     ELSE IF state is "over"
+#         DRAW "Game over" and "Press Space to play again"
+#     END IF
+# END WHILE`,
+
+        completeText: "Click OK for [Pseudocode] Plan 1d: your own variation."
+    },
+    {
+        id: "p1d",
+        group: "Plan: PSEUDOCODE track (choose ONE track)",
+
+        title: "[Pseudocode] Plan 1d: My Own Variation",
+
+        noRun: true,
+
+        next: "2a",
+
+        code: `# ============================================================
+#  w4L2 [PSEUDOCODE] PLAN 1d: MY OWN VARIATION
+# ============================================================
+# CHOOSE ONE: you do the PSEUDOCODE labs OR the FLOWCHART labs, not both.
+# You are on the PSEUDOCODE track.
+#
+# THIS IS THE PLAN YOU HAND IN. When you are finished, press Export Code.
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# TASK 1d
+#   1. Choose a starting game (Swarm, Click or Collector) and ONE variation.
+#      Choose a change to how the game WORKS, not only how it looks. Ideas:
+#        - a red square that bounces around and costs points
+#        - a bonus coin that appears sometimes
+#        - Blip gets faster as you score
+#        - a shield: press S to be safe for 3 seconds
+#        - extra lives that you can earn
+#      Do NOT copy the example in the answer. Make your own.
+#   2. Fill in the boxes below. Write pseudocode for ONLY the new or changed
+#      part. Say which job it belongs in: SETUP, EVENTS, UPDATE or DRAW. Many
+#      variations need steps in more than one job.
+#   3. Turn your plan into a request for Copilot: WHAT to change, HOW it should
+#      work when someone plays, and what must NOT change.
+#   4. Run the game from Copilot, and test it against your plan.
+#   5. Write what you found at the bottom.
+#
+# Write the plan yourself FIRST. Then you may ask Copilot to check it.
+#
+# When you are done, press Export Code, then click "Complete".
+
+# ============================================================
+#  MY PLAN
+# ============================================================
+# STARTED FROM:
+#
+# MY VARIATION (one sentence):
+#
+# WHY IT MAKES THE GAME BETTER FOR THE PLAYER:
+#
+# MY PSEUDOCODE (only the new or changed part):
+#
+#
+#
+#
+#
+# MY REQUEST FOR COPILOT (what, how, and what must not change):
+#
+#
+#
+# AFTER RUNNING IT
+#   Did the game do what my plan said?
+#   Which step was wrong: mine, or Copilot's?
+#   What would I change in my plan next time?
+#`,
+
+        hints: [
+            "Small is good. A change that you can plan in about six lines of pseudocode is better than a big idea that you cannot finish.",
+            "Say where each step goes: a new variable goes in SETUP, a key press goes in EVENTS, a rule goes in UPDATE, and anything new on the screen goes in DRAW. Do not forget the restart: anything new usually needs resetting there too.",
+            "If Copilot's game does not match your plan, that is a result, not a failure. Write down which step differed, and decide who was right."
+        ],
+
+        answer: "There is no single right answer. This is one example, so that you can see the shape. Yours must be a different idea.\n\nNotice three things. The plan names the job for each part. The plan remembers the restart, so the speed is reset. And the request to Copilot says what must NOT change.",
+
+        answerCode: `# STARTED FROM: Collector
+#
+# MY VARIATION: Blip gets 1 faster for every 5 coins collected.
+#
+# WHY IT MAKES THE GAME BETTER FOR THE PLAYER: good players stay challenged
+# instead of the game feeling the same for all 30 seconds.
+#
+# MY PSEUDOCODE
+#   SETUP
+#       SET speed TO BLIP_SPEED
+#   EVENTS (when Space restarts the game)
+#       SET speed TO BLIP_SPEED
+#   UPDATE (Blip moves using speed, not BLIP_SPEED)
+#       IF Blip touches the coin
+#           ADD 1 TO score
+#           MOVE the coin somewhere random
+#           IF score is a multiple of 5
+#               ADD 1 TO speed
+#               PLAY SOUND "powerup"
+#           END IF
+#       END IF
+#   DRAW
+#       ADD speed to the status text
+#
+# MY REQUEST FOR COPILOT: Add a variable called speed that starts at
+# BLIP_SPEED. Move Blip using speed. Every time the score becomes a multiple
+# of 5, add 1 to speed and play the powerup sound. Reset speed when the game
+# restarts. Show speed in the status text. Do not change anything else.
+#
+# AFTER RUNNING IT: It worked, but Copilot also made the coin smaller, which
+# was not in my plan. I told it to put the coin back, and it did. My plan
+# forgot that speed would make Blip hard to steer past 10 coins.`,
+
+        completeText: "Your plan is done. Press Export Code if you have not yet.\n\nClick OK for Lab 2a: Can Copilot Fix It?\n\nYou will use your plan again in Lab 4b, when you ask Copilot for ONE exact change."
+    },
+    {
+        id: "f1a",
+        group: "Plan: FLOWCHART track (choose ONE track)",
+
+        title: "[Flowchart] Plan 1a: Steps in Order",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 [FLOWCHART] PLAN 1a: STEPS IN ORDER
+# ============================================================
+# CHOOSE ONE: you do the FLOWCHART labs OR the PSEUDOCODE labs, not both.
+# You are on the FLOWCHART track. (For pseudocode, choose a [Pseudocode] Plan
+# from the menu at the top.)
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# SHAPES (the brackets stand for the real shapes, and each shape names itself):
+#   ( Terminator )     rounded: START or END
+#   [ Process ]        rectangle: a step that DOES something
+#   < Decision >       diamond: a YES or NO question, with two arrows out
+#   / Input/Output /   parallelogram: something comes IN or goes OUT (a key press, DRAW, PLAY SOUND)
+# Label every shape (a), (b), (c)... so that you can talk about it.
+#
+# THE GAME: Swarm. After "Game over!", the player presses Space to play again.
+# That one moment has to put everything back to how a new game starts.
+#
+# TASK 1a
+#   1. Finish the flowchart below for what happens when Space is pressed on the
+#      game over screen. Write the words inside each box.
+#   2. The start, the end and the last two boxes are done for you. You may add or
+#      remove boxes: you need as many as the job needs.
+#   3. Think about each of these: lives, dodged, Blip's place, the pogos'
+#      places, and Best. Which ones must be reset, and which one must NOT be?
+#   4. Do it yourself FIRST. Then you may ask Copilot: "Here is my flowchart.
+#      Is any step missing or in the wrong order?" Do not just copy its answer.
+#      Decide whether it is right.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  YOUR FLOWCHART
+# ============================================================
+#       ( Terminator: START, Space pressed on the game over screen )
+#                                     |
+#                                     v
+#                  [ (a) Process: ______________________ ]
+#                                     |
+#                                     v
+#                  [ (b) Process: ______________________ ]
+#                                     |
+#                                     v
+#                  [ (c) Process: ______________________ ]
+#                                     |
+#                                     v
+#                  [ (d) Process: ______________________ ]
+#                                     |
+#                                     v
+#                  [ (e) Process: SET state TO "playing" ]
+#                                     |
+#                                     v
+#                / (f) Input/Output: PLAY SOUND "powerup" /
+#                                     |
+#                                     v
+#                            ( Terminator: END )`,
+
+        hints: [
+            "Look at everything the player can see on the screen: Dodged, Lives, Blip, the pogos, Best. Each thing that belongs to the OLD game needs a box.",
+            "The pogos are a list, so one box can say: FOR EACH pogo, put it at a random place above the screen.",
+            "Best is the high score across all games. If you reset it, the player loses their record, so leave it out."
+        ],
+
+        answer: "Four things belong to the old game, and one does not.\n\nlives, dodged, Blip's place and every pogo's place must be reset. Best must NOT be reset, because it remembers the player's record across games.\n\nYour boxes might be in a slightly different order, and that is fine, as long as nothing is missing and the state changes last.",
+
+        answerCode: `#       ( Terminator: START, Space pressed on the game over screen )
+#                                     |
+#                                     v
+#                    [ (a) Process: SET lives TO LIVES ]
+#                                     |
+#                                     v
+#                     [ (b) Process: SET dodged TO 0 ]
+#                                     |
+#                                     v
+#                   [ (c) Process: SET Blip's x TO 375 ]
+#                                     |
+#                                     v
+#                 [ (d) Process: FOR EACH pogo: put it at a
+#                   random place above the screen ]
+#                                     |
+#                                     v
+#                  [ (e) Process: SET state TO "playing" ]
+#                                     |
+#                                     v
+#                / (f) Input/Output: PLAY SOUND "powerup" /
+#                                     |
+#                                     v
+#                            ( Terminator: END )`,
+
+        completeText: "Click OK for [Flowchart] Plan 1b: decisions."
+    },
+    {
+        id: "f1b",
+        group: "Plan: FLOWCHART track (choose ONE track)",
+
+        title: "[Flowchart] Plan 1b: Make a Decision",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 [FLOWCHART] PLAN 1b: MAKE A DECISION
+# ============================================================
+# CHOOSE ONE: you do the FLOWCHART labs OR the PSEUDOCODE labs, not both.
+# You are on the FLOWCHART track.
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# SHAPES (the brackets stand for the real shapes, and each shape names itself):
+#   ( Terminator )     rounded: START or END
+#   [ Process ]        rectangle: a step that DOES something
+#   < Decision >       diamond: a YES or NO question, with two arrows out
+#   / Input/Output /   parallelogram: something comes IN or goes OUT (a key press, DRAW, PLAY SOUND)
+# A question has TWO arrows out, labelled YES and NO. Both arrows must join
+# the flow again afterwards.
+#
+# THE GAME: Swarm. Every frame while the game is playing, each pogo falls.
+# These are the rules:
+#   - A pogo that falls past the bottom of the screen (below 600) has been
+#     dodged. Add 1 to dodged, and put the pogo back above the top of the
+#     screen at a new random x.
+#   - A pogo that touches Blip takes 1 life. Put the pogo back above the top
+#     of the screen at a new random x.
+#   - After all the pogos have moved, if lives are 0 or less the game is over.
+#     Best only changes if dodged is bigger than Best.
+#
+# TASK 1b
+#   PART 1: Fill in every ______ in the flowchart for ONE pogo in ONE frame.
+#           The questions (b) and (e) go in the diamonds. The steps go in
+#           the boxes.
+#   PART 2: Below it, draw the game over check yourself, using (h), (i), (j)
+#           and (k). It needs TWO diamonds: one inside the other's YES path.
+#   Do it yourself FIRST. Then you may ask Copilot to check it.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  PART 1: ONE POGO, ONE FRAME
+# ============================================================
+#                  ( Terminator: START, one pogo, one frame )
+#                                       |
+#                                       v
+#                     [ (a) Process: Move the pogo down by
+#                       FALL_SPEED ]
+#                                       |
+#                                       v
+#                   < (b) Decision: ______________________? >--NO-------+
+#                                       | YES                           |
+#                                       v                               |
+#                    [ (c) Process: ______________________ ]            |
+#                                       |                               |
+#                                       v                               |
+#                    [ (d) Process: ______________________ ]            |
+#                                       |                               |
+#                                       +-------------------------------+
+#                                       |
+#                                       v
+#                   < (e) Decision: ______________________? >--NO-------+
+#                                       | YES                           |
+#                                       v                               |
+#                    [ (f) Process: ______________________ ]            |
+#                                       |                               |
+#                                       v                               |
+#                    [ (g) Process: ______________________ ]            |
+#                                       |                               |
+#                                       +-------------------------------+
+#                                       |
+#                                       v
+#                              ( Terminator: END )
+#
+# ============================================================
+#  PART 2: THE GAME OVER CHECK (draw it here)
+# ============================================================
+#           ( Terminator: START, after all the pogos have moved )
+#                                     |
+#
+#
+#
+#
+#
+#
+#                            ( Terminator: END )`,
+
+        hints: [
+            "Diamond (b) is about the pogo falling off the bottom, and diamond (e) is about Blip. Match each rule above to one diamond.",
+            "The bottom of the screen is 600. A pogo has gone past it when its y is bigger than 600.",
+            "For Part 2, the second diamond is the high score rule from w4L1 Lab 4a: only change Best when dodged is bigger than it. It sits inside the YES path of \"lives is 0 or less\"."
+        ],
+
+        answer: "Diamonds (b) and (e) handle ONE pogo (dodged, or hit). The diamonds in Part 2 handle the WHOLE game (game over, then Best).\n\nThe second diamond in Part 2 matters: Best is only checked at the moment the game ends, and only changes when dodged is bigger. Your wording can differ, but every diamond needs a YES and a NO that both join the flow again.",
+
+        answerCode: `#                  ( Terminator: START, one pogo, one frame )
+#                                       |
+#                                       v
+#                     [ (a) Process: Move the pogo down by
+#                       FALL_SPEED ]
+#                                       |
+#                                       v
+#              < (b) Decision: Is the pogo's y bigger than 600? >--NO---+
+#                                       | YES                           |
+#                                       v                               |
+#                       [ (c) Process: Add 1 to dodged ]                |
+#                                       |                               |
+#                                       v                               |
+#                  [ (d) Process: Put the pogo above the top,           |
+#                    at a random x ]                                    |
+#                                       |                               |
+#                                       +-------------------------------+
+#                                       |
+#                                       v
+#                  < (e) Decision: Does Blip touch the pogo? >--NO------+
+#                                       | YES                           |
+#                                       v                               |
+#                      [ (f) Process: Take 1 from lives ]               |
+#                                       |                               |
+#                                       v                               |
+#                  [ (g) Process: Put the pogo above the top,           |
+#                    at a random x ]                                    |
+#                                       |                               |
+#                                       +-------------------------------+
+#                                       |
+#                                       v
+#                              ( Terminator: END )
+#
+#
+#             ( Terminator: START, after all the pogos have moved )
+#                                       |
+#                                       v
+#                     < (h) Decision: Is lives 0 or less? >--NO---------------+
+#                                       | YES                                 |
+#                                       v                                     |
+#                     [ (i) Process: SET state TO "over" ]                    |
+#                                       |                                     |
+#                                       v                                     |
+#                 < (j) Decision: Is dodged bigger than Best? >--NO---+       |
+#                                       | YES                         |       |
+#                                       v                             |       |
+#                      [ (k) Process: SET Best TO dodged ]            |       |
+#                                       |                             |       |
+#                                       +-----------------------------+       |
+#                                       |                                     |
+#                                       +-------------------------------------+
+#                                       |
+#                                       v
+#                              ( Terminator: END )`,
+
+        completeText: "Click OK for [Flowchart] Plan 1c: a whole game."
+    },
+    {
+        id: "f1c",
+        group: "Plan: FLOWCHART track (choose ONE track)",
+
+        title: "[Flowchart] Plan 1c: A Whole Game",
+
+        noRun: true,
+
+        code: `# ============================================================
+#  w4L2 [FLOWCHART] PLAN 1c: A WHOLE GAME
+# ============================================================
+# CHOOSE ONE: you do the FLOWCHART labs OR the PSEUDOCODE labs, not both.
+# You are on the FLOWCHART track.
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# SHAPES (the brackets stand for the real shapes, and each shape names itself):
+#   ( Terminator )     rounded: START or END
+#   [ Process ]        rectangle: a step that DOES something
+#   < Decision >       diamond: a YES or NO question, with two arrows out
+#   / Input/Output /   parallelogram: something comes IN or goes OUT (a key press, DRAW, PLAY SOUND)
+#
+# THE GAME: Click. A target sits on the screen. Click it to score, and it jumps
+# somewhere random. Click anywhere else and that is a miss. After MAX_MISSES
+# misses the game is over. Space starts the game, and restarts it after game
+# over. Best is kept between games.
+#
+# TASK 1c
+#   1. Draw the WHOLE game as one flowchart. Only the start and the end are
+#      given. Label every shape (a), (b), (c)...
+#   2. A game loop needs an arrow that goes BACK UP to the question "Is the game
+#      running?". Draw it down the left side, like this:
+#
+#         +-------------------+
+#         |                   |
+#         v                   |
+#      < Is it running? > --YES--> [ do one frame ] ---+
+#         | NO
+#         v
+#      ( END )
+#
+#   3. To keep it readable, you may put several steps in one box (for example
+#      "HANDLE EVENTS: Space starts or restarts; a click scores or misses").
+#      But the game over check and the Best check must be diamonds.
+#   4. Do it yourself FIRST. Then you may ask Copilot to check it.
+#
+# When you are done, click "Complete" at the top.
+
+# ============================================================
+#  YOUR FLOWCHART
+# ============================================================
+#                           ( Terminator: START )
+#                                     |
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#                            ( Terminator: END )`,
+
+        hints: [
+            "Work in order: a box for SETUP, then the loop question, then a box for HANDLE EVENTS, then the questions in UPDATE, then a box for DRAW.",
+            "The game over check is two questions: is the state \"playing\", and have the misses reached MAX_MISSES? If both are YES, set the state to \"over\" and update Best.",
+            "Every path must end up back at the DRAW box, and then the arrow goes back up to the loop question. If a path ends in nowhere, you have a bug in your plan."
+        ],
+
+        answer: "Compare the shape, not the exact words. A good flowchart has: a SETUP box; a loop diamond with an arrow that comes back to it; a HANDLE EVENTS box; diamonds for the game over check and the Best check; and a DRAW box that every path reaches.\n\nThe usual mistakes are paths that never rejoin the flow, no arrow back to the loop, and resetting Best on restart. This model puts the click rules in the HANDLE EVENTS box to keep it short.",
+
+        answerCode: `#                             ( Terminator: START )
+#                                       |
+#                                       v
+#                  [ (a) Process: SET score TO 0, misses TO 0,
+#                    Best TO 0, state TO "start" ]
+#                                       |
+#                                       v
+#       +----------->< (b) Decision: Is the game running? >--NO-------------+
+#       |                               | YES                               |
+#       |                               v                                   |
+#       |          / (c) Input/Output: GET the events: a Space              |
+#       |            press or a mouse click /                               |
+#       |                               |                                   |
+#       |                               v                                   |
+#       |          [ (d) Process: Space starts or restarts; a               |
+#       |            click scores or adds a miss ]                          |
+#       |                               |                                   |
+#       |                               v                                   |
+#       |           < (e) Decision: Is the state "playing"? >--NO---+       |
+#       |                               | YES                       |       |
+#       |                               v                           |       |
+#       |          < (f) Decision: Are misses at MAX_MISSES? >--NO--+       |
+#       |                               | YES                       |       |
+#       |                               v                           |       |
+#       |             [ (g) Process: SET state TO "over" ]          |       |
+#       |                               |                           |       |
+#       |                               v                           |       |
+#       |         < (h) Decision: Is score bigger than Best? >--NO--+       |
+#       |                               | YES                       |       |
+#       |                               v                           |       |
+#       |              [ (i) Process: SET Best TO score ]           |       |
+#       |                               |                           |       |
+#       |                               +---------------------------+       |
+#       |                               |                                   |
+#       |                               v                                   |
+#       |             / (j) Input/Output: DRAW the screen /                 |
+#       |                               |                                   |
+#       +-------------------------------+                                   |
+#                                                                           |
+#                                                                           v
+#                                                                  ( Terminator: END )`,
+
+        completeText: "Click OK for [Flowchart] Plan 1d: your own variation."
+    },
+    {
+        id: "f1d",
+        group: "Plan: FLOWCHART track (choose ONE track)",
+
+        title: "[Flowchart] Plan 1d: My Own Variation",
+
+        noRun: true,
+
+        next: "2a",
+
+        code: `# ============================================================
+#  w4L2 [FLOWCHART] PLAN 1d: MY OWN VARIATION
+# ============================================================
+# CHOOSE ONE: you do the FLOWCHART labs OR the PSEUDOCODE labs, not both.
+# You are on the FLOWCHART track.
+#
+# THIS IS THE PLAN YOU HAND IN. When you are finished, press Export Code.
+#
+# Nothing in this lab runs. Every line you write must start with #
+#
+# SHAPES (the brackets stand for the real shapes, and each shape names itself):
+#   ( Terminator )     rounded: START or END
+#   [ Process ]        rectangle: a step that DOES something
+#   < Decision >       diamond: a YES or NO question, with two arrows out
+#   / Input/Output /   parallelogram: something comes IN or goes OUT (a key press, DRAW, PLAY SOUND)
+# Label every shape (a), (b), (c)... so that you can talk about it.
+#
+# TASK 1d
+#   1. Choose a starting game (Swarm, Click or Collector) and ONE variation.
+#      Choose a change to how the game WORKS, not only how it looks. Ideas:
+#        - a red square that bounces around and costs points
+#        - a bonus coin that appears sometimes
+#        - Blip gets faster as you score
+#        - a shield: press S to be safe for 3 seconds
+#        - extra lives that you can earn
+#      Do NOT copy the example in the answer. Make your own.
+#   2. Draw a flowchart for ONLY the new or changed part. It must have at least
+#      ONE diamond (a question with YES and NO). Say which job it belongs in:
+#      SETUP, EVENTS, UPDATE or DRAW. Many variations need a second, small
+#      flowchart for the restart: anything new usually needs resetting there.
+#   3. Turn your flowchart into WORDS for Copilot: WHAT to change, HOW it should
+#      work when someone plays, and what must NOT change. (Copilot cannot read
+#      your shapes, so you must say what each arrow means.)
+#   4. Run the game from Copilot, and test it against your flowchart.
+#   5. Write what you found at the bottom.
+#
+# Do the flowchart yourself FIRST. Then you may ask Copilot to check it.
+#
+# When you are done, press Export Code, then click "Complete".
+
+# ============================================================
+#  MY PLAN
+# ============================================================
+# STARTED FROM:
+#
+# MY VARIATION (one sentence):
+#
+# WHY IT MAKES THE GAME BETTER FOR THE PLAYER:
+#
+# THE JOB(S) IT CHANGES (SETUP / EVENTS / UPDATE / DRAW):
+#
+# MY FLOWCHART (only the new or changed part):
+#
+#               ( Terminator: START, ______________________ )
+#                                     |
+#
+#
+#
+#
+#
+#
+#                            ( Terminator: END )
+#
+# MY REQUEST FOR COPILOT (what, how, and what must not change):
+#
+#
+#
+# AFTER RUNNING IT
+#   Did the game do what my flowchart said?
+#   Which shape was wrong: mine, or Copilot's?
+#   What would I change in my flowchart next time?
+#`,
+
+        hints: [
+            "Small is good. A change that you can draw in about six shapes is better than a big idea that you cannot finish.",
+            "Say where each part goes: a new variable goes in SETUP, a key press goes in EVENTS, a rule goes in UPDATE, and anything new on the screen goes in DRAW. Do not forget the restart: anything new usually needs resetting there too.",
+            "If Copilot's game does not match your flowchart, that is a result, not a failure. Write down which shape differed, and decide who was right."
+        ],
+
+        answer: "There is no single right answer. This is one example, so that you can see the shape. Yours must be a different idea.\n\nNotice three things. The flowchart starts from one clear moment (Blip touches the coin). It has a diamond with a YES and a NO that both rejoin. And the request to Copilot puts the shapes into words, including the restart and what must NOT change.",
+
+        answerCode: `# STARTED FROM: Collector
+#
+# MY VARIATION: Blip gets 1 faster for every 5 coins collected.
+#
+# WHY IT MAKES THE GAME BETTER FOR THE PLAYER: good players stay challenged
+# instead of the game feeling the same for all 30 seconds.
+#
+# THE JOB(S) IT CHANGES: SETUP, EVENTS (restart), UPDATE, DRAW
+#
+# MY FLOWCHART
+#                 ( Terminator: START, Blip touches the coin )
+#                                       |
+#                                       v
+#                        [ (a) Process: Add 1 to score ]
+#                                       |
+#                                       v
+#                   [ (b) Process: Move the coin to a random
+#                     place ]
+#                                       |
+#                                       v
+#                  < (c) Decision: Is score a multiple of 5? >--NO--+
+#                                       | YES                       |
+#                                       v                           |
+#                        [ (d) Process: Add 1 to speed ]            |
+#                                       |                           |
+#                                       v                           |
+#                  / (e) Input/Output: PLAY SOUND "powerup" /       |
+#                                       |                           |
+#                                       +---------------------------+
+#                                       |
+#                                       v
+#                              ( Terminator: END )
+#
+#
+#
+#         ( Terminator: START, Space pressed on the game over screen )
+#                                       |
+#                                       v
+#                   [ (f) Process: SET speed TO BLIP_SPEED ]
+#                                       |
+#                                       v
+#                              ( Terminator: END )
+#
+# MY REQUEST FOR COPILOT: Add a variable called speed that starts at
+# BLIP_SPEED. Move Blip using speed. Every time the score becomes a multiple
+# of 5, add 1 to speed and play the powerup sound. Reset speed when the game
+# restarts. Show speed in the status text. Do not change anything else.
+#
+# AFTER RUNNING IT: It worked, but Copilot also made the coin smaller, which
+# was not in my flowchart. I told it to put the coin back, and it did. My
+# flowchart forgot that speed would make Blip hard to steer past 10 coins.`,
+
+        completeText: "Your plan is done. Press Export Code if you have not yet.\n\nClick OK for Lab 2a: Can Copilot Fix It?\n\nYou will use your plan again in Lab 4b, when you ask Copilot for ONE exact change."
+    },
+
+    {
+        id: "2a",
+        group: "Labs: ask Copilot",
+
+        title: "Lab 2a: Can Copilot Fix It?",
 
         code: `import pygame
 import asyncio
 import random
 
 # ============================================================
-#  w4L2 LAB 3b: ASK EXACTLY
+#  w4L2 LAB 2a: CAN COPILOT FIX IT?
 # ============================================================
-# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
-# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
-# the AI to fix it for you.
+` + REMINDER + `# Welcome to w4L2: Ask the AI. This week you start using an AI to help with
+# your game. The school AI is Microsoft Copilot. Sign in with your SCHOOL account.
 #
-# (Remember: press Stop, make your change, then press Run.)
+# This is Swarm from w4L1, but it has THREE problems. It SHOULD:
+#   1. start a fresh game with 3 lives when you press Space on the game-over screen;
+#   2. never let Blip leave the screen;
+#   3. never let Best go DOWN.
+# Play it a few times first, and find each problem yourself.
 #
-# This is the third game: COLLECTOR, rebuilt from the Square Collector game.
+# TASK 2a
+#   1. Copy ALL of the code in this lab (click in the code, press Ctrl+A, then Ctrl+C).
+#   2. Paste it into Copilot, and ask it to fix the problems. You decide what to
+#      type. You can tell it what the game should do.
+#   3. Copy the code Copilot gives you, paste it here over ALL of the old code
+#      (Ctrl+A, then Ctrl+V), and press Run.
+#   4. Check all three problems. Which ones did Copilot fix? Did it change
+#      anything you did not ask for?
+#
+# AI answers are different every time, so Copilot might NOT fix everything.
+# That is part of what you are finding out.
+#
+# When you are done, click "Complete" at the top.
+
+` + SWARM_BUGGY,
+
+        hints: [
+            "Copilot only knows what you tell it. Telling it what the game SHOULD do (the three numbered points above) usually works better than just \"fix it\".",
+            "If Copilot fixed some problems but not all, you do not have to start again. Tell it which one is still wrong, and what happens when you play.",
+            "If the page froze or the game will not start, look for  while True:  in Copilot's code. Ask it again, and tell it the game runs in a browser emulator, so it must keep  async def main()  and  await asyncio.sleep(0)."
+        ],
+
+        answer: "The three problems, and how to fix them by hand. These steps fix the ORIGINAL code, so press Reset first if Copilot changed yours.\n\n1. The play-again code resets dodged and Blip, but not lives, so the new game is over straight away (the w4L1 Lab 3a bug).\n2. Blip has a wall on the right, but the left wall is missing.\n3. When the game ends, high_score is ALWAYS set to dodged, even when dodged is smaller, so Best can go down. It needs the if from w4L1 Lab 4a.\n\nStep 1: make a new empty line straight under line 81, which says\n    elif state == \"over\":\nand type this line there, with 24 spaces in front:\n    lives = LIVES\n\nStep 2: make a new empty line straight under line 98 (it moved down one line in Step 1), which now says\n    blip.x = 800 - blip.width\nand type these two lines there, with 12 spaces in front of the if and 16 in front of the line inside it:\n    if blip.x < 0:\n        blip.x = 0\n\nStep 3: replace line 115 (it moved down three lines in Steps 1 and 2), which now says\n    high_score = dodged\nwith the two lines below. The indents are already included.",
+
+        answerCode: `                if dodged > high_score:
+                    high_score = dodged`,
+
+        completeText: "Click OK for Lab 3a: a different game."
+    },
+    {
+        id: "3a",
+        group: "Labs: ask Copilot",
+
+        title: "Lab 3a: Fix One Line",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L2 LAB 3a: FIX ONE LINE
+# ============================================================
+` + REMINDER + `# This is a new game: CLICK. It is the Click the Target game from w2L1, now
+# with a start screen, play again and a high score, like Swarm. Click Blip to
+# score. Blip jumps somewhere new. Every click that misses Blip is a miss, and
+# after MAX_MISSES misses (line 38), the game is over.
+#
+# But press Run: it crashes straight away. Read the LAST line of the error in the
+# console. It says which line went wrong, and why.
+#
+# Pasting the WHOLE game into Copilot is not always the best way. When you know
+# which line is wrong, you can ask about just that line.
+#
+# TASK 3a
+#   1. Copy ONLY line 92, and the last line of the error.
+#   2. Paste them into Copilot, and ask it to fix that ONE line.
+#   3. Paste Copilot's line over line 92 (keep the 8 spaces in front),
+#      and press Run. Then play a game: do the score and misses show?
+#   4. Did Copilot explain WHY the line was wrong? Could you explain it to someone else?
+#
+# When you are done, click "Complete" at the top.
+
+` + CLICK_BUGGY,
+
+        hints: [
+            "The error ends with something like:  TypeError: can only concatenate str (not \"int\") to str.  Copy that whole last line for Copilot.",
+            "\"str\" means words (text) and \"int\" means a whole number. The + sign cannot join words and a number together.",
+            "You met the fix in w2L1 Lab 5a: an f-string, with the numbers in curly brackets."
+        ],
+
+        answer: "+ can join words to words, or add numbers to numbers, but it cannot join words to a number, so Python stops with a TypeError. An f-string puts the numbers inside the words for you. (Copilot might use str(score) instead. That works too.)\n\nReplace line 92, which says\n    status_text = font.render(\"Score: \" + score + \"   Misses: \" + misses, True, TEXT_COLOUR)\nwith the line below. The indent is already included.",
+
+        answerCode: `        status_text = font.render(f"Score: {score}   Misses: {misses}", True, TEXT_COLOUR)`,
+
+        completeText: "Click OK for Lab 4a: the third game."
+    },
+    {
+        id: "4a",
+        group: "Labs: ask Copilot",
+
+        title: "Lab 4a: Make It Better?",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L2 LAB 4a: MAKE IT BETTER?
+# ============================================================
+` + REMINDER + `# This is the third game: COLLECTOR, rebuilt from the Square Collector game.
+# The arrow keys move Blip in all four directions. Collect as many gold coins as
+# you can before the time runs out (GAME_LENGTH, line 36, in seconds).
+#
+# Play it once. Then see what happens when you ask Copilot for something VAGUE.
+#
+# TASK 4a
+#   1. Copy ALL of the code, paste it into Copilot, and type only:
+#          Make this game better.
+#   2. Paste what it gives you over all of the old code, and press Run.
+#   3. Answer these in your head, or as comments at the bottom of the code:
+#        - What did Copilot change?  Can you find EVERY change?
+#        - Is it the change YOU would have wanted?
+#        - Would you be able to explain the new code to someone else?
+#
+# When you are done, click "Complete" at the top.
+
+` + COLLECTOR,
+
+        hints: [
+            "To find the changes, look at the settings at the top first, then the four jobs in main(). Copilot often adds new settings or new variables.",
+            "Copilot had to GUESS what \"better\" means. Different people (and different tries) get different guesses.",
+            "If the new game crashes or freezes, that is useful to know too. Press Reset to get the original game back."
+        ],
+
+        answer: "There is no single right answer: every student will get something different. The point is that \"make it better\" makes Copilot guess. It may change many things at once, which makes it hard to check what changed, hard to explain, and hard to undo if something breaks. Lab 4b asks for ONE exact change instead.\n\nPress Reset to get the original Collector game back before Lab 4b.",
+
+        completeText: "Click OK for Lab 4b."
+    },
+    {
+        id: "4b",
+        group: "Labs: ask Copilot",
+
+        title: "Lab 4b: Ask Exactly",
+
+        code: `import pygame
+import asyncio
+import random
+
+# ============================================================
+#  w4L2 LAB 4b: ASK EXACTLY
+# ============================================================
+` + REMINDER + `# This is the third game: COLLECTOR, rebuilt from the Square Collector game.
 # The arrow keys move Blip in all four directions. Collect as many gold coins as
 # you can before the time runs out (GAME_LENGTH, line 47, in seconds).
 #
@@ -681,13 +1707,13 @@ import random
 #     Add a red square that bounces around the screen. If Blip touches it, take
 #     3 points off the score. Do not change anything else.
 #
-# TASK 3b
+# TASK 4b
 #   1. Choose ONE change (your own idea, or one of these):
 #        - a red square that bounces around and costs points;
 #        - a second coin that is worth 5 points but only appears sometimes;
 #        - Blip gets faster every 5 coins;
 #        - a shield: press S to be safe for 3 seconds.
-#   2. Copy all of the code into Copilot, with your exact request.
+#   2. Copy all of the code into Copilot, with your exact request. (Your request from Plan 1d is a good start.)
 #   3. Paste what it gives you over all of the old code, and Run it.
 #   4. At the very bottom of the code, write a CHANGE LOG as comments:
 #          # I asked for: ...
@@ -696,112 +1722,7 @@ import random
 #
 # When you are done, click "Complete" at the top.
 
-# ============================================================
-#  STUDENT ZONE
-# ============================================================
-BLIP_SPEED   = 5
-COIN_SIZE    = 20
-GAME_LENGTH  = 30
-BLIP_COLOUR  = (0, 200, 80)
-COIN_COLOUR  = (255, 200, 0)
-BACKGROUND   = (30, 30, 30)
-TEXT_COLOUR  = (255, 255, 255)
-
-game_running = True
-
-async def main():
-    global game_running
-    game_running = True
-
-    pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    font = pygame.font.SysFont(None, 26)
-    clock = pygame.time.Clock()
-
-    blip = pygame.Rect(380, 280, 40, 40)
-    coin = pygame.Rect(0, 0, COIN_SIZE, COIN_SIZE)
-    coin.x = random.randint(0, 800 - coin.width)
-    coin.y = random.randint(40, 600 - coin.height)
-    score = 0
-    time_left = GAME_LENGTH
-    start_time = 0
-    state = "start"
-    high_score = 0
-
-    while game_running:
-        # 1. HANDLE EVENTS: check what the player did
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if state == "start":
-                        start_time = pygame.time.get_ticks()
-                        state = "playing"
-                    elif state == "over":
-                        score = 0
-                        blip.x = 380
-                        blip.y = 280
-                        start_time = pygame.time.get_ticks()
-                        state = "playing"
-
-        # 2. UPDATE: change the variables
-        if state == "playing":
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_RIGHT]:
-                blip.x = blip.x + BLIP_SPEED
-            if keys[pygame.K_LEFT]:
-                blip.x = blip.x - BLIP_SPEED
-            if keys[pygame.K_DOWN]:
-                blip.y = blip.y + BLIP_SPEED
-            if keys[pygame.K_UP]:
-                blip.y = blip.y - BLIP_SPEED
-            if blip.x > 800 - blip.width:
-                blip.x = 800 - blip.width
-            if blip.x < 0:
-                blip.x = 0
-            if blip.y > 600 - blip.height:
-                blip.y = 600 - blip.height
-            if blip.y < 0:
-                blip.y = 0
-            if blip.colliderect(coin):
-                score = score + 1
-                coin.x = random.randint(0, 800 - coin.width)
-                coin.y = random.randint(40, 600 - coin.height)
-            time_left = GAME_LENGTH - (pygame.time.get_ticks() - start_time) // 1000
-            if time_left <= 0:
-                state = "over"
-                if score > high_score:
-                    high_score = score
-
-        # 3. DRAW: put things on the screen
-        screen.fill(BACKGROUND)
-        pygame.draw.rect(screen, COIN_COLOUR, coin)
-        pygame.draw.rect(screen, BLIP_COLOUR, blip)
-        status_text = font.render(f"Score: {score}   Time: {time_left}", True, TEXT_COLOUR)
-        screen.blit(status_text, (10, 10))
-        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
-        screen.blit(best_text, (700, 10))
-        if state == "start":
-            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
-            screen.blit(start_text, (310, 290))
-        elif state == "over":
-            over_text = font.render(f"Time up!   Score: {score}", True, TEXT_COLOUR)
-            screen.blit(over_text, (300, 290))
-            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
-            screen.blit(again_text, (290, 320))
-
-        # 4. FLIP: show the finished frame
-        pygame.display.flip()
-        clock.tick(60)
-        await asyncio.sleep(0)
-
-    pygame.quit()
-
-# ============================================================
-#  START THE GAME
-# ============================================================
-await main()`,
+` + COLLECTOR,
 
         hints: [
             "Compare your request with the example: does it say what, how, and what must not change?",
@@ -809,29 +1730,24 @@ await main()`,
             "A change that did NOT work is still worth writing down. Your assignment asks for at least one failed attempt, and why it failed."
         ],
 
-        answer: "There is no single right answer. A good result is ONE change that you can find, test and explain. Compare it with Lab 3a: an exact request usually means fewer surprises, and the change log makes you check whether you really got what you asked for.\n\nAn example change log:\n    # I asked for: a red square that bounces around and costs 3 points.\n    # Copilot gave me: a pogo Rect, POGO_SPEED, a bounce, and a colliderect check.\n    # Did it work? Yes, but one bump took off about 15 points, because the\n    # squares overlapped for many frames. I asked Copilot to move the red\n    # square away after a hit, and then it worked.",
+        answer: "There is no single right answer. A good result is ONE change that you can find, test and explain. Compare it with Lab 4a: an exact request usually means fewer surprises, and the change log makes you check whether you really got what you asked for.\n\nAn example change log:\n    # I asked for: a red square that bounces around and costs 3 points.\n    # Copilot gave me: a pogo Rect, POGO_SPEED, a bounce, and a colliderect check.\n    # Did it work? Yes, but one bump took off about 15 points, because the\n    # squares overlapped for many frames. I asked Copilot to move the red\n    # square away after a hit, and then it worked.",
 
         completeText: "That is all the core labs for w4L2 done!\nNow it is time to start on your own game. The lab below this one in the menu is an extension."
     },
     {
-        id: "1ext",
+        id: "5ext",
+        group: "Labs: ask Copilot",
 
-        title: "Lab 1ext: Explain It to Me (extension)",
+        title: "Lab 5ext: Explain It to Me (extension)",
 
         code: `import pygame
 import asyncio
 import random
 
 # ============================================================
-#  w4L2 LAB 1ext: EXPLAIN IT TO ME (EXTENSION)
+#  w4L2 LAB 5ext: EXPLAIN IT TO ME (EXTENSION)
 # ============================================================
-# REMINDER: This IDE is an emulator of pygame, and  while True  will not work.
-# Use  await asyncio.sleep(0)  instead. If you run into trouble, you can ask
-# the AI to fix it for you.
-#
-# (Remember: press Stop, make your change, then press Run.)
-#
-# EXTENSION
+` + REMINDER + `# EXTENSION
 #   Copilot can write code you do not understand. You can ask it to explain.
 #
 #   TASK
@@ -846,112 +1762,7 @@ import random
 #
 # When you are done, click "Complete" at the top.
 
-# ============================================================
-#  STUDENT ZONE
-# ============================================================
-BLIP_SPEED   = 5
-COIN_SIZE    = 20
-GAME_LENGTH  = 30
-BLIP_COLOUR  = (0, 200, 80)
-COIN_COLOUR  = (255, 200, 0)
-BACKGROUND   = (30, 30, 30)
-TEXT_COLOUR  = (255, 255, 255)
-
-game_running = True
-
-async def main():
-    global game_running
-    game_running = True
-
-    pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    font = pygame.font.SysFont(None, 26)
-    clock = pygame.time.Clock()
-
-    blip = pygame.Rect(380, 280, 40, 40)
-    coin = pygame.Rect(0, 0, COIN_SIZE, COIN_SIZE)
-    coin.x = random.randint(0, 800 - coin.width)
-    coin.y = random.randint(40, 600 - coin.height)
-    score = 0
-    time_left = GAME_LENGTH
-    start_time = 0
-    state = "start"
-    high_score = 0
-
-    while game_running:
-        # 1. HANDLE EVENTS: check what the player did
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if state == "start":
-                        start_time = pygame.time.get_ticks()
-                        state = "playing"
-                    elif state == "over":
-                        score = 0
-                        blip.x = 380
-                        blip.y = 280
-                        start_time = pygame.time.get_ticks()
-                        state = "playing"
-
-        # 2. UPDATE: change the variables
-        if state == "playing":
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_RIGHT]:
-                blip.x = blip.x + BLIP_SPEED
-            if keys[pygame.K_LEFT]:
-                blip.x = blip.x - BLIP_SPEED
-            if keys[pygame.K_DOWN]:
-                blip.y = blip.y + BLIP_SPEED
-            if keys[pygame.K_UP]:
-                blip.y = blip.y - BLIP_SPEED
-            if blip.x > 800 - blip.width:
-                blip.x = 800 - blip.width
-            if blip.x < 0:
-                blip.x = 0
-            if blip.y > 600 - blip.height:
-                blip.y = 600 - blip.height
-            if blip.y < 0:
-                blip.y = 0
-            if blip.colliderect(coin):
-                score = score + 1
-                coin.x = random.randint(0, 800 - coin.width)
-                coin.y = random.randint(40, 600 - coin.height)
-            time_left = GAME_LENGTH - (pygame.time.get_ticks() - start_time) // 1000
-            if time_left <= 0:
-                state = "over"
-                if score > high_score:
-                    high_score = score
-
-        # 3. DRAW: put things on the screen
-        screen.fill(BACKGROUND)
-        pygame.draw.rect(screen, COIN_COLOUR, coin)
-        pygame.draw.rect(screen, BLIP_COLOUR, blip)
-        status_text = font.render(f"Score: {score}   Time: {time_left}", True, TEXT_COLOUR)
-        screen.blit(status_text, (10, 10))
-        best_text = font.render(f"Best: {high_score}", True, TEXT_COLOUR)
-        screen.blit(best_text, (700, 10))
-        if state == "start":
-            start_text = font.render("Press Space to start", True, TEXT_COLOUR)
-            screen.blit(start_text, (310, 290))
-        elif state == "over":
-            over_text = font.render(f"Time up!   Score: {score}", True, TEXT_COLOUR)
-            screen.blit(over_text, (300, 290))
-            again_text = font.render("Press Space to play again", True, TEXT_COLOUR)
-            screen.blit(again_text, (290, 320))
-
-        # 4. FLIP: show the finished frame
-        pygame.display.flip()
-        clock.tick(60)
-        await asyncio.sleep(0)
-
-    pygame.quit()
-
-# ============================================================
-#  START THE GAME
-# ============================================================
-await main()`,
+` + COLLECTOR,
 
         hints: [
             "Ask about the lines you understand LEAST.",
@@ -961,7 +1772,7 @@ await main()`,
 
         answer: "There is no single right answer. Explaining the code is how you show that the work is yours, even when Copilot wrote some of it, and testing an explanation is how you check that Copilot is right.",
 
-        finalText: "Congratulations on completing every lab in w4L2!\nYou have asked an AI to fix a whole game, fix one line, and make an exact change, and you have checked what it gave you."
+        finalText: "Congratulations on completing every lab in w4L2!\nYou have planned a change, asked an AI to fix a whole game, fix one line, and make an exact change, and you have checked what it gave you."
     }
     ];
 
@@ -989,13 +1800,20 @@ await main()`,
 
     function initLabs() {
         const select = document.getElementById("lab-select");
+        let groupName = null, groupEl = null;
         LAB_DATA.forEach(function (lab, i) {
+            if (lab.group && lab.group !== groupName) {
+                groupName = lab.group;
+                groupEl = document.createElement("optgroup");
+                groupEl.label = lab.group;
+                select.appendChild(groupEl);
+            }
             const opt = document.createElement("option");
             opt.value = i;
             opt.text = lab.title;
-            select.appendChild(opt);
+            (groupEl || select).appendChild(opt);
         });
-        // Open a specific lab from the address, e.g. w1L1.html#lab1b
+        // Open a specific lab from the address, e.g. w4L2.html#lab2a
         const m = location.hash.match(/^#lab(.+)$/i);
         let start = 0;
         if (m) {
@@ -1040,10 +1858,17 @@ await main()`,
         document.getElementById("info-modal").classList.add("open");
     }
 
+    // Complete goes to the lab named in  next  if there is one,
+    // otherwise to the next lab in the list.
     function closeInfoModal() {
         document.getElementById("info-modal").classList.remove("open");
-        if (infoModalAdvances && currentLab < LAB_DATA.length - 1) {
-            document.getElementById("lab-select").value = currentLab + 1;
+        if (!infoModalAdvances) return;
+        const lab = LAB_DATA[currentLab];
+        const target = lab.next
+            ? LAB_DATA.findIndex(l => l.id === lab.next)
+            : currentLab + 1;
+        if (target >= 0 && target < LAB_DATA.length) {
+            document.getElementById("lab-select").value = target;
             loadLab();
         }
     }
@@ -1152,6 +1977,8 @@ await main()`,
     }
 
     // ── EXPORT CODE ───────────────────────────────────────────────────────────
+    // The file name includes the lab id, so you can see which track was used
+    // (for example sam-w4L2-labp1d.txt or sam-w4L2-labf1d.txt).
     function exportCode() {
         const name = studentName ? studentName.toLowerCase().replace(/\s+/g, "-") : "student";
         const file = name + "-" + LESSON + "-lab" + LAB_DATA[currentLab].id + ".txt";
@@ -1398,6 +2225,11 @@ def play_sound(name, volume=1.0):
     }
 
     async function runGame() {
+        // Planning labs have nothing to run.
+        if (LAB_DATA[currentLab].noRun) {
+            log("This is a planning lab, so there is nothing to run. Write your plan, then click Complete.", "log-sys");
+            return;
+        }
         // Unlock audio straight away, while the browser still counts this as a click.
         if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
         if (!pyodide) return;
