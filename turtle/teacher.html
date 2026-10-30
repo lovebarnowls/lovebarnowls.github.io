@@ -423,6 +423,28 @@ def analyse_json(src): return json.dumps(analyse(src))
 const $ = id => document.getElementById(id);
 const go = $("go"), out = $("out"), status = $("status"), code = $("code");
 let analyse = null, lastText = "";
+// To self-host, copy the Pyodide 0.26.4 files to your own site and point this at that folder (keep the trailing slash).
+const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+(async () => {
+  const t0 = Date.now();
+  const tick = setInterval(() => { status.textContent = "Loading checker… " + Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
+  try {
+    if (typeof loadPyodide === "undefined") throw new Error("pyodide.js did not load (blocked or offline)");
+    const py = await Promise.race([
+      loadPyodide({ indexURL: PYODIDE_URL }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("timed out after 45s; the Pyodide files are probably blocked")), 45000))
+    ]);
+    py.runPython($("py").textContent);
+    analyse = py.globals.get("analyse_json");
+    status.textContent = "Ready.";
+    go.disabled = false;
+  } catch (e) {
+    status.textContent = "Checker failed to load: " + e.message + ". Open the file directly in a browser with internet access, or self-host Pyodide.";
+  } finally { clearInterval(tick); }
+})();
+
 const ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation"];
 const tag = r => r.text + (r.lines ? " (" + r.lines + ")" : "");
 const firstLine = r => { const m = r.lines && r.lines.match(/\d+/); return m ? +m[0] : null; };
