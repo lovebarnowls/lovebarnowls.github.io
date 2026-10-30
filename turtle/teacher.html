@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turtle Code Checker</title>
+<style>
+:root{--bg:#f6f7f4;--panel:#fff;--ink:#1d2a33;--mute:#5b6b75;--line:#d5dbd6;--accent:#1f5f7a;
+--fix:#a32a2a;--fixbg:#fbeaea;--look:#7a5a00;--lookbg:#fbf3d9;--good:#1d6b3a;--goodbg:#e4f3e8;--code:#f0f3f1}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#14191c;--panel:#1c2327;--ink:#e6ecef;--mute:#99a8b0;--line:#334047;--accent:#6bb7d4;
+--fix:#ff9c9c;--fixbg:#3a2022;--look:#f0cf6b;--lookbg:#363020;--good:#88d6a0;--goodbg:#1d3326;--code:#232c31}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif}
+main{max-width:860px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:1.7rem;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 20px;max-width:62ch}
+textarea{width:100%;min-height:300px;font:14px/1.45 Consolas,"Courier New",monospace;background:var(--panel);color:var(--ink);
+border:1px solid var(--line);border-radius:6px;padding:12px;resize:vertical;tab-size:4}
+textarea:focus,button:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.bar{display:flex;gap:10px;align-items:center;margin:12px 0 22px;flex-wrap:wrap}
+button{font:inherit;padding:9px 18px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--accent)}
+button:disabled{opacity:.5;cursor:wait}
+#status{color:var(--mute);font-size:.9rem}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 14px}
+.stat b{font-size:1.3rem;display:block;line-height:1.2}
+.stat span{color:var(--mute);font-size:.85rem}
+h2{font-size:1.1rem;margin:22px 0 8px}
+.item{border-left:5px solid;border-radius:4px;padding:10px 14px;margin:0 0 10px}
+.item.fix{border-color:var(--fix);background:var(--fixbg)}
+.item.look{border-color:var(--look);background:var(--lookbg)}
+.item.good{border-color:var(--good);background:var(--goodbg)}
+.item strong{display:block}
+.item p{margin:2px 0 0}
+.ln{font:12px Consolas,monospace;background:var(--code);border-radius:3px;padding:1px 6px;margin-left:8px;color:var(--mute);white-space:nowrap}
+.note{color:var(--mute);font-size:.85rem;margin-top:26px}
+</style>
+</head>
+<body>
+<main>
+<h1>Turtle code checker</h1>
+<p class="sub">Paste your Python turtle code and press Check. This reads your code without running it and points out things to look at before you hand it in. It does not use AI, and it does not judge your drawing.</p>
+
+<textarea id="code" spellcheck="false" placeholder="Paste your code here…"></textarea>
+<div class="bar">
+  <button id="go" disabled>Check my code</button>
+  <button id="clear" class="alt">Clear</button>
+  <button id="copy" class="alt" hidden>Copy feedback</button>
+  <span id="status">Loading the Python checker (first time only)…</span>
+</div>
+<div id="out" aria-live="polite"></div>
+<p class="note">Checks: input() use, functions, loops and repeated code. Hints are suggestions based on patterns, so a hint can be wrong. Use your judgement.</p>
+</main>
+
+<script type="text/python" id="py">
+import ast, copy, json, collections
+
+TURTLE_NUM = {"forward","fd","backward","bk","back","left","lt","right","rt","circle","goto","setpos","setposition",
+              "setx","sety","setheading","seth","pensize","width","dot"}
+TURTLE_COLOUR = {"color","pencolor","fillcolor","bgcolor"}
+TURTLE_OTHER = {"penup","pu","up","pendown","pd","down","begin_fill","end_fill","hideturtle","ht","showturtle","st",
+                "speed","shape","stamp","write","clear","reset","home","tracer","update","title","setup","screensize"}
+TURTLE_ALL = TURTLE_NUM | TURTLE_COLOUR | TURTLE_OTHER
+INPUT_KIND = {"input":"text","textinput":"text","numinput":"number"}
+
+def callname(n):
+    if isinstance(n, ast.Call):
+        f = n.func
+        if isinstance(f, ast.Name): return f.id
+        if isinstance(f, ast.Attribute): return f.attr
+    return None
+
+def is_input(n):
+    if not isinstance(n, ast.Call): return False
+    f = n.func
+    if isinstance(f, ast.Name): return f.id in INPUT_KIND
+    if isinstance(f, ast.Attribute): return f.attr in ("textinput","numinput")
+    return False
+
+class Norm(ast.NodeTransformer):
+    def visit_Constant(self, node):
+        v = node.value
+        if isinstance(v, bool) or v is None: return node
+        if isinstance(v, (int, float)): return ast.Constant(value=0)
+        if isinstance(v, str): return ast.Constant(value="")
+        return node
+
+def norm_dump(n): return ast.dump(Norm().visit(copy.deepcopy(n)))
+def has_call(stmts): return any(isinstance(x, ast.Call) for s in stmts for x in ast.walk(s))
+def rng(a, b): return "line %d" % a if a == b else "lines %d–%d" % (a, b)
+
+def value_kind(v):
+    if isinstance(v, ast.Call) and callname(v) in ("int", "float") and any(is_input(n) for n in ast.walk(v)):
+        return "number"
+    for n in ast.walk(v):
+        if is_input(n): return INPUT_KIND[callname(n)]
+    return None
+
+def analyse(src):
+    F = []
+    def add(level, line, title, msg): F.append(dict(level=level, line=line, title=title, msg=msg))
+    try:
+        tree = ast.parse(src)
+    except SyntaxError as e:
+        add("fix", e.lineno, "Python cannot read this code yet",
+            "Python stopped at line %s: %s. Check that line and the one above it for a missing bracket, colon or quote." % (e.lineno, e.msg))
+        return dict(findings=F, stats=None)
+
+    parents = {}
+    for p in ast.walk(tree):
+        for c in ast.iter_child_nodes(p): parents[c] = p
+    allnodes = list(ast.walk(tree))
+    calls = [n for n in allnodes if isinstance(n, ast.Call)]
+    turtle_calls = [c for c in calls if callname(c) in TURTLE_ALL]
+
+    # ---- basics
+    imp = any((isinstance(n, ast.Import) and any(a.name == "turtle" for a in n.names)) or
+              (isinstance(n, ast.ImportFrom) and n.module == "turtle") for n in allnodes)
+    if turtle_calls and not imp:
+        add("fix", 1, "turtle is not imported", "Add import turtle at the top, otherwise the drawing commands will not work.")
+    if turtle_calls and not any(callname(c) in ("done", "mainloop", "exitonclick") for c in calls):
+        add("look", None, "No way to keep the window open",
+            "Finish with turtle.done() (or exitonclick()) so the drawing window stays open when the program ends.")
+
+    # ---- inputs
+    input_calls = [n for n in calls if is_input(n)]
+    vars_, conv = {}, {}
+    assigns = sorted([n for n in allnodes if isinstance(n, ast.Assign)], key=lambda n: n.lineno)
+    for a in assigns:
+        if len(a.targets) != 1 or not isinstance(a.targets[0], ast.Name): continue
+        t = a.targets[0].id
+        k = value_kind(a.value)
+        if k:
+            vars_[t] = dict(kind=k, line=a.lineno); conv.pop(t, None); continue
+        v = a.value
+        if isinstance(v, ast.Call) and callname(v) in ("int", "float") and v.args:
+            srcs = [n.id for n in ast.walk(v.args[0]) if isinstance(n, ast.Name) and n.id in vars_]
+            if srcs:
+                if srcs[0] == t: conv[t] = a.lineno
+                else: vars_[t] = dict(kind="number", line=vars_[srcs[0]]["line"])
+
+    def kind_at(name, line):
+        if name in conv and line > conv[name]: return "number"
+        return vars_[name]["kind"]
+
+    flagged = set()
+    def flag(line, key, title, msg):
+        if key in flagged: return
+        flagged.add(key); add("fix", line, title, msg)
+
+    if not input_calls:
+        add("look", None, "No input found",
+            "I could not find input(), textinput() or numinput(). If the task asks the user to choose something (such as the backdrop), this is missing.")
+    input_problems = 0
+    for c in input_calls:
+        node, p, wrapped = c, parents.get(c), False
+        while p is not None and not isinstance(p, ast.stmt):
+            cn = callname(p) if isinstance(p, ast.Call) else None
+            if cn in ("int", "float"): wrapped = True; break
+            if cn in TURTLE_NUM and node in p.args:
+                flag(c.lineno, ("inl", c.lineno), "Input used straight as a number",
+                     "input() gives text, but %s() needs a number. Wrap it: int(input(...)) or use numinput()." % cn)
+                break
+            node, p = p, parents.get(p)
+        if isinstance(p, ast.Expr) and p.value is c:
+            add("look", c.lineno, "Input answer is thrown away",
+                "The answer is not saved in a variable, so nothing can use it. (This is fine only if it is a ‘press Enter’ pause.)")
+        if callname(c) == "input" and not c.args:
+            add("look", c.lineno, "input() has no prompt", "The user will not know what to type. Put a question inside the brackets, like input(\"Day or night? \").")
+
+    loads = collections.defaultdict(list)
+    for n in allnodes:
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and n.id in vars_: loads[n.id].append(n)
+    for name, info in vars_.items():
+        used_other, print_only = False, True
+        for n in loads[name]:
+            p = parents.get(n); kind = kind_at(name, n.lineno); L = n.lineno
+            if isinstance(p, ast.Call) and n in p.args:
+                cn = callname(p)
+                if cn != "print": print_only = False
+                if cn in ("int", "float"): used_other = True
+                elif cn in TURTLE_NUM and kind == "text":
+                    flag(L, (name, L, "c"), "Text used where a number is needed",
+                         "‘%s’ comes from input(), so it is text. %s() needs a number: use %s(int(%s))." % (name, cn, cn, name))
+                elif cn in TURTLE_COLOUR and kind == "number":
+                    flag(L, (name, L, "k"), "Number used as a colour",
+                         "‘%s’ is a number, but %s() expects a colour name such as \"red\" (text)." % (name, cn))
+            else:
+                print_only = False
+            if isinstance(p, ast.BinOp) and kind == "text":
+                other = p.right if p.left is n else p.left
+                if (isinstance(other, ast.Constant) and isinstance(other.value, (int, float))) or \
+                   (isinstance(other, ast.Name) and other.id in vars_ and kind_at(other.id, L) == "number"):
+                    extra = " With *, text is repeated instead of multiplied." if isinstance(p.op, ast.Mult) else ""
+                    flag(L, (name, L, "b"), "Text mixed with a number in a sum",
+                         "‘%s’ is text from input(). Convert it first with int(%s) or float(%s).%s" % (name, name, name, extra))
+            if isinstance(p, ast.Compare):
+                others = [p.left] + p.comparators
+                others = [o for o in others if o is not n]
+                if kind == "text" and any(isinstance(o, ast.Constant) and isinstance(o.value, (int, float)) for o in others):
+                    flag(L, (name, L, "q"), "Text compared with a number",
+                         "‘%s’ is text, so comparing it with a number will not work as expected. Convert it with int() first." % name)
+                if kind == "number" and any(isinstance(o, ast.Constant) and isinstance(o.value, str) for o in others):
+                    flag(L, (name, L, "r"), "Number compared with text", "‘%s’ is a number, so it will never equal a piece of text." % name)
+        if not loads[name]:
+            add("look", info["line"], "Input answer never used", "‘%s’ is saved from an input but nothing uses it, so it changes nothing." % name)
+        elif print_only:
+            add("look", info["line"], "Input only printed", "‘%s’ is only used in print(). Does it change what is drawn?" % name)
+    input_problems = len([f for f in F if f["level"] == "fix" and f["title"] != "turtle is not imported"])
+    if input_calls and input_problems == 0 and not any(f["title"].startswith("Input") or f["title"].startswith("input()") for f in F):
+        add("good", input_calls[0].lineno, "Inputs look sound",
+            "%d input(s) found, and the answers appear to be used in a sensible way." % len(input_calls))
+
+    # ---- functions
+    funcs = [n for n in allnodes if isinstance(n, ast.FunctionDef)]
+    names_loaded = {n.id for n in allnodes if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+    covered = set()
+    if not funcs:
+        add("look", None, "No functions yet", "Functions let you name a job (like draw_window) and reuse it. Try wrapping a repeated part of the drawing in one.")
+    for f in funcs:
+        if f.name not in names_loaded:
+            add("fix", f.lineno, "Function never used", "‘%s’ is defined but never called, so it does nothing. Call it as %s()." % (f.name, f.name))
+        pnames = [a.arg for a in f.args.args]
+        body_loads = {n.id for s in f.body for n in ast.walk(s) if isinstance(n, ast.Name)}
+        for pn in pnames:
+            if pn not in body_loads:
+                add("look", f.lineno, "Unused parameter", "‘%s’ is a parameter of %s() but is never used inside it." % (pn, f.name))
+    fdefs = {f.name: f for f in funcs}
+    for s in tree.body:
+        if isinstance(s, ast.FunctionDef): continue
+        for n in ast.walk(s):
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in fdefs and n.lineno < fdefs[n.func.id].lineno:
+                flag(n.lineno, ("early", n.func.id), "Function used before it is defined",
+                     "%s() is called on line %d but defined later (line %d). Move the def above the first call." % (n.func.id, n.lineno, fdefs[n.func.id].lineno))
+    seen = {}
+    for f in funcs:
+        mod = ast.Module(body=f.body, type_ignores=[])
+        key = norm_dump(mod)
+        if has_call(f.body) and len(f.body) >= 2 and key in seen:
+            o = seen[key]
+            same = ast.dump(mod) == ast.dump(ast.Module(body=o.body, type_ignores=[]))
+            add("look", f.lineno, "Two functions do the same job",
+                "%s() and %s() %s. %s" % (o.name, f.name, "are identical" if same else "have the same steps and only the numbers differ",
+                 "Keep one and call it twice." if same else "One function with parameters (for example x and y) could replace both."))
+            for s in f.body: covered.add(id(s))
+        else:
+            seen.setdefault(key, f)
+    withp = [f for f in funcs if f.args.args]
+    if funcs and not any(f["level"] == "fix" and f["title"].startswith("Function") for f in F):
+        add("good", funcs[0].lineno, "Functions in use", "%d function(s) defined%s." % (len(funcs), ", %d with parameters" % len(withp) if withp else ""))
+
+    # ---- loops and repetition
+    loops = [n for n in allnodes if isinstance(n, (ast.For, ast.While))]
+    bl = []
+    for n in allnodes:
+        for attr in ("body", "orelse", "finalbody"):
+            b = getattr(n, attr, None)
+            if isinstance(b, list) and b and isinstance(b[0], ast.stmt): bl.append(b)
+    cache = [([norm_dump(s) for s in b], [ast.dump(s) for s in b]) for b in bl]
+    nrep = 0
+    for b, (ns, es) in zip(bl, cache):
+        i = 0
+        while i < len(b):
+            hit = False
+            for k in range(1, 9):
+                if i + k > len(b): break
+                r = 1
+                while i + (r + 1) * k <= len(b) and ns[i + r * k:i + (r + 1) * k] == ns[i:i + k]: r += 1
+                if r >= 3 and has_call(b[i:i + k]):
+                    exact = all(es[i + j * k:i + (j + 1) * k] == es[i:i + k] for j in range(r))
+                    a, z = b[i].lineno, b[i + r * k - 1].end_lineno
+                    what = "the same statement" if k == 1 else "the same %d statements" % k
+                    fix = ("A loop would do it: for i in range(%d):" % r) if exact else \
+                          "Only the numbers change, so a loop with a variable, or a function with parameters, could replace it."
+                    add("look", a, "Repeated code", "%s %s %s %d times in a row. %s" % (rng(a, z).capitalize(), "repeat" if z > a else "repeats", what, r, fix))
+                    for s in b[i:i + r * k]: covered.add(id(s))
+                    i += r * k; hit = True; nrep += 1; break
+            if not hit: i += 1
+    occ = {}
+    for bi, (b, (ns, es)) in enumerate(zip(bl, cache)):
+        for i in range(len(b)):
+            for k in range(3, 11):
+                if i + k > len(b): break
+                if any(id(s) in covered for s in b[i:i + k]): continue
+                occ.setdefault(tuple(ns[i:i + k]), []).append((bi, i, k))
+    used = set(); shown = 0
+    for key in sorted(occ, key=lambda k: -len(k)):
+        places, tmp = [], set()
+        for bi, i, k in occ[key]:
+            blk = bl[bi][i:i + k]
+            if any(id(s) in used or id(s) in tmp for s in blk): continue
+            places.append((blk, cache[bi][1][i:i + k])); tmp.update(id(s) for s in blk)
+        if len(places) >= 2 and has_call(places[0][0]) and shown < 4:
+            used |= tmp; shown += 1; nrep += 1
+            (b1, e1), (b2, e2) = places[0], places[1]
+            r1, r2 = rng(b1[0].lineno, b1[-1].end_lineno), rng(b2[0].lineno, b2[-1].end_lineno)
+            same = e1 == e2
+            more = " (and %d more place%s)" % (len(places) - 2, "" if len(places) == 3 else "s") if len(places) > 2 else ""
+            add("look", b1[0].lineno, "Similar blocks of code",
+                "%s and %s are %s%s. Could one function (with parameters for anything that changes) do the job of both?" %
+                (r1.capitalize(), r2, "identical" if same else "very similar, with different numbers", more))
+    if len(turtle_calls) >= 25 and not loops:
+        add("look", None, "No loops", "There are %d turtle commands and no for or while loop. Look for steps that repeat." % len(turtle_calls))
+    if loops:
+        add("good", loops[0].lineno, "Loops in use", "%d loop(s) found." % len(loops))
+    stats = dict(lines=len(src.splitlines()), inputs=len(input_calls), functions=len(funcs), loops=len(loops), repeats=nrep)
+    return dict(findings=F, stats=stats)
+
+def analyse_json(src): return json.dumps(analyse(src))
+</script>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const go = $("go"), out = $("out"), status = $("status"), code = $("code");
+let analyse = null, lastText = "";
+const LEVELS = [["fix", "Needs fixing"], ["look", "Worth a look"], ["good", "Looking good"]];
+
+(async () => {
+  try {
+    const py = await loadPyodide();
+    py.runPython($("py").textContent);
+    analyse = py.globals.get("analyse_json");
+    status.textContent = "Ready. Your code never leaves this page.";
+    go.disabled = false;
+  } catch (e) {
+    status.textContent = "Could not load the Python checker. Check your internet connection and reload.";
+  }
+})();
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+go.addEventListener("click", () => {
+  const src = code.value;
+  out.replaceChildren(); $("copy").hidden = true;
+  if (!src.trim()) { out.append(el("p", "sub", "Paste some code first.")); return; }
+  const res = JSON.parse(analyse(src));
+  let text = "";
+  if (res.stats) {
+    const s = el("div", "stats");
+    [["lines", "lines"], ["inputs", "inputs"], ["functions", "functions"], ["loops", "loops"], ["repeats", "repeated blocks"]].forEach(([k, label]) => {
+      const d = el("div", "stat"); d.append(el("b", null, res.stats[k]), el("span", null, label)); s.append(d);
+    });
+    out.append(s);
+  }
+  LEVELS.forEach(([lv, heading]) => {
+    const items = res.findings.filter(f => f.level === lv);
+    if (!items.length) return;
+    out.append(el("h2", null, heading)); text += heading + "\n";
+    items.forEach(f => {
+      const d = el("div", "item " + lv), t = el("strong", null, f.title);
+      if (f.line) t.append(el("span", "ln", "line " + f.line));
+      d.append(t, el("p", null, f.msg)); out.append(d);
+      text += "- " + f.title + (f.line ? " (line " + f.line + ")" : "") + ": " + f.msg + "\n";
+    });
+    text += "\n";
+  });
+  if (!res.findings.length) out.append(el("p", "sub", "Nothing to report."));
+  lastText = text; $("copy").hidden = false;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+$("clear").addEventListener("click", () => { code.value = ""; out.replaceChildren(); $("copy").hidden = true; code.focus(); });
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(lastText); $("copy").textContent = "Copied"; setTimeout(() => $("copy").textContent = "Copy feedback", 1500); } catch (e) {}
+});
+code.addEventListener("keydown", e => {
+  if (e.key === "Tab") { e.preventDefault(); const s = code.selectionStart; code.setRangeText("    ", s, code.selectionEnd, "end"); }
+});
+</script>
+</body>
+</html>
