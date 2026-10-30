@@ -36,7 +36,7 @@ h2{font-size:1.1rem;margin:22px 0 8px}
 .item p{margin:2px 0 0;white-space:pre-line}
 .row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
 .mk{font-weight:700;width:1.2em;flex:none;text-align:center}
-.mk.yes{color:var(--good)}.mk.no{color:var(--look)}
+.mk.yes{color:var(--good)}.mk.no{color:var(--look)}.mk.flag{color:var(--mute)}
 .row p{margin:2px 0 0;color:var(--mute);font-size:.9rem}
 main.wide{max-width:1240px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
@@ -76,6 +76,7 @@ TURTLE_COLOUR = {"color","pencolor","fillcolor","bgcolor"}
 TURTLE_OTHER = {"penup","pu","up","pendown","pd","down","begin_fill","end_fill","hideturtle","ht","showturtle","st",
                 "speed","shape","stamp","write","clear","reset","home","tracer","update","title","setup","screensize"}
 TURTLE_ALL = TURTLE_NUM | TURTLE_COLOUR | TURTLE_OTHER
+TURTLE_NAME = "faithful"   # every lab should contain: faithful = turtle.Turtle()
 INPUT_KIND = {"input":"text","textinput":"text","numinput":"number"}
 
 def callname(n):
@@ -111,11 +112,11 @@ def value_kind(v):
         if is_input(n): return INPUT_KIND[callname(n)]
     return None
 
-GROUP_MAP = [("Python cannot", "Basics"), ("turtle is not", "Basics"), ("No way", "Basics"), ("No input", "Inputs"), ("Input", "Inputs"),
+GROUP_MAP = [("Python cannot", "Basics"), ("turtle is not", "Basics"), ("No input", "Inputs"), ("Input", "Inputs"),
              ("input()", "Inputs"), ("Text", "Input validation"), ("Number", "Input validation"), ("Function", "Functions"),
              ("Unused", "Functions"), ("Two functions", "Functions"), ("No functions", "Functions"), ("Similar", "Functions"),
              ("Repeated", "Loops"), ("Loops", "Loops"), ("No loops", "Loops")]
-ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation"]
+ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation", "Flags"]
 
 def to_rows(F, X):
     rows = []
@@ -148,9 +149,6 @@ def analyse(src):
               (isinstance(n, ast.ImportFrom) and n.module == "turtle") for n in allnodes)
     if turtle_calls and not imp:
         add("fix", 1, "turtle is not imported", "Add import turtle at the top, otherwise the drawing commands will not work.")
-    if turtle_calls and not any(callname(c) in ("done", "mainloop", "exitonclick") for c in calls):
-        add("look", None, "No way to keep the window open",
-            "Finish with turtle.done() (or exitonclick()) so the drawing window stays open when the program ends.")
 
     # ---- inputs
     input_calls = [n for n in calls if is_input(n)]
@@ -201,6 +199,8 @@ def analyse(src):
     loads = collections.defaultdict(list)
     for n in allnodes:
         if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and n.id in vars_: loads[n.id].append(n)
+    misuse = {}
+    fmap = {n.name: n for n in allnodes if isinstance(n, ast.FunctionDef)}
     for name, info in vars_.items():
         used_other, print_only = False, True
         for n in loads[name]:
@@ -209,9 +209,20 @@ def analyse(src):
                 cn = callname(p)
                 if cn != "print": print_only = False
                 if cn in ("int", "float"): used_other = True
-                elif cn in TURTLE_NUM and kind == "text":
+                elif (cn in TURTLE_NUM or cn == "range") and kind == "text":
+                    misuse.setdefault(name, L)
                     flag(L, (name, L, "c"), "Text used where a number is needed",
                          "‘%s’ comes from input(), so it is text. %s() needs a number: use %s(int(%s))." % (name, cn, cn, name))
+                elif cn in fmap and kind == "text" and p.args.index(n) < len(fmap[cn].args.args):
+                    prm = fmap[cn].args.args[p.args.index(n)].arg
+                    for st in fmap[cn].body:
+                        for m in ast.walk(st):
+                            pm = parents.get(m)
+                            if isinstance(m, ast.Name) and m.id == prm and isinstance(m.ctx, ast.Load) and isinstance(pm, ast.Call) \
+                               and m in pm.args and (callname(pm) in TURTLE_NUM or callname(pm) == "range"):
+                                misuse.setdefault(name, L)
+                                flag(L, (name, L, "f"), "Text passed to a function that uses it as a number",
+                                     "‘%s’ is text from input(), but %s() uses ‘%s’ as a number. Convert it first with int(%s)." % (name, cn, prm, name))
                 elif cn in TURTLE_COLOUR and kind == "number":
                     flag(L, (name, L, "k"), "Number used as a colour",
                          "‘%s’ is a number, but %s() expects a colour name such as \"red\" (text)." % (name, cn))
@@ -221,6 +232,7 @@ def analyse(src):
                 other = p.right if p.left is n else p.left
                 if (isinstance(other, ast.Constant) and isinstance(other.value, (int, float))) or \
                    (isinstance(other, ast.Name) and other.id in vars_ and kind_at(other.id, L) == "number"):
+                    misuse.setdefault(name, L)
                     extra = " With *, text is repeated instead of multiplied." if isinstance(p.op, ast.Mult) else ""
                     flag(L, (name, L, "b"), "Text mixed with a number in a sum",
                          "‘%s’ is text from input(). Convert it first with int(%s) or float(%s).%s" % (name, name, name, extra))
@@ -228,6 +240,7 @@ def analyse(src):
                 others = [p.left] + p.comparators
                 others = [o for o in others if o is not n]
                 if kind == "text" and any(isinstance(o, ast.Constant) and isinstance(o.value, (int, float)) for o in others):
+                    misuse.setdefault(name, L)
                     flag(L, (name, L, "q"), "Text compared with a number",
                          "‘%s’ is text, so comparing it with a number will not work as expected. Convert it with int() first." % name)
                 if kind == "number" and any(isinstance(o, ast.Constant) and isinstance(o.value, str) for o in others):
@@ -242,7 +255,7 @@ def analyse(src):
             "%d input(s) found." % len(input_calls))
 
     # ---- conditionals and validation, per input
-    CASE = ("lower", "upper", "casefold", "title", "capitalize", "strip")
+    CASE = ("lower", "upper", "casefold")
     Match = getattr(ast, "Match", None)
     groups = {}
     for nm, inf in vars_.items(): groups.setdefault(inf["line"], []).append(nm)
@@ -308,12 +321,20 @@ def analyse(src):
                 checks.append(n.func.attr + "()")
         checks = list(dict.fromkeys(checks))
         V = "Input validation"; gl = "line %d" % gline
+        convs = []
+        for a in assigns:
+            if len(a.targets) == 1 and isinstance(a.targets[0], ast.Name) and a.targets[0].id in names and isinstance(a.value, ast.Call):
+                if callname(a.value) in ("int", "float"): convs.append(callname(a.value) + "()")
+                elif callname(a.value) == "numinput": convs.append("numinput()")
+        mis = [misuse[nm] for nm in names if nm in misuse]
         if any(vars_[nm]["kind"] == "number" or nm in conv for nm in names):
-            X.append(dict(group=V, ok=True, text="%s converted to a number" % q, lines=gl, detail=""))
+            X.append(dict(group=V, ok=True, text="%s: number input, converted with %s" % (q, ", ".join(dict.fromkeys(convs)) or "int()"), lines=gl, detail=""))
+        elif mis:
+            X.append(dict(group=V, ok=False, text="%s: used as a number but still a string (no int())" % q, lines=gl, detail="Used numerically on line %d" % min(mis)))
         elif found_case:
-            X.append(dict(group=V, ok=True, text="%s: case handled with .%s()" % (q, "(), .".join(sorted(found_case))), lines=gl, detail=""))
+            X.append(dict(group=V, ok=True, text="%s: string input, case handled with .%s()" % (q, "(), .".join(sorted(found_case))), lines=gl, detail=""))
         else:
-            X.append(dict(group=V, ok=False, text="%s: no .lower() / .upper()" % q, lines=gl,
+            X.append(dict(group=V, ok=False, text="%s: string input, no .lower() / .upper()" % q, lines=gl,
                           detail="Compared with text, so “Day” and “day” differ" if str_cmp else ""))
         X.append(dict(group=V, ok=bool(checks), text="%s: unexpected answers %s" % (q, "checked" if checks else "not checked"), lines=gl, detail=", ".join(checks)))
 
@@ -411,7 +432,18 @@ def analyse(src):
         add("good", loops[0].lineno, "Loops used", "%d loop(s) found." % len(loops))
     if nrep == 0: X.append(dict(group="Loops", ok=True, text="No repeated code detected", lines="", detail=""))
     if imp: X.append(dict(group="Basics", ok=True, text="turtle imported", lines="", detail=""))
-    if any(callname(c) in ("done", "mainloop", "exitonclick") for c in calls): X.append(dict(group="Basics", ok=True, text="Window kept open (done / mainloop)", lines="", detail=""))
+    bg = [c.lineno for c in calls if callname(c) == "bgcolor"]
+    if bg:
+        X.append(dict(group="Flags", ok=None, flag=True, text="bgcolor used", lines=("lines " if len(bg) > 1 else "line ") + ", ".join(map(str, bg)),
+                      detail="Does not work in the custom sim"))
+    ok_line = [a for a in assigns if isinstance(a.value, ast.Call) and callname(a.value) == "Turtle"
+               and any(isinstance(t, ast.Name) and t.id == TURTLE_NAME for t in a.targets)]
+    if not ok_line:
+        other = [(t.id, a.lineno) for a in assigns if isinstance(a.value, ast.Call) and callname(a.value) in ("Turtle", "Pen")
+                 for t in a.targets if isinstance(t, ast.Name)]
+        X.append(dict(group="Flags", ok=None, flag=True, text="No ‘%s = turtle.Turtle()’ line" % TURTLE_NAME,
+                      lines=("line %d" % other[0][1]) if other else "",
+                      detail=("Turtle created as ‘%s’ instead" % other[0][0]) if other else "No Turtle created under that name"))
     stats = dict(lines=len(src.splitlines()), inputs=len(input_calls), functions=len(funcs), loops=len(loops), repeats=nrep)
     return dict(rows=to_rows(F, X), stats=stats)
 
@@ -445,7 +477,8 @@ function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.
   } finally { clearInterval(tick); }
 })();
 
-const ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation"];
+const ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation", "Flags"];
+const sym = r => r.flag ? "⚑" : r.ok ? "✓" : "✗";
 const tag = r => r.text + (r.lines ? " (" + r.lines + ")" : "");
 const firstLine = r => { const m = r.lines && r.lines.match(/\d+/); return m ? +m[0] : null; };
 let res = null, view = "cat", texts = {};
@@ -455,10 +488,10 @@ function rowEl(r, showCat) {
   if (r.lines) t.append(el("span", "ln", r.lines));
   if (showCat) t.append(el("span", "ln cat", r.group));
   b.append(t); if (r.detail) b.append(el("p", null, r.detail));
-  d.append(el("span", "mk " + (r.ok ? "yes" : "no"), r.ok ? "✓" : "✗"), b);
+  d.append(el("span", "mk " + (r.flag ? "flag" : r.ok ? "yes" : "no"), sym(r)), b);
   return d;
 }
-const line = r => (r.ok ? "✓ " : "✗ ") + tag(r) + (r.detail ? " – " + r.detail : "") + "\n";
+const line = r => sym(r) + " " + tag(r) + (r.detail ? " – " + r.detail : "") + "\n";
 
 function catView(box, heading) {
   let text = "";
@@ -470,7 +503,7 @@ function catView(box, heading) {
     rows.forEach(r => { box.append(rowEl(r, false)); text += line(r); });
     text += "\n";
   });
-  const good = res.rows.filter(r => r.ok);
+  const good = res.rows.filter(r => r.ok === true);
   if (good.length) {
     box.append(el("h2", null, "What’s good")); text += "What’s good\n";
     const ul = el("ul", "good");
