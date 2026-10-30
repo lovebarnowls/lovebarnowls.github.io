@@ -30,27 +30,41 @@ h2{font-size:1.1rem;margin:22px 0 8px}
 .item{border-left:5px solid;border-radius:4px;padding:10px 14px;margin:0 0 10px}
 .item.fix{border-color:var(--fix);background:var(--fixbg)}
 .item.look{border-color:var(--look);background:var(--lookbg)}
+.item.info{border-color:var(--accent);background:var(--panel);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
 .item.good{border-color:var(--good);background:var(--goodbg)}
 .item strong{display:block}
-.item p{margin:2px 0 0}
+.item p{margin:2px 0 0;white-space:pre-line}
+.row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.mk{font-weight:700;width:1.2em;flex:none;text-align:center}
+.mk.yes{color:var(--good)}.mk.no{color:var(--look)}
+.row p{margin:2px 0 0;color:var(--mute);font-size:.9rem}
+main.wide{max-width:1240px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+.cat{font-family:inherit;font-size:11px}
+ul.good{margin:0;padding-left:1.2em}
 .ln{font:12px Consolas,monospace;background:var(--code);border-radius:3px;padding:1px 6px;margin-left:8px;color:var(--mute);white-space:nowrap}
-.note{color:var(--mute);font-size:.85rem;margin-top:26px}
+.xnote{color:var(--mute);font-size:.85rem;margin-top:26px}
 </style>
 </head>
 <body>
 <main>
 <h1>Turtle code checker</h1>
-<p class="sub">Paste your Python turtle code and press Check. This reads your code without running it and points out things to look at before you hand it in. It does not use AI, and it does not judge your drawing.</p>
+<p class="sub">Paste student turtle code and press Check. Static analysis only: nothing is run, nothing is uploaded.</p>
 
 <textarea id="code" spellcheck="false" placeholder="Paste your code here…"></textarea>
 <div class="bar">
   <button id="go" disabled>Check my code</button>
   <button id="clear" class="alt">Clear</button>
   <button id="copy" class="alt" hidden>Copy feedback</button>
-  <span id="status">Loading the Python checker (first time only)…</span>
+  <span id="status">Loading checker…</span>
+</div>
+<div id="views" class="bar" hidden>
+  <button data-v="cat">By category</button>
+  <button data-v="line" class="alt">By line</button>
+  <button data-v="both" class="alt">Side by side</button>
 </div>
 <div id="out" aria-live="polite"></div>
-<p class="note">Checks: input() use, functions, loops and repeated code. Hints are suggestions based on patterns, so a hint can be wrong. Use your judgement.</p>
 </main>
 
 <script type="text/python" id="py">
@@ -97,15 +111,30 @@ def value_kind(v):
         if is_input(n): return INPUT_KIND[callname(n)]
     return None
 
+GROUP_MAP = [("Python cannot", "Basics"), ("turtle is not", "Basics"), ("No way", "Basics"), ("No input", "Inputs"), ("Input", "Inputs"),
+             ("input()", "Inputs"), ("Text", "Input validation"), ("Number", "Input validation"), ("Function", "Functions"),
+             ("Unused", "Functions"), ("Two functions", "Functions"), ("No functions", "Functions"), ("Similar", "Functions"),
+             ("Repeated", "Loops"), ("Loops", "Loops"), ("No loops", "Loops")]
+ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation"]
+
+def to_rows(F, X):
+    rows = []
+    for f in F:
+        g = next((g for p, g in GROUP_MAP if f["title"].startswith(p)), "Basics")
+        rows.append(dict(group=g, ok=f["level"] == "good", text=f["title"], lines=("line %d" % f["line"]) if f["line"] else "", detail=f["msg"]))
+    rows += X
+    rows.sort(key=lambda r: ORDER.index(r["group"]))
+    return rows
+
 def analyse(src):
-    F = []
+    F = []; X = []
     def add(level, line, title, msg): F.append(dict(level=level, line=line, title=title, msg=msg))
     try:
         tree = ast.parse(src)
     except SyntaxError as e:
         add("fix", e.lineno, "Python cannot read this code yet",
             "Python stopped at line %s: %s. Check that line and the one above it for a missing bracket, colon or quote." % (e.lineno, e.msg))
-        return dict(findings=F, stats=None)
+        return dict(rows=to_rows(F, X), stats=None)
 
     parents = {}
     for p in ast.walk(tree):
@@ -209,8 +238,84 @@ def analyse(src):
             add("look", info["line"], "Input only printed", "‘%s’ is only used in print(). Does it change what is drawn?" % name)
     input_problems = len([f for f in F if f["level"] == "fix" and f["title"] != "turtle is not imported"])
     if input_calls and input_problems == 0 and not any(f["title"].startswith("Input") or f["title"].startswith("input()") for f in F):
-        add("good", input_calls[0].lineno, "Inputs look sound",
-            "%d input(s) found, and the answers appear to be used in a sensible way." % len(input_calls))
+        add("good", input_calls[0].lineno, "Inputs used without type errors",
+            "%d input(s) found." % len(input_calls))
+
+    # ---- conditionals and validation, per input
+    CASE = ("lower", "upper", "casefold", "title", "capitalize", "strip")
+    Match = getattr(ast, "Match", None)
+    groups = {}
+    for nm, inf in vars_.items(): groups.setdefault(inf["line"], []).append(nm)
+    def refs(node, names): return any(isinstance(x, ast.Name) and x.id in names for x in ast.walk(node))
+    for gline in sorted(groups):
+        names = set(groups[gline]); first = groups[gline][0]; kind0 = vars_[first]["kind"]
+        def under_relevant(n):
+            p = parents.get(n)
+            while p is not None:
+                if isinstance(p, ast.If) and refs(p.test, names): return True
+                p = parents.get(p)
+            return False
+        chains = []
+        for n in allnodes:
+            if isinstance(n, ast.If):
+                p = parents.get(n)
+                if isinstance(p, ast.If) and len(p.orelse) == 1 and p.orelse[0] is n: continue
+                node, tests, br = n, [n.test], 1
+                while len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+                    node = node.orelse[0]; tests.append(node.test); br += 1
+                in_retry = False
+                a = parents.get(n)
+                while a is not None:
+                    if isinstance(a, ast.While) and any(is_input(x) and x.lineno == gline for x in ast.walk(a)): in_retry = True
+                    a = parents.get(a)
+                if any(refs(t, names) for t in tests) and not under_relevant(n) and not in_retry:
+                    chains.append(dict(line=n.lineno, br=br, els=bool(node.orelse)))
+            elif isinstance(n, ast.IfExp) and refs(n.test, names) and not under_relevant(n):
+                chains.append(dict(line=n.lineno, br=1, els=True))
+            elif Match is not None and isinstance(n, Match) and refs(n.subject, names):
+                dflt = any(isinstance(c.pattern, ast.MatchAs) and c.pattern.pattern is None and c.guard is None for c in n.cases)
+                chains.append(dict(line=n.lineno, br=max(len(n.cases) - (1 if dflt else 0), 1), els=dflt))
+        chains.sort(key=lambda c: c["line"])
+        def ls(cs): return ("lines " if len(cs) > 1 else "line ") + ", ".join(str(c["line"]) for c in cs) if cs else ""
+        q = "‘%s’" % first
+        has_elif = any(c["br"] >= 2 for c in chains); has_else = any(c["els"] for c in chains)
+        series = len(chains) >= 2 and not has_elif
+        C = "Conditionals"
+        X.append(dict(group=C, ok=bool(chains), text=("%s tested with if" if chains else "%s not tested by an if") % q,
+                      lines=ls(chains) or "line %d" % gline, detail="Separate if statements, not linked with elif" if series else ""))
+        if chains:
+            X.append(dict(group=C, ok=has_elif, text=("%s: elif used" if has_elif else "%s: no elif") % q, lines=ls([c for c in chains if c["br"] >= 2]), detail=""))
+            X.append(dict(group=C, ok=has_else, text=("%s: else default" if has_else else "%s: no else default") % q, lines=ls([c for c in chains if c["els"]]),
+                          detail="The else belongs only to the last if" if series and chains[-1]["els"] else ""))
+
+        found_case = set()
+        for n in allnodes:
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in CASE:
+                v = n.func.value
+                if (isinstance(v, ast.Name) and v.id in names) or (is_input(v) and v.lineno == gline): found_case.add(n.func.attr)
+        str_cmp = any(isinstance(c, ast.Compare) and refs(c, names) and
+                      any(isinstance(o, ast.Constant) and isinstance(o.value, str) for o in [c.left] + c.comparators) for c in allnodes)
+        checks = []
+        for n in allnodes:
+            if isinstance(n, ast.Try) and any((isinstance(x, ast.Name) and x.id in names) or getattr(x, "lineno", 0) == gline for s in n.body for x in ast.walk(s)):
+                checks.append("try/except")
+            if isinstance(n, ast.While) and any(is_input(x) and x.lineno == gline for x in ast.walk(n)):
+                checks.append("loop that asks again")
+            if isinstance(n, ast.Compare) and any(isinstance(o, (ast.In, ast.NotIn)) for o in n.ops) and refs(n, names):
+                checks.append("in check")
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in ("isdigit", "isnumeric", "isalpha") \
+               and isinstance(n.func.value, ast.Name) and n.func.value.id in names:
+                checks.append(n.func.attr + "()")
+        checks = list(dict.fromkeys(checks))
+        V = "Input validation"; gl = "line %d" % gline
+        if any(vars_[nm]["kind"] == "number" or nm in conv for nm in names):
+            X.append(dict(group=V, ok=True, text="%s converted to a number" % q, lines=gl, detail=""))
+        elif found_case:
+            X.append(dict(group=V, ok=True, text="%s: case handled with .%s()" % (q, "(), .".join(sorted(found_case))), lines=gl, detail=""))
+        else:
+            X.append(dict(group=V, ok=False, text="%s: no .lower() / .upper()" % q, lines=gl,
+                          detail="Compared with text, so “Day” and “day” differ" if str_cmp else ""))
+        X.append(dict(group=V, ok=bool(checks), text="%s: unexpected answers %s" % (q, "checked" if checks else "not checked"), lines=gl, detail=", ".join(checks)))
 
     # ---- functions
     funcs = [n for n in allnodes if isinstance(n, ast.FunctionDef)]
@@ -248,7 +353,7 @@ def analyse(src):
             seen.setdefault(key, f)
     withp = [f for f in funcs if f.args.args]
     if funcs and not any(f["level"] == "fix" and f["title"].startswith("Function") for f in F):
-        add("good", funcs[0].lineno, "Functions in use", "%d function(s) defined%s." % (len(funcs), ", %d with parameters" % len(withp) if withp else ""))
+        add("good", funcs[0].lineno, "Functions defined", "%d function(s) defined%s." % (len(funcs), ", %d with parameters" % len(withp) if withp else ""))
 
     # ---- loops and repetition
     loops = [n for n in allnodes if isinstance(n, (ast.For, ast.While))]
@@ -300,12 +405,15 @@ def analyse(src):
             add("look", b1[0].lineno, "Similar blocks of code",
                 "%s and %s are %s%s. Could one function (with parameters for anything that changes) do the job of both?" %
                 (r1.capitalize(), r2, "identical" if same else "very similar, with different numbers", more))
-    if len(turtle_calls) >= 25 and not loops:
-        add("look", None, "No loops", "There are %d turtle commands and no for or while loop. Look for steps that repeat." % len(turtle_calls))
+    if not loops:
+        add("look", None, "No loops", "No for or while loop anywhere.")
     if loops:
-        add("good", loops[0].lineno, "Loops in use", "%d loop(s) found." % len(loops))
+        add("good", loops[0].lineno, "Loops used", "%d loop(s) found." % len(loops))
+    if nrep == 0: X.append(dict(group="Loops", ok=True, text="No repeated code detected", lines="", detail=""))
+    if imp: X.append(dict(group="Basics", ok=True, text="turtle imported", lines="", detail=""))
+    if any(callname(c) in ("done", "mainloop", "exitonclick") for c in calls): X.append(dict(group="Basics", ok=True, text="Window kept open (done / mainloop)", lines="", detail=""))
     stats = dict(lines=len(src.splitlines()), inputs=len(input_calls), functions=len(funcs), loops=len(loops), repeats=nrep)
-    return dict(findings=F, stats=stats)
+    return dict(rows=to_rows(F, X), stats=stats)
 
 def analyse_json(src): return json.dumps(analyse(src))
 </script>
@@ -315,28 +423,58 @@ def analyse_json(src): return json.dumps(analyse(src))
 const $ = id => document.getElementById(id);
 const go = $("go"), out = $("out"), status = $("status"), code = $("code");
 let analyse = null, lastText = "";
-const LEVELS = [["fix", "Needs fixing"], ["look", "Worth a look"], ["good", "Looking good"]];
+const ORDER = ["Basics", "Loops", "Functions", "Inputs", "Conditionals", "Input validation"];
+const tag = r => r.text + (r.lines ? " (" + r.lines + ")" : "");
+const firstLine = r => { const m = r.lines && r.lines.match(/\d+/); return m ? +m[0] : null; };
+let res = null, view = "cat", texts = {};
 
-(async () => {
-  try {
-    const py = await loadPyodide();
-    py.runPython($("py").textContent);
-    analyse = py.globals.get("analyse_json");
-    status.textContent = "Ready. Your code never leaves this page.";
-    go.disabled = false;
-  } catch (e) {
-    status.textContent = "Could not load the Python checker. Check your internet connection and reload.";
-  }
-})();
+function rowEl(r, showCat) {
+  const d = el("div", "row"), b = el("div"), t = el("strong", null, r.text);
+  if (r.lines) t.append(el("span", "ln", r.lines));
+  if (showCat) t.append(el("span", "ln cat", r.group));
+  b.append(t); if (r.detail) b.append(el("p", null, r.detail));
+  d.append(el("span", "mk " + (r.ok ? "yes" : "no"), r.ok ? "✓" : "✗"), b);
+  return d;
+}
+const line = r => (r.ok ? "✓ " : "✗ ") + tag(r) + (r.detail ? " – " + r.detail : "") + "\n";
 
-function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-
-go.addEventListener("click", () => {
-  const src = code.value;
-  out.replaceChildren(); $("copy").hidden = true;
-  if (!src.trim()) { out.append(el("p", "sub", "Paste some code first.")); return; }
-  const res = JSON.parse(analyse(src));
+function catView(box, heading) {
   let text = "";
+  if (heading) box.append(el("h2", "colhead", "By category"));
+  ORDER.forEach(g => {
+    const rows = res.rows.filter(r => r.group === g);
+    if (!rows.length) return;
+    box.append(el("h2", null, g)); text += g + "\n";
+    rows.forEach(r => { box.append(rowEl(r, false)); text += line(r); });
+    text += "\n";
+  });
+  const good = res.rows.filter(r => r.ok);
+  if (good.length) {
+    box.append(el("h2", null, "What’s good")); text += "What’s good\n";
+    const ul = el("ul", "good");
+    good.forEach(r => { ul.append(el("li", null, tag(r))); text += "- " + tag(r) + "\n"; });
+    box.append(ul);
+  }
+  return text;
+}
+
+function lineView(box, heading) {
+  let text = "";
+  if (heading) box.append(el("h2", "colhead", "By line order"));
+  const withL = res.rows.filter(r => firstLine(r) !== null).sort((a, b) => firstLine(a) - firstLine(b));
+  const noL = res.rows.filter(r => firstLine(r) === null);
+  withL.forEach(r => { box.append(rowEl(r, true)); text += line(r).replace(/\n$/, " [" + r.group + "]\n"); });
+  if (noL.length) {
+    box.append(el("h2", null, "No specific line")); text += "\nNo specific line\n";
+    noL.forEach(r => { box.append(rowEl(r, true)); text += line(r).replace(/\n$/, " [" + r.group + "]\n"); });
+  }
+  return text;
+}
+
+function render() {
+  out.replaceChildren();
+  document.querySelector("main").classList.toggle("wide", view === "both");
+  document.querySelectorAll("#views button").forEach(b => b.classList.toggle("alt", b.dataset.v !== view));
   if (res.stats) {
     const s = el("div", "stats");
     [["lines", "lines"], ["inputs", "inputs"], ["functions", "functions"], ["loops", "loops"], ["repeats", "repeated blocks"]].forEach(([k, label]) => {
@@ -344,24 +482,26 @@ go.addEventListener("click", () => {
     });
     out.append(s);
   }
-  LEVELS.forEach(([lv, heading]) => {
-    const items = res.findings.filter(f => f.level === lv);
-    if (!items.length) return;
-    out.append(el("h2", null, heading)); text += heading + "\n";
-    items.forEach(f => {
-      const d = el("div", "item " + lv), t = el("strong", null, f.title);
-      if (f.line) t.append(el("span", "ln", "line " + f.line));
-      d.append(t, el("p", null, f.msg)); out.append(d);
-      text += "- " + f.title + (f.line ? " (line " + f.line + ")" : "") + ": " + f.msg + "\n";
-    });
-    text += "\n";
-  });
-  if (!res.findings.length) out.append(el("p", "sub", "Nothing to report."));
-  lastText = text; $("copy").hidden = false;
-  out.scrollIntoView({ behavior: "smooth", block: "start" });
-});
+  if (view === "both") {
+    const wrap = el("div", "two"), a = el("div"), b = el("div");
+    const ta = catView(a, true), tb = lineView(b, true);
+    wrap.append(a, b); out.append(wrap); lastText = ta + "\n" + tb;
+  } else {
+    const box = el("div"); out.append(box);
+    lastText = view === "cat" ? catView(box, false) : lineView(box, false);
+  }
+}
 
-$("clear").addEventListener("click", () => { code.value = ""; out.replaceChildren(); $("copy").hidden = true; code.focus(); });
+go.addEventListener("click", () => {
+  const src = code.value;
+  out.replaceChildren(); $("copy").hidden = true; $("views").hidden = true;
+  if (!src.trim()) return;
+  res = JSON.parse(analyse(src));
+  render(); $("copy").hidden = false; $("views").hidden = false;
+});
+document.querySelectorAll("#views button").forEach(b => b.addEventListener("click", () => { view = b.dataset.v; render(); }));
+
+$("clear").addEventListener("click", () => { code.value = ""; out.replaceChildren(); $("copy").hidden = true; $("views").hidden = true; document.querySelector("main").classList.remove("wide"); code.focus(); });
 $("copy").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(lastText); $("copy").textContent = "Copied"; setTimeout(() => $("copy").textContent = "Copy feedback", 1500); } catch (e) {}
 });
