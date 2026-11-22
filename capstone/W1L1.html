@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI App Lab 1</title>
+<title>W1L1: Prompt craft and temperature</title>
 <style>
-:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--ok:#4ec96a;--bad:#f05050;--warn:#f0a500}
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 'Segoe UI',Tahoma,sans-serif}
-body[data-lab="1"] .l2{display:none!important}
 header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 header h1{font-size:17px;margin:0}
 .tag{font-size:11px;padding:2px 8px;border-radius:3px;background:#3a2f12;color:var(--warn)}
@@ -18,255 +17,244 @@ main{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
 @media(max-width:900px){main{grid-template-columns:1fr}}
 section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
 section.wide{grid-column:1/-1}
-section.mission{border-left:4px solid var(--ac)}
-h2{font-size:14px;color:var(--ac);margin:0 0 4px}
-.hint{font-size:12px;color:var(--mut);margin:0 0 8px}
-.mission p{margin:4px 0}
-label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+section.brief{border-left:4px solid var(--ac)}
+section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}
+section.stretch h2{color:var(--warn)}
+p{margin:4px 0}.hint{font-size:12px;color:var(--mut)}
+label{display:block;font-size:12px;color:var(--mut);margin:12px 0 3px}
 input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
 input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 textarea{resize:vertical;min-height:64px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+textarea[readonly]{background:#171717;color:#9aa;border-style:dashed}
+input[type=range]{padding:0;accent-color:var(--ac)}
 button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
 button:hover{background:#e04a4a}button:disabled{background:#555;color:#999;cursor:not-allowed}
-button.alt{background:#444}button.alt:hover{background:#555}
 button.go{background:var(--ac);color:#1e1e1e}button.go:hover{background:#3ab89f}
-.acts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-#out{background:#000;color:#00ff00;font:13px Consolas,monospace;padding:12px;border-radius:4px;min-height:48px;white-space:pre-wrap;margin-top:10px}
-#score{font-size:15px;font-weight:700;min-height:24px;margin:4px 0}
+button.alt{background:#444}button.alt:hover{background:#555}
+.inps{display:grid;gap:6px}
+.row{display:flex;gap:10px;align-items:end;margin-top:12px}.row>div{flex:1}
 table{width:100%;border-collapse:collapse;font-size:12px;font-family:Consolas,monospace}
 th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--bd);padding:4px}
-td{padding:4px;border-bottom:1px solid #2e2e2e;vertical-align:top}
-tr.ok td:last-child{color:var(--ok)}tr.bad td:last-child{color:var(--bad)}tr.bad{background:#2a1a1a}
-.wrap{overflow-x:auto}
+td{padding:5px 4px;border-bottom:1px solid #2e2e2e;vertical-align:top;white-space:pre-wrap}
+.wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+#status{font-size:12px;color:var(--warn);min-height:18px;margin-top:6px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
 #modal.hidden{display:none}
 .mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
 .mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
-#merr{color:var(--bad);font-size:12px;min-height:16px;margin:8px 0}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
 </style>
 </head>
-<body data-lab="1">
+<body>
 
-<div id="modal">
-  <div class="mbox">
-    <h2>Welcome to the AI App Lab</h2>
-    <p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
-    <input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()">
-    <div id="merr"></div>
-    <button onclick="setName()">Start</button>
-  </div>
-</div>
+<div id="modal"><div class="mbox">
+  <h2>Welcome to the AI App Lab</h2>
+  <p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+  <input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()">
+  <div id="merr"></div><button onclick="setName()">Start</button>
+</div></div>
 
 <header>
-  <h1 id="title"></h1><span class="tag">Experimental</span>
-  <span class="who" id="who"></span>
+  <h1>W1L1</h1><span class="tag">Experimental</span><span class="who" id="who"></span>
   <div class="bar">
-    <select id="starter" style="width:auto" onchange="loadStarter(this.value)">
-      <option value="">Load a starter…</option>
-      <option value="zombie">Zombie apocalypse</option>
-      <option value="password">Password checker</option>
-      <option value="bin">Bin Buddy</option>
-    </select>
-    <button class="l2 alt" onclick="exportApp()">Export app</button>
+    <select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+    <button class="alt" onclick="exportApp()">Export as app</button>
     <button class="go" onclick="exportDoc()">Export my work</button>
   </div>
 </header>
 
 <main>
-<section class="mission wide">
-  <h2>Mission</h2>
-  <div id="mission"></div>
-</section>
+<section class="brief wide"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
 
 <section>
   <h2>Your app</h2>
-  <div class="l2">
-    <div class="row">
-      <div><label for="name">App name</label><input id="name"></div>
-      <div><label for="tag">One-line description</label><input id="tag"></div>
-    </div>
-    <label for="story">User story: As a ___, I want ___ so that ___</label><textarea id="story"></textarea>
+  <label for="prompt">System prompt (the instructions the AI reads before every question)</label>
+  <textarea id="prompt" style="min-height:130px"></textarea>
+  <div class="hint" id="plock"></div>
+
+  <label for="temp">Temperature: <b id="tval"></b></label>
+  <input id="temp" type="range" min="0" max="1" step="0.1">
+  <div class="hint" id="tlock"></div>
+
+  <label for="predict">Before you run: what do you think it will say?</label>
+  <input id="predict">
+
+  <label>Inputs (up to five)</label>
+  <div class="inps" id="inps"></div>
+
+  <div class="row">
+    <div><label for="reps" style="margin-top:0">Run each input</label>
+      <select id="reps"><option value="1">1 time</option><option value="2">2 times</option><option value="3">3 times</option></select></div>
+    <button id="runb" onclick="run()">Run</button>
   </div>
-  <label for="prompt">System prompt (the instructions your app follows)</label><textarea id="prompt" style="min-height:130px"></textarea>
-  <label for="temp">Temperature (0.1 = strict, 1.0 = creative)</label><input id="temp" type="number" min="0" max="1" step="0.1" value="0.1">
-  <h2 style="margin-top:16px">Examples</h2>
-  <p class="hint">Optional. Show the AI what a good answer looks like.</p>
-  <div class="row"><input id="ex1i" placeholder="Example 1 input"><input id="ex1o" placeholder="Example 1 ideal answer"></div>
-  <div class="row" style="margin-top:6px"><input id="ex2i" placeholder="Example 2 input"><input id="ex2o" placeholder="Example 2 ideal answer"></div>
-  <div class="row" style="margin-top:6px"><input id="ex3i" placeholder="Example 3 input"><input id="ex3o" placeholder="Example 3 ideal answer"></div>
+  <div id="status" aria-live="polite"></div>
 </section>
 
 <section>
-  <h2>Try it</h2>
-  <label for="predict">Before you run: what do you think it will say?</label><input id="predict">
-  <label for="tryin">Input</label><input id="tryin" onkeydown="if(event.key==='Enter')tryIt()">
-  <div class="acts"><button id="tryb" onclick="tryIt()">Try it</button></div>
-  <div id="out" aria-live="polite">The answer appears here.</div>
-  <label for="runlog">Run log (added automatically)</label><textarea id="runlog" style="min-height:90px"></textarea>
-
-  <div class="l2">
-    <h2 style="margin-top:18px">Tests</h2>
-    <p class="hint">One per line: <b>input =&gt; expected word</b>. It passes if the answer contains the expected word. Maximum 10.</p>
-    <textarea id="tests" style="min-height:120px"></textarea>
-    <div class="acts"><button id="runb" onclick="runTests()">Run tests</button></div>
-    <div id="score" aria-live="polite"></div>
-    <div class="wrap"><table id="results"></table></div>
-  </div>
+  <h2>Output</h2>
+  <div class="wrap"><table id="out"><tr><td class="hint">Answers appear here.</td></tr></table></div>
+  <label for="notes">What did you notice? (goes in your export)</label>
+  <textarea id="notes"></textarea>
+  <details><summary id="logsum">Run log</summary><div class="wrap"><table id="logt"></table></div></details>
 </section>
 
-<section class="wide l2">
-  <h2>Design notes</h2>
-  <p class="hint">Test scores are added to the log automatically. Write what you changed and why beside each one.</p>
-  <label for="log">Iteration log</label><textarea id="log" style="min-height:100px"></textarea>
-  <label for="interviews">Interview notes (two people)</label><textarea id="interviews" style="min-height:100px"></textarea>
-</section>
+<section class="stretch wide"><h2>Stretch (optional)</h2><div id="lstretch"></div></section>
 </main>
 
 <script>
-const LAB = 1;
 const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
-const SEND_MODE_HEADER = false; // set true once the Worker allows an X-Mode header in its CORS settings
-const MAX_TESTS = 10, PAUSE = 400, MAX_TOKENS = 88;
-const LABS = {1:"Lab 1: Meet the machine", 2:"Lab 2: Design and test"};
-const MISSIONS = {
- 1:"<p><b>Change:</b> edit the system prompt so the app answers about something new, then run it.</p><p><b>Extend:</b> add an example and see whether the answers get better. Write your prediction before each run.</p><p><b>Break:</b> find an input that fools the AI, and work out why.</p>",
- 2:"<p><b>Design:</b> interview two people, then write a user story for something useful.</p><p><b>Build:</b> write your prompt and five tests, run them and raise your score.</p><p><b>Share:</b> export your app and let a classmate try it.</p>"};
+const MAX_TOKENS = 88, PAUSE = 400;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const cache = new Map();
-const FIELDS = ["name","tag","story","prompt","temp","ex1i","ex1o","ex2i","ex2o","ex3i","ex3o","runlog","tests","log","interviews"];
-
-// ── Name and autosave ─────────────────────────────────────
 const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+
+const GOOD = "You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste) or GREEN (garden waste). Then give a reason of ten words or fewer.";
+const LABS = {
+ a:{t:"W1L1a: Prompt craft, improve the prompt", prompt:"You help with bins. Say which bin the item goes in.", lockP:false, temp:0.1, lockT:true, reps:1,
+    inputs:["glass jar","grass clippings","greasy pizza box"],
+    brief:"<p>Bin Buddy tells people which bin an item goes in. Right now its instructions are weak.</p><p><b>Your mission:</b> rewrite the system prompt so Bin Buddy answers with one bin colour (YELLOW, RED or GREEN) and a short reason. Predict, run, read, change, run again.</p>",
+    stretch:"Make Bin Buddy answer in five words or fewer, and still be correct."},
+ b:{t:"W1L1b: Bad prompt, too vague (locked)", prompt:"Tell the user about the thing they type. Be helpful.", lockP:true, temp:0.1, lockT:true, reps:1,
+    inputs:["glass jar","pizza box","batteries"],
+    brief:"<p>This prompt is locked. You can change the inputs, but not the instructions.</p><p><b>Your mission:</b> run it, then write down at least three things wrong with the answers.</p>",
+    stretch:"Write a better version of this prompt on paper, then test it in lab a."},
+ c:{t:"W1L1c: Bad prompt, conflicting orders (locked)", prompt:"Reply in exactly one word. Always explain your reasoning in full detail. Never use more than three words.", lockP:true, temp:0.1, lockT:true, reps:1,
+    inputs:["glass jar","nappy"],
+    brief:"<p>Two of these instructions fight each other.</p><p><b>Your mission:</b> predict which instruction the AI will obey, then run it. Were you right?</p>",
+    stretch:"Change one sentence in your head so the instructions agree. Which one did you remove?"},
+ d:{t:"W1L1d: Temperature, strict at 0.1 (locked)", prompt:GOOD, lockP:true, temp:0.1, lockT:true, reps:3,
+    inputs:["greasy pizza box"],
+    brief:"<p><b>Temperature</b> controls how adventurous the AI is when it picks each next word. Near 0, it picks the most likely word every time. Near 1, it is willing to pick less likely words.</p><p><b>Your mission:</b> run the same input three times. How similar are the answers?</p>",
+    stretch:"Find an input where even 0.1 gives you different answers."},
+ e:{t:"W1L1e: Temperature, wild at 1.0 (locked)", prompt:GOOD, lockP:true, temp:1.0, lockT:true, reps:3,
+    inputs:["greasy pizza box"],
+    brief:"<p>Same prompt and same input as lab d, but the temperature is 1.0.</p><p><b>Your mission:</b> predict how the answers will differ from lab d, then run it. Describe the difference in your notes.</p>",
+    stretch:"Write one sentence about when you would want a high temperature (for example, writing a poem) and when you would not."},
+ f:{t:"W1L1f: Temperature explorer", prompt:GOOD, lockP:false, temp:0.5, lockT:false, reps:3,
+    inputs:["greasy pizza box","old toaster"],
+    brief:"<p>Now you are in control of the temperature.</p><p><b>Your mission:</b> try 0.1, 0.5 and 1.0 with the same inputs. Which setting suits Bin Buddy, and why?</p>",
+    stretch:"Find the lowest temperature where Bin Buddy first gives a different answer to the same input."}
+};
+
+// ── State ─────────────────────────────────────────────────
 let who = store.get("aib-name") || "";
-function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+let S = {lab:"a", edits:{}, inputs:{}, notes:{}, log:[]};
+try{ const s = JSON.parse(store.get("aib-W1L1")); if(s && s.lab) S = s; }catch(e){}
+const save = () => store.set("aib-W1L1", JSON.stringify(S));
+const inputEls = () => [...document.querySelectorAll(".inp")];
+
 function setName(){
   const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
   if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
   who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
 }
 function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
-function save(){ const o = {}; FIELDS.forEach(f => o[f] = $(f).value); store.set("aib-lab"+LAB, JSON.stringify(o)); }
-document.addEventListener("input", e => { if(FIELDS.includes(e.target.id)) save(); });
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
 
-// ── Starters ──────────────────────────────────────────────
-const STARTERS = {
-  bin:{name:"Bin Buddy", tag:"Type a household item and find out which bin it goes in.",
-    prompt:"You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste), GREEN (garden waste) or CHECK COUNCIL if unsure. Then give a reason of ten words or fewer. Never invent council rules.",
-    ex:[["milk carton","YELLOW - Clean cartons can be recycled."],["garden prunings","GREEN - Garden waste goes in the green bin."]],
-    tests:"glass jar => YELLOW\ngrass clippings => GREEN\ngreasy pizza box => RED\nplastic bag => RED\nnewspaper => YELLOW\nbatteries => CHECK COUNCIL\ntin can => YELLOW\nnappy => RED"},
-  zombie:{name:"Apocalypse Advisor", tag:"Is this item useful in a zombie apocalypse?",
-    prompt:"You are a zombie apocalypse survival expert. The user names an item. Reply with USEFUL or USELESS, then a reason of ten words or fewer.",
-    ex:[["torch","USEFUL - Light helps you see and signal at night."]],
-    tests:"crowbar => USEFUL\ntinned beans => USEFUL\nhairdryer => USELESS\ngold necklace => USELESS\nwater filter => USEFUL"},
-  password:{name:"Password Sentinel", tag:"Is this password secure?",
-    prompt:"You are a cybersecurity expert. Analyse the password provided by the user. Answer with exactly one word: SECURE or INSECURE.",
-    ex:[],
-    tests:"Password123! => INSECURE\nqwerty => INSECURE\ncorrecthorsebatterystaple => SECURE\nk9#Lm2$vQx7!pZ => SECURE\nadmin => INSECURE"}
-};
-function loadStarter(k, silent){
-  const s = STARTERS[k]; if(!s) return;
-  if(!silent && !confirm("Replace your current prompt and examples with this starter?")){ $("starter").value=""; return; }
-  $("name").value=s.name; $("tag").value=s.tag; $("prompt").value=s.prompt; $("temp").value=0.1; $("tests").value=s.tests;
-  [1,2,3].forEach(n => { $("ex"+n+"i").value = s.ex[n-1]?s.ex[n-1][0]:""; $("ex"+n+"o").value = s.ex[n-1]?s.ex[n-1][1]:""; });
-  $("starter").value=""; save();
+// ── Lab switching ─────────────────────────────────────────
+function collect(){
+  const L = LABS[S.lab];
+  if(!L.lockP || !L.lockT){ S.edits[S.lab] = {prompt:$("prompt").value, temp:+$("temp").value}; }
+  S.inputs[S.lab] = inputEls().map(i => i.value);
+  S.notes[S.lab] = $("notes").value; save();
 }
+function tempWord(v){ return v+" ("+(v<=0.3?"strict":v<=0.7?"balanced":"wild")+")"; }
+function render(){
+  const k = S.lab, L = LABS[k], e = S.edits[k] || {};
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief; $("lstretch").textContent = L.stretch;
+  $("prompt").value = L.lockP ? L.prompt : (e.prompt ?? L.prompt); $("prompt").readOnly = L.lockP;
+  $("plock").textContent = L.lockP ? "Locked in this lab. Read it, then run it." : "";
+  const t = L.lockT ? L.temp : (e.temp ?? L.temp);
+  $("temp").value = t; $("temp").disabled = L.lockT; $("tval").textContent = tempWord(t);
+  $("tlock").textContent = L.lockT ? "Fixed in this lab." : "";
+  const vals = S.inputs[k] || L.inputs;
+  $("inps").innerHTML = [0,1,2,3,4].map(i => '<input class="inp" aria-label="Input '+(i+1)+'" placeholder="Input '+(i+1)+'" value="'+esc(vals[i]||"")+'">').join("");
+  $("reps").value = L.reps; $("notes").value = S.notes[k] || ""; $("predict").value = "";
+  $("out").innerHTML = '<tr><td class="hint">Answers appear here.</td></tr>'; $("status").textContent = "";
+  renderLog();
+}
+function switchLab(k){ collect(); S.lab = k; save(); render(); }
+function renderLog(){
+  const rows = S.log.filter(r => r.lab === S.lab);
+  $("logsum").textContent = "Run log for this lab ("+rows.length+" runs)";
+  $("logt").innerHTML = "<tr><th>Temp</th><th>Predicted</th><th>Input</th><th>Run</th><th>Answer</th></tr>" +
+    rows.map(r => "<tr><td>"+r.temp+"</td><td>"+esc(r.pred||"")+"</td><td>"+esc(r.inp)+"</td><td>"+r.run+"</td><td>"+esc(r.got)+"</td></tr>").join("");
+}
+document.addEventListener("input", e => {
+  if(e.target.id === "temp") $("tval").textContent = tempWord(+e.target.value);
+  if(["prompt","temp","notes"].includes(e.target.id) || e.target.classList.contains("inp")) collect();
+});
 
-// ── LLM call ──────────────────────────────────────────────
-async function llm(system, examples, input, temp){
-  const msgs = [{role:"system",content:system}];
-  examples.forEach(([i,o]) => msgs.push({role:"user",content:i},{role:"assistant",content:o}));
-  msgs.push({role:"user",content:input});
-  const body = JSON.stringify({messages:msgs, model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:temp});
-  if(cache.has(body)) return cache.get(body);
-  const h = {"Content-Type":"application/json"}; if(SEND_MODE_HEADER) h["X-Mode"]="builder";
+// ── Running ───────────────────────────────────────────────
+async function llm(system, input, temp){
   try{
-    const r = await fetch(ENDPOINT,{method:"POST",headers:h,body});
+    const r = await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:[{role:"system",content:system},{role:"user",content:input}], model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:temp})});
     if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
-    const t = (await r.json()).choices[0].message.content.trim();
-    cache.set(body,t); return t;
+    return (await r.json()).choices[0].message.content.trim();
   }catch(e){ return "ERROR: "+e.message; }
 }
-const getEx = () => [1,2,3].map(n => [$("ex"+n+"i").value.trim(), $("ex"+n+"o").value.trim()]).filter(p => p[0] && p[1]);
-
-async function tryIt(){
-  const v = $("tryin").value.trim();
-  if(!v || !$("prompt").value.trim()){ $("out").textContent = "Write a system prompt and type an input first."; return; }
-  $("tryb").disabled = true; $("out").textContent = "Thinking…";
-  const got = await llm($("prompt").value, getEx(), v, +$("temp").value);
-  $("out").textContent = got;
-  const p = $("predict").value.trim();
-  $("runlog").value += ($("runlog").value ? "\n" : "") + "Predicted: "+(p||"(none)")+" | Input: "+v+" | Got: "+got;
-  $("predict").value = ""; save();
-  setTimeout(() => $("tryb").disabled = false, 1500);
-}
-
-// ── Tests (Lab 2) ─────────────────────────────────────────
-const parse = t => t.split("\n").map(l => l.split("=>").map(s => s.trim())).filter(p => p[0] && p[1]).slice(0,MAX_TESTS);
-async function runTests(){
-  const t = parse($("tests").value);
-  if(!$("prompt").value.trim() || !t.length){ $("score").textContent = "Write a prompt and add tests in the form: input => expected"; return; }
-  $("runb").disabled = true; $("score").textContent = "Running…";
-  const ex = getEx(), head = "<tr><th>Input</th><th>Expected</th><th>AI answer</th><th></th></tr>";
-  let pass = 0, rows = "";
-  for(const [inp, exp] of t){
-    const got = await llm($("prompt").value, ex, inp, +$("temp").value);
-    const ok = !got.startsWith("ERROR") && got.toUpperCase().includes(exp.toUpperCase());
-    if(ok) pass++;
-    rows += `<tr class="${ok?"ok":"bad"}"><td>${esc(inp)}</td><td>${esc(exp)}</td><td>${esc(got)}</td><td>${ok?"✔":"✘"}</td></tr>`;
-    $("results").innerHTML = head + rows; await sleep(PAUSE);
+async function run(){
+  const prompt = $("prompt").value.trim(), temp = +$("temp").value, reps = +$("reps").value, pred = $("predict").value.trim();
+  const ins = inputEls().map(i => i.value.trim()).filter(Boolean);
+  if(!prompt || !ins.length){ $("status").textContent = "Write a system prompt and at least one input."; return; }
+  collect(); $("runb").disabled = true; $("status").textContent = "Running…";
+  const head = "<tr><th>Input</th><th>Run</th><th>Answer</th></tr>"; let rows = "";
+  $("out").innerHTML = head;
+  for(const inp of ins) for(let k = 1; k <= reps; k++){
+    const got = await llm(prompt, inp, temp);
+    rows += "<tr><td>"+esc(inp)+"</td><td>"+k+"</td><td>"+esc(got)+"</td></tr>";
+    $("out").innerHTML = head + rows;
+    S.log.push({lab:S.lab, temp, pred, inp, run:k, got, prompt}); await sleep(PAUSE);
   }
-  const label = ex.length ? ex.length+" example"+(ex.length>1?"s":"") : "no examples";
-  $("score").textContent = "Score: "+pass+"/"+t.length+" ("+label+")";
-  $("log").value += ($("log").value ? "\n" : "") + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) + "  "+pass+"/"+t.length+" with "+label+"  | changed: ";
-  save(); $("runb").disabled = false;
+  $("predict").value = ""; $("status").textContent = "Done. Now write what you noticed."; save(); renderLog(); $("runb").disabled = false;
 }
 
 // ── Exports ───────────────────────────────────────────────
 function download(name, text, type){
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
 }
 const fname = () => (who || "Student").replace(/\s+/g,"-");
 function exportDoc(){
   if(!who){ changeName(); return; }
-  const ex = getEx().map((p,i) => "Example "+(i+1)+": "+p[0]+" → "+p[1]).join("\n") || "(none)";
-  const items = LAB >= 2
-    ? [["App name","name"],["Description","tag"],["User story","story"],["System prompt","prompt"],["Temperature","temp"],["Examples",ex],["Tests","tests"],["Iteration log","log"],["Interview notes","interviews"],["Run log","runlog"]]
-    : [["System prompt","prompt"],["Temperature","temp"],["Examples",ex],["Run log","runlog"]];
-  const body = items.map(([l,v]) => "<h3>"+l+"</h3><p style='white-space:pre-wrap'>"+esc($(v) ? $(v).value : v)+"</p>").join("");
-  const html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" Lab "+LAB+"</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": "+LABS[LAB]+"</h1>"+body+"</body></html>";
-  download(fname()+"-Lab"+LAB+".doc", html, "application/msword");
+  collect(); let b = "";
+  for(const k in LABS){
+    const rows = S.log.filter(r => r.lab === k), note = S.notes[k] || "";
+    if(!rows.length && !note) continue;
+    b += "<h2>"+esc(LABS[k].t)+"</h2>";
+    if(rows.length) b += "<p><b>Prompt:</b> "+esc(rows[rows.length-1].prompt)+"</p><table border='1' cellpadding='4' style='border-collapse:collapse'><tr><th>Temp</th><th>Predicted</th><th>Input</th><th>Run</th><th>Answer</th></tr>" +
+      rows.map(r => "<tr><td>"+r.temp+"</td><td>"+esc(r.pred||"")+"</td><td>"+esc(r.inp)+"</td><td>"+r.run+"</td><td>"+esc(r.got)+"</td></tr>").join("") + "</table>";
+    if(note) b += "<p><b>What I noticed:</b> "+esc(note)+"</p>";
+  }
+  if(!b){ alert("Run something first, so there is work to export."); return; }
+  download(fname()+"-W1L1.doc", "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W1L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W1L1 run log</h1>"+b+"</body></html>", "application/msword");
 }
 function exportApp(){
   if(!who){ changeName(); return; }
+  if(LABS[S.lab].lockP){ alert("This prompt is locked. Switch to lab a or lab f to export an app."); return; }
   if(!$("prompt").value.trim()){ alert("Write a system prompt first."); return; }
-  const cfg = {name:$("name").value||"My App", tag:$("tag").value, prompt:$("prompt").value, temp:+$("temp").value, examples:getEx(), endpoint:ENDPOINT, hdr:SEND_MODE_HEADER, max:MAX_TOKENS};
+  const cfg = {name:"Bin Buddy", prompt:$("prompt").value, temp:+$("temp").value, endpoint:ENDPOINT, max:MAX_TOKENS};
   const j = JSON.stringify(cfg).replace(/</g,"\\u003c");
-  download(fname()+"-"+cfg.name.replace(/[^A-Za-z0-9]+/g,"-")+"-app.html", CONSUMER.replace("__CFG__",() => j).replace("__TITLE__",() => esc(cfg.name)), "text/html");
+  download(fname()+"-BinBuddy-app.html", CONSUMER.replace("__CFG__",() => j), "text/html");
 }
-const CONSUMER = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>
+const CONSUMER = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bin Buddy</title><style>
 body{margin:0;background:#121212;color:#e0e0e0;font:16px/1.6 'Segoe UI',Tahoma,sans-serif;display:flex;justify-content:center;padding:24px}
 .c{max-width:520px;width:100%}h1{color:#4EC9B0;margin:0 0 4px}p{color:#aaa;margin:0 0 16px}
 textarea{width:100%;min-height:80px;background:#1e1e1e;color:#eee;border:2px solid #333;border-radius:8px;padding:10px;font:inherit;box-sizing:border-box}
 textarea:focus{outline:none;border-color:#4EC9B0}
 button{margin-top:10px;background:#ce3c3c;color:#fff;border:0;border-radius:6px;padding:10px 26px;font-weight:700;font-size:15px;cursor:pointer}
 button:disabled{background:#555}#o{margin-top:18px;padding:14px;background:#1e1e1e;border-left:4px solid #4EC9B0;border-radius:6px;min-height:24px;white-space:pre-wrap}
-</style></head><body><div class="c"><h1 id="n"></h1><p id="t"></p><textarea id="i" maxlength="300" placeholder="Type here"></textarea><button id="b">Ask</button><div id="o" aria-live="polite"></div></div>
+</style></head><body><div class="c"><h1>Bin Buddy</h1><p>Type a household item and find out which bin it goes in.</p><textarea id="i" maxlength="300" placeholder="Type an item"></textarea><button id="b">Ask</button><div id="o" aria-live="polite"></div></div>
 <script>
 const C=__CFG__,$=id=>document.getElementById(id);
-$("n").textContent=C.name;$("t").textContent=C.tag;
 $("b").onclick=async()=>{
   const v=$("i").value.trim();if(!v)return;
-  const m=[{role:"system",content:C.prompt}];
-  C.examples.forEach(e=>m.push({role:"user",content:e[0]},{role:"assistant",content:e[1]}));
-  m.push({role:"user",content:v});
   $("b").disabled=true;$("o").textContent="Thinking…";
-  const h={"Content-Type":"application/json"};if(C.hdr)h["X-Mode"]="consumer";
   try{
-    const r=await fetch(C.endpoint,{method:"POST",headers:h,body:JSON.stringify({messages:m,model:"llama-3.1-8b-instant",max_tokens:C.max,temperature:C.temp})});
+    const r=await fetch(C.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"system",content:C.prompt},{role:"user",content:v}],model:"llama-3.1-8b-instant",max_tokens:C.max,temperature:C.temp})});
     if(!r.ok)throw new Error("The service is busy. Please try again shortly.");
     $("o").textContent=(await r.json()).choices[0].message.content.trim();
   }catch(e){$("o").textContent=e.message;}
@@ -275,13 +263,9 @@ $("b").onclick=async()=>{
 <\/script></body></html>`;
 
 // ── Start up ──────────────────────────────────────────────
-$("title").textContent = LABS[LAB];
-$("mission").innerHTML = MISSIONS[LAB];
-showWho();
-if(who) $("modal").classList.add("hidden");
-const saved = store.get("aib-lab"+LAB);
-if(saved){ try{ const o = JSON.parse(saved); FIELDS.forEach(f => { if(o[f] !== undefined) $(f).value = o[f]; }); }catch(e){} }
-else loadStarter(LAB === 1 ? "zombie" : "bin", true);
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+showWho(); if(who) $("modal").classList.add("hidden");
+render();
 </script>
 </body>
 </html>
