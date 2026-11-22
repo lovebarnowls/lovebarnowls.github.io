@@ -111,7 +111,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
 
-const GOOD = "You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste) or GREEN (garden waste). Then give a reason of ten words or fewer.";
+const GOOD = "You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste), GREEN (garden waste) or CHECK COUNCIL if the input is not a household item or you are unsure. Then give a reason of ten words or fewer.";
 const LABS = {
  a:{t:"W1L1a: Prompt craft, improve the prompt", prompt:"You help with bins. Say which bin the item goes in.", lockP:false, temp:0.1, lockT:true, reps:1,
     inputs:["glass jar","grass clippings","greasy pizza box"],
@@ -136,7 +136,15 @@ const LABS = {
  f:{t:"W1L1f: Temperature explorer", prompt:GOOD, lockP:false, temp:0.5, lockT:false, reps:3,
     inputs:["greasy pizza box","old toaster"],
     brief:"<p>Now you are in control of the temperature.</p><p><b>Your mission:</b> try 0.1, 0.5 and 1.0 with the same inputs. Which setting suits Bin Buddy, and why?</p>",
-    stretch:"Find the lowest temperature where Bin Buddy first gives a different answer to the same input."}
+    stretch:"Find the lowest temperature where Bin Buddy first gives a different answer to the same input."},
+ g:{t:"W1L1g: When it does not know, no way out (locked)", prompt:"You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW, RED or GREEN, then a reason of ten words or fewer.", lockP:true, temp:0.1, lockT:true, reps:1,
+    inputs:["unicorn","my homework","asdfgh"],
+    brief:"<p>This prompt never says what to do when the AI does not know.</p><p><b>Your mission:</b> predict what it will do with strange inputs, then run it. Did it admit it did not know, or did it guess?</p>",
+    stretch:"Write the one sentence that would fix this prompt."},
+ h:{t:"W1L1h: When it does not know, with a fallback (locked)", prompt:GOOD, lockP:true, temp:0.1, lockT:true, reps:1,
+    inputs:["unicorn","my homework","asdfgh"],
+    brief:"<p>Same inputs as lab g, but this prompt gives the AI an allowed way out: CHECK COUNCIL.</p><p><b>Your mission:</b> compare with lab g. A good prompt says what to do when the AI does not know.</p>",
+    stretch:"Write a fallback line for a different app, such as the zombie checker or the password checker."}
 };
 
 // ── State ─────────────────────────────────────────────────
@@ -194,7 +202,8 @@ async function llm(system, input, temp){
     const r = await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({messages:[{role:"system",content:system},{role:"user",content:input}], model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:temp})});
     if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
-    return (await r.json()).choices[0].message.content.trim();
+    const ch = (await r.json()).choices[0], t = (ch.message.content || "").trim();
+    return t || "(No answer came back"+(ch.finish_reason === "length" ? ": the model ran out of tokens before it could reply" : "")+")";
   }catch(e){ return "ERROR: "+e.message; }
 }
 async function run(){
@@ -256,7 +265,7 @@ $("b").onclick=async()=>{
   try{
     const r=await fetch(C.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"system",content:C.prompt},{role:"user",content:v}],model:"llama-3.1-8b-instant",max_tokens:C.max,temperature:C.temp})});
     if(!r.ok)throw new Error("The service is busy. Please try again shortly.");
-    $("o").textContent=(await r.json()).choices[0].message.content.trim();
+    $("o").textContent=((await r.json()).choices[0].message.content||"").trim()||"No answer came back. Please try again.";
   }catch(e){$("o").textContent=e.message;}
   setTimeout(()=>{$("b").disabled=false;},3000);
 };
