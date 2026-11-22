@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI App Lab 1</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--ok:#4ec96a;--bad:#f05050;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 'Segoe UI',Tahoma,sans-serif}
+body[data-lab="1"] .l2{display:none!important}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}
+.tag{font-size:11px;padding:2px 8px;border-radius:3px;background:#3a2f12;color:var(--warn)}
+.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.wide{grid-column:1/-1}
+section.mission{border-left:4px solid var(--ac)}
+h2{font-size:14px;color:var(--ac);margin:0 0 4px}
+.hint{font-size:12px;color:var(--mut);margin:0 0 8px}
+.mission p{margin:4px 0}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:64px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button:disabled{background:#555;color:#999;cursor:not-allowed}
+button.alt{background:#444}button.alt:hover{background:#555}
+button.go{background:var(--ac);color:#1e1e1e}button.go:hover{background:#3ab89f}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+#out{background:#000;color:#00ff00;font:13px Consolas,monospace;padding:12px;border-radius:4px;min-height:48px;white-space:pre-wrap;margin-top:10px}
+#score{font-size:15px;font-weight:700;min-height:24px;margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:12px;font-family:Consolas,monospace}
+th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--bd);padding:4px}
+td{padding:4px;border-bottom:1px solid #2e2e2e;vertical-align:top}
+tr.ok td:last-child{color:var(--ok)}tr.bad td:last-child{color:var(--bad)}tr.bad{background:#2a1a1a}
+.wrap{overflow-x:auto}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr{color:var(--bad);font-size:12px;min-height:16px;margin:8px 0}
+</style>
+</head>
+<body data-lab="1">
+
+<div id="modal">
+  <div class="mbox">
+    <h2>Welcome to the AI App Lab</h2>
+    <p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+    <input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()">
+    <div id="merr"></div>
+    <button onclick="setName()">Start</button>
+  </div>
+</div>
+
+<header>
+  <h1 id="title"></h1><span class="tag">Experimental</span>
+  <span class="who" id="who"></span>
+  <div class="bar">
+    <select id="starter" style="width:auto" onchange="loadStarter(this.value)">
+      <option value="">Load a starter…</option>
+      <option value="zombie">Zombie apocalypse</option>
+      <option value="password">Password checker</option>
+      <option value="bin">Bin Buddy</option>
+    </select>
+    <button class="l2 alt" onclick="exportApp()">Export app</button>
+    <button class="go" onclick="exportDoc()">Export my work</button>
+  </div>
+</header>
+
+<main>
+<section class="mission wide">
+  <h2>Mission</h2>
+  <div id="mission"></div>
+</section>
+
+<section>
+  <h2>Your app</h2>
+  <div class="l2">
+    <div class="row">
+      <div><label for="name">App name</label><input id="name"></div>
+      <div><label for="tag">One-line description</label><input id="tag"></div>
+    </div>
+    <label for="story">User story: As a ___, I want ___ so that ___</label><textarea id="story"></textarea>
+  </div>
+  <label for="prompt">System prompt (the instructions your app follows)</label><textarea id="prompt" style="min-height:130px"></textarea>
+  <label for="temp">Temperature (0.1 = strict, 1.0 = creative)</label><input id="temp" type="number" min="0" max="1" step="0.1" value="0.1">
+  <h2 style="margin-top:16px">Examples</h2>
+  <p class="hint">Optional. Show the AI what a good answer looks like.</p>
+  <div class="row"><input id="ex1i" placeholder="Example 1 input"><input id="ex1o" placeholder="Example 1 ideal answer"></div>
+  <div class="row" style="margin-top:6px"><input id="ex2i" placeholder="Example 2 input"><input id="ex2o" placeholder="Example 2 ideal answer"></div>
+  <div class="row" style="margin-top:6px"><input id="ex3i" placeholder="Example 3 input"><input id="ex3o" placeholder="Example 3 ideal answer"></div>
+</section>
+
+<section>
+  <h2>Try it</h2>
+  <label for="predict">Before you run: what do you think it will say?</label><input id="predict">
+  <label for="tryin">Input</label><input id="tryin" onkeydown="if(event.key==='Enter')tryIt()">
+  <div class="acts"><button id="tryb" onclick="tryIt()">Try it</button></div>
+  <div id="out" aria-live="polite">The answer appears here.</div>
+  <label for="runlog">Run log (added automatically)</label><textarea id="runlog" style="min-height:90px"></textarea>
+
+  <div class="l2">
+    <h2 style="margin-top:18px">Tests</h2>
+    <p class="hint">One per line: <b>input =&gt; expected word</b>. It passes if the answer contains the expected word. Maximum 10.</p>
+    <textarea id="tests" style="min-height:120px"></textarea>
+    <div class="acts"><button id="runb" onclick="runTests()">Run tests</button></div>
+    <div id="score" aria-live="polite"></div>
+    <div class="wrap"><table id="results"></table></div>
+  </div>
+</section>
+
+<section class="wide l2">
+  <h2>Design notes</h2>
+  <p class="hint">Test scores are added to the log automatically. Write what you changed and why beside each one.</p>
+  <label for="log">Iteration log</label><textarea id="log" style="min-height:100px"></textarea>
+  <label for="interviews">Interview notes (two people)</label><textarea id="interviews" style="min-height:100px"></textarea>
+</section>
+</main>
+
+<script>
+const LAB = 1;
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+const SEND_MODE_HEADER = false; // set true once the Worker allows an X-Mode header in its CORS settings
+const MAX_TESTS = 10, PAUSE = 400, MAX_TOKENS = 88;
+const LABS = {1:"Lab 1: Meet the machine", 2:"Lab 2: Design and test"};
+const MISSIONS = {
+ 1:"<p><b>Change:</b> edit the system prompt so the app answers about something new, then run it.</p><p><b>Extend:</b> add an example and see whether the answers get better. Write your prediction before each run.</p><p><b>Break:</b> find an input that fools the AI, and work out why.</p>",
+ 2:"<p><b>Design:</b> interview two people, then write a user story for something useful.</p><p><b>Build:</b> write your prompt and five tests, run them and raise your score.</p><p><b>Share:</b> export your app and let a classmate try it.</p>"};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const cache = new Map();
+const FIELDS = ["name","tag","story","prompt","temp","ex1i","ex1o","ex2i","ex2o","ex3i","ex3o","runlog","tests","log","interviews"];
+
+// ── Name and autosave ─────────────────────────────────────
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+let who = store.get("aib-name") || "";
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function save(){ const o = {}; FIELDS.forEach(f => o[f] = $(f).value); store.set("aib-lab"+LAB, JSON.stringify(o)); }
+document.addEventListener("input", e => { if(FIELDS.includes(e.target.id)) save(); });
+
+// ── Starters ──────────────────────────────────────────────
+const STARTERS = {
+  bin:{name:"Bin Buddy", tag:"Type a household item and find out which bin it goes in.",
+    prompt:"You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste), GREEN (garden waste) or CHECK COUNCIL if unsure. Then give a reason of ten words or fewer. Never invent council rules.",
+    ex:[["milk carton","YELLOW - Clean cartons can be recycled."],["garden prunings","GREEN - Garden waste goes in the green bin."]],
+    tests:"glass jar => YELLOW\ngrass clippings => GREEN\ngreasy pizza box => RED\nplastic bag => RED\nnewspaper => YELLOW\nbatteries => CHECK COUNCIL\ntin can => YELLOW\nnappy => RED"},
+  zombie:{name:"Apocalypse Advisor", tag:"Is this item useful in a zombie apocalypse?",
+    prompt:"You are a zombie apocalypse survival expert. The user names an item. Reply with USEFUL or USELESS, then a reason of ten words or fewer.",
+    ex:[["torch","USEFUL - Light helps you see and signal at night."]],
+    tests:"crowbar => USEFUL\ntinned beans => USEFUL\nhairdryer => USELESS\ngold necklace => USELESS\nwater filter => USEFUL"},
+  password:{name:"Password Sentinel", tag:"Is this password secure?",
+    prompt:"You are a cybersecurity expert. Analyse the password provided by the user. Answer with exactly one word: SECURE or INSECURE.",
+    ex:[],
+    tests:"Password123! => INSECURE\nqwerty => INSECURE\ncorrecthorsebatterystaple => SECURE\nk9#Lm2$vQx7!pZ => SECURE\nadmin => INSECURE"}
+};
+function loadStarter(k, silent){
+  const s = STARTERS[k]; if(!s) return;
+  if(!silent && !confirm("Replace your current prompt and examples with this starter?")){ $("starter").value=""; return; }
+  $("name").value=s.name; $("tag").value=s.tag; $("prompt").value=s.prompt; $("temp").value=0.1; $("tests").value=s.tests;
+  [1,2,3].forEach(n => { $("ex"+n+"i").value = s.ex[n-1]?s.ex[n-1][0]:""; $("ex"+n+"o").value = s.ex[n-1]?s.ex[n-1][1]:""; });
+  $("starter").value=""; save();
+}
+
+// ── LLM call ──────────────────────────────────────────────
+async function llm(system, examples, input, temp){
+  const msgs = [{role:"system",content:system}];
+  examples.forEach(([i,o]) => msgs.push({role:"user",content:i},{role:"assistant",content:o}));
+  msgs.push({role:"user",content:input});
+  const body = JSON.stringify({messages:msgs, model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:temp});
+  if(cache.has(body)) return cache.get(body);
+  const h = {"Content-Type":"application/json"}; if(SEND_MODE_HEADER) h["X-Mode"]="builder";
+  try{
+    const r = await fetch(ENDPOINT,{method:"POST",headers:h,body});
+    if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
+    const t = (await r.json()).choices[0].message.content.trim();
+    cache.set(body,t); return t;
+  }catch(e){ return "ERROR: "+e.message; }
+}
+const getEx = () => [1,2,3].map(n => [$("ex"+n+"i").value.trim(), $("ex"+n+"o").value.trim()]).filter(p => p[0] && p[1]);
+
+async function tryIt(){
+  const v = $("tryin").value.trim();
+  if(!v || !$("prompt").value.trim()){ $("out").textContent = "Write a system prompt and type an input first."; return; }
+  $("tryb").disabled = true; $("out").textContent = "Thinking…";
+  const got = await llm($("prompt").value, getEx(), v, +$("temp").value);
+  $("out").textContent = got;
+  const p = $("predict").value.trim();
+  $("runlog").value += ($("runlog").value ? "\n" : "") + "Predicted: "+(p||"(none)")+" | Input: "+v+" | Got: "+got;
+  $("predict").value = ""; save();
+  setTimeout(() => $("tryb").disabled = false, 1500);
+}
+
+// ── Tests (Lab 2) ─────────────────────────────────────────
+const parse = t => t.split("\n").map(l => l.split("=>").map(s => s.trim())).filter(p => p[0] && p[1]).slice(0,MAX_TESTS);
+async function runTests(){
+  const t = parse($("tests").value);
+  if(!$("prompt").value.trim() || !t.length){ $("score").textContent = "Write a prompt and add tests in the form: input => expected"; return; }
+  $("runb").disabled = true; $("score").textContent = "Running…";
+  const ex = getEx(), head = "<tr><th>Input</th><th>Expected</th><th>AI answer</th><th></th></tr>";
+  let pass = 0, rows = "";
+  for(const [inp, exp] of t){
+    const got = await llm($("prompt").value, ex, inp, +$("temp").value);
+    const ok = !got.startsWith("ERROR") && got.toUpperCase().includes(exp.toUpperCase());
+    if(ok) pass++;
+    rows += `<tr class="${ok?"ok":"bad"}"><td>${esc(inp)}</td><td>${esc(exp)}</td><td>${esc(got)}</td><td>${ok?"✔":"✘"}</td></tr>`;
+    $("results").innerHTML = head + rows; await sleep(PAUSE);
+  }
+  const label = ex.length ? ex.length+" example"+(ex.length>1?"s":"") : "no examples";
+  $("score").textContent = "Score: "+pass+"/"+t.length+" ("+label+")";
+  $("log").value += ($("log").value ? "\n" : "") + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) + "  "+pass+"/"+t.length+" with "+label+"  | changed: ";
+  save(); $("runb").disabled = false;
+}
+
+// ── Exports ───────────────────────────────────────────────
+function download(name, text, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+const fname = () => (who || "Student").replace(/\s+/g,"-");
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  const ex = getEx().map((p,i) => "Example "+(i+1)+": "+p[0]+" → "+p[1]).join("\n") || "(none)";
+  const items = LAB >= 2
+    ? [["App name","name"],["Description","tag"],["User story","story"],["System prompt","prompt"],["Temperature","temp"],["Examples",ex],["Tests","tests"],["Iteration log","log"],["Interview notes","interviews"],["Run log","runlog"]]
+    : [["System prompt","prompt"],["Temperature","temp"],["Examples",ex],["Run log","runlog"]];
+  const body = items.map(([l,v]) => "<h3>"+l+"</h3><p style='white-space:pre-wrap'>"+esc($(v) ? $(v).value : v)+"</p>").join("");
+  const html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" Lab "+LAB+"</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": "+LABS[LAB]+"</h1>"+body+"</body></html>";
+  download(fname()+"-Lab"+LAB+".doc", html, "application/msword");
+}
+function exportApp(){
+  if(!who){ changeName(); return; }
+  if(!$("prompt").value.trim()){ alert("Write a system prompt first."); return; }
+  const cfg = {name:$("name").value||"My App", tag:$("tag").value, prompt:$("prompt").value, temp:+$("temp").value, examples:getEx(), endpoint:ENDPOINT, hdr:SEND_MODE_HEADER, max:MAX_TOKENS};
+  const j = JSON.stringify(cfg).replace(/</g,"\\u003c");
+  download(fname()+"-"+cfg.name.replace(/[^A-Za-z0-9]+/g,"-")+"-app.html", CONSUMER.replace("__CFG__",() => j).replace("__TITLE__",() => esc(cfg.name)), "text/html");
+}
+const CONSUMER = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>
+body{margin:0;background:#121212;color:#e0e0e0;font:16px/1.6 'Segoe UI',Tahoma,sans-serif;display:flex;justify-content:center;padding:24px}
+.c{max-width:520px;width:100%}h1{color:#4EC9B0;margin:0 0 4px}p{color:#aaa;margin:0 0 16px}
+textarea{width:100%;min-height:80px;background:#1e1e1e;color:#eee;border:2px solid #333;border-radius:8px;padding:10px;font:inherit;box-sizing:border-box}
+textarea:focus{outline:none;border-color:#4EC9B0}
+button{margin-top:10px;background:#ce3c3c;color:#fff;border:0;border-radius:6px;padding:10px 26px;font-weight:700;font-size:15px;cursor:pointer}
+button:disabled{background:#555}#o{margin-top:18px;padding:14px;background:#1e1e1e;border-left:4px solid #4EC9B0;border-radius:6px;min-height:24px;white-space:pre-wrap}
+</style></head><body><div class="c"><h1 id="n"></h1><p id="t"></p><textarea id="i" maxlength="300" placeholder="Type here"></textarea><button id="b">Ask</button><div id="o" aria-live="polite"></div></div>
+<script>
+const C=__CFG__,$=id=>document.getElementById(id);
+$("n").textContent=C.name;$("t").textContent=C.tag;
+$("b").onclick=async()=>{
+  const v=$("i").value.trim();if(!v)return;
+  const m=[{role:"system",content:C.prompt}];
+  C.examples.forEach(e=>m.push({role:"user",content:e[0]},{role:"assistant",content:e[1]}));
+  m.push({role:"user",content:v});
+  $("b").disabled=true;$("o").textContent="Thinking…";
+  const h={"Content-Type":"application/json"};if(C.hdr)h["X-Mode"]="consumer";
+  try{
+    const r=await fetch(C.endpoint,{method:"POST",headers:h,body:JSON.stringify({messages:m,model:"llama-3.1-8b-instant",max_tokens:C.max,temperature:C.temp})});
+    if(!r.ok)throw new Error("The service is busy. Please try again shortly.");
+    $("o").textContent=(await r.json()).choices[0].message.content.trim();
+  }catch(e){$("o").textContent=e.message;}
+  setTimeout(()=>{$("b").disabled=false;},3000);
+};
+<\/script></body></html>`;
+
+// ── Start up ──────────────────────────────────────────────
+$("title").textContent = LABS[LAB];
+$("mission").innerHTML = MISSIONS[LAB];
+showWho();
+if(who) $("modal").classList.add("hidden");
+const saved = store.get("aib-lab"+LAB);
+if(saved){ try{ const o = JSON.parse(saved); FIELDS.forEach(f => { if(o[f] !== undefined) $(f).value = o[f]; }); }catch(e){} }
+else loadStarter(LAB === 1 ? "zombie" : "bin", true);
+</script>
+</body>
+</html>
