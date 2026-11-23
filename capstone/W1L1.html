@@ -70,6 +70,7 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
 
 <section>
   <h2>Your app</h2>
+  <div id="freebox" style="display:none"><div class="irow"><div><label for="appname">App name</label><input id="appname"></div><div><label for="apptag">One-line description</label><input id="apptag"></div></div></div>
   <label for="prompt">System prompt (the instructions the AI reads before every question)</label>
   <textarea id="prompt" style="min-height:130px"></textarea>
   <div class="hint" id="plock"></div>
@@ -87,7 +88,7 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
     <button id="runb" onclick="run()">Run</button>
   </div>
   <div id="status" aria-live="polite"></div>
-  <p class="hint">Some inputs make the model think harder. That can take longer, and sometimes the reply comes back blank. If that happens, run it again.</p>
+  <p class="hint">Some inputs make the model think harder. That can take longer, and sometimes the reply comes back blank. If that happens, wait <span class="cdn"></span> seconds, then run it again. The Run button locks for <span class="cdn"></span> seconds after every click, so use the wait to write your next predictions.</p>
 </section>
 
 <section>
@@ -105,6 +106,7 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
 // CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
 const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 const MAX_TOKENS = 88, PAUSE = 400;
+const COOLDOWN = 45; // seconds the Run button stays locked after every click (change per class if needed)
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -115,7 +117,7 @@ const FALLBACK = "You are Bin Buddy, a helper for Queensland households. The use
 const LABS = {
  a:{t:"W1L1a: Prompt craft, improve the prompt", prompt:"You help with bins. Say which bin the item goes in.", lockP:false, temp:0.1, lockT:true, reps:1,
     inputs:["glass jar","grass clippings","greasy pizza box"],
-    brief:"<p>Bin Buddy tells people which bin an item goes in. Right now its instructions are weak.</p><p><b>Your mission:</b> rewrite the system prompt so Bin Buddy answers with one bin colour (YELLOW, RED or GREEN) and a short reason. Predict, run, read, change, run again.</p>",
+    brief:"<p>This lesson introduces prompting. Bin Buddy is an example of an AI app: you type an item and it tells you which bin it goes in. But its instructions are weak, and its temperature may need adjusting too. In this lab you fix the instructions. Labs d to f deal with the temperature.</p><p><b>Your mission:</b> rewrite the system prompt so Bin Buddy answers with one bin colour (YELLOW, RED or GREEN) and a short reason. Predict, run, read, change, run again.</p>",
     stretch:"Make Bin Buddy answer in five words or fewer, and still be correct."},
  b:{t:"W1L1b: Bad prompt, too vague (locked)", prompt:"Tell the user about the thing they type. Be helpful.", lockP:true, temp:0.1, lockT:true, reps:1,
     inputs:["glass jar","pizza box","batteries"],
@@ -144,7 +146,11 @@ const LABS = {
  h:{t:"W1L1h: When it does not know, with a fallback (locked)", prompt:FALLBACK, lockP:true, temp:0.1, lockT:true, reps:1,
     inputs:["unicorn","my homework","asdfgh"],
     brief:"<p>Same inputs as lab g, but this prompt gives the AI an allowed way out: CHECK COUNCIL.</p><p><b>Your mission:</b> compare with lab g. A good prompt says what to do when the AI does not know.</p>",
-    stretch:"Write a fallback line for a different app, such as the zombie checker or the password checker."}
+    stretch:"Write a fallback line for a different sorter, such as one that sorts animals or foods."},
+ i:{t:"W1L1i: Free lab, build your own sorter", free:true, prompt:"You sort things into categories. The user types one word or a short phrase. Reply with exactly one of: MAMMAL, BIRD, REPTILE or OTHER. Then give a reason of ten words or fewer.", lockP:false, temp:0.1, lockT:false, reps:1,
+    inputs:["penguin","koala","snake"],
+    brief:"<p>This lab is yours. Type a word or short phrase and the AI puts it in a category.</p><p><b>Your challenge:</b> Bin Buddy sorts items into bins. What else could you sort with a word or a short phrase? Think about animals, foods, clothes, sports, school subjects, moods, anything. Change the app name, the categories in the prompt and the items. Test it, then export it as an app.</p><p>In your assignment you will build an app like this for a real person, so this is practice.</p>",
+    stretch:"Write down two other ideas for sorter apps, and who you think would use each one."}
 };
 
 // ── State ─────────────────────────────────────────────────
@@ -167,7 +173,7 @@ function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeNam
 // ── Lab switching ─────────────────────────────────────────
 function collect(){
   const L = LABS[S.lab];
-  if(!L.lockP || !L.lockT){ S.edits[S.lab] = {prompt:$("prompt").value, temp:+$("temp").value}; }
+  if(!L.lockP || !L.lockT){ S.edits[S.lab] = {prompt:$("prompt").value, temp:+$("temp").value, name:$("appname").value, tag:$("apptag").value}; }
   S.inputs[S.lab] = inputEls().map(i => i.value); S.preds[S.lab] = predEls().map(i => i.value);
   S.notes[S.lab] = $("notes").value; S.stretch[S.lab] = $("snote").value; save();
 }
@@ -179,6 +185,7 @@ function render(){
   $("plock").textContent = L.lockP ? "Locked in this lab. Read it, then run it." : "";
   const t = L.lockT ? L.temp : (e.temp ?? L.temp);
   $("temp").value = t; $("temp").disabled = L.lockT; $("tval").textContent = tempWord(t);
+  $("freebox").style.display = L.free ? "" : "none"; $("appname").value = e.name ?? "My Sorter"; $("apptag").value = e.tag ?? "Type a word or short phrase and I will sort it.";
   $("tlock").textContent = L.lockT ? "Fixed in this lab." : "";
   const vals = S.inputs[k] || L.inputs;
   const prs = S.preds[k] || [];
@@ -196,7 +203,7 @@ function renderLog(){
 }
 document.addEventListener("input", e => {
   if(e.target.id === "temp") $("tval").textContent = tempWord(+e.target.value);
-  if(["prompt","temp","notes","snote"].includes(e.target.id) || e.target.classList.contains("inp") || e.target.classList.contains("prd")) collect();
+  if(["prompt","temp","notes","snote","appname","apptag"].includes(e.target.id) || e.target.classList.contains("inp") || e.target.classList.contains("prd")) collect();
 });
 
 // ── Running ───────────────────────────────────────────────
@@ -209,11 +216,22 @@ async function llm(system, input, temp){
     return t || "(No answer came back"+(ch.finish_reason === "length" ? ": the model ran out of tokens before it could reply" : "")+")";
   }catch(e){ return "ERROR: "+e.message; }
 }
+let running = false, lockTimer = null;
+function lockRun(){ store.set("aib-lock", String(Date.now() + COOLDOWN*1000)); tick(); }
+function tick(){
+  clearInterval(lockTimer);
+  const f = () => {
+    const left = Math.ceil(((+store.get("aib-lock")||0) - Date.now())/1000);
+    if(left > 0 || running){ $("runb").disabled = true; $("runb").textContent = left > 0 ? "Run again in "+left+"s" : "Running…"; }
+    else { $("runb").disabled = false; $("runb").textContent = "Run"; clearInterval(lockTimer); }
+  };
+  f(); lockTimer = setInterval(f, 500);
+}
 async function run(){
   const prompt = $("prompt").value.trim(), temp = +$("temp").value, reps = +$("reps").value;
   const pe = predEls(), ins = inputEls().map((el,i) => ({inp:el.value.trim(), pred:pe[i].value.trim()})).filter(r => r.inp);
   if(!prompt || !ins.length){ $("status").textContent = "Write a system prompt and at least one input."; return; }
-  collect(); $("runb").disabled = true; $("status").textContent = "Running…";
+  collect(); running = true; lockRun(); $("status").textContent = "Running…";
   const head = "<tr><th>Input</th><th>Run</th><th>Answer</th></tr>"; let rows = "";
   $("out").innerHTML = head;
   for(const {inp, pred} of ins) for(let k = 1; k <= reps; k++){
@@ -222,7 +240,7 @@ async function run(){
     $("out").innerHTML = head + rows;
     S.log.push({lab:S.lab, temp, pred, inp, run:k, got, prompt}); await sleep(PAUSE);
   }
-  predEls().forEach(p => p.value = ""); collect(); $("status").textContent = "Done. Now write what you noticed."; save(); renderLog(); $("runb").disabled = false;
+  predEls().forEach(p => p.value = ""); collect(); $("status").textContent = "Done. Use the wait to write what you noticed and your next predictions."; save(); renderLog(); running = false;
 }
 
 // ── Exports ───────────────────────────────────────────────
@@ -247,22 +265,24 @@ function exportDoc(){
 }
 function exportApp(){
   if(!who){ changeName(); return; }
-  if(LABS[S.lab].lockP){ alert("This prompt is locked. Switch to lab a or lab f to export an app."); return; }
+  if(LABS[S.lab].lockP){ alert("This prompt is locked. Switch to lab a, f or i to export an app."); return; }
   if(!$("prompt").value.trim()){ alert("Write a system prompt first."); return; }
-  const cfg = {name:"Bin Buddy", prompt:$("prompt").value, temp:+$("temp").value, endpoint:ENDPOINT, max:MAX_TOKENS};
+  const L = LABS[S.lab], nm = L.free ? ($("appname").value.trim() || "My Sorter") : "Bin Buddy";
+  const cfg = {name:nm, tag:L.free ? $("apptag").value : "Type a household item and find out which bin it goes in.", prompt:$("prompt").value, temp:+$("temp").value, endpoint:ENDPOINT, max:MAX_TOKENS};
   const j = JSON.stringify(cfg).replace(/</g,"\\u003c");
-  download(fname()+"-BinBuddy-app.html", CONSUMER.replace("__CFG__",() => j), "text/html");
+  download(fname()+"-"+nm.replace(/[^A-Za-z0-9]+/g,"-")+"-app.html", CONSUMER.replace("__CFG__",() => j).replace("__TITLE__",() => esc(nm)), "text/html");
 }
-const CONSUMER = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bin Buddy</title><style>
+const CONSUMER = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>
 body{margin:0;background:#121212;color:#e0e0e0;font:16px/1.6 'Segoe UI',Tahoma,sans-serif;display:flex;justify-content:center;padding:24px}
 .c{max-width:520px;width:100%}h1{color:#4EC9B0;margin:0 0 4px}p{color:#aaa;margin:0 0 16px}
 textarea{width:100%;min-height:80px;background:#1e1e1e;color:#eee;border:2px solid #333;border-radius:8px;padding:10px;font:inherit;box-sizing:border-box}
 textarea:focus{outline:none;border-color:#4EC9B0}
 button{margin-top:10px;background:#ce3c3c;color:#fff;border:0;border-radius:6px;padding:10px 26px;font-weight:700;font-size:15px;cursor:pointer}
 button:disabled{background:#555}#o{margin-top:18px;padding:14px;background:#1e1e1e;border-left:4px solid #4EC9B0;border-radius:6px;min-height:24px;white-space:pre-wrap}
-</style></head><body><div class="c"><h1>Bin Buddy</h1><p>Type a household item and find out which bin it goes in.</p><textarea id="i" maxlength="300" placeholder="Type an item"></textarea><button id="b">Ask</button><div id="o" aria-live="polite"></div></div>
+</style></head><body><div class="c"><h1 id="n"></h1><p id="t"></p><textarea id="i" maxlength="300" placeholder="Type here"></textarea><button id="b">Ask</button><div id="o" aria-live="polite"></div></div>
 <script>
 const C=__CFG__,$=id=>document.getElementById(id);
+$("n").textContent=C.name;$("t").textContent=C.tag;
 $("b").onclick=async()=>{
   const v=$("i").value.trim();if(!v)return;
   $("b").disabled=true;$("o").textContent="Thinking…";
@@ -278,7 +298,8 @@ $("b").onclick=async()=>{
 // ── Start up ──────────────────────────────────────────────
 $("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
 showWho(); if(who) $("modal").classList.add("hidden");
-render();
+render(); tick();
+document.querySelectorAll(".cdn").forEach(e => e.textContent = COOLDOWN);
 </script>
 </body>
 </html>
