@@ -32,7 +32,7 @@ button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16
 button:hover{background:#e04a4a}button:disabled{background:#555;color:#999;cursor:not-allowed}
 button.go{background:var(--ac);color:#1e1e1e}button.go:hover{background:#3ab89f}
 button.alt{background:#444}button.alt:hover{background:#555}
-.inps{display:grid;gap:6px}
+.inps{display:grid;gap:8px}.irow{display:grid;grid-template-columns:1fr 1fr;gap:6px}@media(max-width:600px){.irow{grid-template-columns:1fr}}
 .row{display:flex;gap:10px;align-items:end;margin-top:12px}.row>div{flex:1}
 table{width:100%;border-collapse:collapse;font-size:12px;font-family:Consolas,monospace}
 th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--bd);padding:4px}
@@ -78,10 +78,7 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
   <input id="temp" type="range" min="0" max="1" step="0.1">
   <div class="hint" id="tlock"></div>
 
-  <label for="predict">Before you run: what do you think it will say?</label>
-  <input id="predict">
-
-  <label>Inputs (up to five)</label>
+  <label>Inputs (up to three). Write what you think it will say before you run.</label>
   <div class="inps" id="inps"></div>
 
   <div class="row">
@@ -90,6 +87,7 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
     <button id="runb" onclick="run()">Run</button>
   </div>
   <div id="status" aria-live="polite"></div>
+  <p class="hint">Some inputs make the model think harder. That can take longer, and sometimes the reply comes back blank. If that happens, run it again.</p>
 </section>
 
 <section>
@@ -100,10 +98,11 @@ details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
   <details><summary id="logsum">Run log</summary><div class="wrap"><table id="logt"></table></div></details>
 </section>
 
-<section class="stretch wide"><h2>Stretch (optional)</h2><div id="lstretch"></div></section>
+<section class="stretch wide"><h2>Stretch (optional)</h2><div id="lstretch"></div><label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
 </main>
 
 <script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
 const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 const MAX_TOKENS = 88, PAUSE = 400;
 const $ = id => document.getElementById(id);
@@ -111,7 +110,8 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
 
-const GOOD = "You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste), GREEN (garden waste) or CHECK COUNCIL if the input is not a household item or you are unsure. Then give a reason of ten words or fewer.";
+const GOOD = "You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste) or GREEN (garden waste). Then give a reason of ten words or fewer.";
+const FALLBACK = "You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW (recycling), RED (general waste), GREEN (garden waste) or CHECK COUNCIL if the input is not a household item or you are unsure. Then give a reason of ten words or fewer.";
 const LABS = {
  a:{t:"W1L1a: Prompt craft, improve the prompt", prompt:"You help with bins. Say which bin the item goes in.", lockP:false, temp:0.1, lockT:true, reps:1,
     inputs:["glass jar","grass clippings","greasy pizza box"],
@@ -126,22 +126,22 @@ const LABS = {
     brief:"<p>Two of these instructions fight each other.</p><p><b>Your mission:</b> predict which instruction the AI will obey, then run it. Were you right?</p>",
     stretch:"Change one sentence in your head so the instructions agree. Which one did you remove?"},
  d:{t:"W1L1d: Temperature, strict at 0.1 (locked)", prompt:GOOD, lockP:true, temp:0.1, lockT:true, reps:3,
-    inputs:["greasy pizza box"],
+    inputs:["greasy pizza box","zombie blaster"],
     brief:"<p><b>Temperature</b> controls how adventurous the AI is when it picks each next word. Near 0, it picks the most likely word every time. Near 1, it is willing to pick less likely words.</p><p><b>Your mission:</b> run the same input three times. How similar are the answers?</p>",
     stretch:"Find an input where even 0.1 gives you different answers."},
  e:{t:"W1L1e: Temperature, wild at 1.0 (locked)", prompt:GOOD, lockP:true, temp:1.0, lockT:true, reps:3,
-    inputs:["greasy pizza box"],
-    brief:"<p>Same prompt and same input as lab d, but the temperature is 1.0.</p><p><b>Your mission:</b> predict how the answers will differ from lab d, then run it. Describe the difference in your notes.</p>",
+    inputs:["greasy pizza box","zombie blaster"],
+    brief:"<p>Same prompt and same inputs as lab d, but the temperature is 1.0.</p><p><b>Your mission:</b> predict how the answers will differ from lab d, then run it. Describe the difference in your notes.</p>",
     stretch:"Write one sentence about when you would want a high temperature (for example, writing a poem) and when you would not."},
  f:{t:"W1L1f: Temperature explorer", prompt:GOOD, lockP:false, temp:0.5, lockT:false, reps:3,
-    inputs:["greasy pizza box","old toaster"],
+    inputs:["old toaster","zombie blaster","birthday balloon"],
     brief:"<p>Now you are in control of the temperature.</p><p><b>Your mission:</b> try 0.1, 0.5 and 1.0 with the same inputs. Which setting suits Bin Buddy, and why?</p>",
     stretch:"Find the lowest temperature where Bin Buddy first gives a different answer to the same input."},
  g:{t:"W1L1g: When it does not know, no way out (locked)", prompt:"You are Bin Buddy, a helper for Queensland households. The user names a household item. Reply with exactly one of: YELLOW, RED or GREEN, then a reason of ten words or fewer.", lockP:true, temp:0.1, lockT:true, reps:1,
     inputs:["unicorn","my homework","asdfgh"],
     brief:"<p>This prompt never says what to do when the AI does not know.</p><p><b>Your mission:</b> predict what it will do with strange inputs, then run it. Did it admit it did not know, or did it guess?</p>",
     stretch:"Write the one sentence that would fix this prompt."},
- h:{t:"W1L1h: When it does not know, with a fallback (locked)", prompt:GOOD, lockP:true, temp:0.1, lockT:true, reps:1,
+ h:{t:"W1L1h: When it does not know, with a fallback (locked)", prompt:FALLBACK, lockP:true, temp:0.1, lockT:true, reps:1,
     inputs:["unicorn","my homework","asdfgh"],
     brief:"<p>Same inputs as lab g, but this prompt gives the AI an allowed way out: CHECK COUNCIL.</p><p><b>Your mission:</b> compare with lab g. A good prompt says what to do when the AI does not know.</p>",
     stretch:"Write a fallback line for a different app, such as the zombie checker or the password checker."}
@@ -149,10 +149,12 @@ const LABS = {
 
 // ── State ─────────────────────────────────────────────────
 let who = store.get("aib-name") || "";
-let S = {lab:"a", edits:{}, inputs:{}, notes:{}, log:[]};
+let S = {lab:"a", edits:{}, inputs:{}, preds:{}, notes:{}, stretch:{}, log:[]};
 try{ const s = JSON.parse(store.get("aib-W1L1")); if(s && s.lab) S = s; }catch(e){}
+S.preds = S.preds || {}; S.stretch = S.stretch || {};
 const save = () => store.set("aib-W1L1", JSON.stringify(S));
 const inputEls = () => [...document.querySelectorAll(".inp")];
+const predEls = () => [...document.querySelectorAll(".prd")];
 
 function setName(){
   const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
@@ -166,8 +168,8 @@ function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeNam
 function collect(){
   const L = LABS[S.lab];
   if(!L.lockP || !L.lockT){ S.edits[S.lab] = {prompt:$("prompt").value, temp:+$("temp").value}; }
-  S.inputs[S.lab] = inputEls().map(i => i.value);
-  S.notes[S.lab] = $("notes").value; save();
+  S.inputs[S.lab] = inputEls().map(i => i.value); S.preds[S.lab] = predEls().map(i => i.value);
+  S.notes[S.lab] = $("notes").value; S.stretch[S.lab] = $("snote").value; save();
 }
 function tempWord(v){ return v+" ("+(v<=0.3?"strict":v<=0.7?"balanced":"wild")+")"; }
 function render(){
@@ -179,8 +181,9 @@ function render(){
   $("temp").value = t; $("temp").disabled = L.lockT; $("tval").textContent = tempWord(t);
   $("tlock").textContent = L.lockT ? "Fixed in this lab." : "";
   const vals = S.inputs[k] || L.inputs;
-  $("inps").innerHTML = [0,1,2,3,4].map(i => '<input class="inp" aria-label="Input '+(i+1)+'" placeholder="Input '+(i+1)+'" value="'+esc(vals[i]||"")+'">').join("");
-  $("reps").value = L.reps; $("notes").value = S.notes[k] || ""; $("predict").value = "";
+  const prs = S.preds[k] || [];
+  $("inps").innerHTML = [0,1,2].map(i => '<div class="irow"><input class="inp" aria-label="Input '+(i+1)+'" placeholder="Input '+(i+1)+'" value="'+esc(vals[i]||"")+'"><input class="prd" aria-label="Prediction '+(i+1)+'" placeholder="I think it will say…" value="'+esc(prs[i]||"")+'"></div>').join("");
+  $("reps").value = L.reps; $("notes").value = S.notes[k] || ""; $("snote").value = S.stretch[k] || "";
   $("out").innerHTML = '<tr><td class="hint">Answers appear here.</td></tr>'; $("status").textContent = "";
   renderLog();
 }
@@ -193,7 +196,7 @@ function renderLog(){
 }
 document.addEventListener("input", e => {
   if(e.target.id === "temp") $("tval").textContent = tempWord(+e.target.value);
-  if(["prompt","temp","notes"].includes(e.target.id) || e.target.classList.contains("inp")) collect();
+  if(["prompt","temp","notes","snote"].includes(e.target.id) || e.target.classList.contains("inp") || e.target.classList.contains("prd")) collect();
 });
 
 // ── Running ───────────────────────────────────────────────
@@ -207,19 +210,19 @@ async function llm(system, input, temp){
   }catch(e){ return "ERROR: "+e.message; }
 }
 async function run(){
-  const prompt = $("prompt").value.trim(), temp = +$("temp").value, reps = +$("reps").value, pred = $("predict").value.trim();
-  const ins = inputEls().map(i => i.value.trim()).filter(Boolean);
+  const prompt = $("prompt").value.trim(), temp = +$("temp").value, reps = +$("reps").value;
+  const pe = predEls(), ins = inputEls().map((el,i) => ({inp:el.value.trim(), pred:pe[i].value.trim()})).filter(r => r.inp);
   if(!prompt || !ins.length){ $("status").textContent = "Write a system prompt and at least one input."; return; }
   collect(); $("runb").disabled = true; $("status").textContent = "Running…";
   const head = "<tr><th>Input</th><th>Run</th><th>Answer</th></tr>"; let rows = "";
   $("out").innerHTML = head;
-  for(const inp of ins) for(let k = 1; k <= reps; k++){
+  for(const {inp, pred} of ins) for(let k = 1; k <= reps; k++){
     const got = await llm(prompt, inp, temp);
     rows += "<tr><td>"+esc(inp)+"</td><td>"+k+"</td><td>"+esc(got)+"</td></tr>";
     $("out").innerHTML = head + rows;
     S.log.push({lab:S.lab, temp, pred, inp, run:k, got, prompt}); await sleep(PAUSE);
   }
-  $("predict").value = ""; $("status").textContent = "Done. Now write what you noticed."; save(); renderLog(); $("runb").disabled = false;
+  predEls().forEach(p => p.value = ""); collect(); $("status").textContent = "Done. Now write what you noticed."; save(); renderLog(); $("runb").disabled = false;
 }
 
 // ── Exports ───────────────────────────────────────────────
@@ -231,12 +234,13 @@ function exportDoc(){
   if(!who){ changeName(); return; }
   collect(); let b = "";
   for(const k in LABS){
-    const rows = S.log.filter(r => r.lab === k), note = S.notes[k] || "";
-    if(!rows.length && !note) continue;
+    const rows = S.log.filter(r => r.lab === k), note = S.notes[k] || "", st = S.stretch[k] || "";
+    if(!rows.length && !note && !st) continue;
     b += "<h2>"+esc(LABS[k].t)+"</h2>";
     if(rows.length) b += "<p><b>Prompt:</b> "+esc(rows[rows.length-1].prompt)+"</p><table border='1' cellpadding='4' style='border-collapse:collapse'><tr><th>Temp</th><th>Predicted</th><th>Input</th><th>Run</th><th>Answer</th></tr>" +
       rows.map(r => "<tr><td>"+r.temp+"</td><td>"+esc(r.pred||"")+"</td><td>"+esc(r.inp)+"</td><td>"+r.run+"</td><td>"+esc(r.got)+"</td></tr>").join("") + "</table>";
     if(note) b += "<p><b>What I noticed:</b> "+esc(note)+"</p>";
+    if(st) b += "<p><b>Stretch:</b> "+esc(LABS[k].stretch)+"</p><p><b>My stretch response:</b> "+esc(st)+"</p>";
   }
   if(!b){ alert("Run something first, so there is work to export."); return; }
   download(fname()+"-W1L1.doc", "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W1L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W1L1 run log</h1>"+b+"</body></html>", "application/msword");
