@@ -59,7 +59,7 @@ iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;back
 <h3 style="margin-top:0">1. What an API key is</h3>
 <p>An AI app does not run on your computer. The AI lives on a company's servers, and your app sends it a request over the internet. The company needs to know who is asking, so every request carries an <b>API key</b>: a long, secret code that works like a password and an account number in one.</p>
 <h3>2. Why AI companies charge by key</h3>
-<p>Every answer costs the company real computing power. They add up how much each key has used and send the bill to the key's owner. For this unit the school pays. A key is a bit like a prepaid card with the number printed on it: whoever holds the number can spend the money.</p>
+<p>Every answer costs the company real computing power. They add up how much each key has used and send the bill to the key's owner. A key is a bit like a credit card number: whoever holds the number can spend the owner's money, and the owner gets the bill.</p>
 <h3>3. Why you keep the key secret</h3>
 <p>If a key is copied, a stranger can use the AI for free and the owner pays. People have found keys in public code and been billed thousands of dollars. A web page is public by design. Anyone can right-click and choose View Source, so a key written into a page is a key given away.</p>
 <h3>4. How this lab keeps the key secret</h3>
@@ -98,6 +98,7 @@ iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;back
 
 <section id="sec-c"><div class="cols">
 <div><fieldset id="cfs">
+<div id="pbox"><h2>The prompt</h2><p class="hint">This works already. Change the rules, or change what it sorts, then change the words to match.</p><textarea id="prm" maxlength="1500" style="min-height:200px" spellcheck="false" aria-label="Prompt"></textarea></div>
 <h2>Words to change</h2><div id="wcon"></div>
 <h2 style="margin-top:16px">Settings</h2><div id="scon"></div>
 <label for="img">Your picture (becomes 128 by 128 pixels)</label><input type="file" id="img" accept="image/*" onchange="pic(this.files[0])">
@@ -107,17 +108,18 @@ iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;back
 <button class="alt" onclick="wreset()" style="margin-top:8px">Reset everything</button></div>
 <div><h2>Live preview (this page really calls the Worker)</h2><iframe id="pv" title="Preview"></iframe>
 <p class="hint">After each answer the Run button locks for 45 seconds. That lock is code in the page. Can you find it?</p></div></div>
-<label for="code">The page you are building, as code</label><textarea id="code" style="min-height:330px" spellcheck="false"></textarea>
-<h2 style="margin-top:16px">Find it in the code</h2>
+<label for="code">The page you are building, as code</label>
+<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" id="sd" style="width:auto" onchange="showData=this.checked;wsync()">Show the real picture data (a long block of text called Base64)</label><textarea id="code" style="min-height:330px" spellcheck="false"></textarea>
+<div id="findbox"><h2 style="margin-top:16px">Find it in the code</h2>
 <label for="wa0">1. Paste the line that sends the request to the Worker.</label><input class="wa" data-n="0" id="wa0">
 <label for="wa1">2. Paste the line that holds the endpoint (the Worker's address).</label><input class="wa" data-n="1" id="wa1">
 <label for="wa2">3. Where do the app's instructions (the prompt) live? Describe what you found.</label><input class="wa" data-n="2" id="wa2">
-<label for="wa3">4. Search the code for the API key. It is not there. Why not, and where is it?</label><textarea class="wa" data-n="3" id="wa3"></textarea>
+<label for="wa3">4. Search the code for the API key. It is not there. Why not, and where is it?</label><textarea class="wa" data-n="3" id="wa3"></textarea></div>
 <button class="go" onclick="exportApp()" style="width:100%;margin-top:16px;padding:14px">Export my app as an HTML file</button>
 <p class="hint">Saves your page as one file you can open in any browser, on any device. It still asks the Worker for answers, so it needs the internet.</p>
 </section>
 
-<section id="sec-d">
+<section id="sec-e">
 <table><tr><th>Filament</th><th>What it is</th><th>Good for</th><th>Watch out for</th></tr>
 <tr><td><b>PLA</b></td><td>Plant-based, rigid, easy to print</td><td>Models, toys, prototypes, decorations</td><td>Softens at roughly 55 to 60 °C, so not for hot cars. Can be brittle.</td></tr>
 <tr><td><b>PETG</b></td><td>Tougher and slightly flexible; copes with water better</td><td>Outdoor parts, brackets, containers</td><td>Strings. Softens at roughly 70 to 80 °C. Tiny gaps between layers mean "food safe" is not guaranteed.</td></tr>
@@ -125,6 +127,17 @@ iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;back
 <tr><td><b>ABS</b></td><td>Strong and more heat resistant (roughly to 90 to 100 °C)</td><td>Car interior parts, tool housings</td><td>Warps without an enclosure. Gives off fumes, so it needs good ventilation.</td></tr>
 <tr><td><b>PA6CF</b></td><td>Nylon filled with carbon fibre; stiff, strong, heat tolerant</td><td>Working parts, brackets, jigs</td><td>Needs a hardened nozzle and very dry filament. Costs more.</td></tr></table>
 <p class="hint" style="margin-top:10px">Temperatures are rough and change between brands. This page is for your information only. It is not assessed and it is not in your export. Some machines print in resin, metal and even concrete.</p>
+</section>
+
+<section id="sec-f">
+<h3 style="margin-top:0">What is Base64?</h3>
+<p>Computers store everything, including pictures, as bytes. Many bytes cannot travel safely through text, such as a web page, an email or a message. <b>Base64</b> is a way to <b>encode</b> any bytes as plain text, using only 64 safe characters: A to Z, a to z, 0 to 9, plus + and /. Every 3 bytes become 4 characters, so the text ends up about a third bigger. An = at the end is padding.</p>
+<h3>Why encoding matters</h3>
+<p>Encoding means rewriting data so it can go somewhere it could not go before. It is how your picture sits inside the HTML file as text (it starts with <code>data:image/jpeg;base64,</code> and then the picture), how email attachments travel, and how binary data fits inside text formats such as JSON.</p>
+<h3>Encoding is not encryption</h3>
+<p>Base64 has no key. Anyone can turn it back into the original in a second, so it hides nothing. Hiding an API key in Base64 would not protect it. That is why the key lives in the Worker, as in lab a.</p>
+<label for="b64in">Try it. Type some plain text, such as Hi, and see its Base64.</label><input id="b64in" autocomplete="off"><pre id="b64out"></pre>
+<p class="hint">For your information only. It is not assessed and it is not in your export.</p>
 </section>
 
 <section class="stretch" id="sec-s"><h2>Stretch (optional)</h2><div id="lstretch"></div>
@@ -138,13 +151,16 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
 
 const LABS = {
- a:{t:"W3L2a: How the app keeps its key safe", s:"Explain the key idea to someone at home using a comparison, such as a prepaid card or a house key. Which comparison works best, and where does it break down?",
+ a:{t:"W3L2a: How the app keeps its key safe", s:"Explain the key idea to someone at home using a comparison, such as a credit card or a house key. Which comparison works best, and where does it break down?",
     brief:"<p>Your apps talk to an AI over the internet. This lab explains how that works and how it stays safe. Read it, then answer the two boxes at the bottom in your own words.</p>"},
  b:{t:"W3L2b: Check your understanding", s:"Write a seventh question with one right answer and three tempting wrong answers.",
     brief:"<p>Six questions on lab a. Pick an answer to see why it is right or wrong. You can change your answer, and your first try is the one that is scored.</p>"},
  c:{t:"W3L2c: Build your own wrapper", s:"Change the page so a Year 6 student would find it friendlier. What did you change, and why?",
     brief:"<p>A <b>wrapper</b> is the web page around an AI app: a title, a box, a button and a little code. This one is a 3D print checker. Change the words and settings, add a picture, and watch the code change.</p><p><b>Your mission:</b> make the page your own, press the button in the preview with a made-up object (such as a phone stand), then find the four things at the bottom. Use made-up or everyday objects only.</p>"},
- d:{t:"[For your information] Types of 3D printing filament", s:null, brief:"<p>Useful background for the 3D print checker. Nothing to submit.</p>"}
+ d:{t:"W3L2d: Free lab, make your own checker", s:"Make the app sort something that is not 3D printing. What are your three categories, and which input would you use to test each?",
+    brief:"<p><b>Practice, not your final app.</b> This is the same wrapper as lab c, but the prompt is yours. It already works. Change the rules, change what it sorts, then change the words to match. Keep it school-appropriate, and use made-up or everyday inputs only.</p>"},
+ e:{t:"[For your information] Types of 3D printing filament", s:null, brief:"<p>Useful background for the 3D print checker. Nothing to submit.</p>"},
+ f:{t:"[For your information 2] Base64: turning a picture into text", s:null, brief:"<p>Useful background for the picture in your wrapper. Nothing to submit.</p>"}
 };
 const Q = [
  ["What is an API key?",["A code that tells an AI service who is asking, so it knows who to charge","The AI's memory of your last question","A button that restarts the AI","A key that unlocks your computer"],0,"It works like a password and an account number in one."],
@@ -159,13 +175,16 @@ const WORDS = [["t","Tab title"],["h","Heading"],["i","Instruction line"],["p","
 const FONTS = ["Segoe UI, sans-serif","Georgia, serif","Verdana, sans-serif","Trebuchet MS, sans-serif","Arial, sans-serif","Courier New, monospace"];
 const DEFV = {t:"Print Check",h:"Should I 3D print this?",i:"Type one everyday object.",p:"for example: phone stand",b:"Check",al:"The answer:",f:"A Year 9 project",font:FONTS[0],hs:28,bs:16,bg:"#1e1e1e",ac:"#4EC9B0",tx:"#e0e0e0"};
 const DEFIMG = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" rx="16" fill="#4EC9B0"/><text x="64" y="80" font-size="48" text-anchor="middle" fill="#1e1e1e" font-family="Arial" font-weight="bold">3D</text></svg>');
-const newW = () => ({v:{...DEFV}, img:null, edit:false, code:"", ans:["","","",""]});
+const newW = free => ({v:{...DEFV}, img:null, edit:false, code:"", ans:["","","",""], free:!!free, prompt:P.join("\n")});
+const W = () => S.lab === "d" ? S.f : S.w;
+let showData = false;
 
 let who = store.get("aib-name") || "";
 let S = {lab:"a", notes:{}, stretch:{}, first:[], cur:[], w:null};
 try{ const s = JSON.parse(store.get("aib-W3L2")); if(s && s.lab) S = s; }catch(e){}
 S.notes = S.notes || {}; S.stretch = S.stretch || {}; S.first = S.first || []; S.cur = S.cur || [];
-S.w = S.w || newW(); S.w.v = {...DEFV, ...S.w.v}; S.w.ans = S.w.ans || ["","","",""];
+const fix = (w, free) => { w = w || newW(free); w.v = {...DEFV, ...w.v}; w.ans = w.ans || ["","","",""]; w.free = free; if(w.prompt == null) w.prompt = P.join("\n"); return w; };
+S.w = fix(S.w, false); S.f = fix(S.f, true);
 const save = () => store.set("aib-W3L2", JSON.stringify(S));
 
 // ── Name ──
@@ -191,8 +210,8 @@ function pick(n,i){ if(S.first[n] == null) S.first[n] = i; S.cur[n] = i; save();
 function quizReset(){ if(confirm("Clear all your quiz answers and start again?")){ S.first = []; S.cur = []; save(); renderQuiz(); } }
 
 // ── Wrapper ──
-function build(full){
-  const v = S.w.v, img = full ? (S.w.img || DEFIMG) : "[your picture is stored here]";
+function build(full, w = W(), real = showData){
+  const v = w.v, img = (full || real) ? (w.img || DEFIMG) : "[your picture is stored here]";
   return [
 '<!DOCTYPE html>','<html lang="en">','<head>','<meta charset="UTF-8">','<title>'+esc(v.t)+'</title>','<style>',
 'body{font-family:'+v.font+';font-size:'+v.bs+'px;background:'+v.bg+';color:'+v.tx+';max-width:480px;margin:30px auto;padding:0 16px}',
@@ -207,7 +226,7 @@ function build(full){
 '<script>',
 'const ENDPOINT = "'+ENDPOINT+'";',
 'const COOLDOWN = 45; // seconds the button stays locked',
-'const PROMPT = '+P.map(l => JSON.stringify(l+"\n")).join(" +\n  ")+';',
+'const PROMPT = '+(w.free ? w.prompt.split("\n") : P).map(l => JSON.stringify(l+"\n")).join(" +\n  ")+';',
 '',
 'document.getElementById("go").onclick = async () => {',
 '  const out = document.getElementById("out");',
@@ -231,28 +250,28 @@ function build(full){
 '<\/script>','</body>','</html>'].join("\n");
 }
 let tm;
-function preview(){ clearTimeout(tm); tm = setTimeout(() => { $("pv").srcdoc = S.w.edit ? S.w.code : build(true); }, 300); }
+function preview(){ clearTimeout(tm); tm = setTimeout(() => { $("pv").srcdoc = W().edit ? W().code : build(true); }, 300); }
 function wsync(){
-  const w = S.w; $("code").value = w.edit ? w.code : build(false); $("code").readOnly = !w.edit; $("cfs").disabled = w.edit; $("edit").checked = w.edit;
+  const w = W(); $("prm").value = w.prompt; $("code").value = w.edit ? w.code : build(false); $("code").readOnly = !w.edit; $("cfs").disabled = w.edit; $("edit").checked = w.edit;
   WORDS.concat([["font"],["hs"],["bs"],["bg"],["ac"],["tx"]]).forEach(([k]) => { const e = document.querySelector('.wv[data-k="'+k+'"]'); if(e) e.value = w.v[k]; });
   $("o_hs").textContent = w.v.hs+"px"; $("o_bs").textContent = w.v.bs+"px"; preview(); save();
 }
 function toggleEdit(on){
-  if(on){ S.w.edit = true; S.w.code = build(true); }
-  else if(confirm("Go back to the controls? Your own code edits will be lost.")) S.w.edit = false;
+  if(on){ W().edit = true; W().code = build(true); }
+  else if(confirm("Go back to the controls? Your own code edits will be lost.")) W().edit = false;
   wsync();
 }
-function wreset(){ if(confirm("Reset the whole wrapper, including your picture and answers?")){ S.w = newW(); wsync(); renderAns(); } }
+function wreset(){ if(confirm("Reset the whole wrapper, including your picture, prompt and answers?")){ S[S.lab === "d" ? "f" : "w"] = newW(S.lab === "d"); wsync(); renderAns(); } }
 function pic(f){
   if(!f) return; if(f.size > 5e6){ $("imsg").textContent = "That file is over 5 MB. Choose a smaller one."; return; }
   const im = new Image();
   im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 128; const s = Math.min(im.width, im.height);
     c.getContext("2d").drawImage(im, (im.width-s)/2, (im.height-s)/2, s, s, 0, 0, 128, 128);
-    S.w.img = c.toDataURL("image/jpeg", 0.8); $("imsg").textContent = "Done. Your picture is now 128 by 128 pixels and stays in your browser."; URL.revokeObjectURL(im.src); wsync(); };
+    W().img = c.toDataURL("image/jpeg", 0.8); $("imsg").textContent = "Done. Your picture is now 128 by 128 pixels and stays in your browser."; URL.revokeObjectURL(im.src); wsync(); };
   im.onerror = () => { $("imsg").textContent = "That file is not a picture this page can read."; };
   im.src = URL.createObjectURL(f);
 }
-function renderAns(){ document.querySelectorAll(".wa").forEach(e => e.value = S.w.ans[+e.dataset.n] || ""); }
+function renderAns(){ document.querySelectorAll(".wa").forEach(e => e.value = W().ans[+e.dataset.n] || ""); }
 function initWrap(){
   $("wcon").innerHTML = WORDS.map(([k,l]) => '<label>'+l+'</label><input class="wv" data-k="'+k+'" aria-label="'+l+'">').join("");
   $("scon").innerHTML = '<label>Font</label><select class="wv" data-k="font" aria-label="Font">'+FONTS.map(f => '<option>'+f+'</option>').join("")+'</select>'+
@@ -268,19 +287,21 @@ function switchLab(k){ S.lab = k; save(); render(); }
 function render(){
   const k = S.lab, L = LABS[k];
   $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief;
-  ["a","b","c","d"].forEach(x => $("sec-"+x).style.display = x === k ? "" : "none");
+  ["a","b","c","e","f"].forEach(x => $("sec-"+x).style.display = (x === k || (x === "c" && k === "d")) ? "" : "none"); $("pbox").style.display = k === "d" ? "" : "none"; $("findbox").style.display = k === "c" ? "" : "none";
   $("sec-s").style.display = L.s ? "" : "none"; $("lstretch").textContent = L.s || ""; $("snote").value = S.stretch[k] || "";
   document.querySelectorAll(".nt").forEach(e => e.value = S.notes[e.dataset.k] || "");
   if(k === "b") renderQuiz();
-  if(k === "c"){ renderAns(); wsync(); }
+  if(k === "c" || k === "d"){ renderAns(); wsync(); }
 }
 document.addEventListener("input", e => {
   const t = e.target, c = t.classList;
   if(c.contains("nt")) S.notes[t.dataset.k] = t.value;
   else if(t.id === "snote") S.stretch[S.lab] = t.value;
-  else if(c.contains("wa")) S.w.ans[+t.dataset.n] = t.value;
-  else if(c.contains("wv")){ const k = t.dataset.k; S.w.v[k] = ["hs","bs"].includes(k) ? +t.value : t.value; wsync(); return; }
-  else if(t.id === "code" && S.w.edit){ S.w.code = t.value; preview(); }
+  else if(c.contains("wa")) W().ans[+t.dataset.n] = t.value;
+  else if(c.contains("wv")){ const k = t.dataset.k; W().v[k] = ["hs","bs"].includes(k) ? +t.value : t.value; wsync(); return; }
+  else if(t.id === "prm"){ W().prompt = t.value; if(!W().edit){ $("code").value = build(false); preview(); } }
+  else if(t.id === "b64in"){ try{ $("b64out").textContent = btoa(t.value) || " "; }catch(err){ $("b64out").textContent = "Use plain English letters, numbers and symbols only."; } }
+  else if(t.id === "code" && W().edit){ W().code = t.value; preview(); }
   save();
 });
 
@@ -288,8 +309,8 @@ document.addEventListener("input", e => {
 function exportApp(){
   if(!who){ changeName(); return; }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([S.w.edit ? S.w.code : build(true)], {type:"text/html"}));
-  a.download = who.replace(/\s+/g,"-")+"-3D-print-checker.html"; a.click(); URL.revokeObjectURL(a.href);
+  a.href = URL.createObjectURL(new Blob([W().edit ? W().code : build(true)], {type:"text/html"}));
+  a.download = who.replace(/\s+/g,"-")+(S.lab === "d" ? "-my-checker" : "-3D-print-checker")+".html"; a.click(); URL.revokeObjectURL(a.href);
 }
 function exportDoc(){
   if(!who){ changeName(); return; }
@@ -300,7 +321,9 @@ function exportDoc(){
   if(w.ans.some(a => a.trim()) || JSON.stringify(w.v) !== JSON.stringify(DEFV) || S.stretch.c){
     b += "<h2>"+esc(LABS.c.t)+"</h2><p><b>My settings:</b> "+esc(JSON.stringify(w.v))+"</p><p><b>My own picture:</b> "+(w.img ? "yes" : "no")+"</p>"+
       "<p><b>The line that sends the request:</b> "+esc(w.ans[0])+"</p><p><b>The endpoint:</b> "+esc(w.ans[1])+"</p><p><b>Where the prompt lives:</b> "+esc(w.ans[2])+"</p><p><b>Why the key is not in the code:</b> "+esc(w.ans[3])+"</p>"+
-      "<p><b>My page, as code:</b></p><pre style='white-space:pre-wrap'>"+esc(w.edit ? w.code.replace(/data:image\/jpeg;base64,[^"]+/, "[picture]") : build(false))+"</pre>"+(S.stretch.c ? "<p><b>Stretch:</b> "+esc(LABS.c.s)+"</p><p>"+esc(S.stretch.c)+"</p>" : ""); }
+      "<p><b>My page, as code:</b></p><pre style='white-space:pre-wrap'>"+esc(w.edit ? w.code.replace(/data:image\/jpeg;base64,[^"]+/, "[picture]") : build(false, w, false))+"</pre>"+(S.stretch.c ? "<p><b>Stretch:</b> "+esc(LABS.c.s)+"</p><p>"+esc(S.stretch.c)+"</p>" : ""); }
+  if(S.f.prompt !== P.join("\n") || JSON.stringify(S.f.v) !== JSON.stringify(DEFV) || S.stretch.d){
+    b += "<h2>"+esc(LABS.d.t)+"</h2><p><b>My prompt:</b></p><pre style='white-space:pre-wrap'>"+esc(S.f.prompt)+"</pre><p><b>My settings:</b> "+esc(JSON.stringify(S.f.v))+"</p><p><b>My page, as code:</b></p><pre style='white-space:pre-wrap'>"+esc(S.f.edit ? S.f.code.replace(/data:image\/jpeg;base64,[^"]+/, "[picture]") : build(false, S.f, false))+"</pre>"+(S.stretch.d ? "<p><b>Stretch:</b> "+esc(LABS.d.s)+"</p><p>"+esc(S.stretch.d)+"</p>" : ""); }
   if(!b){ alert("Add some work first, so there is something to export."); return; }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L2</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L2 work</h1>"+b+"</body></html>"], {type:"application/msword"}));
