@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W3L1: Run the project</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 'Segoe UI',Tahoma,sans-serif}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;gap:14px;padding:14px;max-width:1100px;margin:0 auto}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.brief{border-left:4px solid var(--ac)}section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}h3{font-size:13px;margin:0 0 6px}
+section.stretch h2{color:var(--warn)}p{margin:4px 0;max-width:75ch}.hint{font-size:12px;color:var(--mut)}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:70px}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button.go{background:var(--ac);color:#1e1e1e}button.alt{background:#444}button.alt:hover{background:#555}
+.card{background:#1b2321;border:1px solid #2f4a44;border-radius:6px;padding:10px 12px;margin:8px 0}
+.card.inc{background:#2a2310;border-color:#6b5514}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}@media(max-width:700px){.board{grid-template-columns:1fr}}
+.col{background:#1b1b1b;border:1px solid var(--bd);border-radius:6px;padding:8px;min-height:80px}
+.tk{background:var(--pn2);border:1px solid #444;border-radius:4px;padding:6px 8px;margin:6px 0;font-size:13px}
+.tb{margin-top:5px;display:flex;gap:4px;flex-wrap:wrap}.tb button{padding:2px 8px;font-size:11px}
+.tag{background:#12332d;color:var(--ac);border-radius:3px;padding:0 5px;font-size:11px}
+.row{display:grid;grid-template-columns:2fr 1fr auto;gap:6px;align-items:end}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:var(--mut);border-bottom:1px solid var(--bd);padding:4px}td{padding:4px;border-bottom:1px solid #2e2e2e;vertical-align:top}
+ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}.ok{color:var(--ac)}.bad{color:#f05050}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr,#status{color:#f05050;font-size:12px;min-height:16px;margin:6px 0}
+</style>
+</head>
+<body>
+<div id="modal"><div class="mbox"><h2>Welcome to the AI App Lab</h2>
+<p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+<input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()"><div id="merr"></div><button onclick="setName()">Start</button></div></div>
+
+<header><h1>W3L1</h1><span class="who" id="who"></span>
+<div class="bar"><select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+<button class="go" onclick="exportDoc()">Export my work</button></div></header>
+
+<main>
+<section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
+
+<section id="sec-a"><div id="exb"></div>
+<h2 style="margin-top:14px">Example risk register</h2><div class="wrap" id="exr"></div>
+<label for="na">Which task would you move next, and which risk is the most serious? Say why.</label><textarea class="nt" id="na" data-k="a"></textarea></section>
+
+<section id="sec-b">
+<button class="go" onclick="deal()">Deal an incident card</button>
+<div id="inc"></div>
+<label for="did">What did you do on the board, and why?</label><textarea id="did"></textarea>
+<button class="alt" onclick="decide()" style="margin-top:6px">Save my decision</button><div id="status"></div>
+<h2 style="margin-top:12px">Practice board (the "Should I eat this?" app)</h2><div id="pbd"></div>
+<button class="alt" onclick="if(confirm('Reset the practice board?')){S.pb=newPB();save();renderDyn()}">Reset practice board</button>
+<h2 style="margin-top:14px">My decisions so far</h2><div id="dlog" class="hint"></div></section>
+
+<section id="sec-c">
+<h2>1. My user stories</h2><div id="stl"></div>
+<div class="card"><div class="row" style="grid-template-columns:1fr 1fr"><div><label for="sw">As a... (who)</label><input id="sw"></div><div><label for="sm">I want... (what)</label><input id="sm"></div></div>
+<div class="row" style="grid-template-columns:1fr 1fr"><div><label for="sy">So that... (why)</label><input id="sy"></div><div><label for="sa">Acceptance criterion</label><input id="sa"></div></div>
+<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="alt" onclick="addStory()">Add story</button><button class="alt" onclick="loadStory()">Load my story from W2L1 or W2L2</button></div>
+<div class="hint" id="stmsg">Loading only works on the browser and website you used for W2.</div></div>
+<h2 style="margin-top:14px">2. My project board</h2><div id="bd"></div><div id="bform"></div>
+<details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Everything I moved or changed (recorded for you)</summary><div id="mlog" class="hint"></div></details>
+<h2 style="margin-top:14px">3. Snapshots</h2>
+<p class="hint">Save one at the start of Week 3, the end of Week 4 and the end of Week 5. Say how and why tasks moved or changed since the last one.</p>
+<div class="row" style="grid-template-columns:1fr 2fr auto"><div><label for="slab">Which point?</label><select id="slab"><option>Start of Week 3</option><option>End of Week 4</option><option>End of Week 5</option><option>Other</option></select></div>
+<div><label for="snn">How and why did tasks move or change?</label><input id="snn"></div><button class="alt" onclick="snap()">Save a snapshot</button></div><div id="snl"></div>
+<h2 style="margin-top:14px">4. My risk register</h2><p class="hint">At least three risks, covering a technical one, a time one and a data or safety one.</p>
+<div class="wrap" id="rkt"></div><button class="alt" onclick="S.c.risks.push({r:'',type:'',l:'',i:'',did:''});save();renderDyn()" style="margin-top:6px">Add a risk</button>
+<h2 style="margin-top:14px">5. Roles and reflection (fill in during Weeks 4 and 5)</h2>
+<label for="roles">My responsibilities, and what my testing partner (the person who tried my app) did</label><textarea class="nt" id="roles" data-k="roles"></textarea>
+<label for="fchange">One change I made because of my tester's feedback</label><textarea class="nt" id="fchange" data-k="fchange"></textarea>
+<label for="refl">One point where I changed my plan after testing: what I learned, and what I would plan differently next time</label><textarea class="nt" id="refl" data-k="refl"></textarea>
+<h2 style="margin-top:14px">Checklist</h2><ul class="chk" id="chk"></ul></section>
+
+<section class="stretch"><h2>Stretch (optional)</h2><div id="lstretch"></div>
+<label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+const now = () => new Date().toLocaleString("en-AU");
+const COLS = ["To do","Doing","Done"], TYPES = ["Technical","Time","Data or safety","Other"], LV = ["Low","Medium","High"];
+
+const FOOD = ["As a hungry student, I want to type in a food so that I can decide quickly whether to eat it.","As a student who hates waste, I want to be told when something is fine once so that I do not bin good food.","As someone who second-guesses everything, I want to be asked ARE YOU SURE? when the answer is unclear so that I do not eat a mystery leftover."];
+const TK = [[0,"Ask a friend what they check before eating leftovers",2],[0,"Write the prompt",2],[0,"Write five tests",1],[1,"Check every reason is ten words or fewer",0],[2,"Add a rule: anything with mould is NO",1],[2,"Ask a tester to try it",0],[1,"Customise the wrapper",0]];
+const mk = () => ({tasks:TK.map(([s,t,col],i) => ({id:i+1,s,t,col})), next:20});
+const newPB = mk, EX = mk();
+const EXR = [["The app says YES to a food that has gone off","Data or safety","Medium","High","Add a rule that anything with mould is NO. Test it with old bread and a suspicious leftover."],
+ ["The AI service slows down when the whole class runs tests at once","Technical","High","Medium","Run tests at a different time and wait out the lock instead of clicking again."],
+ ["My tester does not reply before testing week ends","Time","Medium","Medium","Ask two testers and send the app early."],
+ ["Someone treats a joke answer as real advice about an allergy","Data or safety","Low","High","Put a warning above the box: this is for fun, not for allergies."]];
+const INC = [
+ ["Your tester is away for the week and cannot try your app.","Ask someone else, such as a family member, and move the testing task up. Note it as a time risk."],
+ ["The AI starts giving wrong answers to inputs that worked yesterday.","Add a task to re-run your tests and compare prompt versions. Add a technical risk. Do not change three things at once."],
+ ["You get blank replies and error messages because the whole class is testing at once.","Wait out the lock and run at a quieter time. Add a technical risk. Do not click repeatedly."],
+ ["Your browser cleared its storage and your work is gone.","Add a task to export your work every session. Add a data risk and rate its impact high."],
+ ["Your teacher moves the deadline one day earlier.","Drop or park the least important task and protect the ones your criteria need. Note it as a time risk."],
+ ["Your user says the answers are too long and confusing.","Add a task to change the prompt and its reason rule, then move your testing task back to To do."],
+ ["A tester types a real password into your app.","Add a data or safety risk. Add a task to put a clear warning above the box, and tell the tester why."],
+ ["You finished every task two days early.","Add stretch tasks: hidden tests, a second tester, a better comparison. Check your criteria are still all met."]];
+const LABS = {
+ a:{t:"W3L1a: How a board and a risk register work", s:"Write one more risk for the “Should I eat this?” app and rate its likelihood and impact.",
+    brief:"<p>A <b>project board</b> shows what is <b>To do</b>, <b>Doing</b> and <b>Done</b>. Each card is a small task that comes from a user story. A <b>risk register</b> lists what could go wrong, how likely it is, how bad it would be and what you will do about it.</p><p>This example is a “Should I eat this?” app. It answers YES, NO, PROBABLY ONLY ONCE or ARE YOU SURE? Read the three stories, the board and the register, then answer the box at the bottom.</p>"},
+ b:{t:"W3L1b: Practice, when things go wrong", s:"Write an incident card for a project like yours, with a possible response.",
+    brief:"<p>Real projects get surprises. Press <b>Deal an incident card</b>. Change the practice board to deal with it: move, edit, drop or add a task. Then write what you did and why, and read a possible response. Compare your choices.</p>"},
+ c:{t:"W3L1c: My board and risk register", s:"Pick the riskiest item on your register. What is the earliest sign that it is going wrong?",
+    brief:"<p>This is your real project. It is evidence for Part C of your task sheet, and everything saves automatically.</p><p><b>Your mission today:</b> write or load at least two user stories, add tasks for each, move the first one to Doing, save a snapshot called Start of Week 3, and write at least three risks. Come back each week. Use Export my work often.</p>"}
+};
+const INC_N = INC.length;
+
+let who = store.get("aib-name") || "";
+let S = {lab:"a", notes:{}, stretch:{}, pb:null, inc:{seen:[],cur:null,rev:false,log:[]}, c:null};
+try{ const s = JSON.parse(store.get("aib-W3L1")); if(s && s.lab) S = s; }catch(e){}
+S.notes = S.notes || {}; S.stretch = S.stretch || {}; S.pb = S.pb || newPB(); S.inc = S.inc || {seen:[],cur:null,rev:false,log:[]};
+S.c = S.c || {stories:[], board:{tasks:[], next:1}, log:[], snaps:[], risks:[]};
+const save = () => store.set("aib-W3L1", JSON.stringify(S));
+
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+
+// ── Boards ──
+function boardHTML(B, k, ro){
+  return '<div class="board">'+COLS.map((c,ci) => { const ts = B.tasks.filter(t => t.col === ci);
+    return '<div class="col"><h3>'+c+' ('+ts.length+')</h3>'+ts.map(t => '<div class="tk">'+(t.s >= 0 ? '<span class="tag">S'+(t.s+1)+'</span> ' : '')+esc(t.t)+
+      (ro ? '' : '<div class="tb">'+(ci > 0 ? '<button class="alt" data-a="mv" data-k="'+k+'" data-id="'+t.id+'" data-d="-1" aria-label="Move left">&#9664;</button>' : '')+(ci < 2 ? '<button class="alt" data-a="mv" data-k="'+k+'" data-id="'+t.id+'" data-d="1" aria-label="Move right">&#9654;</button>' : '')+
+      '<button class="alt" data-a="ed" data-k="'+k+'" data-id="'+t.id+'">Edit</button><button class="alt" data-a="dr" data-k="'+k+'" data-id="'+t.id+'">Drop</button></div>')+'</div>').join("")+'</div>'; }).join("")+'</div>';
+}
+function addForm(k, n){
+  return '<div class="row"><div><label for="ntx_'+k+'">New task</label><input id="ntx_'+k+'"></div><div><label for="nts_'+k+'">For which story?</label><select id="nts_'+k+'"><option value="-1">No story</option>'+
+    Array.from({length:n}, (_,i) => '<option value="'+i+'">S'+(i+1)+'</option>').join("")+'</select></div><button class="alt" onclick="addTask(\''+k+'\')">Add task</button></div>';
+}
+function task(k, id, a, d){
+  const B = k === "c" ? S.c.board : S.pb, t = B.tasks.find(x => x.id === id); if(!t) return;
+  const lg = m => { if(k === "c") S.c.log.push({d:now(), m}); };
+  if(a === "mv"){ const n = t.col + d; lg('"'+t.t+'" moved from '+COLS[t.col]+' to '+COLS[n]); t.col = n; }
+  else if(a === "ed"){ const v = prompt("Change this task:", t.t); if(!v || !v.trim()) return; lg('"'+t.t+'" changed to "'+v.trim()+'"'); t.t = v.trim(); }
+  else if(confirm("Drop this task?")){ lg('"'+t.t+'" dropped'); B.tasks = B.tasks.filter(x => x !== t); }
+  save(); renderDyn();
+}
+function addTask(k){
+  const B = k === "c" ? S.c.board : S.pb, x = $("ntx_"+k), v = x.value.trim(); if(!v) return;
+  B.tasks.push({id:B.next++, s:+$("nts_"+k).value, t:v, col:0}); if(k === "c") S.c.log.push({d:now(), m:'"'+v+'" added'});
+  save(); renderDyn();
+}
+
+// ── Incident cards ──
+function deal(){
+  let left = INC.map((_,i) => i).filter(i => !S.inc.seen.includes(i)); if(!left.length){ S.inc.seen = []; left = INC.map((_,i) => i); }
+  S.inc.cur = left[Math.floor(Math.random()*left.length)]; S.inc.seen.push(S.inc.cur); S.inc.rev = false; $("did").value = ""; $("status").textContent = ""; save(); renderDyn();
+}
+function decide(){
+  if(S.inc.cur == null){ $("status").textContent = "Deal a card first."; return; }
+  const v = $("did").value.trim(); if(!v){ $("status").textContent = "Write what you did and why."; return; }
+  S.inc.log.push({c:INC[S.inc.cur][0], d:v}); S.inc.rev = true; $("did").value = ""; $("status").textContent = ""; save(); renderDyn();
+}
+
+// ── Stories, snapshots, risks ──
+function addStory(){
+  const f = ["sw","sm","sy","sa"].map(i => $(i).value.trim()); if(!f[0] || !f[1]){ $("stmsg").textContent = "Fill in at least the who and the what."; return; }
+  S.c.stories.push({who:f[0], what:f[1], why:f[2], a:f[3]}); ["sw","sm","sy","sa"].forEach(i => $(i).value = ""); $("stmsg").textContent = ""; save(); renderDyn();
+}
+function loadStory(){
+  let f = null;
+  for(const [k,l] of [["aib-W2L2","c"],["aib-W2L1","c"],["aib-W2L1","b"]]){ try{ const e = (JSON.parse(store.get(k)) || {}).edits; if(e && e[l] && e[l].f && e[l].f.who && e[l].f.what){ f = e[l].f; break; } }catch(x){} }
+  if(!f){ $("stmsg").textContent = "Nothing saved on this browser. Type your story in instead."; return; }
+  S.c.stories.push({who:f.who, what:f.what, why:f.why || "", a:[f.a1, f.a2].filter(Boolean).join(" / ")}); $("stmsg").textContent = "Loaded."; save(); renderDyn();
+}
+function starter(i){ ["Write the prompt for this story","Write a test for each criterion","Ask a real person to try it"].forEach(t => { S.c.board.tasks.push({id:S.c.board.next++, s:i, t, col:0}); S.c.log.push({d:now(), m:'"'+t+'" added'}); }); save(); renderDyn(); }
+function snap(){
+  S.c.snaps.push({l:$("slab").value, d:now(), tasks:S.c.board.tasks.map(t => ({...t})), note:$("snn").value.trim()}); $("snn").value = ""; save(); renderDyn();
+}
+const opts = (list, v) => '<option value="">Choose...</option>'+list.map(x => '<option'+(x === v ? " selected" : "")+'>'+x+'</option>').join("");
+const colsText = ts => COLS.map((c,ci) => c+": "+(ts.filter(t => t.col === ci).map(t => t.t).join("; ") || "(none)")).join(" | ");
+
+function chk(){
+  const c = S.c, R = c.risks, full = R.filter(r => r.r.trim() && r.type && r.l && r.i && r.did.trim());
+  const items = [["At least two user stories", c.stories.length >= 2],["Every story has at least one task", c.stories.length > 0 && c.stories.every((_,i) => c.board.tasks.some(t => t.s === i))],
+   ["At least four tasks on the board", c.board.tasks.length >= 4],["At least one task is in Doing or Done", c.board.tasks.some(t => t.col > 0)],
+   ["Snapshots saved: "+c.snaps.length+" of 3 (start of Week 3, end of Week 4, end of Week 5)", c.snaps.length >= 3],["Every snapshot says how and why tasks changed", c.snaps.length > 0 && c.snaps.every(s => s.note)],
+   ["At least three risks, each fully filled in", full.length >= 3],["Risks include a technical, a time and a data or safety risk", ["Technical","Time","Data or safety"].every(t => R.some(r => r.type === t))]];
+  return items.map(([t,ok]) => '<li><span class="'+(ok ? 'ok">&#10004;' : 'bad">&#10008;')+'</span> '+esc(t)+'</li>').join("");
+}
+
+// ── Render ──
+function renderDyn(){
+  const k = S.lab;
+  if(k === "a"){ $("exb").innerHTML = '<h2>User stories</h2><ol>'+FOOD.map(s => '<li>'+esc(s)+'</li>').join("")+'</ol>'+boardHTML(EX, "ex", true);
+    $("exr").innerHTML = '<table><tr><th>Risk</th><th>Type</th><th>Likelihood</th><th>Impact</th><th>What I did</th></tr>'+EXR.map(r => '<tr>'+r.map(x => '<td>'+esc(x)+'</td>').join("")+'</tr>').join("")+'</table>'; }
+  if(k === "b"){ const i = S.inc.cur;
+    $("inc").innerHTML = i == null ? '<p class="hint">Press the button to deal your first card.</p>' : '<div class="card inc"><h3>Incident ('+S.inc.seen.length+' of '+INC_N+')</h3><p>'+esc(INC[i][0])+'</p></div>'+(S.inc.rev ? '<div class="card"><h3>A possible response</h3><p>'+esc(INC[i][1])+'</p><p class="hint">Yours may differ. What matters is that you can explain your choice.</p></div>' : "");
+    $("pbd").innerHTML = boardHTML(S.pb, "pb", false)+addForm("pb", 3);
+    $("dlog").innerHTML = S.inc.log.length ? S.inc.log.map(l => '<p><b>'+esc(l.c)+'</b><br>'+esc(l.d)+'</p>').join("") : "Nothing yet."; }
+  if(k === "c"){ const c = S.c;
+    $("stl").innerHTML = c.stories.length ? c.stories.map((s,i) => '<div class="card"><b>S'+(i+1)+':</b> As a '+esc(s.who)+', I want '+esc(s.what)+(s.why ? ' so that '+esc(s.why) : "")+'.'+(s.a ? '<br><span class="hint">Criteria: '+esc(s.a)+'</span>' : "")+
+      '<div class="tb"><button class="alt" data-a="sa" data-i="'+i+'">Add starter tasks</button><button class="alt" data-a="sd" data-i="'+i+'">Remove story</button></div></div>').join("") : '<p class="hint">No stories yet. Add one below.</p>';
+    $("bd").innerHTML = boardHTML(c.board, "c", false); $("bform").innerHTML = addForm("c", c.stories.length);
+    $("mlog").innerHTML = c.log.length ? c.log.slice().reverse().slice(0,60).map(l => esc(l.d)+": "+esc(l.m)).join("<br>") : "Nothing yet.";
+    $("snl").innerHTML = c.snaps.map(s => '<div class="card"><b>'+esc(s.l)+'</b> <span class="hint">'+esc(s.d)+'</span><br>'+esc(s.note || "(no note yet)")+'<details><summary class="hint" style="cursor:pointer">The board then</summary><p class="hint">'+esc(colsText(s.tasks))+'</p></details></div>').join("");
+    $("rkt").innerHTML = '<table><tr><th>Risk</th><th>Type</th><th>Likelihood</th><th>Impact</th><th>What I did about it</th><th></th></tr>'+c.risks.map((r,i) => '<tr><td><input class="rk" data-i="'+i+'" data-f="r" aria-label="Risk" value="'+esc(r.r)+'"></td>'+
+      [["type",TYPES],["l",LV],["i",LV]].map(([f,L]) => '<td><select class="rk" data-i="'+i+'" data-f="'+f+'" aria-label="'+f+'">'+opts(L, r[f])+'</select></td>').join("")+
+      '<td><input class="rk" data-i="'+i+'" data-f="did" aria-label="What I did" value="'+esc(r.did)+'"></td><td><button class="alt" data-a="rd" data-i="'+i+'" aria-label="Remove risk">&#10005;</button></td></tr>').join("")+'</table>';
+    $("chk").innerHTML = chk(); }
+}
+function switchLab(k){ S.lab = k; save(); render(); }
+function render(){
+  const k = S.lab, L = LABS[k];
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief; $("lstretch").textContent = L.s; $("snote").value = S.stretch[k] || "";
+  ["a","b","c"].forEach(x => $("sec-"+x).style.display = x === k ? "" : "none");
+  document.querySelectorAll(".nt").forEach(e => e.value = S.notes[e.dataset.k] || ""); renderDyn();
+}
+document.addEventListener("input", e => {
+  const t = e.target, c = t.classList;
+  if(c.contains("nt")) S.notes[t.dataset.k] = t.value;
+  else if(t.id === "snote") S.stretch[S.lab] = t.value;
+  else if(c.contains("rk")){ S.c.risks[+t.dataset.i][t.dataset.f] = t.value; $("chk").innerHTML = chk(); }
+  save();
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-a]"); if(!b) return; const a = b.dataset.a, i = +b.dataset.i;
+  if(["mv","ed","dr"].includes(a)) task(b.dataset.k, +b.dataset.id, a, +b.dataset.d);
+  else if(a === "sa") starter(i);
+  else if(a === "sd"){ if(confirm("Remove this story? Its tasks stay on the board.")){ S.c.stories.splice(i,1); save(); renderDyn(); } }
+  else if(a === "rd"){ S.c.risks.splice(i,1); save(); renderDyn(); }
+});
+
+// ── Export ──
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  const T = "<table border='1' cellpadding='4' style='border-collapse:collapse'>", c = S.c, n = S.notes; let b = "";
+  const st = k => S.stretch[k] ? "<p><b>Stretch:</b> "+esc(LABS[k].s)+"</p><p>"+esc(S.stretch[k])+"</p>" : "";
+  if(n.a || S.stretch.a) b += "<h2>"+esc(LABS.a.t)+"</h2><p>"+esc(n.a || "")+"</p>"+st("a");
+  if(S.inc.log.length || S.stretch.b) b += "<h2>"+esc(LABS.b.t)+"</h2>"+S.inc.log.map(l => "<p><b>Incident:</b> "+esc(l.c)+"<br><b>What I did and why:</b> "+esc(l.d)+"</p>").join("")+"<p><b>My practice board at the end:</b> "+esc(colsText(S.pb.tasks))+"</p>"+st("b");
+  if(c.stories.length || c.board.tasks.length || c.risks.length || n.roles || n.fchange || n.refl || S.stretch.c){
+    b += "<h2>"+esc(LABS.c.t)+"</h2><p><b>User stories</b></p><ol>"+c.stories.map(s => "<li>As a "+esc(s.who)+", I want "+esc(s.what)+" so that "+esc(s.why)+". Criteria: "+esc(s.a)+"</li>").join("")+"</ol>"+
+      "<p><b>Board now</b></p><p>"+esc(colsText(c.board.tasks))+"</p><p><b>Snapshots</b></p>"+T+"<tr><th>Point</th><th>Date</th><th>The board then</th><th>How and why tasks moved or changed</th></tr>"+c.snaps.map(s => "<tr><td>"+esc(s.l)+"</td><td>"+esc(s.d)+"</td><td>"+esc(colsText(s.tasks))+"</td><td>"+esc(s.note)+"</td></tr>").join("")+"</table>"+
+      "<p><b>Risk register</b></p>"+T+"<tr><th>Risk</th><th>Type</th><th>Likelihood</th><th>Impact</th><th>What I did</th></tr>"+c.risks.map(r => "<tr><td>"+esc(r.r)+"</td><td>"+esc(r.type)+"</td><td>"+esc(r.l)+"</td><td>"+esc(r.i)+"</td><td>"+esc(r.did)+"</td></tr>").join("")+"</table>"+
+      "<p><b>Roles:</b> "+esc(n.roles || "")+"</p><p><b>One change because of feedback:</b> "+esc(n.fchange || "")+"</p><p><b>Reflection:</b> "+esc(n.refl || "")+"</p>"+
+      "<p><b>Recent moves and changes</b></p><p>"+c.log.slice(-40).map(l => esc(l.d)+": "+esc(l.m)).join("<br>")+"</p>"+st("c"); }
+  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L1 work</h1>"+b+"</body></html>"], {type:"application/msword"}));
+  a.download = who.replace(/\s+/g,"-")+"-W3L1.doc"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+showWho(); if(who) $("modal").classList.add("hidden");
+render();
+</script>
+</body>
+</html>
