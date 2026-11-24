@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W3L2: How the app talks to the AI</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 'Segoe UI',Tahoma,sans-serif}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}
+.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;gap:14px;padding:14px;max-width:1100px;margin:0 auto}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.brief{border-left:4px solid var(--ac)}section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}h3{font-size:14px;margin:16px 0 4px;color:var(--ac)}
+section.stretch h2{color:var(--warn)}
+p{margin:4px 0;max-width:75ch}.hint{font-size:12px;color:var(--mut)}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input[type=color]{padding:2px;height:32px}input[type=range]{padding:0;accent-color:var(--ac)}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:70px}textarea[readonly]{background:#171717;color:#9aa;border-style:dashed}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button.go{background:var(--ac);color:#1e1e1e}button.alt{background:#444}
+pre{background:#171717;border:1px solid var(--bd);border-radius:4px;padding:10px;font-size:12px;overflow-x:auto;margin:8px 0}
+.card{background:#1b2321;border:1px solid #2f4a44;border-radius:6px;padding:10px 12px;margin:8px 0}
+.q{margin:14px 0}.q p{font-weight:700}
+.opt{display:block;width:100%;text-align:left;background:var(--pn);color:var(--tx);border:1px solid var(--bd);margin:4px 0;font-weight:400}
+.opt:hover{background:#2c2c2c}.opt.ok{border-color:var(--ac);background:#1b2e2a}.opt.no{border-color:var(--rd);background:#2e1b1b}
+.fb{font-size:12px;color:var(--mut);margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--ac);border-bottom:1px solid var(--bd);padding:5px}
+td{padding:6px 5px;border-bottom:1px solid #2e2e2e;vertical-align:top}
+.cols{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:14px}@media(max-width:800px){.cols{grid-template-columns:1fr}}
+fieldset{border:0;padding:0;margin:0}fieldset:disabled{opacity:.45}
+iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
+</style>
+</head>
+<body>
+<div id="modal"><div class="mbox"><h2>Welcome to the AI App Lab</h2>
+<p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+<input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()"><div id="merr"></div><button onclick="setName()">Start</button></div></div>
+
+<header><h1>W3L2</h1><span class="who" id="who"></span>
+<div class="bar"><select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+<button class="go" onclick="exportDoc()">Export my work</button></div></header>
+
+<main>
+<section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
+
+<section id="sec-a">
+<h3 style="margin-top:0">1. What an API key is</h3>
+<p>An AI app does not run on your computer. The AI lives on a company's servers, and your app sends it a request over the internet. The company needs to know who is asking, so every request carries an <b>API key</b>: a long, secret code that works like a password and an account number in one.</p>
+<h3>2. Why AI companies charge by key</h3>
+<p>Every answer costs the company real computing power. They add up how much each key has used and send the bill to the key's owner. For this unit the school pays. A key is a bit like a prepaid card with the number printed on it: whoever holds the number can spend the money.</p>
+<h3>3. Why you keep the key secret</h3>
+<p>If a key is copied, a stranger can use the AI for free and the owner pays. People have found keys in public code and been billed thousands of dollars. A web page is public by design. Anyone can right-click and choose View Source, so a key written into a page is a key given away.</p>
+<h3>4. How this lab keeps the key secret</h3>
+<p>The key is not in this page. It sits on a small program called a <b>Worker</b>, running on Cloudflare's servers. Your page sends your words to the Worker. The Worker adds the key, passes the request to the AI and passes the answer back. The page never sees the key, so someone who finds this website cannot take it.</p>
+<pre>
+ YOUR DEVICE (hardware)
+ +-------------------------+
+ | Browser + this page     |  software. Your autosaved work is stored here.
+ +------------+------------+
+              | 1. your words and the prompt
+              v
+ +-------------------------+
+ | Worker (the middleman)  |  software on a server (hardware). Holds the API key.
+ |                         |  Your words pass through. The Worker does not keep them.
+ +------------+------------+
+              | 2. adds the secret key, forwards the request
+              v
+ +-------------------------+
+ | AI service              |  software on servers. Works out the answer
+ +------------+------------+  and bills the owner of the key.
+              | 3. the answer
+              v
+   back through the Worker to your browser, then shown on the page
+</pre>
+<h3>5. How the Worker limits what anyone can do</h3>
+<p>The page can still see the Worker's address, so the Worker has its own limits. It only accepts requests from approved websites. It chooses the AI model itself, so a page cannot ask for an expensive one. It caps the length of every answer. The Run button also locks for 45 seconds. This is one way we manage potential abuse. No single measure is perfect, so we use several.</p>
+<label for="own">In your own words: why is the key not in the page, and what could go wrong if it were?</label>
+<textarea class="nt" id="own" data-k="own" style="min-height:90px"></textarea>
+<label for="own2">Pick one thing you type into an app. Where does it go, who might be able to see it, and what is one risk and one control that reduces it?</label>
+<textarea class="nt" id="own2" data-k="own2" style="min-height:90px"></textarea>
+<p class="hint">These two boxes are evidence for Part B of your task sheet. Use Export my work.</p>
+</section>
+
+<section id="sec-b"><div id="quiz"></div><div id="qscore" style="font-weight:700;margin-top:10px"></div>
+<button class="alt" onclick="quizReset()" style="margin-top:8px">Clear my answers</button></section>
+
+<section id="sec-c"><div class="cols">
+<div><fieldset id="cfs">
+<h2>Words to change</h2><div id="wcon"></div>
+<h2 style="margin-top:16px">Settings</h2><div id="scon"></div>
+<label for="img">Your picture (becomes 128 by 128 pixels)</label><input type="file" id="img" accept="image/*" onchange="pic(this.files[0])">
+<div class="hint" id="imsg">Your picture stays in your browser. It is never sent anywhere. Please do not use a photo of a person.</div>
+</fieldset>
+<label style="display:flex;gap:8px;align-items:center;margin-top:14px"><input type="checkbox" id="edit" style="width:auto" onchange="toggleEdit(this.checked)">I want to edit the code myself (turns the controls off)</label>
+<button class="alt" onclick="wreset()" style="margin-top:8px">Reset everything</button></div>
+<div><h2>Live preview (this page really calls the Worker)</h2><iframe id="pv" title="Preview"></iframe>
+<p class="hint">After each answer the Run button locks for 45 seconds. That lock is code in the page. Can you find it?</p></div></div>
+<label for="code">The page you are building, as code</label><textarea id="code" style="min-height:330px" spellcheck="false"></textarea>
+<h2 style="margin-top:16px">Find it in the code</h2>
+<label for="wa0">1. Paste the line that sends the request to the Worker.</label><input class="wa" data-n="0" id="wa0">
+<label for="wa1">2. Paste the line that holds the endpoint (the Worker's address).</label><input class="wa" data-n="1" id="wa1">
+<label for="wa2">3. Where do the app's instructions (the prompt) live? Describe what you found.</label><input class="wa" data-n="2" id="wa2">
+<label for="wa3">4. Search the code for the API key. It is not there. Why not, and where is it?</label><textarea class="wa" data-n="3" id="wa3"></textarea>
+<button class="go" onclick="exportApp()" style="width:100%;margin-top:16px;padding:14px">Export my app as an HTML file</button>
+<p class="hint">Saves your page as one file you can open in any browser, on any device. It still asks the Worker for answers, so it needs the internet.</p>
+</section>
+
+<section id="sec-d">
+<table><tr><th>Filament</th><th>What it is</th><th>Good for</th><th>Watch out for</th></tr>
+<tr><td><b>PLA</b></td><td>Plant-based, rigid, easy to print</td><td>Models, toys, prototypes, decorations</td><td>Softens at roughly 55 to 60 °C, so not for hot cars. Can be brittle.</td></tr>
+<tr><td><b>PETG</b></td><td>Tougher and slightly flexible; copes with water better</td><td>Outdoor parts, brackets, containers</td><td>Strings. Softens at roughly 70 to 80 °C. Tiny gaps between layers mean "food safe" is not guaranteed.</td></tr>
+<tr><td><b>TPU</b></td><td>Flexible and rubbery</td><td>Phone cases, grips, seals, tyres for toy wheels</td><td>Prints slowly and can be hard to feed through some printers.</td></tr>
+<tr><td><b>ABS</b></td><td>Strong and more heat resistant (roughly to 90 to 100 °C)</td><td>Car interior parts, tool housings</td><td>Warps without an enclosure. Gives off fumes, so it needs good ventilation.</td></tr>
+<tr><td><b>PA6CF</b></td><td>Nylon filled with carbon fibre; stiff, strong, heat tolerant</td><td>Working parts, brackets, jigs</td><td>Needs a hardened nozzle and very dry filament. Costs more.</td></tr></table>
+<p class="hint" style="margin-top:10px">Temperatures are rough and change between brands. This page is for your information only. It is not assessed and it is not in your export. Some machines print in resin, metal and even concrete.</p>
+</section>
+
+<section class="stretch" id="sec-s"><h2>Stretch (optional)</h2><div id="lstretch"></div>
+<label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
+</main>
+
+<script>
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev"; // CHANGE FOR EACH CLASS
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+
+const LABS = {
+ a:{t:"W3L2a: How the app keeps its key safe", s:"Explain the key idea to someone at home using a comparison, such as a prepaid card or a house key. Which comparison works best, and where does it break down?",
+    brief:"<p>Your apps talk to an AI over the internet. This lab explains how that works and how it stays safe. Read it, then answer the two boxes at the bottom in your own words.</p>"},
+ b:{t:"W3L2b: Check your understanding", s:"Write a seventh question with one right answer and three tempting wrong answers.",
+    brief:"<p>Six questions on lab a. Pick an answer to see why it is right or wrong. You can change your answer, and your first try is the one that is scored.</p>"},
+ c:{t:"W3L2c: Build your own wrapper", s:"Change the page so a Year 6 student would find it friendlier. What did you change, and why?",
+    brief:"<p>A <b>wrapper</b> is the web page around an AI app: a title, a box, a button and a little code. This one is a 3D print checker. Change the words and settings, add a picture, and watch the code change.</p><p><b>Your mission:</b> make the page your own, press the button in the preview with a made-up object (such as a phone stand), then find the four things at the bottom. Use made-up or everyday objects only.</p>"},
+ d:{t:"[For your information] Types of 3D printing filament", s:null, brief:"<p>Useful background for the 3D print checker. Nothing to submit.</p>"}
+};
+const Q = [
+ ["What is an API key?",["A code that tells an AI service who is asking, so it knows who to charge","The AI's memory of your last question","A button that restarts the AI","A key that unlocks your computer"],0,"It works like a password and an account number in one."],
+ ["Why must an API key stay secret?",["Because it is long and hard to type","Because anyone who has it can use the AI and the owner pays the bill","Because the AI refuses to answer if people can see it","Because browsers delete it"],1,"A copied key lets a stranger spend the owner's money."],
+ ["Where does the key live in this lab?",["In the page's code, hidden near the bottom","In your browser's autosave","In the Worker, never in the page","In the AI's answer"],2,"Only the Worker holds the key, so View Source shows nothing worth stealing."],
+ ["What does the Worker do with your question?",["Answers it by itself","Adds the secret key, forwards it to the AI and returns the answer","Saves it so your teacher can read it","Sends it to every other student"],1,"The Worker is a middleman. It does not keep what you type."],
+ ["Someone saves this page and reads its code. What can they find?",["The API key","The AI company's private instructions","The Worker's address, but not the key","Every student's answers"],2,"The address is visible, which is why the Worker also has its own limits."],
+ ["Which is one way the Worker manages potential abuse?",["It only accepts requests from approved websites","It asks each user for a password","It publishes the key so nobody can hide it","It lets the AI set its own price"],0,"It also chooses the model itself and caps answer length. No single measure is perfect."]
+];
+const P = ["You are a helper app.","Who you are helping: a student with a home 3D printer","What they want: to know if an everyday object is a good thing to print","Why it matters: they save filament and avoid unsafe prints","The user types: one everyday object.","Reply with exactly one of: PRINT, DO NOT PRINT or ASK AN EXPERT. Then give a reason of ten words or fewer.","Rules:","- Anything that touches food or hot liquid is ASK AN EXPERT.","- Weapons, and parts that keep people safe (helmets, brakes, climbing gear), are DO NOT PRINT.","- Everyday decorative or household items are PRINT."];
+const WORDS = [["t","Tab title"],["h","Heading"],["i","Instruction line"],["p","Box placeholder"],["b","Button label"],["al","Answer label"],["f","Footer"]];
+const FONTS = ["Segoe UI, sans-serif","Georgia, serif","Verdana, sans-serif","Trebuchet MS, sans-serif","Arial, sans-serif","Courier New, monospace"];
+const DEFV = {t:"Print Check",h:"Should I 3D print this?",i:"Type one everyday object.",p:"for example: phone stand",b:"Check",al:"The answer:",f:"A Year 9 project",font:FONTS[0],hs:28,bs:16,bg:"#1e1e1e",ac:"#4EC9B0",tx:"#e0e0e0"};
+const DEFIMG = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" rx="16" fill="#4EC9B0"/><text x="64" y="80" font-size="48" text-anchor="middle" fill="#1e1e1e" font-family="Arial" font-weight="bold">3D</text></svg>');
+const newW = () => ({v:{...DEFV}, img:null, edit:false, code:"", ans:["","","",""]});
+
+let who = store.get("aib-name") || "";
+let S = {lab:"a", notes:{}, stretch:{}, first:[], cur:[], w:null};
+try{ const s = JSON.parse(store.get("aib-W3L2")); if(s && s.lab) S = s; }catch(e){}
+S.notes = S.notes || {}; S.stretch = S.stretch || {}; S.first = S.first || []; S.cur = S.cur || [];
+S.w = S.w || newW(); S.w.v = {...DEFV, ...S.w.v}; S.w.ans = S.w.ans || ["","","",""];
+const save = () => store.set("aib-W3L2", JSON.stringify(S));
+
+// ── Name ──
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+
+// ── Quiz ──
+function renderQuiz(){
+  $("quiz").innerHTML = Q.map((q,n) => {
+    const c = S.cur[n];
+    return '<div class="q"><p>'+(n+1)+'. '+esc(q[0])+'</p>'+q[1].map((o,i) => '<button class="opt'+(c===i ? (i===q[2] ? " ok" : " no") : "")+'" onclick="pick('+n+','+i+')">'+esc(o)+'</button>').join("")+
+      (c!=null ? '<div class="fb">'+(c===q[2] ? "Correct. " : "Not quite. Try another answer. ")+(c===q[2] ? esc(q[3]) : "")+'</div>' : "")+'</div>';
+  }).join("");
+  const done = S.first.filter(x => x != null).length, ok = S.first.filter((x,n) => x === Q[n][2]).length;
+  $("qscore").textContent = done ? "First-try score: "+ok+" of "+Q.length+" ("+done+" answered)" : "";
+}
+function pick(n,i){ if(S.first[n] == null) S.first[n] = i; S.cur[n] = i; save(); renderQuiz(); }
+function quizReset(){ if(confirm("Clear all your quiz answers and start again?")){ S.first = []; S.cur = []; save(); renderQuiz(); } }
+
+// ── Wrapper ──
+function build(full){
+  const v = S.w.v, img = full ? (S.w.img || DEFIMG) : "[your picture is stored here]";
+  return [
+'<!DOCTYPE html>','<html lang="en">','<head>','<meta charset="UTF-8">','<title>'+esc(v.t)+'</title>','<style>',
+'body{font-family:'+v.font+';font-size:'+v.bs+'px;background:'+v.bg+';color:'+v.tx+';max-width:480px;margin:30px auto;padding:0 16px}',
+'h1{font-size:'+v.hs+'px;color:'+v.ac+'}',
+'button{background:'+v.ac+';color:'+v.bg+';border:0;padding:8px 16px;font:inherit;cursor:pointer}',
+'input{width:100%;padding:8px;font:inherit;margin:8px 0;box-sizing:border-box}',
+'#out{margin-top:6px;font-weight:bold}','</style>','</head>','<body>',
+'<img src="'+img+'" width="128" height="128" alt="Logo">',
+'<h1>'+esc(v.h)+'</h1>','<p>'+esc(v.i)+'</p>',
+'<input id="box" placeholder="'+esc(v.p)+'">','<button id="go">'+esc(v.b)+'</button>',
+'<p>'+esc(v.al)+'</p>','<div id="out"></div>','<p><small>'+esc(v.f)+'</small></p>','',
+'<script>',
+'const ENDPOINT = "'+ENDPOINT+'";',
+'const COOLDOWN = 45; // seconds the button stays locked',
+'const PROMPT = '+P.map(l => JSON.stringify(l+"\n")).join(" +\n  ")+';',
+'',
+'document.getElementById("go").onclick = async () => {',
+'  const out = document.getElementById("out");',
+'  const text = document.getElementById("box").value.trim();',
+'  if (!text) return;',
+'  let wait = 0;',
+'  try { wait = Math.ceil(((+localStorage.getItem("aib-lock") || 0) - Date.now()) / 1000); } catch (e) {}',
+'  if (wait > 0) { out.textContent = "Please wait " + wait + " seconds."; return; }',
+'  try { localStorage.setItem("aib-lock", String(Date.now() + COOLDOWN * 1000)); } catch (e) {}',
+'  out.textContent = "Thinking...";',
+'  try {',
+'    const r = await fetch(ENDPOINT, {',
+'      method: "POST",',
+'      headers: { "Content-Type": "application/json" },',
+'      body: JSON.stringify({ messages: [{ role: "system", content: PROMPT }, { role: "user", content: text }], max_tokens: 88, temperature: 0.1 })',
+'    });',
+'    const d = await r.json();',
+'    out.textContent = d.choices ? (d.choices[0].message.content || "(blank answer, try again)") : ((d.error && d.error.message) || "Something went wrong.");',
+'  } catch (e) { out.textContent = "Error: " + e.message; }',
+'};',
+'<\/script>','</body>','</html>'].join("\n");
+}
+let tm;
+function preview(){ clearTimeout(tm); tm = setTimeout(() => { $("pv").srcdoc = S.w.edit ? S.w.code : build(true); }, 300); }
+function wsync(){
+  const w = S.w; $("code").value = w.edit ? w.code : build(false); $("code").readOnly = !w.edit; $("cfs").disabled = w.edit; $("edit").checked = w.edit;
+  WORDS.concat([["font"],["hs"],["bs"],["bg"],["ac"],["tx"]]).forEach(([k]) => { const e = document.querySelector('.wv[data-k="'+k+'"]'); if(e) e.value = w.v[k]; });
+  $("o_hs").textContent = w.v.hs+"px"; $("o_bs").textContent = w.v.bs+"px"; preview(); save();
+}
+function toggleEdit(on){
+  if(on){ S.w.edit = true; S.w.code = build(true); }
+  else if(confirm("Go back to the controls? Your own code edits will be lost.")) S.w.edit = false;
+  wsync();
+}
+function wreset(){ if(confirm("Reset the whole wrapper, including your picture and answers?")){ S.w = newW(); wsync(); renderAns(); } }
+function pic(f){
+  if(!f) return; if(f.size > 5e6){ $("imsg").textContent = "That file is over 5 MB. Choose a smaller one."; return; }
+  const im = new Image();
+  im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 128; const s = Math.min(im.width, im.height);
+    c.getContext("2d").drawImage(im, (im.width-s)/2, (im.height-s)/2, s, s, 0, 0, 128, 128);
+    S.w.img = c.toDataURL("image/jpeg", 0.8); $("imsg").textContent = "Done. Your picture is now 128 by 128 pixels and stays in your browser."; URL.revokeObjectURL(im.src); wsync(); };
+  im.onerror = () => { $("imsg").textContent = "That file is not a picture this page can read."; };
+  im.src = URL.createObjectURL(f);
+}
+function renderAns(){ document.querySelectorAll(".wa").forEach(e => e.value = S.w.ans[+e.dataset.n] || ""); }
+function initWrap(){
+  $("wcon").innerHTML = WORDS.map(([k,l]) => '<label>'+l+'</label><input class="wv" data-k="'+k+'" aria-label="'+l+'">').join("");
+  $("scon").innerHTML = '<label>Font</label><select class="wv" data-k="font" aria-label="Font">'+FONTS.map(f => '<option>'+f+'</option>').join("")+'</select>'+
+    '<label>Heading size: <b id="o_hs"></b></label><input type="range" class="wv" data-k="hs" min="18" max="48" aria-label="Heading size">'+
+    '<label>Text size: <b id="o_bs"></b></label><input type="range" class="wv" data-k="bs" min="12" max="24" aria-label="Text size">'+
+    '<label>Background colour</label><input type="color" class="wv" data-k="bg" aria-label="Background colour">'+
+    '<label>Accent colour</label><input type="color" class="wv" data-k="ac" aria-label="Accent colour">'+
+    '<label>Text colour</label><input type="color" class="wv" data-k="tx" aria-label="Text colour">';
+}
+
+// ── Labs ──
+function switchLab(k){ S.lab = k; save(); render(); }
+function render(){
+  const k = S.lab, L = LABS[k];
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief;
+  ["a","b","c","d"].forEach(x => $("sec-"+x).style.display = x === k ? "" : "none");
+  $("sec-s").style.display = L.s ? "" : "none"; $("lstretch").textContent = L.s || ""; $("snote").value = S.stretch[k] || "";
+  document.querySelectorAll(".nt").forEach(e => e.value = S.notes[e.dataset.k] || "");
+  if(k === "b") renderQuiz();
+  if(k === "c"){ renderAns(); wsync(); }
+}
+document.addEventListener("input", e => {
+  const t = e.target, c = t.classList;
+  if(c.contains("nt")) S.notes[t.dataset.k] = t.value;
+  else if(t.id === "snote") S.stretch[S.lab] = t.value;
+  else if(c.contains("wa")) S.w.ans[+t.dataset.n] = t.value;
+  else if(c.contains("wv")){ const k = t.dataset.k; S.w.v[k] = ["hs","bs"].includes(k) ? +t.value : t.value; wsync(); return; }
+  else if(t.id === "code" && S.w.edit){ S.w.code = t.value; preview(); }
+  save();
+});
+
+// ── Export ──
+function exportApp(){
+  if(!who){ changeName(); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([S.w.edit ? S.w.code : build(true)], {type:"text/html"}));
+  a.download = who.replace(/\s+/g,"-")+"-3D-print-checker.html"; a.click(); URL.revokeObjectURL(a.href);
+}
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  const n = S.notes, w = S.w, T = "<table border='1' cellpadding='4' style='border-collapse:collapse'>"; let b = "";
+  if(n.own || n.own2 || S.stretch.a) b += "<h2>"+esc(LABS.a.t)+"</h2><p><b>Why the key is not in the page:</b> "+esc(n.own||"")+"</p><p><b>What I type, where it goes, one risk and one control:</b> "+esc(n.own2||"")+"</p>"+(S.stretch.a ? "<p><b>Stretch:</b> "+esc(LABS.a.s)+"</p><p>"+esc(S.stretch.a)+"</p>" : "");
+  if(S.first.some(x => x != null)){ const ok = S.first.filter((x,i) => x === Q[i][2]).length;
+    b += "<h2>"+esc(LABS.b.t)+"</h2><p><b>First-try score:</b> "+ok+" of "+Q.length+"</p>"+T+"<tr><th>Question</th><th>First try</th><th>Latest answer</th></tr>"+Q.map((q,i) => "<tr><td>"+esc(q[0])+"</td><td>"+(S.first[i] == null ? "" : (S.first[i] === q[2] ? "Correct" : "Incorrect"))+"</td><td>"+(S.cur[i] == null ? "" : esc(q[1][S.cur[i]]))+"</td></tr>").join("")+"</table>"+(S.stretch.b ? "<p><b>Stretch:</b> "+esc(LABS.b.s)+"</p><p>"+esc(S.stretch.b)+"</p>" : ""); }
+  if(w.ans.some(a => a.trim()) || JSON.stringify(w.v) !== JSON.stringify(DEFV) || S.stretch.c){
+    b += "<h2>"+esc(LABS.c.t)+"</h2><p><b>My settings:</b> "+esc(JSON.stringify(w.v))+"</p><p><b>My own picture:</b> "+(w.img ? "yes" : "no")+"</p>"+
+      "<p><b>The line that sends the request:</b> "+esc(w.ans[0])+"</p><p><b>The endpoint:</b> "+esc(w.ans[1])+"</p><p><b>Where the prompt lives:</b> "+esc(w.ans[2])+"</p><p><b>Why the key is not in the code:</b> "+esc(w.ans[3])+"</p>"+
+      "<p><b>My page, as code:</b></p><pre style='white-space:pre-wrap'>"+esc(w.edit ? w.code.replace(/data:image\/jpeg;base64,[^"]+/, "[picture]") : build(false))+"</pre>"+(S.stretch.c ? "<p><b>Stretch:</b> "+esc(LABS.c.s)+"</p><p>"+esc(S.stretch.c)+"</p>" : ""); }
+  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L2</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L2 work</h1>"+b+"</body></html>"], {type:"application/msword"}));
+  a.download = who.replace(/\s+/g,"-")+"-W3L2.doc"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ── Start up ──
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+initWrap(); showWho(); if(who) $("modal").classList.add("hidden");
+render();
+</script>
+</body>
+</html>
