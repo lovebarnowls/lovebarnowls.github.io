@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W2L1: From story to prompt</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 'Segoe UI',Tahoma,sans-serif}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}
+.tag{font-size:11px;padding:2px 8px;border-radius:3px;background:#3a2f12;color:var(--warn)}
+.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.wide{grid-column:1/-1}
+section.brief{border-left:4px solid var(--ac)}
+section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}
+section.stretch h2{color:var(--warn)}
+p{margin:4px 0}.hint{font-size:12px;color:var(--mut)}
+.card{background:#1b2321;border:1px solid #2f4a44;border-radius:6px;padding:10px 12px;margin:8px 0}
+.card h3{font-size:13px;margin:0 0 4px;color:var(--ac)}
+label{display:block;font-size:12px;color:var(--mut);margin:12px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:64px}
+textarea[readonly],input[readonly]{background:#171717;color:#9aa;border-style:dashed}
+input[type=range]{padding:0;accent-color:var(--ac)}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button:disabled{background:#555;color:#999;cursor:not-allowed}
+button.go{background:var(--ac);color:#1e1e1e}button.go:hover{background:#3ab89f}
+button.alt{background:#444}button.alt:hover{background:#555}
+.inps{display:grid;gap:8px}.irow{display:grid;grid-template-columns:1fr 1fr;gap:6px}@media(max-width:600px){.irow{grid-template-columns:1fr}}
+.row{display:flex;gap:10px;align-items:end;margin-top:12px}.row>div{flex:1}
+table{width:100%;border-collapse:collapse;font-size:12px;font-family:Consolas,monospace}
+th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--bd);padding:4px}
+td{padding:5px 4px;border-bottom:1px solid #2e2e2e;vertical-align:top;white-space:pre-wrap}
+.wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+#status{font-size:12px;color:var(--warn);min-height:18px;margin-top:6px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--mut);font-size:12px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
+</style>
+</head>
+<body>
+
+<div id="modal"><div class="mbox">
+  <h2>Welcome to the AI App Lab</h2>
+  <p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+  <input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()">
+  <div id="merr"></div><button onclick="setName()">Start</button>
+</div></div>
+
+<header>
+  <h1>W2L1</h1><span class="who" id="who"></span>
+  <div class="bar">
+    <select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+    <button class="go" onclick="exportDoc()">Export my work</button>
+  </div>
+</header>
+
+<main>
+<section class="brief wide"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
+
+<section id="intsec" class="wide" style="display:none">
+  <h2>Your interview plan and notes</h2>
+  <div class="irow">
+    <div><label for="iwho">Who will you ask?</label><input id="iwho" placeholder="for example: my uncle, who sorts his own recycling"></div>
+    <div><label for="iwhy">Why did you choose them?</label><input id="iwhy"></div>
+  </div>
+  <label>Your questions (at least five). Write them before you ask.</label>
+  <div class="inps" id="iqs"></div>
+  <label for="inotes">What they told you (typed notes, or say that you have a photo of your notes)</label>
+  <textarea id="inotes" style="min-height:150px"></textarea>
+  <label for="isort">The small sorting or deciding job you will build your app for, in one sentence</label>
+  <input id="isort">
+  <p class="hint" style="margin-top:12px">Do not forget you can use the Export my work button to save your thoughts.</p>
+</section>
+
+<section id="storysec">
+  <h2>Your user story</h2>
+  <p class="hint">A user story says who needs something, what they need and why.</p>
+  <label for="fwho">As a... (who is the app for?)</label><input id="fwho" placeholder="for example: retired grandmother who banks online">
+  <label for="fwhat">I want... (what must the app do?)</label><input id="fwhat" placeholder="for example: to type in a made-up password and be told if it is safe">
+  <label for="fwhy">So that... (why does it matter to them?)</label><input id="fwhy" placeholder="for example: I stop reusing my dog's name">
+  <label for="ftype">The user types in (what is one input?)</label><input id="ftype" placeholder="for example: one made-up password">
+  <label for="fa1">Acceptance criterion 1 (a specific statement you can check with one test)</label><input id="fa1">
+  <label for="fa2">Acceptance criterion 2</label><input id="fa2">
+  <div class="hint">A good criterion gives a clear yes or no after one test. "It is helpful" is not checkable. "A password with fewer than 12 characters is WEAK" is. Use one criterion to say when the app should use its way out.</div>
+  <label for="fcats">Answer categories, separated by commas. Include a way out, such as UNSURE.</label><input id="fcats" placeholder="for example: STRONG, WEAK, UNSURE">
+  <button class="alt" id="buildb" onclick="buildDraft()" style="margin-top:12px">Build draft prompt from my story</button>
+  <div class="hint" id="slock"></div>
+</section>
+
+<section id="appsec">
+  <h2>Your app</h2>
+  <label for="prompt">System prompt (the instructions the AI reads before every question)</label>
+  <textarea id="prompt" style="min-height:170px"></textarea>
+  <div class="hint" id="plock"></div>
+  <label for="temp">Temperature: <b id="tval"></b></label>
+  <input id="temp" type="range" min="0" max="1" step="0.1" disabled>
+  <div class="hint">Fixed at 0.1 so your tests are fair.</div>
+  <label>Inputs (up to three). Write what you think it will say before you run.</label>
+  <div class="inps" id="inps"></div>
+  <div class="row">
+    <div><label for="reps" style="margin-top:0">Run each input</label>
+      <select id="reps"><option value="1">1 time</option><option value="2">2 times</option><option value="3">3 times</option></select></div>
+    <button id="runb" onclick="run()">Run</button>
+  </div>
+  <div id="status" aria-live="polite"></div>
+  <p class="hint">Some inputs make the model think harder. That can take longer, and sometimes the reply comes back blank. If that happens, wait <span class="cdn"></span> seconds, then run it again. The Run button locks for <span class="cdn"></span> seconds after every click, so use the wait to write your next predictions.</p>
+</section>
+
+<section id="outsec" class="wide">
+  <h2>Output</h2>
+  <div class="wrap"><table id="out"><tr><td class="hint">Answers appear here.</td></tr></table></div>
+  <label for="notes">What did you notice? Which of your criteria passed and which failed? (goes in your export)</label>
+  <textarea id="notes"></textarea>
+  <details><summary id="logsum">Run log</summary><div class="wrap"><table id="logt"></table></div></details>
+</section>
+
+
+<section class="stretch wide"><h2>Stretch (optional)</h2><div id="lstretch"></div><label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
+</main>
+
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+const MAX_TOKENS = 88, PAUSE = 400;
+const COOLDOWN = 45; // seconds the Run button stays locked after every click
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+
+const FIELDS = [["who","fwho","Who"],["what","fwhat","What"],["why","fwhy","Why"],["type","ftype","The user types in"],["a1","fa1","Acceptance criterion 1"],["a2","fa2","Acceptance criterion 2"],["cats","fcats","Categories"]];
+const PW = "<p class='hint'>Always type made-up passwords into this app. Never type a real one. You will find out why in Week 3.</p>";
+const EMPTY = {who:"",what:"",why:"",type:"",a1:"",a2:"",cats:""};
+const LABS = {
+ a:{t:"W2L1a: Worked example, Christmas party app (locked)", locked:true, temp:0.1, reps:1,
+    f:{who:"an introvert who finds parties stressful and is not sure what is appropriate to wear or bring", what:"to type in something I plan to wear, bring or do, and be told YES, NO or CHECK WITH ORGANISERS", why:"I can arrive feeling confident without having to ask strangers", type:"one item or outfit piece for a Christmas-themed party", a1:"Clothing or accessories in red, green, gold, silver or white are YES.", a2:"Food, drink, gifts and anything the host might have rules about are CHECK WITH ORGANISERS.", cats:"YES, NO, CHECK WITH ORGANISERS"},
+    inputs:["red jumper","fruit cake","black suit"],
+    brief:"<p>This app was made for an <b>introvert</b> user who has a hard time attending parties and deciding on appropriate colours and things to wear or bring. The question it answers is: <b>does this item suit a Christmas-themed party?</b></p><p>The person who will use an app is the <b>stakeholder</b>. You find out what they need by <b>interviewing</b> them, then you write a <b>user story</b> (who, what, why) and <b>acceptance criteria</b>: specific statements you can check with one test. Everything on this page is locked so you can follow the whole chain.</p><div class='card'><h3>What the user told the interviewer</h3><p><b>What is hard about parties?</b> I never know if what I am wearing is right, and I do not want to ask.</p><p><b>What do you need?</b> Something I can check on my own before I go.</p><p><b>How should the answer look?</b> Yes, no, or tell me to ask the host. Short.</p><p><b>What would you not trust an app to do?</b> Guess about food. People have allergies and rules.</p></div><div class='card'><h3>A vague story would say</h3><p>&quot;As a person, I want a party app so that it is good.&quot; With that, could you say whether &quot;red jumper: YES&quot; is right? No. That is why the details in the story matter.</p></div><p><b>Your mission:</b> find where each acceptance criterion appears in the prompt. Run the three items, then check each answer against the criteria. Which criterion explains each answer?</p>",
+    stretch:"Write a third acceptance criterion for this app with a clear yes or no test, and name the input you would use to test it."},
+ b:{t:"W2L1b: Your user wants a password checker", temp:0.1, reps:1, f:EMPTY,
+    inputs:["rover","Rover2020","BlueKettle!47Sunrise"],
+    brief:"<p><b>Your user wants a password checker.</b> Pat is a retired grandmother who banks online. A student interviewed her.</p><details class='card' open><summary>Interview notes: Pat</summary><p><b>What do you use passwords for?</b> Email and my online banking.</p><p><b>What goes wrong?</b> I use my dog's name for everything. My grandson says that is bad, but he does not say why.</p><p><b>What would help?</b> Something where I can type in a made-up one and it tells me if it is okay, in plain words with no tech talk.</p><p><b>How should the answer look?</b> Just tell me strong or weak, and a few words about why.</p><p><b>Any rules you have been given?</b> The bank says at least 12 characters, with a number in it.</p><p><b>Any worries?</b> Is it safe to type my real password into a computer?</p></details><p><b>Your mission:</b></p><p>1. Fill in the user story: who, what, why, and what the user types in. Use Pat's own words where you can.<br>2. Write two acceptance criteria you can check with one test each. Pat's bank rule is a good start.<br>3. Write your categories, including a way out, and say in a criterion when the app should use it.<br>4. Press <b>Build draft prompt</b>, read it and edit it.<br>5. Test it with passwords that probe each criterion. Which criteria passed, and which failed?</p>"+PW,
+    stretch:"Show your two criteria to someone at home. Can they tell, from one test, whether each one passes or fails? Rewrite any they cannot."},
+ c:{t:"W2L1c: Your own user (homework)", int:true, temp:0.1, reps:1, f:EMPTY, inputs:["","",""],
+    brief:"<p>Your assignment app will solve a small <b>sorting or deciding</b> problem for a real person. It might be a job they find annoying, or something they have to look up every time.</p><p><b>Your mission:</b> find one person (a family member, neighbour, coach or teacher) and ask them about a small sorting or deciding job. Plan at least five questions first, then keep your notes in the box. Once you have talked to them, fill in the story, build the draft prompt and test it. Everything saves automatically, so you can come back after your interview.</p><div class='card'><h3>Questions that work well</h3><p>What do you have to decide or look up? How often? What goes wrong now? What would a good answer look like? Who is it for? What would you not trust an app to do?</p></div><p>Examples of jobs: which bin an item goes in, which sports gear suits a weather forecast, whether a food is safe for a pet.</p>",
+    stretch:"Write one more question that you wish you had asked, and say what you think the answer might be."}
+};
+
+// ── State ─────────────────────────────────────────────────
+let who = store.get("aib-name") || "";
+let S = {lab:"a", edits:{}, inputs:{}, preds:{}, notes:{}, stretch:{}, log:[], int:{}};
+try{ const s = JSON.parse(store.get("aib-W2L1")); if(s && s.lab) S = s; }catch(e){}
+S.preds = S.preds || {}; S.stretch = S.stretch || {}; S.int = S.int || {};
+const save = () => store.set("aib-W2L1", JSON.stringify(S));
+const inputEls = () => [...document.querySelectorAll(".inp")];
+const predEls = () => [...document.querySelectorAll(".prd")];
+const iqEls = () => [...document.querySelectorAll(".iq")];
+const readF = () => Object.fromEntries(FIELDS.map(([k,id]) => [k, $(id).value]));
+
+function listOf(c){ return c.length < 2 ? c.join("") : c.slice(0,-1).join(", ")+" or "+c[c.length-1]; }
+function build(f){
+  const cats = f.cats.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+  const ac = [f.a1, f.a2].map(s => s.trim()).filter(Boolean).map(s => "- "+s).join("\n");
+  return "You are a helper app.\nWho you are helping: "+f.who.trim()+"\nWhat they want: "+f.what.trim()+"\nWhy it matters: "+f.why.trim()+
+    "\nThe user types: "+f.type.trim()+".\nReply with exactly one of: "+listOf(cats)+". Then give a reason of ten words or fewer.\nRules:\n"+ac;
+}
+function buildDraft(){
+  const f = readF();
+  if(!f.who.trim() || !f.what.trim() || !f.type.trim() || !f.a1.trim() || !f.cats.trim()){ $("status").textContent = "Fill in who, what, what the user types in, the first criterion and your categories, then build the draft."; return; }
+  if($("prompt").value.trim() && !confirm("This replaces the prompt you have now, including any edits. Continue?")) return;
+  $("prompt").value = build(f); $("status").textContent = "Draft built. Read it, then edit it in the box."; collect();
+}
+
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+
+// ── Lab switching ─────────────────────────────────────────
+function collect(){
+  const L = LABS[S.lab];
+  if(L.int) S.int = {who:$("iwho").value, why:$("iwhy").value, q:iqEls().map(i => i.value), notes:$("inotes").value, sort:$("isort").value};
+  if(!L.locked) S.edits[S.lab] = {f:readF(), prompt:$("prompt").value};
+  S.inputs[S.lab] = inputEls().map(i => i.value); S.preds[S.lab] = predEls().map(i => i.value); S.notes[S.lab] = $("notes").value;
+  S.stretch[S.lab] = $("snote").value; save();
+}
+function render(){
+  const k = S.lab, L = LABS[k], e = S.edits[k] || {};
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief; $("lstretch").textContent = L.stretch; $("snote").value = S.stretch[k] || "";
+  $("intsec").style.display = L.int ? "" : "none";
+  if(L.int){
+    const I = S.int, q = I.q || [];
+    $("iwho").value = I.who || ""; $("iwhy").value = I.why || ""; $("inotes").value = I.notes || ""; $("isort").value = I.sort || "";
+    $("iqs").innerHTML = [0,1,2,3,4].map(i => '<input class="iq" aria-label="Question '+(i+1)+'" placeholder="Question '+(i+1)+'" value="'+esc(q[i]||"")+'">').join("");
+  }
+  const f = L.locked ? L.f : (e.f ?? L.f);
+  FIELDS.forEach(([key,id]) => { $(id).value = f[key]; $(id).readOnly = !!L.locked; });
+  $("buildb").style.display = L.locked ? "none" : ""; $("slock").textContent = L.locked ? "Locked in this lab. Read it, then run the app." : "";
+  $("prompt").value = L.locked ? build(L.f) : (e.prompt ?? ""); $("prompt").readOnly = !!L.locked;
+  $("plock").textContent = L.locked ? "Built from the locked story." : "";
+  $("temp").value = L.temp; $("tval").textContent = L.temp+" (strict)";
+  const vals = S.inputs[k] || L.inputs, prs = S.preds[k] || [];
+  $("inps").innerHTML = [0,1,2].map(i => '<div class="irow"><input class="inp" aria-label="Input '+(i+1)+'" placeholder="Input '+(i+1)+'" maxlength="60" value="'+esc(vals[i]||"")+'"><input class="prd" aria-label="Prediction '+(i+1)+'" placeholder="I think it will say…" value="'+esc(prs[i]||"")+'"></div>').join("");
+  $("reps").value = L.reps; $("notes").value = S.notes[k] || "";
+  $("out").innerHTML = '<tr><td class="hint">Answers appear here.</td></tr>'; $("status").textContent = "";
+  renderLog();
+}
+function switchLab(k){ collect(); S.lab = k; save(); render(); }
+function renderLog(){
+  const rows = S.log.filter(r => r.lab === S.lab);
+  $("logsum").textContent = "Run log for this lab ("+rows.length+" runs)";
+  $("logt").innerHTML = "<tr><th>Temp</th><th>Predicted</th><th>Input</th><th>Run</th><th>Answer</th></tr>" +
+    rows.map(r => "<tr><td>"+r.temp+"</td><td>"+esc(r.pred||"")+"</td><td>"+esc(r.inp)+"</td><td>"+r.run+"</td><td>"+esc(r.got)+"</td></tr>").join("");
+}
+document.addEventListener("input", e => {
+  const t = e.target, c = t.classList;
+  if(["prompt","notes","snote","inotes","iwho","iwhy","isort"].includes(t.id) || FIELDS.some(x => x[1] === t.id) || ["inp","prd","iq"].some(x => c.contains(x))) collect();
+});
+
+// ── Running ───────────────────────────────────────────────
+async function llm(system, input, temp){
+  try{
+    const r = await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:[{role:"system",content:system},{role:"user",content:input}], model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:temp})});
+    if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
+    const ch = (await r.json()).choices[0], t = (ch.message.content || "").trim();
+    return t || "(No answer came back"+(ch.finish_reason === "length" ? ": the model ran out of tokens before it could reply" : "")+")";
+  }catch(e){ return "ERROR: "+e.message; }
+}
+let running = false, lockTimer = null;
+function lockRun(){ store.set("aib-lock", String(Date.now() + COOLDOWN*1000)); tick(); }
+function tick(){
+  clearInterval(lockTimer);
+  const f = () => {
+    const left = Math.ceil(((+store.get("aib-lock")||0) - Date.now())/1000);
+    if(left > 0 || running){ $("runb").disabled = true; $("runb").textContent = left > 0 ? "Run again in "+left+"s" : "Running…"; }
+    else { $("runb").disabled = false; $("runb").textContent = "Run"; clearInterval(lockTimer); }
+  };
+  f(); lockTimer = setInterval(f, 500);
+}
+async function run(){
+  const prompt = $("prompt").value.trim(), temp = LABS[S.lab].temp, reps = +$("reps").value;
+  const pe = predEls(), ins = inputEls().map((el,i) => ({inp:el.value.trim(), pred:pe[i].value.trim()})).filter(r => r.inp);
+  if(!prompt || !ins.length){ $("status").textContent = "Build or write a system prompt, and add at least one input."; return; }
+  collect(); running = true; lockRun(); $("status").textContent = "Running…";
+  const head = "<tr><th>Input</th><th>Run</th><th>Answer</th></tr>"; let rows = "";
+  $("out").innerHTML = head;
+  try{
+    for(const {inp, pred} of ins) for(let k = 1; k <= reps; k++){
+      const got = await llm(prompt, inp, temp);
+      rows += "<tr><td>"+esc(inp)+"</td><td>"+k+"</td><td>"+esc(got)+"</td></tr>";
+      $("out").innerHTML = head + rows;
+      S.log.push({lab:S.lab, temp, pred, inp, run:k, got, prompt}); await sleep(PAUSE);
+    }
+  } finally {
+    predEls().forEach(p => p.value = ""); collect(); $("status").textContent = "Done. Use the wait to write what you noticed and your next predictions."; save(); renderLog(); running = false;
+  }
+}
+
+// ── Export ────────────────────────────────────────────────
+function download(name, text, type){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+const fname = () => (who || "Student").replace(/\s+/g,"-");
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  collect(); let b = "";
+  for(const k in LABS){
+    const L = LABS[k], rows = S.log.filter(r => r.lab === k), note = S.notes[k] || "", st = S.stretch[k] || "", ed = S.edits[k], I = S.int;
+    const iHas = L.int && (I.who || I.notes || I.sort || (I.q||[]).some(Boolean));
+    const sHas = ed && ed.f && FIELDS.some(([key]) => ed.f[key] && ed.f[key].trim());
+    if(!rows.length && !note && !st && !iHas && !sHas) continue;
+    b += "<h2>"+esc(L.t)+"</h2>";
+    if(iHas) b += "<p><b>Stakeholder:</b> "+esc(I.who||"")+"</p><p><b>Why I chose them:</b> "+esc(I.why||"")+"</p><p><b>My questions:</b></p><ol>"+(I.q||[]).filter(Boolean).map(q => "<li>"+esc(q)+"</li>").join("")+"</ol><p><b>What they told me:</b> "+esc(I.notes||"")+"</p><p><b>My sorting or deciding job:</b> "+esc(I.sort||"")+"</p>";
+    if(sHas) b += "<p><b>My user story:</b></p><ul>"+FIELDS.map(([key,,lab]) => "<li><b>"+lab+":</b> "+esc(ed.f[key])+"</li>").join("")+"</ul>";
+    if(rows.length) b += "<p><b>Prompt:</b></p><p style='white-space:pre-wrap'>"+esc(rows[rows.length-1].prompt)+"</p><table border='1' cellpadding='4' style='border-collapse:collapse'><tr><th>Temp</th><th>Predicted</th><th>Input</th><th>Run</th><th>Answer</th></tr>" +
+      rows.map(r => "<tr><td>"+r.temp+"</td><td>"+esc(r.pred||"")+"</td><td>"+esc(r.inp)+"</td><td>"+r.run+"</td><td>"+esc(r.got)+"</td></tr>").join("") + "</table>";
+    if(note) b += "<p><b>What I noticed:</b> "+esc(note)+"</p>";
+    if(st) b += "<p><b>Stretch:</b> "+esc(L.stretch)+"</p><p><b>My stretch response:</b> "+esc(st)+"</p>";
+  }
+  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  download(fname()+"-W2L1.doc", "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W2L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W2L1 work</h1>"+b+"</body></html>", "application/msword");
+}
+
+// ── Start up ──────────────────────────────────────────────
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+showWho(); if(who) $("modal").classList.add("hidden");
+render(); tick();
+document.querySelectorAll(".cdn").forEach(e => e.textContent = COOLDOWN);
+</script>
+</body>
+</html>
