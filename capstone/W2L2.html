@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W2L2: Test it and judge it</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 'Segoe UI',Tahoma,sans-serif}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}
+.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;grid-template-columns:1fr;gap:14px;padding:14px;max-width:1100px;margin:0 auto}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.brief{border-left:4px solid var(--ac)}
+section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}
+section.stretch h2{color:var(--warn)}
+p{margin:4px 0}.hint{font-size:12px;color:var(--mut)}
+.card{background:#1b2321;border:1px solid #2f4a44;border-radius:6px;padding:10px 12px;margin:8px 0}
+.card.warn{background:#2a2310;border-color:#6b5514}
+.card h3{font-size:13px;margin:0 0 4px;color:var(--ac)}.card.warn h3{color:var(--warn)}
+label{display:block;font-size:12px;color:var(--mut);margin:12px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input[type=checkbox]{width:auto;margin-right:8px}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:64px}
+textarea[readonly],input[readonly],select:disabled{background:#171717;color:#9aa;border-style:dashed}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button:disabled{background:#555;color:#999;cursor:not-allowed}
+button.go{background:var(--ac);color:#1e1e1e}button.go:hover{background:#3ab89f}
+button.alt{background:#444}button.alt:hover{background:#555}
+.irow{display:grid;grid-template-columns:1fr 1fr;gap:6px}@media(max-width:600px){.irow{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:12px;font-family:Consolas,monospace}
+th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--bd);padding:4px}
+td{padding:5px 4px;border-bottom:1px solid #2e2e2e;vertical-align:top;white-space:pre-wrap}
+td select{padding:3px;font-size:12px}
+.wrap{overflow-x:auto}
+.ok{color:var(--ac)}.bad{color:#f05050}
+pre{background:#171717;border:1px solid var(--bd);border-radius:4px;padding:8px;font-size:12px;white-space:pre-wrap;margin:6px 0}
+ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}
+#status{font-size:12px;color:var(--warn);min-height:18px;margin-top:6px}
+details{margin-top:8px}summary{cursor:pointer;color:var(--mut);font-size:12px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
+</style>
+</head>
+<body>
+
+<div id="modal"><div class="mbox">
+  <h2>Welcome to the AI App Lab</h2>
+  <p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+  <input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()">
+  <div id="merr"></div><button onclick="setName()">Start</button>
+</div></div>
+
+<header>
+  <h1>W2L2</h1><span class="who" id="who"></span>
+  <div class="bar">
+    <select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+    <button class="go" onclick="exportDoc()">Export my work</button>
+  </div>
+</header>
+
+<main>
+<section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
+
+<section id="storysec">
+  <h2>The story</h2>
+  <div id="pickbox">
+    <div class="card warn"><h3>Important</h3><p>Your final summative app <b>must</b> be your own solution to your own user's problem. It can not be one of the apps taught in class: Bin Buddy, Zombie Advisor, the Christmas party app or the password checker.</p></div>
+    <label for="pick">Which app are you testing in this lab?</label>
+    <select id="pick" onchange="collect()"><option value="pw">The password checker (taught in class)</option><option value="own">My own app, for my own user</option></select>
+    <button class="alt" onclick="loadW2L1()" style="margin-top:8px">Load my story and prompt from W2L1</button>
+    <p class="hint">This only works on the same browser and website you used for W2L1. Otherwise, type your story below.</p>
+  </div>
+  <label for="fwho">Who</label><input id="fwho">
+  <label for="fwhat">What</label><input id="fwhat">
+  <label for="fwhy">Why</label><input id="fwhy">
+  <label for="fa1">Acceptance criterion 1</label><input id="fa1">
+  <label for="fa2">Acceptance criterion 2</label><input id="fa2">
+  <label for="fcats">Answer categories, separated by commas (they fill the Expected lists in your tests)</label><input id="fcats">
+</section>
+
+<section id="appsec">
+  <h2>Prompt and tests</h2>
+  <label for="prompt">System prompt</label>
+  <textarea id="prompt" style="min-height:150px"></textarea>
+  <div class="hint" id="plock"></div>
+  <label>Five tests. Each test is an input and the answer you expect. Expected answers come from your acceptance criteria.</label>
+  <div class="wrap"><table id="ttab"></table></div>
+  <p class="hint">A test passes if the answer starts with the expected category. A fail gets a suggested reason, which you can change.</p>
+  <div id="runhost1"></div>
+  <div id="score" style="margin-top:8px;font-weight:700"></div>
+</section>
+
+<section id="evalsec" style="display:none">
+  <h2>Pat's two possible solutions</h2>
+  <div class="card"><h3>The criteria (fixed for this lab)</h3>
+    <div class="wrap"><table id="crit"></table></div></div>
+  <details><summary>Solution A: the AI app (its prompt)</summary><pre id="aiprompt"></pre></details>
+  <details><summary>Solution B: the code checker, no AI (its code)</summary><pre id="rulecode"></pre></details>
+  <div id="runhost2" style="margin-top:10px"></div>
+  <div class="wrap" style="margin-top:8px"><table id="etab"></table></div>
+  <label for="cb1">Which solution works better for Pat? Use the criteria table as your evidence.</label>
+  <textarea id="cb1" style="min-height:90px"></textarea>
+  <label for="cb2">Name one thing the AI version does better and one thing the code version does better.</label>
+  <textarea id="cb2" style="min-height:90px"></textarea>
+</section>
+
+<section id="chksec" style="display:none">
+  <h2>Checklist (updates as you work)</h2>
+  <ul class="chk" id="chk"></ul>
+  <h2 style="margin-top:14px">Your iteration log</h2>
+  <p class="hint">Every time you run the tests, the page records a line. Change your prompt, run again, and the prompt version goes up. Write what you changed and why.</p>
+  <div class="wrap"><table id="iter"></table></div>
+</section>
+
+<section id="notesec">
+  <label for="notes" style="margin-top:0">What did you notice? (goes in your export)</label>
+  <textarea id="notes"></textarea>
+</section>
+
+<section class="stretch"><h2>Stretch (optional)</h2><div id="lstretch"></div><label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
+
+<div id="runrow">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="runb" onclick="run()">Run tests</button><span id="status" aria-live="polite"></span></div>
+  <p class="hint">The Run button locks for <span class="cdn"></span> seconds after every click to protect the shared key. If a reply comes back blank, wait, then run again.</p>
+</div>
+</main>
+
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+const MAX_TOKENS = 88, PAUSE = 400, COOLDOWN = 45, TEMP = 0.1;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+
+const FIELDS = [["who","fwho","Who"],["what","fwhat","What"],["why","fwhy","Why"],["a1","fa1","Criterion 1"],["a2","fa2","Criterion 2"],["cats","fcats","Categories"]];
+const EMPTY = {who:"",what:"",why:"",a1:"",a2:"",cats:""};
+const TAGS = ["Wrong answer","Wrong format","Too long","Made something up"];
+const WAYOUT = /UNSURE|CHECK|ASK|NOT |OTHER|NEITHER/;
+
+const XMAS = "You are a helper app.\nWho you are helping: an introvert who finds parties stressful and is not sure what is appropriate to wear or bring\nWhat they want: to type in something I plan to wear, bring or do, and be told YES, NO or CHECK WITH ORGANISERS\nWhy it matters: I can arrive feeling confident without having to ask strangers\nThe user types: one item or outfit piece for a Christmas-themed party.\nReply with exactly one of: YES, NO or CHECK WITH ORGANISERS. Then give a reason of ten words or fewer.\nRules:\n- Clothing or accessories in red, green, gold, silver or white are YES.\n- Food, drink, gifts and anything the host might have rules about are CHECK WITH ORGANISERS.";
+const AIP = "You are a helper app.\nWho you are helping: a retired grandmother who banks online\nWhat they want: to try a made-up password and get a short, plain-English answer\nWhy it matters: she stops reusing her dog's name\nThe user types: one made-up password.\nReply with exactly one of: STRONG, WEAK or UNSURE. Then give a reason of ten words or fewer.\nRules:\n- A password with fewer than 12 characters is WEAK.\n- If the input is not a password, reply UNSURE.";
+function ruleCheck(p){
+  const t = p.trim();
+  if(!t || t.split(/\s+/).length > 3) return "UNSURE: that does not look like a password.";
+  if(t.length < 12) return "WEAK: it needs at least 12 characters.";
+  if(!/\d/.test(t)) return "WEAK: it needs a number.";
+  return "STRONG: long enough and it has a number.";
+}
+const ET = [["rover","WEAK"],["Rover2020","WEAK"],["BlueKettle!47Sunrise","STRONG"],["blue kettle sunrise","WEAK"],["k9#Vq2!tLm8x","STRONG"],["what is the weather today","UNSURE"]];
+const CR = [["C1","A password with fewer than 12 characters, or with no number, is WEAK.","tests",[0,1,3]],
+            ["C2","A password with 12 or more characters and a number is STRONG.","tests",[2,4]],
+            ["C3","Input that is not a password gets UNSURE.","tests",[5]],
+            ["C4","The reason is ten words or fewer.","tests",null],
+            ["C5","The reason uses plain words that Pat would understand.","a person",null]];
+
+const LABS = {
+ a:{t:"W2L2a: How tests work (worked example, locked)", locked:true,
+    f:{who:"an introvert who finds parties stressful and is not sure what is appropriate to wear or bring", what:"to type in something I plan to wear, bring or do, and be told YES, NO or CHECK WITH ORGANISERS", why:"I can arrive feeling confident without having to ask strangers", a1:"Clothing or accessories in red, green, gold, silver or white are YES.", a2:"Food, drink, gifts and anything the host might have rules about are CHECK WITH ORGANISERS.", cats:"YES, NO, CHECK WITH ORGANISERS"},
+    prompt:XMAS, tests:[["red jumper","YES"],["gold earrings","YES"],["fruit cake","CHECK WITH ORGANISERS"],["bottle of wine","CHECK WITH ORGANISERS"],["black leather jacket","NO"]],
+    brief:"<p>How do you know your app works? You <b>test</b> it. A test is an <b>input</b> and the <b>answer you expect</b>, and the expected answer comes from an acceptance criterion in the user story. The page runs the test, and marks it PASS or FAIL.</p><p>This is the Christmas party app from W2L1, with five tests.</p><p><b>Your mission:</b> run the tests. For each fail, read the suggested reason and change it if you disagree. The four reasons are: <b>wrong answer</b>, <b>wrong format</b>, <b>too long</b> and <b>made something up</b>. Then look at test 5. Is the prompt at fault, or is something missing from the story?</p>",
+    stretch:"Write a sixth test that you think this app will fail, and say which criterion it checks."},
+ b:{t:"W2L2b: Practice evaluation, two solutions for Pat", eval:true, noprompt:true,
+    brief:"<p>Pat now has two possible solutions. <b>Solution A</b> is an AI app. <b>Solution B</b> is a plain code checker with no AI. You will judge both against the same five criteria. Each criterion is either <b>checked by tests</b> or <b>judged by a person</b>.</p><p>In your assignment you will compare your own app with an existing solution in the same way, so this is practice.</p><p><b>Your mission:</b></p><p>1. Read the criteria, then press Run tests. The page tests both solutions on six passwords.<br>2. Read the answers and judge criterion C5 yourself, for both solutions.<br>3. Write which solution works better for Pat, and what each does better.</p><p class='hint'>Use made-up passwords only. Never type a real one into an app.</p>",
+    stretch:"Write a password that one of the two solutions rates wrongly. Which solution gets it wrong, and why?"},
+ c:{t:"W2L2c: Your first prompt and five tests (formative)", own:true,
+    brief:"<p>This is your formative submission: a first prompt and five tests, then at least one improvement.</p><p><b>Your mission:</b></p><p>1. Choose the app you are testing. The password checker is fine for practice, but your final app must be your own.<br>2. Load your story and prompt from W2L1, or type them in.<br>3. Write five tests: an input and an expected answer for each. Cover every category, and include one test for your way out.<br>4. Press Run tests. Read the fails and their reasons.<br>5. Change one thing in your prompt and run again. Write what you changed and why in the log.<br>6. Work down the checklist until every line has a tick, then use Export my work.</p>",
+    stretch:"Pick your weakest test and explain what is wrong with it. How would you write a better one?"}
+};
+
+// ── State ─────────────────────────────────────────────────
+let who = store.get("aib-name") || "";
+let S = {lab:"a", edits:{}, tests:{}, res:{}, iter:{}, notes:{}, stretch:{}, ev:{}, manual:[false,false]};
+try{ const s = JSON.parse(store.get("aib-W2L2")); if(s && s.lab) S = s; }catch(e){}
+["edits","tests","res","iter","notes","stretch","ev"].forEach(k => S[k] = S[k] || {}); S.manual = S.manual || [false,false];
+const save = () => store.set("aib-W2L2", JSON.stringify(S));
+const readF = () => Object.fromEntries(FIELDS.map(([k,id]) => [k, $(id).value]));
+const catList = s => String(s || "").split(",").map(x => x.trim().toUpperCase()).filter(Boolean);
+const newTests = () => [0,1,2,3,4].map(() => ({i:"", e:""}));
+
+// ── Judging ───────────────────────────────────────────────
+const UPR = s => String(s || "").toUpperCase().replace(/^[^A-Z]+/, "");
+const starts = (got, c) => { const u = UPR(got); return u.startsWith(c) && !/[A-Z]/.test(u.charAt(c.length) || " "); };
+function judge(got, exp, cats){
+  if(/^(ERROR|\(No answer)/.test(got)) return {res:"BLANK", tag:""};
+  if(starts(got, exp)) return {res:"PASS", tag:""};
+  return {res:"FAIL", tag: cats.some(c => c !== exp && starts(got, c)) ? "Wrong answer" : "Wrong format"};
+}
+function reasonOK(got, cats){
+  const u = String(got).trim(), c = cats.find(x => starts(u, x)); if(!c) return false;
+  const rest = u.slice(u.toUpperCase().indexOf(c) + c.length).replace(/^[\s:,.\-–—]+/, "");
+  const n = rest ? rest.split(/\s+/).length : 0; return n > 0 && n <= 10;
+}
+
+// ── Name ──────────────────────────────────────────────────
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+
+// ── Tests table ───────────────────────────────────────────
+const curCats = () => LABS[S.lab].locked ? catList(LABS[S.lab].f.cats) : catList($("fcats").value);
+function getTests(){
+  if(LABS[S.lab].locked) return LABS.a.tests.map(([i,e]) => ({i,e}));
+  return S.tests.c = S.tests.c || newTests();
+}
+function renderTests(){
+  const L = LABS[S.lab], T = getTests(), R = S.res[S.lab] || [], cats = curCats();
+  $("ttab").innerHTML = "<tr><th>#</th><th>Input</th><th>Expected</th><th>Answer</th><th>Result</th><th>If it failed, why?</th></tr>" + T.map((t,n) => {
+    const r = R[n] || {}, o = !t.e || cats.includes(t.e) ? cats : [t.e, ...cats];
+    return '<tr class="tr"><td>'+(n+1)+'</td><td><input class="ti" aria-label="Test '+(n+1)+' input" value="'+esc(t.i)+'"'+(L.locked?" readonly":"")+'></td>'+
+      '<td><select class="te" aria-label="Test '+(n+1)+' expected answer"'+(L.locked?" disabled":"")+'><option value="">Choose…</option>'+o.map(c => '<option'+(c===t.e?" selected":"")+'>'+esc(c)+'</option>').join("")+'</select></td>'+
+      '<td>'+esc(r.got||"")+'</td><td class="'+(r.res==="PASS"?"ok":r.res==="FAIL"?"bad":"")+'">'+(r.res==="PASS"?"✔ PASS":r.res==="FAIL"?"✘ FAIL":esc(r.res||""))+'</td>'+
+      '<td>'+(r.res==="FAIL" ? '<select aria-label="Reason for fail '+(n+1)+'" onchange="setTag('+n+',this.value)">'+TAGS.map(g => '<option'+(g===r.tag?" selected":"")+'>'+g+'</option>').join("")+'</select>' : "")+'</td></tr>';
+  }).join("");
+  const done = R.filter(r => r && r.res && r.res !== "BLANK"), p = done.filter(r => r.res === "PASS").length, b = R.filter(r => r && r.res === "BLANK").length;
+  $("score").textContent = R.length ? "Score: "+p+" of "+done.length+" passed"+(b ? " ("+b+" blank, run again)" : "") : "";
+}
+function readTests(){ return [...document.querySelectorAll(".tr")].map(tr => ({i:tr.querySelector(".ti").value, e:tr.querySelector(".te").value})); }
+function setTag(n, v){ if(S.res[S.lab] && S.res[S.lab][n]){ S.res[S.lab][n].tag = v; save(); } }
+
+// ── Own-app extras ────────────────────────────────────────
+function loadW2L1(){
+  let s = null; try{ s = JSON.parse(store.get("aib-W2L1")); }catch(e){}
+  const e = s && s.edits && s.edits[$("pick").value === "pw" ? "b" : "c"];
+  if(!e || !e.f){ $("status").textContent = "Nothing saved in W2L1 for this choice on this browser. Finish it there, or type your story here."; return; }
+  FIELDS.forEach(([k,id]) => { $(id).value = e.f[k] || ""; }); $("prompt").value = e.prompt || ""; $("status").textContent = "Loaded. Check it over, then write your tests."; collect(); renderTests();
+}
+function renderChecklist(){
+  const f = readF(), T = (S.tests.c || []).filter(t => t.i.trim() && t.e), cats = catList(f.cats), it = S.iter.c || [];
+  const items = [
+    ["Story has a who, a what and a why", f.who.trim() && f.what.trim() && f.why.trim(), "Fill in all three parts."],
+    ["Two acceptance criteria are written", f.a1.trim() && f.a2.trim(), "Write two criteria that each give a clear yes or no from one test."],
+    ["The categories include a way out (such as UNSURE or CHECK)", cats.some(c => WAYOUT.test(c)), "Add a category for when the app does not know."],
+    ["Five tests are written", T.length >= 5, "Give every test an input and an expected answer."],
+    ["The tests cover every category", cats.length > 0 && cats.every(c => T.some(t => t.e === c)), "Add a test for each category that has none."],
+    ["At least one test checks the way out", T.some(t => WAYOUT.test(t.e)), "Add a test that should get your way-out answer."],
+    ["The tests have been run", it.length > 0, "Press Run tests."],
+    ["The prompt was changed and run again (version 2 or higher)", it.some(r => r.v >= 2), "Change one thing in the prompt, then run again."]];
+  $("chk").innerHTML = items.map(([t,ok,h]) => "<li>"+(ok ? '<span class="ok">✔</span> ' : '<span class="bad">✘</span> ')+esc(t)+(ok ? "" : ' <span class="hint">'+esc(h)+"</span>")+"</li>").join("") +
+    ["Every criterion is checked by at least one test, or I have noted that a person must judge it.","I understand that my final app must be my own solution, not one taught in class."].map((t,n) => '<li><label style="margin:0;color:inherit;font-size:14px"><input type="checkbox" class="mk" data-n="'+n+'"'+(S.manual[n]?" checked":"")+'>'+esc(t)+"</label></li>").join("");
+}
+function renderIter(){
+  const it = S.iter.c || [];
+  $("iter").innerHTML = "<tr><th>Run</th><th>Prompt version</th><th>Score</th><th>What I changed and why</th></tr>" + it.map((r,n) => "<tr><td>"+(n+1)+"</td><td>"+r.v+"</td><td>"+esc(r.score)+'</td><td><input class="in" data-n="'+n+'" value="'+esc(r.note)+'"></td></tr>').join("");
+}
+
+// ── Evaluation lab (b) ────────────────────────────────────
+const ECATS = ["STRONG","WEAK","UNSURE"];
+function critRes(arr, idxs, n){
+  if(!arr) return "";
+  if(idxs){ if(idxs.some(i => !arr[i] || arr[i].res === "BLANK")) return "RUN AGAIN"; const f = idxs.filter(i => arr[i].res === "FAIL").length; return f ? "✘ FAIL ("+(idxs.length-f)+" of "+idxs.length+" tests)" : "✔ PASS ("+idxs.length+" of "+idxs.length+" tests)"; }
+  if(arr.some(a => !a || a.res === "BLANK")) return "RUN AGAIN";
+  const bad = arr.filter(a => !reasonOK(a.got, ECATS)).length; return bad ? "✘ FAIL ("+bad+" answers)" : "✔ PASS (all answers)";
+}
+function renderEval(){
+  $("aiprompt").textContent = AIP; $("rulecode").textContent = ruleCheck.toString();
+  const ev = S.ev, sel = k => '<select class="c5" data-k="'+k+'" aria-label="C5 for '+(k==="ai"?"solution A":"solution B")+'">'+["Choose…","Yes","Partly","No"].map(o => '<option'+(o===(ev["c5"+k]||"Choose…")?" selected":"")+'>'+o+'</option>').join("")+'</select>';
+  $("crit").innerHTML = "<tr><th></th><th>Criterion</th><th>How it is judged</th><th>A (AI)</th><th>B (code)</th></tr>" + CR.map(([id,t,how,idx]) =>
+    "<tr><td>"+id+"</td><td>"+esc(t)+"</td><td>"+how+"</td>"+(how === "a person" ? "<td>"+sel("ai")+"</td><td>"+sel("rule")+"</td>" : "<td>"+esc(critRes(ev.ai, idx))+"</td><td>"+esc(critRes(ev.rule, idx))+"</td>")+"</tr>").join("");
+  const c = (a, exp) => !a ? "" : a.res === "BLANK" ? esc(a.got) : '<span class="'+(a.res==="PASS"?"ok":"bad")+'">'+(a.res==="PASS"?"✔ ":"✘ ")+esc(a.got)+"</span>";
+  $("etab").innerHTML = "<tr><th>#</th><th>Input</th><th>Expected</th><th>A answered</th><th>B answered</th></tr>" + ET.map(([i,e],n) => "<tr><td>"+(n+1)+"</td><td>"+esc(i)+"</td><td>"+e+"</td><td>"+c(ev.ai && ev.ai[n])+"</td><td>"+c(ev.rule && ev.rule[n])+"</td></tr>").join("");
+  $("cb1").value = ev.cb1 || ""; $("cb2").value = ev.cb2 || "";
+}
+
+// ── Lab switching ─────────────────────────────────────────
+function collect(){
+  const L = LABS[S.lab];
+  if(L.own){ S.edits.c = {f:readF(), prompt:$("prompt").value, pick:$("pick").value}; S.tests.c = readTests(); }
+  if(L.eval){ S.ev.cb1 = $("cb1").value; S.ev.cb2 = $("cb2").value; } else S.notes[S.lab] = $("notes").value;
+  S.stretch[S.lab] = $("snote").value; save(); if(L.own) renderChecklist();
+}
+function render(){
+  const k = S.lab, L = LABS[k], e = S.edits[k] || {};
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief; $("lstretch").textContent = L.stretch; $("snote").value = S.stretch[k] || "";
+  const t = (id, on) => $(id).style.display = on ? "" : "none";
+  t("storysec", !L.eval); t("pickbox", !!L.own); t("appsec", !L.eval); t("evalsec", !!L.eval); t("chksec", !!L.own); t("notesec", !L.eval);
+  $(L.eval ? "runhost2" : "runhost1").appendChild($("runrow")); $("status").textContent = "";
+  if(L.eval){ renderEval(); return; }
+  const f = L.locked ? L.f : (e.f || EMPTY);
+  FIELDS.forEach(([key,id]) => { $(id).value = f[key]; $(id).readOnly = !!L.locked; });
+  $("pick").value = e.pick || "pw";
+  $("prompt").value = L.locked ? L.prompt : (e.prompt || ""); $("prompt").readOnly = !!L.locked; $("plock").textContent = L.locked ? "Locked in this lab. Read it, then run the tests." : "";
+  $("notes").value = S.notes[k] || "";
+  renderTests(); if(L.own){ renderChecklist(); renderIter(); }
+}
+function switchLab(k){ collect(); S.lab = k; save(); render(); }
+document.addEventListener("input", e => {
+  const t = e.target, c = t.classList;
+  if(c.contains("in")){ S.iter.c[+t.dataset.n].note = t.value; save(); return; }
+  if(c.contains("mk")){ S.manual[+t.dataset.n] = t.checked; save(); return; }
+  if(c.contains("c5")){ S.ev["c5"+t.dataset.k] = t.value; save(); return; }
+  if(["prompt","notes","snote","cb1","cb2","pick"].includes(t.id) || FIELDS.some(x => x[1] === t.id) || c.contains("ti") || c.contains("te")) collect();
+});
+$("fcats").addEventListener("change", () => { if(LABS[S.lab].own){ collect(); renderTests(); renderChecklist(); } });
+
+// ── Running ───────────────────────────────────────────────
+async function llm(system, input){
+  try{
+    const r = await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:[{role:"system",content:system},{role:"user",content:input}], model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:TEMP})});
+    if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
+    const ch = (await r.json()).choices[0], t = (ch.message.content || "").trim();
+    return t || "(No answer came back"+(ch.finish_reason === "length" ? ": the model ran out of tokens before it could reply" : "")+")";
+  }catch(e){ return "ERROR: "+e.message; }
+}
+let running = false, lockTimer = null;
+function lockRun(){ store.set("aib-lock", String(Date.now() + COOLDOWN*1000)); tick(); }
+function tick(){
+  clearInterval(lockTimer);
+  const f = () => {
+    const left = Math.ceil(((+store.get("aib-lock")||0) - Date.now())/1000);
+    if(left > 0 || running){ $("runb").disabled = true; $("runb").textContent = left > 0 ? "Run again in "+left+"s" : "Running…"; }
+    else { $("runb").disabled = false; $("runb").textContent = "Run tests"; clearInterval(lockTimer); }
+  };
+  f(); lockTimer = setInterval(f, 500);
+}
+async function run(){ return LABS[S.lab].eval ? runEval() : runTests(); }
+async function runTests(){
+  collect(); const prompt = $("prompt").value.trim(), T = getTests(), cats = curCats();
+  if(!prompt){ $("status").textContent = "Write or load a system prompt first."; return; }
+  if(T.some(t => !t.i.trim() || !t.e)){ $("status").textContent = "Give every test an input and an expected answer."; return; }
+  running = true; lockRun(); S.res[S.lab] = T.map(() => ({}));
+  try{
+    for(let n = 0; n < T.length; n++){
+      $("status").textContent = "Running test "+(n+1)+" of "+T.length+"…";
+      const got = await llm(prompt, T[n].i.trim()); S.res[S.lab][n] = {got, ...judge(got, T[n].e, cats)}; renderTests(); await sleep(PAUSE);
+    }
+    const R = S.res[S.lab], ok = R.filter(r => r.res !== "BLANK"), p = ok.filter(r => r.res === "PASS").length;
+    if(S.lab === "c"){
+      const it = S.iter.c = S.iter.c || [], last = it[it.length-1], v = !last ? 1 : last.prompt === prompt ? last.v : last.v + 1;
+      it.push({v, score:p+" of "+ok.length, prompt, note:"", tests:T.map((t,n) => ({i:t.i, e:t.e, got:R[n].got, res:R[n].res}))}); renderIter(); renderChecklist();
+    }
+    $("status").textContent = "Done.";
+  } finally { save(); running = false; }
+}
+async function runEval(){
+  running = true; lockRun(); S.ev.ai = []; S.ev.rule = ET.map(([i,e]) => { const got = ruleCheck(i); return {got, ...judge(got, e, ECATS)}; }); renderEval();
+  try{
+    for(let n = 0; n < ET.length; n++){
+      $("status").textContent = "Running test "+(n+1)+" of "+ET.length+"…";
+      const got = await llm(AIP, ET[n][0]); S.ev.ai[n] = {got, ...judge(got, ET[n][1], ECATS)}; renderEval(); await sleep(PAUSE);
+    }
+    $("status").textContent = "Done. Now judge C5 and write your comparison.";
+  } finally { save(); running = false; }
+}
+
+// ── Export ────────────────────────────────────────────────
+function download(name, text, type){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+const fname = () => (who || "Student").replace(/\s+/g,"-");
+const TB = "<table border='1' cellpadding='4' style='border-collapse:collapse'>";
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  collect(); let b = "";
+  for(const k in LABS){
+    const L = LABS[k], R = S.res[k] || [], note = S.notes[k] || "", st = S.stretch[k] || "", ev = S.ev, ed = S.edits[k];
+    const has = L.eval ? (ev.ai || ev.cb1 || ev.cb2) : (R.length || note || (ed && ed.f && FIELDS.some(([x]) => ed.f[x].trim())));
+    if(!has && !st) continue;
+    b += "<h2>"+esc(L.t)+"</h2>";
+    if(L.eval && (ev.ai || ev.cb1 || ev.cb2)){
+      b += "<p><b>Criteria results</b></p>"+TB+"<tr><th>Criterion</th><th>How judged</th><th>A (AI)</th><th>B (code)</th></tr>"+CR.map(([id,t,how,idx]) => "<tr><td>"+id+": "+esc(t)+"</td><td>"+how+"</td><td>"+esc(how==="a person" ? (ev.c5ai||"") : critRes(ev.ai, idx))+"</td><td>"+esc(how==="a person" ? (ev.c5rule||"") : critRes(ev.rule, idx))+"</td></tr>").join("")+"</table>";
+      if(ev.ai) b += "<p><b>Test answers</b></p>"+TB+"<tr><th>Input</th><th>Expected</th><th>A answered</th><th>B answered</th></tr>"+ET.map(([i,e],n) => "<tr><td>"+esc(i)+"</td><td>"+e+"</td><td>"+esc((ev.ai[n]||{}).got||"")+" ("+((ev.ai[n]||{}).res||"")+")</td><td>"+esc(((ev.rule||[])[n]||{}).got||"")+" ("+(((ev.rule||[])[n]||{}).res||"")+")</td></tr>").join("")+"</table>";
+      b += "<p><b>Which works better for Pat:</b> "+esc(ev.cb1||"")+"</p><p><b>What each does better:</b> "+esc(ev.cb2||"")+"</p>";
+    } else if(!L.eval){
+      if(ed && ed.f && FIELDS.some(([x]) => ed.f[x].trim())) b += "<p><b>My story</b> (testing: "+(ed.pick === "own" ? "my own app" : "the password checker")+")</p><ul>"+FIELDS.map(([x,,lab]) => "<li><b>"+lab+":</b> "+esc(ed.f[x])+"</li>").join("")+"</ul><p><b>Prompt:</b></p><p style='white-space:pre-wrap'>"+esc(ed.prompt||"")+"</p>";
+      if(R.length){ const T = k === "a" ? LABS.a.tests.map(([i,e]) => ({i,e})) : (S.tests.c || []);
+        b += "<p><b>Latest test run</b></p>"+TB+"<tr><th>#</th><th>Input</th><th>Expected</th><th>Answer</th><th>Result</th><th>Reason</th></tr>"+R.map((r,n) => "<tr><td>"+(n+1)+"</td><td>"+esc((T[n]||{}).i)+"</td><td>"+esc((T[n]||{}).e)+"</td><td>"+esc(r.got)+"</td><td>"+esc(r.res)+"</td><td>"+esc(r.tag||"")+"</td></tr>").join("")+"</table>"; }
+      if(k === "c" && (S.iter.c||[]).length) b += "<p><b>Iteration log</b></p>"+TB+"<tr><th>Run</th><th>Prompt version</th><th>Score</th><th>What I changed and why</th></tr>"+S.iter.c.map((r,n) => "<tr><td>"+(n+1)+"</td><td>"+r.v+"</td><td>"+esc(r.score)+"</td><td>"+esc(r.note)+"</td></tr>").join("")+"</table>";
+      if(note) b += "<p><b>What I noticed:</b> "+esc(note)+"</p>";
+    }
+    if(st) b += "<p><b>Stretch:</b> "+esc(L.stretch)+"</p><p><b>My stretch response:</b> "+esc(st)+"</p>";
+  }
+  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  download(fname()+"-W2L2.doc", "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W2L2</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W2L2 work</h1>"+b+"</body></html>", "application/msword");
+}
+
+// ── Start up ──────────────────────────────────────────────
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+showWho(); if(who) $("modal").classList.add("hidden");
+render(); tick();
+document.querySelectorAll(".cdn").forEach(e => e.textContent = COOLDOWN);
+</script>
+</body>
+</html>
