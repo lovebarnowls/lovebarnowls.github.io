@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W4L1: Test it, break it, fix it</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 'Segoe UI',Tahoma,sans-serif}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;gap:14px;padding:14px;max-width:1100px;margin:0 auto}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.brief{border-left:4px solid var(--ac)}section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}section.stretch h2{color:var(--warn)}
+p{margin:4px 0;max-width:75ch}.hint{font-size:12px;color:var(--mut)}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:70px}
+textarea[readonly],input[readonly],select:disabled{background:#171717;color:#9aa;border-style:dashed}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button:disabled{background:#555;color:#999;cursor:not-allowed}
+button.go{background:var(--ac);color:#1e1e1e}button.go:disabled{background:#555;color:#999}button.alt{background:#444}button.alt:hover{background:#555}
+pre{background:#171717;border:1px solid var(--bd);border-radius:4px;padding:8px;font-size:12px;white-space:pre-wrap}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;font-family:Consolas,monospace}
+th{text-align:left;color:var(--mut);border-bottom:1px solid var(--bd);padding:4px}td{padding:5px 4px;border-bottom:1px solid #2e2e2e;vertical-align:top;white-space:pre-wrap}
+td select{padding:3px;font-size:12px}tr.nx td{background:#1b2321}
+ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}.ok{color:var(--ac)}.bad{color:#f05050}
+.warnbox{border-left:4px solid var(--rd);background:#2a1515;border-color:#5a2a2a;color:#ffb4b4}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}#st{font-size:12px;color:var(--warn)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
+</style>
+</head>
+<body>
+<div id="modal"><div class="mbox"><h2>Welcome to the AI App Lab</h2>
+<p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+<input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()"><div id="merr"></div><button onclick="setName()">Start</button></div></div>
+
+<header><h1>W4L1</h1><span class="who" id="who"></span>
+<div class="bar"><select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+<button class="go" onclick="exportDoc()">Export my work</button></div></header>
+
+<main>
+<section class="warnbox" role="note"><b>THIS IS FOR FUN. DO NOT USE THE ANSWERS FOR REAL FOOD OR HEALTH DECISIONS, AS AIs CAN MAKE MISTAKES.</b></section>
+<section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
+
+<section data-lab="ac">
+<h2>Prompt and tests</h2>
+<div data-lab="c">
+<button class="alt" data-a="ld">Load my prompt and categories from W2L2</button>
+<label for="fc">Answer categories, separated by commas</label><input id="fc">
+<label for="wy">Which category is your way out (the answer for when the app does not know)?</label><select id="wy"></select>
+</div>
+<label for="prm">System prompt</label><textarea id="prm" style="min-height:170px" spellcheck="false"></textarea>
+<p class="hint" id="plock"></p>
+<label>Eight tests: five you can see, then three <b>hidden</b> tests. The run button does one test per click, and the hidden tests always run last.</label>
+<div class="wrap"><table id="ttab"></table></div>
+<div data-lab="c" class="row"><button class="alt" id="lkb" data-a="lk">Lock my hidden tests</button><span class="hint" id="hls"></span></div>
+<div id="score" style="margin-top:8px;font-weight:700"></div>
+<div class="row"><button class="go rb" id="runb" data-a="rn" data-l="Run">Run</button><span id="st" aria-live="polite"></span></div>
+<p class="hint">The run button locks for <span id="cdn"></span> seconds after every click to protect the shared key. If a reply comes back blank, wait, then click again: it tries the same test again. A test passes if the answer starts with the expected category.</p>
+</section>
+
+<section data-lab="a">
+<label for="na">Which hidden test came closest to failing, or failed? What does that tell you about the prompt?</label><textarea class="nt" id="na" data-k="a"></textarea>
+</section>
+
+<section data-lab="b">
+<h2>Attack menu</h2>
+<details><summary class="hint" style="cursor:pointer">The lunch app's prompt (locked)</summary><pre id="pp"></pre></details>
+<p class="hint">Each attack is an input the app was not designed for. Change the input if you have a better idea. Try one at a time, then say whether it broke the app. Use made-up or everyday inputs only.</p>
+<div class="wrap"><table id="atk"></table></div>
+<label for="nb1">Which attack broke the app most badly? Why do you think it did?</label><textarea class="nt" id="nb1" data-k="b1"></textarea>
+<label for="nb2">Write one rule you would add to the prompt to fix it.</label><textarea class="nt" id="nb2" data-k="b2"></textarea>
+<label for="nb3">Practice board: write one task you would add, and one risk you would add to a risk register (type, likelihood, impact), because of what you found.</label><textarea class="nt" id="nb3" data-k="b3"></textarea>
+</section>
+
+<section data-lab="c">
+<h2>Your iteration log</h2>
+<p class="hint">Every time all eight tests have been run, the page records a line. Change your prompt, run all eight again, and the prompt version goes up. Write what you changed and why.</p>
+<div class="wrap"><table id="iter"></table></div>
+<label for="nc1">Break it on purpose: what did you type to try to break your app, and what happened?</label><textarea class="nt" id="nc1" data-k="c1"></textarea>
+<label for="nc2">Your real project board and risk register (W3L1): which task did you move or add, and which risk did you add or change, because of your testing? Say why.</label><textarea class="nt" id="nc2" data-k="c2"></textarea>
+<label for="nc3">What did you notice?</label><textarea class="nt" id="nc3" data-k="c3"></textarea>
+<h2 style="margin-top:14px">Checklist</h2><ul class="chk" id="chk"></ul>
+</section>
+
+<section class="stretch"><h2>Stretch (optional)</h2><div id="lstretch"></div>
+<label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
+</main>
+
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+const MAX_TOKENS = 88, COOLDOWN = 45, TEMP = 0.1;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+const TAGS = ["Wrong answer","Wrong format","Too long","Made something up"];
+const CATS = ["HEALTHY","NOT HEALTHY","DEPENDS"];
+const P = ["You are a helper app.","Who you are helping: a Year 9 student who packs their own school lunch","What they want: to type in one lunch item and be told if it is a healthy choice","Why it matters: they pick better food without feeling lectured","The user types: one lunch item.","Reply with exactly one of: HEALTHY, NOT HEALTHY or DEPENDS. Then give a reason of ten words or fewer.","Rules:","- Fresh fruit, vegetables, plain yoghurt and water are HEALTHY.","- Lollies, soft drink, chips and anything deep fried are NOT HEALTHY.","- Anything that changes with the brand or filling, such as sandwiches, muesli bars and flavoured milk, is DEPENDS."].join("\n");
+const TA = [["apple","HEALTHY"],["carrot sticks","HEALTHY"],["potato chips","NOT HEALTHY"],["soft drink","NOT HEALTHY"],["ham sandwich","DEPENDS"],["fish and chips","NOT HEALTHY"],["muesli bar","DEPENDS"],["dried mango","DEPENDS"]];
+const ATK = [["A vague noun","food"],["Two items in one","apple and chips"],["A misspelling","bananna"],["A word from another language","pomme"],["A boundary case","chocolate milk"],["Not food at all","my homework"]];
+const BRK = ["Choose…","No, it coped","Yes: wrong answer","Yes: wrong format","Yes: too long","Yes: made something up"];
+const LABS = {
+ a:{t:"W4L1a: How a test set works (worked example, locked)", s:"Write a ninth test for a food you think this prompt will get wrong. Which rule would you add to fix it?",
+    brief:"<p>In W2L2 you wrote five tests. A stronger test set has more tests, and some of them are <b>hidden</b>: written before you start improving the prompt, and run last. If you tune a prompt until it passes the tests you can see, that proves little. Passing tests you did not tune for is stronger evidence.</p><p>This is a lunch app: <b>HEALTHY</b>, <b>NOT HEALTHY</b> or <b>DEPENDS</b>. It has eight tests. In this lab the hidden tests are shown so you can see how they are built.</p><p><b>Your mission:</b> click the run button eight times, one test per click. Read every fail and its reason. Then answer the box at the bottom.</p>"},
+ b:{t:"W4L1b: Practice, break it on purpose", s:"Find an input that makes the lunch app reply with more than ten words. What did you try?",
+    brief:"<p>Real users type things you did not plan for. Testing means trying to break your app before someone else does. Below is a menu of six kinds of attack. Try each one on the lunch app, decide whether it broke the app, then say what you would change.</p><p><b>Your mission:</b> try all six, mark each one, then answer the three boxes at the bottom.</p>"},
+ c:{t:"W4L1c: Test and improve my own app", s:"Pick your weakest test. Rewrite it and explain why the new version is better.",
+    brief:"<p>This is your real project. It is evidence for Part D of your task sheet, and everything saves automatically.</p><p><b>Your mission:</b></p><p>1. Load your prompt from W2L2, or type it in, and write your categories. Choose your way out.<br>2. Write eight tests from your design criteria. Tests 6, 7 and 8 are hidden: write them <b>first</b>, before you improve your prompt, then press Lock.<br>3. Run all eight, one click each. Change one thing in your prompt, then run all eight again.<br>4. Try to break your app on purpose, and note what happened.<br>5. Update your real board and risk register in W3L1, then work down the checklist and use Export my work.</p>"}
+};
+
+// ── State ──
+let who = store.get("aib-name") || "";
+let S = {lab:"a"};
+try{ const s = JSON.parse(store.get("aib-W4L1")); if(s && s.lab) S = s; }catch(e){}
+S.a = S.a || {}; S.a.res = S.a.res || [];
+S.b = S.b || {}; ["in","res","brk"].forEach(k => S.b[k] = S.b[k] || []);
+S.c = {cats:"", way:"", prompt:"", hl:"", res:[], rp:"", iter:[], ...(S.c || {})};
+S.c.tests = S.c.tests || Array.from({length:8}, () => ({i:"", e:""}));
+S.n = S.n || {}; S.stretch = S.stretch || {};
+const save = () => store.set("aib-W4L1", JSON.stringify(S));
+const catList = s => String(s || "").split(",").map(x => x.trim().toUpperCase()).filter(Boolean);
+const TESTS = k => k === "a" ? TA.map(([i,e]) => ({i,e})) : S.c.tests;
+const CATS_ = k => k === "a" ? CATS : catList(S.c.cats);
+const PRM = k => k === "a" ? P : S.c.prompt;
+const nextIdx = R => { let n = 0; while(n < 8 && R[n] && R[n].res && R[n].res !== "BLANK") n++; return n; };
+const msg = t => $("st").textContent = t;
+const UPR = s => String(s || "").toUpperCase().replace(/^[^A-Z]+/, "");
+const starts = (got, c) => { const u = UPR(got); return u.startsWith(c) && !/[A-Z]/.test(u.charAt(c.length) || " "); };
+function judge(got, exp, cats){
+  if(/^(ERROR|\(No answer)/.test(got)) return {res:"BLANK", tag:""};
+  if(starts(got, exp)) return {res:"PASS", tag:""};
+  return {res:"FAIL", tag: cats.some(c => c !== exp && starts(got, c)) ? "Wrong answer" : "Wrong format"};
+}
+
+// ── Name ──
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+
+// ── Calling the Worker, and the 45 second lock ──
+async function llm(system, input){
+  try{
+    const r = await fetch(ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:[{role:"system",content:system},{role:"user",content:input}], model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:TEMP})});
+    if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
+    const ch = (await r.json()).choices[0], t = (ch.message.content || "").trim();
+    return t || "(No answer came back"+(ch.finish_reason === "length" ? ": the model ran out of tokens before it could reply" : "")+")";
+  }catch(e){ return "ERROR: "+e.message; }
+}
+let running = false, lt = null;
+function lockRun(){ store.set("aib-lock", String(Date.now() + COOLDOWN*1000)); tick(); }
+function tick(){
+  clearInterval(lt);
+  const f = () => {
+    const left = Math.ceil(((+store.get("aib-lock")||0) - Date.now())/1000), off = left > 0 || running;
+    document.querySelectorAll(".rb").forEach(b => { b.disabled = off; b.textContent = left > 0 ? "Wait "+left+"s" : running ? "Running…" : b.dataset.l; });
+    if(!off) clearInterval(lt);
+  };
+  f(); lt = setInterval(f, 500);
+}
+
+// ── Tests ──
+function renderTests(k){
+  const T = TESTS(k), R = S[k].res, cats = CATS_(k), ro = k === "a", hl = k === "c" && S.c.hl, nx = nextIdx(R);
+  $("ttab").innerHTML = "<tr><th>#</th><th>Kind</th><th>Input</th><th>Expected</th><th>Answer</th><th>Result</th><th>If it failed, why?</th></tr>" + T.map((t,n) => {
+    const r = R[n] || {}, h = n > 4, lk = ro || (h && hl), o = !t.e || cats.includes(t.e) ? cats : [t.e, ...cats];
+    return '<tr'+(n === nx && nx < 8 ? ' class="nx"' : '')+'><td>'+(n+1)+'</td><td>'+(h ? "Hidden" : "Visible")+'</td><td><input class="ti" data-n="'+n+'" aria-label="Test '+(n+1)+' input" value="'+esc(t.i)+'"'+(lk ? " readonly" : "")+'></td>'+
+      '<td><select class="te" data-n="'+n+'" aria-label="Test '+(n+1)+' expected answer"'+(lk ? " disabled" : "")+'><option value="">Choose…</option>'+o.map(c => '<option'+(c === t.e ? " selected" : "")+'>'+esc(c)+'</option>').join("")+'</select></td>'+
+      '<td>'+esc(r.got || "")+'</td><td class="'+(r.res === "PASS" ? "ok" : r.res === "FAIL" ? "bad" : "")+'">'+(r.res === "PASS" ? "✔ PASS" : r.res === "FAIL" ? "✘ FAIL" : esc(r.res || ""))+'</td>'+
+      '<td>'+(r.res === "FAIL" ? '<select class="tg" data-n="'+n+'" aria-label="Reason for fail '+(n+1)+'">'+TAGS.map(g => '<option'+(g === r.tag ? " selected" : "")+'>'+g+'</option>').join("")+'</select>' : "")+'</td></tr>';
+  }).join("");
+  const pc = (a, b) => R.slice(a, b).filter(r => r && r.res === "PASS").length, bl = R.filter(r => r && r.res === "BLANK").length;
+  $("score").textContent = R.length ? "Visible: "+pc(0,5)+" of 5 passed. Hidden: "+pc(5,8)+" of 3 passed."+(bl ? " ("+bl+" blank, click again)" : "") : "";
+  $("runb").dataset.l = nx >= 8 ? "Run all eight again" : nx > 4 ? "Run hidden test "+(nx-4)+" of 3" : "Run test "+(nx+1)+" of 5";
+  tick();
+}
+async function runNext(){
+  const k = S.lab; if(running) return;
+  const T = TESTS(k), cats = CATS_(k), prompt = PRM(k).trim();
+  if(k === "c"){
+    if(!prompt){ msg("Write your prompt first."); return; }
+    if(!cats.length){ msg("Write your categories first."); return; }
+    if(T.some(t => !t.i.trim() || !t.e)){ msg("Give all eight tests an input and an expected answer."); return; }
+    if(!S.c.hl){ msg("Lock your three hidden tests first."); return; }
+    if(S.c.rp && S.c.rp !== prompt && S.c.res.some(r => r && r.res)){ S.c.res = []; msg("Your prompt changed, so this is a new run from test 1."); }
+    S.c.rp = prompt;
+  }
+  let R = S[k].res, n = nextIdx(R); if(n >= 8){ R = S[k].res = []; n = 0; }
+  running = true; lockRun(); msg("Running test "+(n+1)+" of 8…");
+  const got = await llm(prompt, T[n].i.trim()); R[n] = {got, ...judge(got, T[n].e, cats)};
+  if(k === "c" && nextIdx(R) >= 8){
+    const it = S.c.iter, last = it[it.length-1], v = !last ? 1 : last.prompt === prompt ? last.v : last.v + 1, pc = (a, b) => R.slice(a, b).filter(r => r.res === "PASS").length;
+    it.push({v, vis:pc(0,5)+" of 5", hid:pc(5,8)+" of 3", prompt, note:""});
+  }
+  running = false; save(); msg(R[n].res === "BLANK" ? "Blank reply. Wait, then click again." : nextIdx(R) >= 8 ? "All eight run. Read the fails." : "Done. Next test is ready.");
+  renderTests(k); if(k === "c") renderC();
+}
+function lockHidden(){
+  if(S.c.tests.slice(5).some(t => !t.i.trim() || !t.e)){ msg("Fill in tests 6, 7 and 8 first."); return; }
+  if(!confirm("Lock tests 6, 7 and 8? You cannot change them afterwards.")) return;
+  S.c.hl = new Date().toLocaleString("en-AU"); save(); renderTests("c"); renderC();
+}
+function loadW2(){
+  let e = null; try{ e = JSON.parse(store.get("aib-W2L2")).edits.c; }catch(x){}
+  if(!e || !e.prompt){ msg("Nothing saved in W2L2 on this browser. Type your prompt in instead."); return; }
+  if(S.c.prompt.trim() && !confirm("Replace the prompt below with the one from W2L2?")) return;
+  S.c.prompt = e.prompt; if(e.f && e.f.cats && !S.c.cats) S.c.cats = e.f.cats; save(); render(); msg("Loaded. Check it over.");
+}
+
+// ── Break it (lab b) ──
+function renderB(){
+  $("pp").textContent = P;
+  $("atk").innerHTML = "<tr><th>Attack</th><th>Input (you can change it)</th><th></th><th>Answer</th><th>Did it break?</th></tr>" + ATK.map(([l,d],n) => "<tr><td>"+esc(l)+'</td><td><input class="ai" data-n="'+n+'" aria-label="Attack '+(n+1)+' input" value="'+esc(S.b.in[n] ?? d)+'"></td><td><button class="alt rb" data-a="ta" data-n="'+n+'" data-l="Try">Try</button></td><td>'+esc(S.b.res[n] || "")+'</td><td><select class="ab" data-n="'+n+'" aria-label="Did attack '+(n+1)+' break it?">'+BRK.map(o => '<option'+(o === (S.b.brk[n] || BRK[0]) ? " selected" : "")+'>'+o+'</option>').join("")+'</select></td></tr>').join("");
+  tick();
+}
+async function attack(n){
+  if(running) return; const v = (S.b.in[n] ?? ATK[n][1]).trim(); if(!v) return;
+  running = true; lockRun(); S.b.res[n] = "Thinking…"; renderB();
+  S.b.res[n] = await llm(P, v); running = false; save(); renderB();
+}
+
+// ── Lab c extras ──
+function chk(){
+  const c = S.c, cats = catList(c.cats), T = c.tests, it = c.iter;
+  return [["Categories written, with one chosen as the way out", cats.length > 1 && cats.includes(c.way)],["Eight tests written, each with an input and an expected answer", T.every(t => t.i.trim() && t.e)],
+   ["The tests cover every category", cats.length > 0 && cats.every(x => T.some(t => t.e === x))],["At least one test checks the way out", !!c.way && T.some(t => t.e === c.way)],
+   ["The three hidden tests are locked", !!c.hl],["All eight tests have been run", it.length > 0],["The prompt was changed and all eight run again (version 2 or higher)", it.some(r => r.v >= 2)],
+   ["I tried to break my app and wrote what happened", !!(S.n.c1 || "").trim()],["I wrote how my board and risk register changed", !!(S.n.c2 || "").trim()]]
+   .map(([t,ok]) => '<li><span class="'+(ok ? 'ok">✔' : 'bad">✘')+'</span> '+esc(t)+'</li>').join("");
+}
+function renderC(){
+  const c = S.c, cats = catList(c.cats);
+  $("wy").innerHTML = '<option value="">Choose…</option>' + cats.map(x => '<option'+(x === c.way ? " selected" : "")+'>'+esc(x)+'</option>').join("");
+  $("hls").textContent = c.hl ? "Locked on "+c.hl+". These can no longer be changed." : "Write tests 6, 7 and 8, then lock them before you run anything."; $("lkb").disabled = !!c.hl;
+  $("iter").innerHTML = "<tr><th>Run</th><th>Prompt version</th><th>Visible</th><th>Hidden</th><th>What I changed and why</th></tr>" + c.iter.map((r,n) => "<tr><td>"+(n+1)+"</td><td>"+r.v+"</td><td>"+esc(r.vis)+"</td><td>"+esc(r.hid)+'</td><td><input class="in" data-n="'+n+'" aria-label="Change note '+(n+1)+'" value="'+esc(r.note)+'"></td></tr>').join("");
+  $("chk").innerHTML = chk();
+}
+
+// ── Render ──
+function switchLab(k){ S.lab = k; save(); render(); }
+function render(){
+  const k = S.lab, L = LABS[k];
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief; $("lstretch").textContent = L.s; $("snote").value = S.stretch[k] || ""; msg("");
+  document.querySelectorAll("[data-lab]").forEach(e => e.style.display = e.dataset.lab.includes(k) ? "" : "none");
+  document.querySelectorAll(".nt").forEach(e => e.value = S.n[e.dataset.k] || "");
+  if(k === "b"){ renderB(); return; }
+  $("prm").value = PRM(k); $("prm").readOnly = k === "a"; $("plock").textContent = k === "a" ? "Locked in this lab. Read it, then run the tests." : "";
+  if(k === "c"){ $("fc").value = S.c.cats; renderC(); }
+  renderTests(k);
+}
+document.addEventListener("input", e => {
+  const t = e.target, c = t.classList, n = +t.dataset.n;
+  if(c.contains("nt")){ S.n[t.dataset.k] = t.value; if(S.lab === "c") $("chk").innerHTML = chk(); }
+  else if(t.id === "snote") S.stretch[S.lab] = t.value;
+  else if(t.id === "prm" && S.lab === "c") S.c.prompt = t.value;
+  else if(t.id === "fc"){ S.c.cats = t.value; renderC(); renderTests("c"); }
+  else if(t.id === "wy"){ S.c.way = t.value; renderC(); }
+  else if(c.contains("ti")){ S.c.tests[n].i = t.value; $("chk").innerHTML = chk(); }
+  else if(c.contains("te")){ S.c.tests[n].e = t.value; $("chk").innerHTML = chk(); }
+  else if(c.contains("tg")){ if(S[S.lab].res[n]) S[S.lab].res[n].tag = t.value; }
+  else if(c.contains("in")) S.c.iter[n].note = t.value;
+  else if(c.contains("ai")) S.b.in[n] = t.value;
+  else if(c.contains("ab")) S.b.brk[n] = t.value;
+  save();
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-a]"); if(!b) return;
+  ({rn:runNext, lk:lockHidden, ld:loadW2, ta:() => attack(+b.dataset.n)})[b.dataset.a]();
+});
+
+// ── Export ──
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  const TB = "<table border='1' cellpadding='4' style='border-collapse:collapse'>", n = S.n; let b = "";
+  const tt = k => { const T = TESTS(k), R = S[k].res; return TB+"<tr><th>#</th><th>Kind</th><th>Input</th><th>Expected</th><th>Answer</th><th>Result</th><th>Reason</th></tr>"+T.map((t,i) => { const r = R[i] || {}; return "<tr><td>"+(i+1)+"</td><td>"+(i > 4 ? "Hidden" : "Visible")+"</td><td>"+esc(t.i)+"</td><td>"+esc(t.e)+"</td><td>"+esc(r.got || "")+"</td><td>"+esc(r.res || "")+"</td><td>"+esc(r.tag || "")+"</td></tr>"; }).join("")+"</table>"; };
+  const st = k => S.stretch[k] ? "<p><b>Stretch:</b> "+esc(LABS[k].s)+"</p><p>"+esc(S.stretch[k])+"</p>" : "";
+  if(S.a.res.length || n.a || S.stretch.a) b += "<h2>"+esc(LABS.a.t)+"</h2>"+(S.a.res.length ? tt("a") : "")+"<p><b>My answer:</b> "+esc(n.a || "")+"</p>"+st("a");
+  if(S.b.res.some(Boolean) || n.b1 || n.b2 || n.b3 || S.stretch.b) b += "<h2>"+esc(LABS.b.t)+"</h2>"+TB+"<tr><th>Attack</th><th>Input</th><th>Answer</th><th>Did it break?</th></tr>"+ATK.map(([l,d],i) => "<tr><td>"+esc(l)+"</td><td>"+esc(S.b.in[i] ?? d)+"</td><td>"+esc(S.b.res[i] || "")+"</td><td>"+esc(S.b.brk[i] || "")+"</td></tr>").join("")+"</table><p><b>Which attack broke it most, and why:</b> "+esc(n.b1 || "")+"</p><p><b>A rule I would add:</b> "+esc(n.b2 || "")+"</p><p><b>Practice board task and risk:</b> "+esc(n.b3 || "")+"</p>"+st("b");
+  const c = S.c;
+  if(c.res.length || c.prompt.trim() || c.cats || n.c1 || n.c2 || n.c3 || S.stretch.c) b += "<h2>"+esc(LABS.c.t)+"</h2><p><b>Categories:</b> "+esc(c.cats)+" (way out: "+esc(c.way)+")</p><p><b>Prompt:</b></p><p style='white-space:pre-wrap'>"+esc(c.prompt)+"</p><p><b>Latest test run</b> (hidden tests locked: "+esc(c.hl || "not yet")+")</p>"+tt("c")+
+    "<p><b>Iteration log</b></p>"+TB+"<tr><th>Run</th><th>Prompt version</th><th>Visible</th><th>Hidden</th><th>What I changed and why</th></tr>"+c.iter.map((r,i) => "<tr><td>"+(i+1)+"</td><td>"+r.v+"</td><td>"+esc(r.vis)+"</td><td>"+esc(r.hid)+"</td><td>"+esc(r.note)+"</td></tr>").join("")+"</table>"+
+    "<p><b>Trying to break my app:</b> "+esc(n.c1 || "")+"</p><p><b>Board and risk register changes:</b> "+esc(n.c2 || "")+"</p><p><b>What I noticed:</b> "+esc(n.c3 || "")+"</p>"+st("c");
+  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W4L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W4L1 work</h1><p><b>THIS IS FOR FUN. DO NOT USE THE ANSWERS FOR REAL FOOD OR HEALTH DECISIONS, AS AIs CAN MAKE MISTAKES.</b></p>"+b+"</body></html>"], {type:"application/msword"}));
+  a.download = who.replace(/\s+/g,"-")+"-W4L1.doc"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ── Start up ──
+$("cdn").textContent = COOLDOWN;
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+showWho(); if(who) $("modal").classList.add("hidden");
+render();
+</script>
+</body>
+</html>
