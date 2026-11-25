@@ -23,6 +23,7 @@ textarea{resize:vertical;min-height:70px}
 button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
 button:hover{background:#e04a4a}button.go{background:var(--ac);color:#1e1e1e}button.alt{background:#444}button.alt:hover{background:#555}
 .card{background:#1b2321;border:1px solid #2f4a44;border-radius:6px;padding:10px 12px;margin:8px 0}
+.warnbox{border-left:4px solid var(--rd);background:#2a1515;border-color:#5a2a2a;font-weight:700;color:#ffb4b4;letter-spacing:.2px}
 .card.inc{background:#2a2310;border-color:#6b5514}
 .board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}@media(max-width:700px){.board{grid-template-columns:1fr}}
 .col{background:#1b1b1b;border:1px solid var(--bd);border-radius:6px;padding:8px;min-height:80px}
@@ -50,6 +51,7 @@ ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}.ok{color:
 <button class="go" onclick="exportDoc()">Export my work</button></div></header>
 
 <main>
+<section class="warnbox" role="note"><b>THIS IS FOR FUN. DO NOT TEST THIS FOR REAL, AS AIs CAN MAKE MISTAKES.</b></section>
 <section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
 
 <section id="sec-a"><div id="exb"></div>
@@ -258,7 +260,7 @@ function exportDoc(){
       "<p><b>Recent moves and changes</b></p><p>"+c.log.slice(-40).map(l => esc(l.d)+": "+esc(l.m)).join("<br>")+"</p>"+st("c"); }
   if(!b){ alert("Add some work first, so there is something to export."); return; }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L1 work</h1>"+b+"</body></html>"], {type:"application/msword"}));
+  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L1 work</h1><p><b>THIS IS FOR FUN. DO NOT TEST THIS FOR REAL, AS AIs CAN MAKE MISTAKES.</b></p>"+b+"</body></html>"], {type:"application/msword"}));
   a.download = who.replace(/\s+/g,"-")+"-W3L1.doc"; a.click(); URL.revokeObjectURL(a.href);
 }
 
