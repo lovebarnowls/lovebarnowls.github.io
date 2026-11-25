@@ -36,6 +36,7 @@ td{padding:6px 5px;border-bottom:1px solid #2e2e2e;vertical-align:top}
 .cols{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:14px}@media(max-width:800px){.cols{grid-template-columns:1fr}}
 fieldset{border:0;padding:0;margin:0}fieldset:disabled{opacity:.45}
 iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+.warnbox{border-left:4px solid var(--rd);background:#2a1515;border-color:#5a2a2a;color:#ffb4b4}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
 #modal.hidden{display:none}
 .mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
@@ -53,6 +54,7 @@ iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;back
 <button class="go" onclick="exportDoc()">Export my work</button></div></header>
 
 <main>
+<section class="warnbox" role="note"><b>THIS IS FOR FUN. DO NOT USE THE ANSWERS FOR REAL, AS AIs CAN MAKE MISTAKES.</b></section>
 <section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
 
 <section id="sec-a">
@@ -222,7 +224,7 @@ function build(full, w = W(), real = showData){
 '<img src="'+img+'" width="128" height="128" alt="Logo">',
 '<h1>'+esc(v.h)+'</h1>','<p>'+esc(v.i)+'</p>',
 '<input id="box" placeholder="'+esc(v.p)+'">','<button id="go">'+esc(v.b)+'</button>',
-'<p>'+esc(v.al)+'</p>','<div id="out"></div>','<p><small>'+esc(v.f)+'</small></p>','',
+'<p>'+esc(v.al)+'</p>','<div id="out"></div>','<p><small>'+esc(v.f)+'</small></p>','<p><small><b>For fun only. AIs can make mistakes, so do not rely on this answer for anything real.</b></small></p>','',
 '<script>',
 'const ENDPOINT = "'+ENDPOINT+'";',
 'const COOLDOWN = 45; // seconds the button stays locked',
@@ -326,7 +328,7 @@ function exportDoc(){
     b += "<h2>"+esc(LABS.d.t)+"</h2><p><b>My prompt:</b></p><pre style='white-space:pre-wrap'>"+esc(S.f.prompt)+"</pre><p><b>My settings:</b> "+esc(JSON.stringify(S.f.v))+"</p><p><b>My page, as code:</b></p><pre style='white-space:pre-wrap'>"+esc(S.f.edit ? S.f.code.replace(/data:image\/jpeg;base64,[^"]+/, "[picture]") : build(false, S.f, false))+"</pre>"+(S.stretch.d ? "<p><b>Stretch:</b> "+esc(LABS.d.s)+"</p><p>"+esc(S.stretch.d)+"</p>" : ""); }
   if(!b){ alert("Add some work first, so there is something to export."); return; }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L2</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L2 work</h1>"+b+"</body></html>"], {type:"application/msword"}));
+  a.href = URL.createObjectURL(new Blob(["<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W3L2</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W3L2 work</h1><p><b>THIS IS FOR FUN. DO NOT USE THE ANSWERS FOR REAL, AS AIs CAN MAKE MISTAKES.</b></p>"+b+"</body></html>"], {type:"application/msword"}));
   a.download = who.replace(/\s+/g,"-")+"-W3L2.doc"; a.click(); URL.revokeObjectURL(a.href);
 }
 
