@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>W5: My workspace</title>
+<title>W5: My project</title>
 <style>
 :root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
 *{box-sizing:border-box}
@@ -14,26 +14,33 @@ header h1{font-size:17px;margin:0}.bar{margin-left:auto;display:flex;gap:8px;fle
 main{display:grid;gap:14px;padding:14px;max-width:1100px;margin:0 auto}
 section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
 section.brief{border-left:4px solid var(--ac)}
-h2{font-size:14px;color:var(--ac);margin:0 0 6px}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}h3{font-size:13px;margin:0 0 6px}
 p{margin:4px 0;max-width:75ch}.hint{font-size:12px;color:var(--mut)}
-label{display:block;font-size:12px;color:var(--mut);margin:12px 0 3px}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
 input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
 input[type=checkbox]{width:auto;margin-right:8px}input[type=color]{padding:2px;height:32px}input[type=range]{padding:0;accent-color:var(--ac)}
 input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
-textarea{resize:vertical}
+textarea{resize:vertical;min-height:70px}
 button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
 button:hover{background:#e04a4a}button.go{background:var(--ac);color:#1e1e1e}button.alt{background:#444}button.alt:hover{background:#555}
-.tabs{display:flex;gap:6px;flex-wrap:wrap}.tb{background:#333}.tb.on{background:var(--ac);color:#1e1e1e}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tbn{background:#333}.tbn.on{background:var(--ac);color:#1e1e1e}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:800px){.board{grid-template-columns:1fr}}
+.col{background:#1b1b1b;border:1px solid var(--bd);border-radius:6px;padding:8px;min-height:80px}
+.tk{background:var(--pn2);border:1px solid #444;border-radius:4px;padding:6px 8px;margin:6px 0;font-size:13px}
+.tb{margin-top:5px;display:flex;gap:4px;flex-wrap:wrap}.tb button{padding:2px 8px;font-size:11px}
+.tag{background:#12332d;color:var(--ac);border-radius:3px;padding:0 5px;font-size:11px}
+.card{background:#1b2321;border:1px solid #2f4a44;border-radius:6px;padding:10px 12px;margin:8px 0}
+.g{display:grid;grid-template-columns:2fr 1fr auto;gap:6px;align-items:end}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}@media(max-width:800px){.g3,.g{grid-template-columns:1fr}}
 .cols{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:14px}@media(max-width:800px){.cols{grid-template-columns:1fr}}
-fieldset{border:0;padding:0;margin:0}fieldset:disabled{opacity:.45}
-iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+fieldset{border:0;padding:0;margin:0}iframe{width:100%;height:420px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;color:var(--mut);border-bottom:1px solid var(--bd);padding:4px}td{padding:4px;border-bottom:1px solid #2e2e2e;vertical-align:top}
 ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}.ok{color:var(--ac)}.bad{color:#f05050}
 .warnbox{border-left:4px solid var(--rd);background:#2a1515;border-color:#5a2a2a;color:#ffb4b4}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
 #modal.hidden{display:none}
 .mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
 .mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
-#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}#msg{font-size:12px;color:var(--warn);min-height:16px}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
 </style>
 </head>
 <body>
@@ -41,12 +48,12 @@ ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}.ok{color:
 <p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
 <input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()"><div id="merr"></div><button onclick="setName()">Start</button></div></div>
 
-<header><h1>W5: My workspace</h1><span class="who" id="who"></span>
-<div class="bar"><button class="alt" onclick="loadAll()">Fill from my earlier labs</button><button class="go" onclick="exportDoc()">Export my work</button><button class="go" onclick="exportApp()">Export my app</button></div></header>
+<header><h1>W5: My project</h1><span class="who" id="who"></span>
+<div class="bar"><button class="go" onclick="exportDoc()">Export my work</button><button class="go" onclick="exportApp()">Export my app</button></div></header>
 
 <main>
 <section class="warnbox" role="note"><b>THIS IS FOR FUN. DO NOT USE THE ANSWERS FROM YOUR APP FOR ANYTHING REAL, AS AIs CAN MAKE MISTAKES.</b></section>
-<div class="tabs" id="tabs"></div><div id="msg" aria-live="polite"></div>
+<div class="tabs" id="tabs"></div>
 <section class="brief" id="brief"></section>
 <section id="tab"></section>
 </main>
@@ -57,36 +64,40 @@ const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
-const rd = k => { try{ return JSON.parse(store.get(k)) || {}; }catch(e){ return {}; } };
-const TABS = [["A","Part A"],["B","Part B"],["C","Part C"],["D","Part D"],["W","My app"],["E","Before I submit"]];
-const FORM = {
- A:[["a_stk","Your stakeholder: who they are and why you chose them",3],["a_q","The questions you asked (at least five)",4],["a_sum","A summary of what they told you",4],["a_prob","Your problem in one sentence",2],["a_parts","The problem broken into at least four smaller parts",4],["a_st","At least three user stories (As a, I want, so that), each with an acceptance criterion",7],["a_crit","Five design criteria from your stories. Mark each one: checked by tests, or judged by a person",5]],
- B:[["b_diag","A labelled diagram of your app as a networked system: the user's device, the browser, the Worker and the AI service, with the path of one request and its answer. Label each part hardware or software, and mark where data is stored and where it only passes through.",13],["b_key","How access to data is controlled: why the key is in the Worker and not the page, what someone could do if it was in the exported file, and how the Worker limits what any user can do",5],["b_data","What a user types into your app, where it goes and who might see it, with one risk and one control that reduces it",5],["b_hs","One hardware component and one software component that help manage or secure data in your system, and what each does",4],["b_notes","Your notes from the W3L2 lab",3]],
- C:[["c_snaps","Your project board at the start of Week 3, the end of Week 4 and the end of Week 5, with how and why tasks moved or changed",9],["c_risks","Your risk register: at least four risks, including a technical, a time and a data or safety risk. Give the likelihood, the impact and what you did",9],["c_roles","Roles: your responsibilities, and what your tester did",4],["c_change","One change you made because of your tester's feedback",3],["c_refl","Reflection: one point where you changed your plan after testing, what you learned, and what you would plan differently next time",5]],
- D:[["d_prompt","Your final system prompt. This is also the prompt in your app.",10],["d_tests","Your test set: at least eight tests, including three hidden, with a pass or fail for each and a reason for each fail",10],["d_iter","Your iteration log: at least three changes, with what you changed, why, and the score before and after",6],["d_comp","A comparison with one existing solution to the same problem (an app, a website or a non-digital method), against your design criteria",6],["d_fb","Feedback from two rounds of user testing and one peer evaluation, with a usefulness rating from 1 to 4 from at least two testers",9],["d_judge","How well your app meets your user stories",5],["d_top2","Your top two improvements and the evidence for each",5],["d_impact","Future impact: one positive and one negative impact if many people used your app, and what you would do to reduce the negative one",5],["d_ent","Enterprise: could your app become a product or a service? Who would use it, who would pay, and what would you change?",5]]
-};
-const BR = {
- A:"<h2>Part A: Investigating and defining (AC9TDI10P04)</h2><p>Graded on how well you define and break down a real problem, using what a real stakeholder told you, and turn it into user stories and design criteria.</p>",
- B:"<h2>Part B: Digital systems (AC9TDI10K01)</h2><p>Graded on your understanding of how hardware and software manage, control and secure access to data in a networked system, shown through your own app. A plain text diagram is fine.</p>",
- C:"<h2>Part C: Collaborating and managing (AC9TDI10P12)</h2><p>Graded on how you plan, track and adjust a project, manage risks and responsibilities, and work with others. Your board lives in W3L1. Add your end of Week 5 snapshot there, then press Fill from my earlier labs.</p>",
- D:"<h2>Part D: Evaluating (AC9TDI10P10)</h2><p>Graded on how well you judge your own solution and an existing one against your criteria, using evidence, and how well you consider future impact and enterprise opportunities.</p>",
- W:"<h2>My app</h2><p>Make your app look the way you want, check it in the live preview, then press Export my app. The prompt is the same one as in Part D.</p>",
- E:"<h2>Before I submit</h2><p>Submit through Schoolbox: your completed task sheet, your Export my work file and your exported app (.html file).</p>"
-};
-const STARTER = "YOUR DEVICE (hardware)\n  Browser and my app page (software). Stored here: ...\n        |  1. what the user types\n        v\nWORKER (software, running on a server, which is hardware)\n  Holds the key. What the user types only passes through. Stored here: ...\n        |  2. adds the secret key and forwards the request\n        v\nAI SERVICE (software on servers)\n  Works out the answer. Stored here: ...\n        |  3. the answer goes back through the Worker to the browser";
+const now = () => new Date().toLocaleString("en-AU");
+const COLS = ["To do","Doing","Done"], WIP = 3, TYPES = ["Technical","Time","Data or safety","Other"], LV = ["Low","Medium","High"], PARTS = ["A","B","C","D"];
+const TABS = [["board","My board"],["journal","Journal"],["risks","Risks"],["app","My app"],["submit","Before I submit"]];
+const SEED = [
+ ["A","Choose a stakeholder","You can say who they are and why you chose them."],["A","Interview them with at least five questions","Your questions are written down, with a summary of what they told you."],
+ ["A","Write the problem in one sentence and break it into four parts","One sentence and four smaller parts."],["A","Write three user stories with acceptance criteria","Each story has who, what, why and a checkable criterion."],
+ ["A","Write five design criteria","Each is marked: checked by tests, or judged by a person."],["B","Draw your app as a networked system","Device, browser, Worker and AI service, labelled hardware or software, with data stored or passing through."],
+ ["B","Explain how access to data is controlled","Why the key is in the Worker, what could happen if it was in the file, and how the Worker limits users."],["B","Describe what a user types, where it goes and who might see it","One risk and one control. Add one hardware and one software component."],
+ ["D","Write your prompt and examples","A prompt that gives sensible answers for your user."],["D","Write eight tests, three of them hidden","Each has an input and an expected answer."],
+ ["D","Run the tests and improve the prompt three times","Three changes, each with the score before and after."],["D","Try to break your app on purpose","You know what breaks it, and you changed something because of it."],
+ ["D","Round 1 user test","A tester used your exported app and gave a rating from 1 to 4."],["D","Round 2 user test","A second round, after you made changes."],["D","Peer evaluation","Someone in your class evaluated your app, or you evaluated theirs."],
+ ["D","Compare with an existing solution","An app, a website or a non-digital method, judged against your criteria."],["D","Write future impact and enterprise","One positive and one negative impact, and who might pay for your app."],
+ ["C","Write your risk register","Four risks, including a technical, a time and a data or safety risk (Risks tab)."],["D","Export your app and open it on a different device or browser","It still works."],["C","Write your roles and reflection","Journal tab."]];
 const FONTS = ["Segoe UI, sans-serif","Georgia, serif","Verdana, sans-serif","Trebuchet MS, sans-serif","Arial, sans-serif","Courier New, monospace"];
 const DEFV = {t:"My App",h:"My app",i:"Type one short thing.",p:"for example: ...",b:"Check",al:"The answer:",f:"A Year 9 project",font:FONTS[0],hs:28,bs:16,bg:"#1e1e1e",ac:"#4EC9B0",tx:"#e0e0e0"};
 const WORDS = [["t","Tab title"],["h","Heading"],["i","Instruction line"],["p","Box placeholder"],["b","Button label"],["al","Answer label"],["f","Footer"]];
 const DEFIMG = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" rx="16" fill="#4EC9B0"/><text x="64" y="80" font-size="48" text-anchor="middle" fill="#1e1e1e" font-family="Arial" font-weight="bold">AI</text></svg>');
+const BR = {
+ board:"<h2>My board</h2><p>Your whole project is already on the board, in order. Move a card to <b>Doing</b> when you start it (three at a time at most), and to <b>Done</b> when it meets its \"done when\" line. A card cannot go to Done without evidence. Add your own cards any time. If a card goes backwards, the page asks why, and writes the answer in your move log.</p><p class='hint'>If you did the work in an earlier week, paste it from your exported files as the evidence, then move the card to Done.</p>",
+ journal:"<h2>Journal</h2><p>Add one short entry each time you sit down to work. It takes two minutes, and it is evidence for Part C.</p>",
+ risks:"<h2>Risks</h2><p>At least four risks, including a technical, a time and a data or safety risk. Check this list again each time you write a journal entry.</p>",
+ app:"<h2>My app</h2><p>Write your prompt, make the page look the way you want, and check it in the live preview. Press Export my app when you are happy.</p>",
+ submit:"<h2>Before I submit</h2><p>Submit through Schoolbox: your task sheet, your Export my work file and your exported app (.html file).</p>"};
 
-let who = store.get("aib-name") || "", showData = false, tm;
-let S = {tab:"A", f:{}, auto:{}, ck:[false,false], w:{}};
+let who = store.get("aib-name") || "", tm;
+let S = {tab:"board", cards:null, next:100, log:[], jr:[], risks:[], snaps:[], roles:"", refl:"", prompt:"", ck:[false,false], w:{}};
 try{ const s = JSON.parse(store.get("aib-W5")); if(s && s.tab) S = s; }catch(e){}
-S.f = S.f || {}; S.auto = S.auto || {}; S.ck = S.ck || [false,false];
-S.w = {v:{}, img:null, edit:false, code:"", ...(S.w || {})}; S.w.v = {...DEFV, ...S.w.v};
+S.cards = S.cards || SEED.map(([p,t,h],i) => ({id:i+1, p, t, h, col:0, ev:""}));
+["log","jr","risks","snaps"].forEach(k => S[k] = S[k] || []); S.ck = S.ck || [false,false];
+S.w = {v:{}, img:null, ...(S.w || {})}; S.w.v = {...DEFV, ...S.w.v};
 const save = () => store.set("aib-W5", JSON.stringify(S));
-const W = () => S.w, msg = t => $("msg").textContent = t;
-const cnt = k => FORM[k].filter(([f]) => (S.f[f] || "").trim()).length;
+const lg = m => S.log.push({d:now(), m});
+const colsText = () => COLS.map((c,i) => c+": "+(S.cards.filter(t => t.col === i).map(t => t.t).join("; ") || "(none)")).join(" | ");
+const counts = () => COLS.map((c,i) => c+" "+S.cards.filter(t => t.col === i).length).join(", ");
 
 function setName(){
   const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
@@ -96,52 +107,60 @@ function setName(){
 function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
 function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
 
-// ── Loading from earlier labs ──
-const COLS = ["To do","Doing","Done"], QOK = [0,1,2,1,2,0];
-const colsText = ts => COLS.map((c,i) => c+": "+((ts || []).filter(t => t.col === i).map(t => t.t).join("; ") || "(none)")).join(" | ");
-function loadAll(){
-  const w31 = rd("aib-W3L1"), w32 = rd("aib-W3L2"), w41 = rd("aib-W4L1"), w42 = rd("aib-W4L2"), w22 = rd("aib-W2L2");
-  const c31 = w31.c || {}, n31 = w31.notes || {}, n32 = w32.notes || {}, c41 = w41.c || {}, c42 = w42.c || {}, o = {};
-  const L = a => a || [];
-  o.a_st = L(c31.stories).map((s,i) => "S"+(i+1)+": As a "+s.who+", I want "+s.what+(s.why ? " so that "+s.why : "")+". Criteria: "+(s.a || "")).join("\n");
-  o.b_key = n32.own; o.b_data = n32.own2;
-  if(L(w32.first).some(x => x != null)) o.b_notes = "W3L2 quiz, first-try score: "+L(w32.first).filter((x,i) => x === QOK[i]).length+" of 6.";
-  o.c_snaps = L(c31.snaps).map(s => s.l+" ("+s.d+")\nBoard then: "+colsText(s.tasks)+"\nHow and why tasks changed: "+(s.note || "")).join("\n\n");
-  o.c_risks = L(c31.risks).map((r,i) => (i+1)+". "+r.r+" | "+r.type+" | likelihood "+r.l+" | impact "+r.i+" | what I did: "+r.did).join("\n");
-  o.c_roles = n31.roles; o.c_change = n31.fchange; o.c_refl = n31.refl;
-  o.d_prompt = c41.prompt || ((w22.edits || {}).c || {}).prompt;
-  o.d_tests = L(c41.tests).map((t,i) => { const r = L(c41.res)[i] || {}; return t.i ? (i+1)+". ("+(i > 4 ? "Hidden" : "Visible")+") "+t.i+" | expected "+t.e+" | answer: "+(r.got || "not run")+" | "+(r.res || "")+(r.tag ? " ("+r.tag+")" : "") : ""; }).filter(Boolean).join("\n");
-  o.d_iter = L(c41.iter).map((r,i) => "Run "+(i+1)+", prompt version "+r.v+": visible "+r.vis+", hidden "+r.hid+". What I changed and why: "+(r.note || "")).join("\n");
-  o.d_fb = L(c42.log).map(x => x.r+", "+x.w+" ("+x.d+"), rating "+x.v+":\n"+x.t).join("\n\n");
-  o.d_judge = L(c42.st).map(s => s.t+" "+(s.v || "")+". Evidence: "+(s.e || "")).join("\n");
-  o.d_top2 = L(c42.imp).map((m,i) => m.i ? (i+1)+". "+m.i+"\nEvidence: "+m.e+"\nWhat I changed: "+m.ch+"\nScores: "+m.sc : "").filter(Boolean).join("\n\n");
-  let n = 0;
-  for(const k in o){ const v = String(o[k] || "").trim(); if(v && (!(S.f[k] || "").trim() || S.auto[k])){ S.f[k] = v; S.auto[k] = 1; n++; } }
-  if(!(S.f.b_diag || "").trim()) S.f.b_diag = STARTER;
-  save(); render(); msg(n ? "Filled "+n+" boxes. Check them over and edit anything that is wrong." : "Nothing new to load. Boxes you have edited are never replaced.");
+// ── Board ──
+function renderBoard(){
+  const opts = ["A","B","C","D","–"].map(p => "<option>"+p+"</option>").join("");
+  $("tab").innerHTML = '<div class="board">'+COLS.map((c,ci) => { const ts = S.cards.filter(t => t.col === ci);
+    return '<div class="col"><h3>'+c+" ("+ts.length+(ci === 1 ? " of "+WIP+" allowed" : "")+")</h3>"+ts.map(t => '<div class="tk"><span class="tag">'+esc(t.p)+"</span> "+esc(t.t)+(t.h ? '<div class="hint">Done when: '+esc(t.h)+"</div>" : "")+
+      (ci > 0 ? '<textarea class="ev" data-id="'+t.id+'" aria-label="Evidence for '+esc(t.t)+'" placeholder="Evidence: paste or write what shows this is done" style="min-height:60px;margin-top:5px'+(ci === 2 && !t.ev.trim() ? ";border-color:#ce3c3c" : "")+'">'+esc(t.ev)+"</textarea>" : "")+
+      '<div class="tb">'+(ci > 0 ? '<button class="alt" data-a="mv" data-id="'+t.id+'" data-d="-1" aria-label="Move left">&#9664;</button>' : "")+(ci < 2 ? '<button class="alt" data-a="mv" data-id="'+t.id+'" data-d="1" aria-label="Move right">&#9654;</button>' : "")+
+      '<button class="alt" data-a="ed" data-id="'+t.id+'">Edit</button><button class="alt" data-a="dr" data-id="'+t.id+'">Drop</button></div></div>').join("")+"</div>"; }).join("")+"</div>"+
+    '<div class="g" style="margin-top:12px"><div><label for="nt">New card</label><input id="nt"></div><div><label for="np">Which part?</label><select id="np">'+opts+'</select></div><button class="alt" data-a="ad">Add card</button></div>'+
+    '<h2 style="margin-top:16px">Snapshots</h2><p class="hint">Save one at the start and the end of Week 5. Say how and why cards moved or changed. Your Week 3 and Week 4 exports are your earlier snapshots.</p>'+
+    '<div class="g"><div><label for="sl">Which point?</label><select id="sl"><option>Start of Week 5</option><option>End of Week 5</option><option>Other</option></select></div><div><label for="sn">How and why did cards move or change?</label><input id="sn"></div><button class="alt" data-a="sp">Save a snapshot</button></div>'+
+    S.snaps.map(s => '<div class="card"><b>'+esc(s.l)+'</b> <span class="hint">'+esc(s.d)+"</span><br>"+esc(s.note || "(no note)")+'<details><summary class="hint" style="cursor:pointer">The board then</summary><p class="hint">'+esc(s.b)+"</p></details></div>").join("")+
+    '<details style="margin-top:10px"><summary class="hint" style="cursor:pointer">My move log (recorded for you)</summary><div class="hint">'+(S.log.length ? S.log.slice().reverse().slice(0,60).map(l => esc(l.d)+": "+esc(l.m)).join("<br>") : "Nothing yet.")+"</div></details>";
+}
+function card(a, id, d){
+  const t = S.cards.find(x => x.id === id); if(!t) return;
+  if(a === "mv"){
+    const n = t.col + d; if(n < 0 || n > 2) return;
+    if(n === 1 && t.col !== 1 && S.cards.filter(x => x.col === 1).length >= WIP){ alert("You already have "+WIP+" cards in Doing. Finish one first."); return; }
+    if(n === 2 && !t.ev.trim()){ alert("Add your evidence to this card first, then move it to Done."); return; }
+    if(d < 0){ const w = prompt("Why are you moving this card back?"); if(!w || !w.trim()) return; lg('"'+t.t+'" moved back to '+COLS[n]+". Why: "+w.trim()); } else lg('"'+t.t+'" moved to '+COLS[n]);
+    t.col = n;
+  } else if(a === "ed"){ const v = prompt("Change this card:", t.t); if(!v || !v.trim()) return; lg('"'+t.t+'" changed to "'+v.trim()+'"'); t.t = v.trim(); }
+  else if(confirm("Drop this card?")){ lg('"'+t.t+'" dropped'); S.cards = S.cards.filter(x => x !== t); } else return;
+  save(); render();
+}
+function addCard(){ const v = $("nt").value.trim(); if(!v) return; S.cards.push({id:S.next++, p:$("np").value, t:v, h:"", col:0, ev:""}); lg('"'+v+'" added'); save(); render(); }
+function snap(){ S.snaps.push({l:$("sl").value, d:now(), note:$("sn").value.trim(), b:colsText()}); save(); render(); }
+
+// ── Journal ──
+function renderJournal(){
+  $("tab").innerHTML = '<div class="card"><label for="jd">What I did</label><textarea id="jd" style="min-height:50px"></textarea><label for="jb">What is blocking me</label><textarea id="jb" style="min-height:50px"></textarea><label for="jn">What I will do next</label><textarea id="jn" style="min-height:50px"></textarea>'+
+    '<button class="alt" data-a="aj" style="margin-top:8px">Add entry</button><span class="hint" id="jm"></span></div>'+
+    S.jr.slice().reverse().map(j => '<div class="card"><span class="hint">'+esc(j.d)+" | board: "+esc(j.s)+"</span><p><b>Did:</b> "+esc(j.a)+"</p><p><b>Blocked:</b> "+esc(j.b)+"</p><p><b>Next:</b> "+esc(j.n)+"</p></div>").join("")+
+    '<label for="ro">Roles: what you were responsible for, and what your tester did</label><textarea id="ro" class="nt" data-k="roles">'+esc(S.roles)+'</textarea>'+
+    '<label for="rf">Reflection: one point where you changed your plan after testing, what you learned, and what you would plan differently next time</label><textarea id="rf" class="nt" data-k="refl" style="min-height:110px">'+esc(S.refl)+"</textarea>";
+}
+function addJ(){
+  const a = $("jd").value.trim(); if(!a){ $("jm").textContent = " Write what you did first."; return; }
+  S.jr.push({d:now(), a, b:$("jb").value.trim(), n:$("jn").value.trim(), s:counts()}); save(); render();
 }
 
-// ── Render ──
-function renderTabs(){
-  $("tabs").innerHTML = TABS.map(([k,l]) => '<button class="tb'+(S.tab === k ? " on" : "")+'" data-t="'+k+'">'+l+(FORM[k] ? " ("+cnt(k)+"/"+FORM[k].length+")" : "")+"</button>").join("");
+// ── Risks ──
+const opt = (L, v) => '<option value="">Choose...</option>'+L.map(x => "<option"+(x === v ? " selected" : "")+">"+x+"</option>").join("");
+function renderRisks(){
+  $("tab").innerHTML = '<div class="wrap"><table><tr><th>Risk</th><th>Type</th><th>Likelihood</th><th>Impact</th><th>What I did about it</th><th></th></tr>'+S.risks.map((r,i) => '<tr><td><input class="rk" data-i="'+i+'" data-f="r" aria-label="Risk" value="'+esc(r.r)+'"></td>'+
+    [["type",TYPES],["l",LV],["i",LV]].map(([f,L]) => '<td><select class="rk" data-i="'+i+'" data-f="'+f+'" aria-label="'+f+'">'+opt(L, r[f])+"</select></td>").join("")+
+    '<td><input class="rk" data-i="'+i+'" data-f="did" aria-label="What I did" value="'+esc(r.did)+'"></td><td><button class="alt" data-a="rr" data-i="'+i+'" aria-label="Remove risk">&#10005;</button></td></tr>').join("")+"</table></div>"+
+    '<button class="alt" data-a="ar" style="margin-top:8px">Add a risk</button>';
 }
-function render(){
-  const k = S.tab; renderTabs(); $("brief").innerHTML = BR[k];
-  if(FORM[k]){
-    $("tab").innerHTML = FORM[k].map(([f,l,r]) => '<label for="'+f+'">'+esc(l)+'</label><textarea class="ff" id="'+f+'" data-f="'+f+'" style="min-height:'+(r*19)+'px">'+esc(S.f[f] || "")+"</textarea>").join(""); }
-  else if(k === "W") renderW();
-  else{
-    const rows = ["A","B","C","D"].map(p => [p, cnt(p), FORM[p].length]);
-    $("tab").innerHTML = '<ul class="chk">'+rows.map(([p,c,n]) => '<li><span class="'+(c === n ? 'ok">✔' : 'bad">✘')+"</span> Part "+p+": "+c+" of "+n+" boxes filled</li>").join("")+"</ul>"+
-      ["I opened my exported app on a different device or browser, and it worked","My name is on every file I am submitting"].map((t,n) => '<label style="margin:6px 0;color:inherit;font-size:14px"><input type="checkbox" class="ck" data-n="'+n+'"'+(S.ck[n] ? " checked" : "")+">"+t+"</label>").join("")+
-      '<p class="hint" style="margin-top:10px">Also check that your diagram (Part B), your project board (Part C) and your test results (Part D) are inserted in your task sheet.</p>';
-  }
-}
-function switchTab(k){ S.tab = k; save(); msg(""); render(); }
 
-// ── Wrapper ──
-function build(full, real = showData){
-  const v = W().v, img = (full || real) ? (W().img || DEFIMG) : "[your picture is stored here]";
+// ── My app (wrapper) ──
+function build(){
+  const v = S.w.v, img = S.w.img || DEFIMG;
   return [
 '<!DOCTYPE html>','<html lang="en">','<head>','<meta charset="UTF-8">','<title>'+esc(v.t)+'</title>','<style>',
 'body{font-family:'+v.font+';font-size:'+v.bs+'px;background:'+v.bg+';color:'+v.tx+';max-width:480px;margin:30px auto;padding:0 16px}',
@@ -156,7 +175,7 @@ function build(full, real = showData){
 '<script>',
 'const ENDPOINT = "'+ENDPOINT+'";',
 'const COOLDOWN = 45; // seconds the button stays locked',
-'const PROMPT = '+(S.f.d_prompt || "").split("\n").map(l => JSON.stringify(l+"\n")).join(" +\n  ")+';',
+'const PROMPT = '+(S.prompt || "").split("\n").map(l => JSON.stringify(l+"\n")).join(" +\n  ")+';',
 '',
 'document.getElementById("go").onclick = async () => {',
 '  const out = document.getElementById("out");',
@@ -179,71 +198,91 @@ function build(full, real = showData){
 '};',
 '<\/script>','</body>','</html>'].join("\n");
 }
-function renderW(){
-  $("tab").innerHTML = '<div class="cols"><div><fieldset id="cfs"><label for="d_prompt">The prompt</label><textarea class="ff" id="d_prompt" data-f="d_prompt" style="min-height:170px" spellcheck="false">'+esc(S.f.d_prompt || "")+'</textarea>'+
-    '<h2 style="margin-top:14px">Words to change</h2>'+WORDS.map(([k,l]) => '<label>'+l+'</label><input class="wv" data-k="'+k+'" aria-label="'+l+'">').join("")+
-    '<h2 style="margin-top:14px">Settings</h2><label>Font</label><select class="wv" data-k="font" aria-label="Font">'+FONTS.map(f => "<option>"+f+"</option>").join("")+'</select>'+
+function renderApp(){
+  $("tab").innerHTML = '<div class="cols"><div><fieldset><label for="pr">The prompt</label><textarea id="pr" style="min-height:170px" spellcheck="false">'+esc(S.prompt)+"</textarea>"+
+    '<h2 style="margin-top:14px">Words to change</h2>'+WORDS.map(([k,l]) => "<label>"+l+'</label><input class="wv" data-k="'+k+'" aria-label="'+l+'">').join("")+
+    '<h2 style="margin-top:14px">Settings</h2><label>Font</label><select class="wv" data-k="font" aria-label="Font">'+FONTS.map(f => "<option>"+f+"</option>").join("")+"</select>"+
     '<label>Heading size: <b id="o_hs"></b></label><input type="range" class="wv" data-k="hs" min="18" max="48" aria-label="Heading size"><label>Text size: <b id="o_bs"></b></label><input type="range" class="wv" data-k="bs" min="12" max="24" aria-label="Text size">'+
     '<label>Background colour</label><input type="color" class="wv" data-k="bg" aria-label="Background colour"><label>Accent colour</label><input type="color" class="wv" data-k="ac" aria-label="Accent colour"><label>Text colour</label><input type="color" class="wv" data-k="tx" aria-label="Text colour">'+
-    '<label for="img">Your picture (becomes 128 by 128 pixels)</label><input type="file" id="img" accept="image/*" onchange="pic(this.files[0])"><div class="hint" id="imsg">Your picture stays in your browser. Please do not use a photo of a person.</div></fieldset>'+
-    '<label style="display:flex;gap:8px;align-items:center;margin-top:14px"><input type="checkbox" id="edit" onchange="toggleEdit(this.checked)">I want to edit the code myself (turns the controls off)</label>'+
-    '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sd" onchange="showData=this.checked;wsync()">Show the real picture data</label>'+
-    '<button class="alt" style="margin-top:8px" onclick="wreset()">Reset the look</button></div>'+
+    '<label for="img">Your picture (becomes 128 by 128 pixels)</label><input type="file" id="img" accept="image/*" onchange="pic(this.files[0])"><div class="hint" id="imsg">Your picture stays in your browser. Please do not use a photo of a person.</div></fieldset></div>'+
     '<div><h2>Live preview (this really calls the Worker)</h2><iframe id="pv" title="Preview"></iframe><p class="hint">After each answer the Run button locks for 45 seconds.</p></div></div>'+
-    '<label for="code">Your page, as code</label><textarea id="code" style="min-height:300px" spellcheck="false"></textarea>'+
+    '<label for="code">Your page, as code</label><textarea id="code" readonly style="min-height:260px" spellcheck="false"></textarea>'+
     '<button class="go" onclick="exportApp()" style="width:100%;margin-top:14px;padding:14px">Export my app as an HTML file</button>'+
     '<p class="hint">Saves your app as one file you can open in any browser. It still asks the Worker for answers, so it needs the internet. Open it on a different device or browser before you submit.</p>';
   wsync();
 }
-function preview(){ clearTimeout(tm); tm = setTimeout(() => { const p = $("pv"); if(p) p.srcdoc = W().edit ? W().code : build(true); }, 300); }
 function wsync(){
-  if(!$("code")) return; const w = W();
-  $("code").value = w.edit ? w.code : build(false); $("code").readOnly = !w.edit; $("cfs").disabled = w.edit; $("edit").checked = w.edit; $("sd").checked = showData;
-  document.querySelectorAll(".wv").forEach(e => e.value = w.v[e.dataset.k]); $("o_hs").textContent = w.v.hs+"px"; $("o_bs").textContent = w.v.bs+"px"; preview(); save();
+  const v = S.w.v; $("code").value = build();
+  document.querySelectorAll(".wv").forEach(e => e.value = v[e.dataset.k]); $("o_hs").textContent = v.hs+"px"; $("o_bs").textContent = v.bs+"px";
+  clearTimeout(tm); tm = setTimeout(() => { const p = $("pv"); if(p) p.srcdoc = build(); }, 300); save();
 }
-function toggleEdit(on){
-  if(on){ W().edit = true; W().code = build(true); } else if(confirm("Go back to the controls? Your own code edits will be lost.")) W().edit = false;
-  wsync();
-}
-function wreset(){ if(confirm("Reset the words, settings and picture?")){ S.w = {v:{...DEFV}, img:null, edit:false, code:""}; renderW(); } }
 function pic(f){
   if(!f) return; if(f.size > 5e6){ $("imsg").textContent = "That file is over 5 MB. Choose a smaller one."; return; }
   const im = new Image();
   im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 128; const s = Math.min(im.width, im.height);
     c.getContext("2d").drawImage(im, (im.width-s)/2, (im.height-s)/2, s, s, 0, 0, 128, 128);
-    W().img = c.toDataURL("image/jpeg", 0.8); $("imsg").textContent = "Done. Your picture is now 128 by 128 pixels and stays in your browser."; URL.revokeObjectURL(im.src); wsync(); };
+    S.w.img = c.toDataURL("image/jpeg", 0.8); $("imsg").textContent = "Done. Your picture is now 128 by 128 pixels and stays in your browser."; URL.revokeObjectURL(im.src); wsync(); };
   im.onerror = () => { $("imsg").textContent = "That file is not a picture this page can read."; };
   im.src = URL.createObjectURL(f);
 }
 
-// ── Events ──
+// ── Submit ──
+function chk(){
+  const C = S.cards, R = S.risks, full = R.filter(r => r.r.trim() && r.type && r.l && r.i && r.did.trim()), dn = C.filter(c => c.col === 2 && c.ev.trim()).length;
+  return [["Every card is Done with evidence ("+dn+" of "+C.length+")", dn === C.length],["Snapshots saved: "+S.snaps.length+" (start and end of Week 5)", S.snaps.length >= 2],
+    ["At least four risks, each fully filled in", full.length >= 4],["Risks include a technical, a time and a data or safety risk", ["Technical","Time","Data or safety"].every(t => R.some(r => r.type === t))],
+    ["At least three journal entries ("+S.jr.length+" so far)", S.jr.length >= 3],["Roles and reflection written", !!(S.roles.trim() && S.refl.trim())],["My prompt is written", !!S.prompt.trim()]]
+    .map(([t,ok]) => '<li><span class="'+(ok ? 'ok">&#10004;' : 'bad">&#10008;')+"</span> "+esc(t)+"</li>").join("");
+}
+function renderSubmit(){
+  $("tab").innerHTML = '<ul class="chk">'+chk()+"</ul>"+["I opened my exported app on a different device or browser, and it worked","My name is on every file I am submitting"].map((t,n) => '<label style="margin:6px 0;color:inherit;font-size:14px"><input type="checkbox" class="ck" data-n="'+n+'"'+(S.ck[n] ? " checked" : "")+">"+t+"</label>").join("")+
+    '<p class="hint" style="margin-top:10px">Export my work gathers your card evidence under Parts A to D, with your board, snapshots, risks and journal. Check your diagram, board and test results are in your task sheet too.</p>';
+}
+
+// ── Render and events ──
+function render(){
+  $("tabs").innerHTML = TABS.map(([k,l]) => '<button class="tbn'+(S.tab === k ? " on" : "")+'" data-t="'+k+'">'+l+"</button>").join("");
+  $("brief").innerHTML = BR[S.tab];
+  ({board:renderBoard, journal:renderJournal, risks:renderRisks, app:renderApp, submit:renderSubmit})[S.tab]();
+}
 document.addEventListener("input", e => {
   const t = e.target, c = t.classList;
-  if(c.contains("ff")){ S.f[t.dataset.f] = t.value; delete S.auto[t.dataset.f]; renderTabs(); if(t.dataset.f === "d_prompt" && S.tab === "W" && !W().edit){ $("code").value = build(false); preview(); } }
-  else if(c.contains("wv")){ const k = t.dataset.k; W().v[k] = ["hs","bs"].includes(k) ? +t.value : t.value; wsync(); return; }
-  else if(t.id === "code" && W().edit){ W().code = t.value; preview(); }
+  if(c.contains("ev")) S.cards.find(x => x.id === +t.dataset.id).ev = t.value;
+  else if(c.contains("nt")) S[t.dataset.k] = t.value;
+  else if(c.contains("rk")) S.risks[+t.dataset.i][t.dataset.f] = t.value;
   else if(c.contains("ck")) S.ck[+t.dataset.n] = t.checked;
+  else if(t.id === "pr"){ S.prompt = t.value; wsync(); return; }
+  else if(c.contains("wv")){ const k = t.dataset.k; S.w.v[k] = ["hs","bs"].includes(k) ? +t.value : t.value; wsync(); return; }
   save();
 });
-document.addEventListener("click", e => { const b = e.target.closest("[data-t]"); if(b) switchTab(b.dataset.t); });
+document.addEventListener("click", e => {
+  const tb = e.target.closest("[data-t]"); if(tb){ S.tab = tb.dataset.t; save(); render(); return; }
+  const b = e.target.closest("[data-a]"); if(!b) return; const a = b.dataset.a, i = +b.dataset.i;
+  if(["mv","ed","dr"].includes(a)) card(a, +b.dataset.id, +b.dataset.d);
+  else if(a === "ad") addCard(); else if(a === "sp") snap(); else if(a === "aj") addJ();
+  else if(a === "ar"){ S.risks.push({r:"", type:"", l:"", i:"", did:""}); save(); render(); }
+  else if(a === "rr"){ S.risks.splice(i,1); save(); render(); }
+});
 
 // ── Export ──
 function download(name, text, type){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); URL.revokeObjectURL(a.href); }
 function exportApp(){
   if(!who){ changeName(); return; }
-  const code = W().edit ? W().code : build(true);
-  if(!W().edit && !(S.f.d_prompt || "").trim()){ alert("Write your prompt first. It is the first box in Part D."); return; }
-  if(!/AIs can make mistakes/.test(code)){ alert("Your page must keep the line that says AIs can make mistakes. Put it back, then export again."); return; }
-  download(who.replace(/\s+/g,"-")+"-my-app.html", code, "text/html");
+  if(!S.prompt.trim()){ alert("Write your prompt first. It is on the My app tab."); return; }
+  download(who.replace(/\s+/g,"-")+"-my-app.html", build(), "text/html");
 }
 function exportDoc(){
   if(!who){ changeName(); return; }
-  let b = "";
-  [["A","Part A: Investigating and defining"],["B","Part B: Digital systems"],["C","Part C: Collaborating and managing"],["D","Part D: Evaluating"]].forEach(([k,t]) => {
-    if(!cnt(k)) return;
-    b += "<h2>"+t+"</h2>"+FORM[k].map(([f,l]) => "<p><b>"+esc(l)+"</b></p><p style='white-space:pre-wrap;font-family:Consolas,monospace'>"+esc(S.f[f] || "")+"</p>").join("");
-  });
-  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  const TB = "<table border='1' cellpadding='4' style='border-collapse:collapse'>", pre = "<p style='white-space:pre-wrap'>";
+  const ev = p => { const cs = S.cards.filter(c => c.p === p); return cs.length ? cs.map(c => "<p><b>"+esc(c.t)+"</b> ("+COLS[c.col]+")</p>"+pre+esc(c.ev || "(no evidence yet)")+"</p>").join("") : ""; };
+  let b = "<h2>Part A: Investigating and defining</h2>"+ev("A")+"<h2>Part B: Digital systems</h2>"+ev("B")+
+    "<h2>Part C: Collaborating and managing</h2><p><b>Board now</b></p><p>"+esc(colsText())+"</p>"+ev("C")+
+    "<p><b>Snapshots</b></p>"+TB+"<tr><th>Point</th><th>Date</th><th>The board then</th><th>How and why cards moved or changed</th></tr>"+S.snaps.map(s => "<tr><td>"+esc(s.l)+"</td><td>"+esc(s.d)+"</td><td>"+esc(s.b)+"</td><td>"+esc(s.note)+"</td></tr>").join("")+"</table>"+
+    "<p><b>Risk register</b></p>"+TB+"<tr><th>Risk</th><th>Type</th><th>Likelihood</th><th>Impact</th><th>What I did</th></tr>"+S.risks.map(r => "<tr><td>"+esc(r.r)+"</td><td>"+esc(r.type)+"</td><td>"+esc(r.l)+"</td><td>"+esc(r.i)+"</td><td>"+esc(r.did)+"</td></tr>").join("")+"</table>"+
+    "<p><b>Roles:</b> "+esc(S.roles)+"</p><p><b>Reflection:</b> "+esc(S.refl)+"</p>"+
+    "<p><b>Journal</b></p>"+S.jr.map(j => "<p>"+esc(j.d)+" (board: "+esc(j.s)+")<br><b>Did:</b> "+esc(j.a)+"<br><b>Blocked:</b> "+esc(j.b)+"<br><b>Next:</b> "+esc(j.n)+"</p>").join("")+
+    "<p><b>Recent moves and changes</b></p><p>"+S.log.slice(-40).map(l => esc(l.d)+": "+esc(l.m)).join("<br>")+"</p>"+
+    "<h2>Part D: Evaluating</h2><p><b>My final prompt</b></p>"+pre+esc(S.prompt)+"</p>"+ev("D")+(S.cards.some(c => c.p !== "A" && c.p !== "B" && c.p !== "C" && c.p !== "D") ? "<h2>Other cards</h2>"+ev("–") : "");
   download(who.replace(/\s+/g,"-")+"-W5.doc", "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W5</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W5 work</h1><p><b>THIS IS FOR FUN. AIs CAN MAKE MISTAKES, SO DO NOT RELY ON ANY ANSWER FOR ANYTHING REAL.</b></p>"+b+"</body></html>", "application/msword");
 }
 
