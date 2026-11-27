@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W8: The AI game master</title>
+</head>
+<body>
+<script src="labkit.js"></script>
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+
+const PY = `# app.py: the server for a tiny text adventure.
+# Python keeps the game state and enforces the rules. The AI only writes the story text.
+
+ROOMS = {
+    "cave":   {"desc": "a damp cave with a faint glow to the north", "exits": {"north": "tunnel"}, "item": "torch"},
+    "tunnel": {"desc": "a dark tunnel", "exits": {"south": "cave", "east": "vault"}, "item": None, "needs": "torch"},
+    "vault":  {"desc": "a glittering vault", "exits": {"west": "tunnel"}, "item": "gold"},
+}
+
+NARRATOR = """You are the narrator of a tiny adventure game.
+Describe what just happened in one or two short sentences.
+Use ONLY the facts you are given. Never add rooms, items or numbers of your own."""
+
+state = {"room": "cave", "health": 5, "bag": []}      # the game remembers everything here
+
+def snapshot(text):
+    # Everything the page needs to draw the game.
+    room = ROOMS[state["room"]]
+    return {"text": text, "exits": list(room["exits"]), "item": room["item"],
+            "health": state["health"], "bag": state["bag"],
+            "won": "gold" in state["bag"], "over": state["health"] <= 0}
+
+async def tell(facts):
+    # The AI turns plain facts into a story. If the AI is not available, the facts are enough.
+    story = await ask_ai(NARRATOR, facts)
+    if story.startswith("Please wait") or story.startswith("ERROR"):
+        return facts
+    return story
+
+async def reset(data):
+    state["room"] = "cave"
+    state["health"] = 5
+    state["bag"] = []
+    return snapshot("You wake up in " + ROOMS["cave"]["desc"] + ".")
+
+async def act(data):
+    action = data["action"]
+    room = ROOMS[state["room"]]
+
+    if action.startswith("go "):
+        direction = action[3:]
+        if direction not in room["exits"]:
+            facts = "The player tried to go " + direction + " but there is no exit that way."
+        else:
+            target = ROOMS[room["exits"][direction]]
+            if target.get("needs") and target["needs"] not in state["bag"]:
+                state["health"] -= 1                      # Python enforces the rule
+                facts = "The player stumbled in the dark without a " + target["needs"] + " and lost 1 health. They stay where they are."
+            else:
+                state["room"] = room["exits"][direction]
+                facts = "The player walked " + direction + " into " + ROOMS[state["room"]]["desc"] + "."
+    elif action == "take":
+        if room["item"] and room["item"] not in state["bag"]:
+            state["bag"].append(room["item"])
+            facts = "The player picked up the " + room["item"] + "."
+        else:
+            facts = "There is nothing to take here."
+    else:
+        facts = "The player looks around " + room["desc"] + "."
+
+    if state["health"] <= 0:
+        facts += " The player has no health left and the game is over."
+    return snapshot(await tell(facts))
+`;
+const HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cave of Gold</title>
+<style>
+  body { font-family: Segoe UI, sans-serif; background: #1e1e1e; color: #e0e0e0;
+         max-width: 440px; margin: 30px auto; padding: 0 16px; }
+  h1 { color: #4EC9B0; }
+  #stats { color: #9a9a9a; font-size: 14px; }
+  #story { font-size: 18px; margin: 14px 0; min-height: 70px; }
+  button { background: #4EC9B0; border: 0; padding: 8px 14px; font-size: 15px; margin: 4px 4px 0 0; cursor: pointer; }
+  button.new { background: #555; color: #fff; }
+</style>
+</head>
+<body>
+  <h1>Cave of Gold</h1>
+  <div id="stats"></div>
+  <div id="story"></div>
+  <div id="buttons"></div>
+  <p><button class="new" id="new">New game</button></p>
+  <p><small><b>For fun only. AIs can make mistakes, so do not rely on this answer for anything real.</b></small></p>
+
+  <script>
+    const story = document.getElementById("story");
+    const buttons = document.getElementById("buttons");
+
+    async function send(route, action) {
+      story.textContent = "...";
+      // This line sends your choice to the server code in app.py.
+      const r = await fetch("/" + route, { method: "POST", body: JSON.stringify({ action: action }) });
+      const d = await r.json();
+      if (d.error) { story.textContent = d.error; return; }
+      show(d);
+    }
+
+    function addButton(label, action) {
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.onclick = () => send("act", action);
+      buttons.appendChild(b);
+    }
+
+    function show(d) {
+      story.textContent = d.text;
+      document.getElementById("stats").textContent = "Health: " + d.health + "  |  Bag: " + (d.bag.join(", ") || "empty");
+      buttons.innerHTML = "";
+      if (d.won) { story.textContent += "  YOU WIN!"; return; }
+      if (d.over) { story.textContent += "  GAME OVER."; return; }
+      for (const e of d.exits) addButton("Go " + e, "go " + e);
+      if (d.item && !d.bag.includes(d.item)) addButton("Take " + d.item, "take");
+      addButton("Look", "look");
+    }
+
+    document.getElementById("new").onclick = () => send("reset", "");
+    send("reset", "");
+  <\/script>
+</body>
+</html>
+`;
+const RM = /ROOMS = \{[\s\S]*?\n\}/, NR = /NARRATOR = """[\s\S]*?"""/, cnt = (s, re) => (s.match(re) || []).length;
+
+Lab({
+  id:"W8", title:"W8: The AI game master", endpoint:ENDPOINT,
+  labs:{
+    a:{t:"W8a: Who runs the game? (read and play, locked)", locked:true, py:PY, html:HTML,
+       s:"Look at tell(). Why does it hand back the plain facts when the AI is not available? What would a game without that fallback feel like to play?",
+       brief:"<p>An AI can write a lovely story, but it cannot be trusted to keep score. It forgets, it contradicts itself, and it can be talked into anything. So a good AI game splits the work: <b>Python</b> keeps the game state and enforces the rules, and the <b>AI</b> only turns the facts into a story.</p><p><b>Your mission:</b> play the cave game on the right. Try to walk into the tunnel without taking the torch. Watch the log to see what Python decides and what the AI writes. Then read app.py and answer the questions at the bottom.</p><p class='hint'>The AI narrates when the 45 second lock allows. Otherwise you see the plain facts, and the game carries on.</p>",
+       qs:["Where does the game remember your health and what you are carrying? What is that variable called, and does the AI know about it from one turn to the next?",
+           "Try to enter the tunnel without the torch. Who decided what happened, Python or the AI? Paste the lines that decided it.",
+           "What does tell() do if the AI is locked or fails? Why is that a good design?",
+           "The AI is told to use only the facts. Look at NARRATOR. What could go wrong if the AI also decided what happened, such as whether you find treasure?",
+           "Look at the log. Which parts of one turn were Python, and which were the AI?"]},
+    b:{t:"W8b: Change the game", py:PY, html:HTML,
+       s:"Add a monster to your game. Which part is Python, and which part could be the AI?",
+       brief:"<p>Now the game is yours to change. Add a room, an item and a rule, then try a dangerous experiment: let the AI decide something, and see what happens to the game state.</p><p><b>Your mission:</b> 1. Add a new room to ROOMS, with an exit in and an exit out. 2. Add an item and a rule that uses it. 3. Change NARRATOR to a different style, such as a pirate or a news reporter. 4. Play at least six turns. 5. Break the code on purpose, read the red message and fix it.</p><p><b>The experiment:</b> change NARRATOR so the AI also invents something, for example 'Invent one new item the player finds.' Play a few turns and check your bag.</p>",
+       checks:x => [["I changed ROOMS", x.pick(x.c.py, RM) !== x.pick(x.o.py, RM)],["I changed NARRATOR", x.pick(x.c.py, NR) !== x.pick(x.o.py, NR)],["I played at least six turns ("+x.s.ok+" so far)", x.s.ok >= 6],["I broke it on purpose, read the red message, then fixed it", x.s.err && x.s.fixed]],
+       notes:["What did you add, and which parts of the Python did you have to change?","The experiment: when the AI invented something, did your bag agree with the story? What does that tell you about who should keep the score?"]},
+    c:{t:"W8c: Design my own game", py:PY, html:HTML,
+       load:{key:"aib-W8", label:"Load my game from W8b", get:s => s.code && s.code.b ? {py:s.code.b.py, html:s.code.b.html} : null},
+       s:"Give your game one feature that needs a second variable in state, such as a score, a timer or a key. Where did you have to change the code?",
+       brief:"<p>This is your finished piece for the term. Design your own world with a theme, and build it on the same pattern: <b>Python holds the state and the rules, and the AI tells the story</b>. You can start from the code on the left, or load your game from the last lab.</p><p><b>Your mission:</b> 1. Choose a theme (a space station, a school, a jungle, a haunted house) and change the title and descriptions. 2. Build at least four rooms and two items. 3. Add at least two rooms that need something to enter. 4. Make sure the game can be won and lost. 5. Write a narrator prompt with its own tone. 6. Test it for at least eight turns, then write your store listing below.</p>",
+       checks:x => [["At least four rooms ("+cnt(x.c.py, /"exits"/g)+" so far)", cnt(x.c.py, /"exits"/g) >= 4],["At least two items ("+cnt(x.c.py, /"item":\s*"[^"]+"/g)+" so far)", cnt(x.c.py, /"item":\s*"[^"]+"/g) >= 2],
+         ["At least two rooms that need something ("+cnt(x.c.py, /"needs"/g)+" so far)", cnt(x.c.py, /"needs"/g) >= 2],["I changed the page heading", x.pick(x.c.html, /<h1>[\s\S]*?<\/h1>/) !== x.pick(x.o.html, /<h1>[\s\S]*?<\/h1>/)],
+         ["I changed NARRATOR", x.pick(x.c.py, NR) !== x.pick(x.o.py, NR)],["I played at least eight turns ("+x.s.ok+" so far)", x.s.ok >= 8]],
+       ticks:["My game can be won, and it can be lost"],
+       notes:["Your store listing: the name of your game, one sentence about it, and who it is for.","Which rules did you put in Python, and which words come from the AI? Explain why you split the work that way.","What would you tell a Year 8 student about how AI apps really work, now that you have seen the code?"]}
+  }
+});
+</script>
+</body>
+</html>
