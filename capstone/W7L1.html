@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W7L1: Code or AI?</title>
+</head>
+<body>
+<script src="labkit.js"></script>
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+
+const PY = `# app.py: the server for tic-tac-toe. The player is X. The server plays O.
+# The board is a list of nine items: "X", "O" or " " (empty). Square 0 is top left, square 8 is bottom right.
+
+WINS = [(0,1,2), (3,4,5), (6,7,8), (0,3,6), (1,4,7), (2,5,8), (0,4,8), (2,4,6)]
+
+AI_PROMPT = """You are playing tic-tac-toe as O.
+The squares are numbered 0 to 8, left to right, top to bottom.
+Reply with only the number of the square you choose."""
+
+def winner(board):
+    # Returns "X", "O", "draw", or None if the game is still going.
+    for a, b, c in WINS:
+        if board[a] != " " and board[a] == board[b] == board[c]:
+            return board[a]
+    if " " not in board:
+        return "draw"
+    return None
+
+def free_squares(board):
+    return [i for i in range(9) if board[i] == " "]
+
+def code_move(board):
+    # Rules written by a person: win if you can, block if you must, else take the best free square.
+    for mark in ["O", "X"]:
+        for a, b, c in WINS:
+            line = [board[a], board[b], board[c]]
+            if line.count(mark) == 2 and line.count(" ") == 1:
+                return [a, b, c][line.index(" ")]
+    for square in [4, 0, 2, 6, 8, 1, 3, 5, 7]:
+        if board[square] == " ":
+            return square
+
+async def ai_move(board):
+    shown = " ".join(str(i) + "=" + (board[i] if board[i] != " " else "empty") for i in range(9))
+    reply = await ask_ai(AI_PROMPT, shown)
+    if reply.startswith("Please wait") or reply.startswith("ERROR"):
+        return -2, reply
+    for ch in reply:
+        if ch.isdigit():
+            return int(ch), reply
+    return -1, reply
+
+async def move(data):
+    # The page sends the board and the opponent. This function sends back the new board.
+    board = list(data["board"])
+    result = winner(board)
+    note = ""
+    if result is None:
+        if data["opponent"] == "code":
+            square = code_move(board)
+        else:
+            square, reply = await ai_move(board)
+            if square == -2:
+                return {"error": reply}
+            if square not in free_squares(board):
+                note = "ILLEGAL MOVE by the AI: " + reply
+                square = free_squares(board)[0]      # Python steps in and picks a free square
+        board[square] = "O"
+        result = winner(board)
+    return {"board": board, "result": result, "note": note}
+`;
+const HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tic-tac-toe</title>
+<style>
+  body { font-family: Segoe UI, sans-serif; background: #1e1e1e; color: #e0e0e0;
+         max-width: 360px; margin: 20px auto; padding: 0 16px; }
+  h1 { color: #4EC9B0; font-size: 22px; }
+  #board { display: grid; grid-template-columns: repeat(3, 80px); gap: 6px; margin: 12px 0; }
+  .sq { width: 80px; height: 80px; font-size: 34px; background: #2d2d2d; color: #e0e0e0; border: 0; cursor: pointer; }
+  select, button.new { padding: 6px; font-size: 15px; }
+  #msg { font-weight: bold; margin-top: 6px; }
+  #note { color: #f0a500; font-size: 13px; min-height: 18px; }
+</style>
+</head>
+<body>
+  <h1>Tic-tac-toe: you are X</h1>
+  <label>Opponent:
+    <select id="opp">
+      <option value="code">Code (Python rules)</option>
+      <option value="ai">The AI</option>
+    </select>
+  </label>
+  <button class="new" id="new">New game</button>
+  <div id="board"></div>
+  <div id="msg">Your turn.</div>
+  <div id="note"></div>
+  <div id="count">Illegal AI moves so far: 0</div>
+  <p><small><b>For fun only. AIs can make mistakes, so do not rely on this answer for anything real.</b></small></p>
+
+  <script>
+    let board = Array(9).fill(" "), over = false, illegal = 0;
+    const boardDiv = document.getElementById("board");
+    const msg = document.getElementById("msg");
+
+    function draw() {
+      boardDiv.innerHTML = "";
+      board.forEach((mark, i) => {
+        const b = document.createElement("button");
+        b.className = "sq";
+        b.textContent = mark === " " ? "" : mark;
+        b.onclick = () => play(i);
+        boardDiv.appendChild(b);
+      });
+    }
+
+    async function play(i) {
+      if (over || board[i] !== " ") return;
+      board[i] = "X";
+      draw();
+      msg.textContent = "Thinking...";
+
+      // This line sends the board to the server code in app.py.
+      const r = await fetch("/move", { method: "POST",
+        body: JSON.stringify({ board: board, opponent: document.getElementById("opp").value }) });
+      const d = await r.json();
+
+      if (d.error) { board[i] = " "; draw(); msg.textContent = d.error + " Click the square again."; return; }
+      board = d.board;
+      draw();
+      document.getElementById("note").textContent = d.note || "";
+      if ((d.note || "").startsWith("ILLEGAL")) {
+        illegal++;
+        document.getElementById("count").textContent = "Illegal AI moves so far: " + illegal;
+      }
+      if (d.result) {
+        over = true;
+        msg.textContent = d.result === "X" ? "You win!" : d.result === "O" ? "The opponent wins." : "A draw.";
+      } else {
+        msg.textContent = "Your turn.";
+      }
+    }
+
+    document.getElementById("new").onclick = () => {
+      board = Array(9).fill(" "); over = false;
+      msg.textContent = "Your turn.";
+      document.getElementById("note").textContent = "";
+      draw();
+    };
+    draw();
+  <\/script>
+</body>
+</html>
+`;
+
+Lab({
+  id:"W7L1", title:"W7L1: Code or AI?", endpoint:ENDPOINT,
+  onResult:(d, s) => { if((d.note || "").startsWith("ILLEGAL")) s.ill = (s.ill || 0) + 1; },
+  labs:{
+    a:{t:"W7L1a: Code against AI (read and play, locked)", locked:true, py:PY, html:HTML,
+       s:"Change the code opponent so it picks a random free square. Does the AI beat it more often?",
+       brief:"<p>You can build almost anything with an AI now. The skill is knowing when <b>not</b> to. Here are two opponents for tic-tac-toe. One is <b>Python code</b> that follows a few rules written by a person. The other is the <b>AI</b>, told the board and asked for a number.</p><p><b>Your mission:</b> play at least two games against each opponent. Watch the log, and watch for the orange note under the board. Then read app.py and answer the questions at the bottom.</p><p class='hint'>Against the AI, each move can take up to 45 seconds because of the shared lock. If you click too soon, the page tells you to wait and lets you try the same square again.</p>",
+       qs:["Which function decides whether someone has won? What does it send back when the game is still going?",
+           "Play two games against each opponent. How many illegal moves did the AI make? Did the code opponent ever make one?",
+           "Find the lines that make sure the code opponent never plays on a taken square. Paste them.",
+           "Where does Python check whether the AI's move is legal, and what happens when it is not?",
+           "In one or two sentences: for which jobs would you use code, and for which would you use an AI?"]},
+    b:{t:"W7L1b: Improve an opponent", py:PY, html:HTML,
+       s:"Find a way to make the AI opponent play a full game with no illegal moves. What did it take, and was it worth it?",
+       brief:"<p>Now choose a side. Either improve the <b>AI opponent</b> by changing <b>AI_PROMPT</b>, or change the <b>code opponent</b> by editing <b>code_move</b>. Then play it and see what changes.</p><p><b>Your mission:</b> change one opponent, press <b>Update the app</b>, play at least three games against each opponent, and record what happened. Then break your app on purpose, read the red message and fix it.</p>",
+       checks:x => [["I changed AI_PROMPT", x.pick(x.c.py, /AI_PROMPT\s*=\s*"""[\s\S]*?"""/) !== x.pick(x.o.py, /AI_PROMPT\s*=\s*"""[\s\S]*?"""/)],["I changed code_move", x.pick(x.c.py, /def code_move[\s\S]*?\nasync def ai_move/) !== x.pick(x.o.py, /def code_move[\s\S]*?\nasync def ai_move/)],
+         ["I made at least six moves ("+x.s.ok+" so far)", x.s.ok >= 6],["I saw the AI make an illegal move ("+(x.s.ill || 0)+" so far)", (x.s.ill || 0) >= 1],["I broke it on purpose, read the red message, then fixed it", x.s.err && x.s.fixed]],
+       notes:["Play at least three games against each opponent. Write the results: wins, losses, draws and illegal AI moves.","What did you change, and what happened?","Which jobs would you give to code, and which to an AI? Use this game as your evidence."]}
+  }
+});
+</script>
+</body>
+</html>
