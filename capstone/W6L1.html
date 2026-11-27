@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W6L1: Under the hood</title>
+<style>
+:root{--bg:#121212;--pn:#1e1e1e;--pn2:#252526;--bd:#3a3a3a;--tx:#e0e0e0;--mut:#9a9a9a;--ac:#4EC9B0;--rd:#ce3c3c;--warn:#f0a500}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 'Segoe UI',Tahoma,sans-serif}
+header{background:#1f1f1f;border-bottom:2px solid var(--rd);padding:12px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}.bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{font-size:12px;color:var(--mut)}.who a{color:var(--ac);cursor:pointer;margin-left:6px}
+main{display:grid;gap:14px;padding:14px;max-width:1300px;margin:0 auto}
+section{background:var(--pn2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+section.brief{border-left:4px solid var(--ac)}section.stretch{border-left:4px solid var(--warn)}
+h2{font-size:14px;color:var(--ac);margin:0 0 6px}section.stretch h2{color:var(--warn)}
+p{margin:4px 0;max-width:80ch}.hint{font-size:12px;color:var(--mut)}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+input,textarea,select{width:100%;background:var(--pn);color:#d4d4d4;border:1px solid var(--bd);border-radius:4px;padding:7px 9px;font:13px Consolas,monospace}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:70px}
+button{background:var(--rd);color:#fff;border:0;border-radius:4px;padding:8px 16px;font-weight:700;cursor:pointer}
+button:hover{background:#e04a4a}button.go{background:var(--ac);color:#1e1e1e}button.alt{background:#444}button.alt:hover{background:#555}button.tab{background:#333;border-radius:4px 4px 0 0}button.tab.on{background:#1e1e1e;color:var(--ac)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.split{grid-template-columns:1fr}}
+#ed{width:100%;height:440px;white-space:pre;overflow:auto;tab-size:4;line-height:1.45;resize:vertical}
+#ed[readonly]{background:#171717;color:#9aa;border-style:dashed}
+iframe{width:100%;height:290px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+#log{background:#171717;border:1px solid var(--bd);border-radius:4px;padding:8px;height:200px;overflow:auto;font:12px Consolas,monospace;white-space:pre-wrap}
+#log b{color:var(--ac)}#log .e{color:#f05050}#log .w{color:var(--warn)}
+#py{font-size:12px;color:var(--warn);min-height:18px}
+ul.chk{list-style:none;padding:0;margin:6px 0}ul.chk li{padding:3px 0}.ok{color:var(--ac)}.bad{color:#f05050}
+.warnbox{border-left:4px solid var(--rd);background:#2a1515;border-color:#5a2a2a;color:#ffb4b4}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10;display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+.mbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:32px 36px;max-width:400px;width:90%}
+.mbox h2{font-size:17px}.mbox p{color:#aaa;margin:6px 0 14px}.mbox button{width:100%;background:var(--ac);color:#1e1e1e}
+#merr{color:#f05050;font-size:12px;min-height:16px;margin:8px 0}
+#load{position:fixed;inset:0;background:rgba(18,18,18,.96);z-index:9;display:flex;align-items:center;justify-content:center}
+.lbox{background:var(--pn2);border:2px solid var(--ac);border-radius:12px;padding:28px 32px;max-width:440px;width:90%}
+.lbox h2{font-size:17px}.track{background:#171717;border:1px solid var(--bd);border-radius:6px;height:16px;overflow:hidden;margin:14px 0 6px}
+#pbar{background:var(--ac);height:100%;width:0;transition:width .3s}
+#ppct{font-size:12px;color:var(--mut)}#pstat{margin:6px 0}
+</style>
+</head>
+<body>
+<div id="modal"><div class="mbox"><h2>Welcome to the AI App Lab</h2>
+<p>Enter your first name. It goes on your exported work so your teacher knows it is yours.</p>
+<input id="minput" placeholder="Your first name" onkeydown="if(event.key==='Enter')setName()"><div id="merr"></div><button onclick="setName()">Start</button></div></div>
+
+<div id="load"><div class="lbox"><h2>Getting Python ready</h2>
+<p class="hint">Python runs inside your browser, so it has to download first. This takes longer the first time and is much quicker after that.</p>
+<div class="track"><div id="pbar"></div></div><div id="ppct">0%</div><div id="pstat">Starting…</div>
+<div class="row"><button class="alt" onclick="$('load').style.display='none'">Read the code while I wait</button><button class="go" id="retry" style="display:none" onclick="location.reload()">Try again</button></div></div></div>
+
+<header><h1>W6L1</h1><span class="who" id="who"></span>
+<div class="bar"><select id="labsel" style="width:auto" onchange="switchLab(this.value)" aria-label="Choose a lab"></select>
+<button class="alt" onclick="dlFiles()" data-lab="b">Download my files</button><button class="go" onclick="exportDoc()">Export my work</button></div></header>
+
+<main>
+<section class="warnbox" role="note"><b>THIS IS FOR FUN. DO NOT USE THE ANSWERS FOR REAL, AS AIs CAN MAKE MISTAKES. USE MADE-UP OR EVERYDAY INPUTS ONLY.</b></section>
+<section class="brief"><h2 id="ltitle"></h2><div id="lbrief"></div></section>
+
+<section class="split">
+<div>
+<div class="row" style="margin:0"><button class="tab on" id="t_py" onclick="showFile('py')">app.py</button><button class="tab" id="t_html" onclick="showFile('html')">index.html</button><span class="hint" id="fh"></span></div>
+<textarea id="ed" spellcheck="false" aria-label="Code editor" wrap="off"></textarea>
+<div class="row"><button class="go" id="upd" onclick="applyApp()">Update the app</button><button class="alt" id="rst" onclick="resetFile()" data-lab="b">Reset this file</button><span class="hint">Ctrl+Enter also updates the app. The Tab key types four spaces.</span></div>
+</div>
+<div>
+<h2>The app, running</h2><div id="py"></div>
+<iframe id="pv" title="The app"></iframe>
+<h2 style="margin-top:10px">What happens under the hood</h2><div id="log" aria-live="polite"></div>
+<p class="hint">Every request leaves a trail here. The Run lock works the same way as in your exported apps: after each answer, wait 45 seconds.</p>
+</div>
+</section>
+
+<section data-lab="a" id="qa"></section>
+<section data-lab="b"><div id="chk"></div>
+<label for="n1">What happened when you broke your app on purpose? What did the red message say, and how did you fix it?</label><textarea class="nt" id="n1" data-k="b1"></textarea>
+<label for="n2">Which of your changes were in Python, and which were in HTML? Which one changed what the user sees?</label><textarea class="nt" id="n2" data-k="b2"></textarea></section>
+<section class="stretch"><h2>Stretch (optional)</h2><div id="lstretch"></div><label for="snote">Your stretch response (goes in your export)</label><textarea id="snote"></textarea></section>
+</main>
+
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+const MAX_TOKENS = 88, COOLDOWN = 45, TEMP = 0.1;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {get:k => {try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v) => {try{localStorage.setItem(k,v)}catch(e){}}};
+
+const PY0 = `# app.py: the SERVER half of the app.
+# In a real app this code runs on a computer the user never sees.
+# The page (index.html) sends it a request, and this code sends back an answer.
+
+CATEGORIES = ["USEFUL", "USELESS", "RISKY"]
+
+SYSTEM_PROMPT = """You are a helper app.
+Who you are helping: someone trying to survive a zombie apocalypse
+What they want: to know if an everyday item is worth carrying
+Why it matters: carrying the wrong thing could get them caught
+The user types: one everyday item.
+Reply with exactly one of: USEFUL, USELESS or RISKY. Then give a reason of ten words or fewer.
+Rules:
+- Tools, food, water and anything that helps you escape are USEFUL.
+- Anything loud, bright or smelly is RISKY because zombies notice it.
+- Anything that needs electricity or a phone signal is USELESS.
+"""
+
+def clean(text):
+    # Python tidies the input before the AI sees it.
+    text = text.strip()
+    return text[:40]      # keep only the first 40 characters
+
+async def check(item):
+    # The page calls this function every time someone presses the button.
+    item = clean(item)
+    if item == "":
+        return {"category": "NONE", "reason": "Type an item first."}
+
+    # ask_ai sends the prompt and the item to the AI. Leave this line as it is.
+    reply = await ask_ai(SYSTEM_PROMPT, item)
+
+    category = "UNSURE"
+    for c in CATEGORIES:
+        if reply.upper().startswith(c):
+            category = c
+    return {"category": category, "reason": reply}
+`;
+const HTML0 = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Zombie Check</title>
+<style>
+  body { font-family: Segoe UI, sans-serif; background: #1e1e1e; color: #e0e0e0;
+         max-width: 420px; margin: 30px auto; padding: 0 16px; }
+  h1 { color: #4EC9B0; }
+  input { width: 100%; padding: 8px; font-size: 16px; box-sizing: border-box; }
+  button { background: #4EC9B0; border: 0; padding: 8px 16px; font-size: 16px;
+           margin-top: 8px; cursor: pointer; }
+  #answer { font-size: 22px; font-weight: bold; margin-top: 14px; }
+  #reason { margin-top: 4px; }
+</style>
+</head>
+<body>
+  <h1>Is this useful in a zombie apocalypse?</h1>
+  <p>Type one everyday item.</p>
+  <input id="item" placeholder="for example: torch">
+  <button id="go">Check</button>
+  <div id="answer"></div>
+  <div id="reason"></div>
+  <p><small><b>For fun only. AIs can make mistakes, so do not rely on this answer for anything real.</b></small></p>
+
+  <script>
+    // These colours must match the categories in app.py.
+    const COLOURS = { USEFUL: "#4EC9B0", USELESS: "#9a9a9a", RISKY: "#ce3c3c" };
+
+    document.getElementById("go").onclick = async () => {
+      const item = document.getElementById("item").value;
+      document.getElementById("answer").textContent = "Thinking...";
+
+      // This line sends the request to the server code in app.py.
+      const r = await fetch("/check", { method: "POST", body: JSON.stringify({ item: item }) });
+      const data = await r.json();
+
+      const a = document.getElementById("answer");
+      a.textContent = data.category;
+      a.style.color = COLOURS[data.category] || "#f0a500";
+      document.getElementById("reason").textContent = data.reason;
+    };
+  <\/script>
+</body>
+</html>
+`;
+const LABS = {
+ a:{t:"W6L1a: How the app really works (read and explore)", s:"Python cuts the item to 40 characters. Change 40 to 10 in the Make it your own lab. What does the user notice?",
+    brief:"<p>Every app you have used so far was a box with some controls around it. Now you can see the code. An app has two halves: the <b>page</b> (<b>index.html</b>), which the user sees, and the <b>server</b> (<b>app.py</b>), which does the thinking. The page sends a request, Python builds the AI's instructions and asks the AI, and the answer travels back.</p><p>In a real app the Python runs on another computer. Here it runs inside your browser, so the log on the right can show you every step. The files are locked in this lab.</p><p><b>Your mission:</b> try the app on the right with three different items and watch the log. Then read the code and answer the questions at the bottom. The first time, Python takes a few seconds to load.</p>"},
+ b:{t:"W6L1b: Make it your own", s:"Add a new rule to your prompt that is not in the zombie app. Test it with three items and say what happened.",
+    brief:"<p>This is the same app, but now the code is yours to change. Turn the zombie app into an app of your own: a different question, different categories and different rules.</p><p><b>Your mission:</b> change the code on the left, press <b>Update the app</b>, and test it on the right. Work through the checklist below. Break it on purpose at least once, such as deleting a bracket in app.py, and read what the log says. Use short, everyday inputs only.</p><p class='hint'>Your changes are saved automatically. Download my files saves app.py and index.html on your computer.</p>"}
+};
+
+// ── State ──
+let who = store.get("aib-name") || "";
+let S = {lab:"a", file:"py", a:{ans:["","","","",""], ok:0}, b:{py:PY0, html:HTML0, ok:0, err:false, fixed:false}, n:{}, stretch:{}};
+try{ const s = JSON.parse(store.get("aib-W6L1")); if(s && s.lab) S = s; }catch(e){}
+S.a = S.a || {ans:["","","","",""], ok:0}; S.b = {py:PY0, html:HTML0, ok:0, err:false, fixed:false, ...(S.b || {})}; S.n = S.n || {}; S.stretch = S.stretch || {}; S.file = S.file || "py";
+const save = () => store.set("aib-W6L1", JSON.stringify(S));
+const cur = () => S.lab === "a" ? {py:PY0, html:HTML0} : S.b;
+
+function setName(){
+  const v = $("minput").value.trim().replace(/[^A-Za-z\u00C0-\u024F' -]/g,"");
+  if(v.length < 2){ $("merr").textContent = "Please enter your first name (at least 2 letters)."; return; }
+  who = v; store.set("aib-name", who); $("modal").classList.add("hidden"); showWho();
+}
+function changeName(){ $("minput").value = who; $("modal").classList.remove("hidden"); }
+function showWho(){ $("who").innerHTML = who ? esc(who)+" <a onclick=\"changeName()\">change</a>" : ""; }
+
+// ── Log ──
+let LOG = [];
+function log(h, t, c){ LOG.push('<span class="'+(c || "")+'"><b>'+esc(h)+"</b>\n"+esc(t)+"</span>"); if(LOG.length > 60) LOG.shift(); $("log").innerHTML = LOG.join("\n\n"); $("log").scrollTop = 1e9; }
+const tail = m => String(m).trim().split("\n").slice(-4).join("\n");
+
+// ── Python ──
+let pyo = null, pyErr = "", ready = null;
+const setPy = (t) => $("py").textContent = t;
+const PYB = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+function prog(p, t){ $("pbar").style.width = p+"%"; $("ppct").textContent = Math.round(p)+"%"; $("pstat").textContent = t; setPy(t+" "+Math.round(p)+"%"); }
+const addScript = src => new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => no(new Error("could not reach the Python download")); document.head.appendChild(s); });
+async function prefetch(){
+  const files = ["pyodide.asm.wasm","python_stdlib.zip","pyodide.asm.js","pyodide-lock.json"], got = files.map(() => 0), tot = files.map(() => 0);
+  const upd = () => { const t = tot.reduce((a,b) => a+b, 0) || 12e6, l = got.reduce((a,b) => a+b, 0); prog(5 + 85*Math.min(l/t, 1), "Downloading Python…"); };
+  await Promise.all(files.map(async (f,i) => {
+    const r = await fetch(PYB+f); if(!r.ok) throw new Error("download failed"); tot[i] = +r.headers.get("content-length") || 0;
+    const rd = r.body.getReader(); for(;;){ const x = await rd.read(); if(x.done) break; got[i] += x.value.length; upd(); }
+  }));
+}
+function initPy(){
+  ready = (async () => {
+    prog(2, "Starting…"); await addScript(PYB+"pyodide.js");
+    prog(5, "Downloading Python…"); try{ await prefetch(); }catch(e){}
+    prog(92, "Starting Python…"); pyo = await loadPyodide({indexURL:PYB}); pyo.globals.set("ask_ai", askAI);
+    prog(100, "Python is ready."); setTimeout(() => $("load").style.display = "none", 400);
+  })().catch(e => {
+    $("pstat").textContent = "Python did not load: "+e.message+". Check your internet connection, then press Try again. If it keeps failing, tell your teacher."; $("pbar").style.background = "#ce3c3c"; $("retry").style.display = ""; $("load").style.display = ""; setPy("Python did not load."); throw e;
+  });
+  return ready;
+}
+async function askAI(system, text){
+  log("3. Python asks the AI", "Instructions:\n"+system+"\nItem: "+text);
+  const left = Math.ceil(((+store.get("aib-lock") || 0) - Date.now())/1000);
+  if(left > 0){ log("Locked", "The 45 second lock is on, so nothing was sent. Wait "+left+" seconds.", "w"); return "Please wait "+left+" seconds."; }
+  store.set("aib-lock", String(Date.now() + COOLDOWN*1000));
+  try{
+    const r = await fetch(ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:[{role:"system",content:system},{role:"user",content:text}], model:"llama-3.1-8b-instant", max_tokens:MAX_TOKENS, temperature:TEMP})});
+    if(!r.ok) throw new Error((await r.json()).error?.message || "Request failed");
+    const t = ((await r.json()).choices[0].message.content || "").trim();
+    log("4. The AI replies", t || "(blank answer)"); return t || "(blank answer, try again)";
+  }catch(e){ log("Error", e.message, "e"); return "ERROR: "+e.message; }
+}
+const resp = o => new Response(JSON.stringify(o), {status:200, headers:{"Content-Type":"application/json"}});
+async function handle(url, opts){
+  if(!String(url).endsWith("/check")){ log("Page", "The page asked for "+url+", which this app does not have.", "e"); return new Response("{}", {status:404}); }
+  let item = ""; try{ item = JSON.parse(opts.body).item; }catch(e){}
+  log("1. The page sends a request", "POST /check\n"+(opts && opts.body));
+  if(!pyo) return resp({category:"ERROR", reason:"Python is still loading."});
+  if(pyErr){ log("app.py has an error", pyErr, "e"); return resp({category:"ERROR", reason:"app.py has an error. Read the log."}); }
+  try{
+    pyo.globals.set("_item", item); log("2. Python runs check()", "check(\""+item+"\")");
+    const out = await pyo.runPythonAsync("import json\njson.dumps(await check(_item))"), d = JSON.parse(out);
+    log("5. Python sends the answer back to the page", out);
+    if(d.category !== "ERROR"){ S[S.lab].ok++; if(S.lab === "b" && S.b.err) S.b.fixed = true; save(); renderChecks(); }
+    return resp(d);
+  }catch(e){ if(S.lab === "b"){ S.b.err = true; save(); } log("Python error", tail(e.message), "e"); return resp({category:"ERROR", reason:"Python error. Read the log."}); }
+}
+async function applyApp(){
+  try{ await ready; }catch(e){ return; }
+  const c = cur(); pyErr = ""; LOG = []; $("log").innerHTML = "";
+  try{ pyo.runPython("globals().pop('check', None)"); await pyo.runPythonAsync(c.py); log("Updated", "app.py loaded without errors."); }
+  catch(e){ pyErr = tail(e.message); if(S.lab === "b"){ S.b.err = true; save(); } log("app.py has an error", pyErr, "e"); }
+  const fr = $("pv");
+  fr.onload = () => { const w = fr.contentWindow; w.fetch = handle; w.addEventListener("error", ev => { if(S.lab === "b"){ S.b.err = true; save(); } log("The page has a JavaScript error", ev.message, "e"); }); };
+  fr.srcdoc = c.html; renderChecks();
+}
+
+// ── Editor ──
+function showFile(f){ S.file = f; save(); loadEd(); }
+function loadEd(){
+  const c = cur(); $("ed").value = c[S.file]; $("ed").readOnly = S.lab === "a"; $("upd").textContent = S.lab === "a" ? "Restart the app" : "Update the app";
+  $("t_py").classList.toggle("on", S.file === "py"); $("t_html").classList.toggle("on", S.file === "html");
+  $("fh").textContent = S.lab === "a" ? "Locked in this lab." : "";
+}
+function resetFile(){ if(confirm("Put this file back to the original zombie app code?")){ S.b[S.file] = S.file === "py" ? PY0 : HTML0; save(); loadEd(); } }
+$("ed").addEventListener("keydown", e => {
+  if(e.key === "Tab" && !e.target.readOnly){ e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText("    ", s, t.selectionEnd, "end"); t.dispatchEvent(new Event("input")); }
+  if(e.key === "Enter" && e.ctrlKey){ e.preventDefault(); applyApp(); }
+});
+$("ed").addEventListener("input", e => { if(S.lab === "b"){ S.b[S.file] = e.target.value; save(); renderChecks(); } });
+
+// ── Checklist and questions ──
+const pick = (s, re) => { const m = String(s).match(re); return m ? m[0].trim() : ""; };
+const P_PROMPT = /SYSTEM_PROMPT\s*=\s*"""[\s\S]*?"""/, P_CATS = /CATEGORIES\s*=.*/, H_H1 = /<h1>[\s\S]*?<\/h1>/, H_COL = /const COLOURS.*/;
+function renderChecks(){
+  if(S.lab !== "b"){ $("chk").innerHTML = ""; return; }
+  const b = S.b, d = (re, k, o) => pick(b[k], re) !== pick(o, re);
+  const items = [["I changed the instructions in SYSTEM_PROMPT (app.py)", d(P_PROMPT, "py", PY0)],["I changed CATEGORIES to my own answers (app.py)", d(P_CATS, "py", PY0)],
+    ["I changed the heading on the page (index.html)", d(H_H1, "html", HTML0)],["I changed COLOURS so they match my categories (index.html)", d(H_COL, "html", HTML0)],
+    ["I ran my app at least three times ("+b.ok+" so far)", b.ok >= 3],["I broke it on purpose, read the red message, then fixed it", b.err && b.fixed]];
+  $("chk").innerHTML = '<h2>Checklist</h2><ul class="chk">'+items.map(([t,ok]) => '<li><span class="'+(ok ? 'ok">&#10004;' : 'bad">&#10008;')+"</span> "+esc(t)+"</li>").join("")+"</ul>";
+}
+const QA = ["Which file does the user see, and which file runs out of sight, on a computer the user never sees?","Paste the line in index.html that sends the request to Python.","Where in app.py are the instructions for the AI? What is the variable called?","Python tidies the item before the AI sees it. Which function does that, and what does it do?","Press Check three times, then look at the log. Describe the five steps in your own words."];
+function renderQA(){ $("qa").innerHTML = QA.map((q,n) => '<label for="qa'+n+'">'+(n+1)+". "+esc(q)+"</label>"+(n === 4 ? '<textarea' : '<input')+' class="qa" id="qa'+n+'" data-n="'+n+'" value="">'+(n === 4 ? "</textarea>" : "")).join(""); QA.forEach((q,n) => $("qa"+n).value = S.a.ans[n] || ""); }
+
+// ── Render ──
+function switchLab(k){ S.lab = k; save(); render(); }
+function render(){
+  const k = S.lab, L = LABS[k];
+  $("labsel").value = k; $("ltitle").textContent = L.t; $("lbrief").innerHTML = L.brief; $("lstretch").textContent = L.s; $("snote").value = S.stretch[k] || "";
+  document.querySelectorAll("[data-lab]").forEach(e => e.style.display = e.dataset.lab.includes(k) ? "" : "none");
+  document.querySelectorAll(".nt").forEach(e => e.value = S.n[e.dataset.k] || "");
+  renderQA(); renderChecks(); loadEd(); applyApp();
+}
+document.addEventListener("input", e => {
+  const t = e.target, c = t.classList;
+  if(c.contains("qa")) S.a.ans[+t.dataset.n] = t.value;
+  else if(c.contains("nt")) S.n[t.dataset.k] = t.value;
+  else if(t.id === "snote") S.stretch[S.lab] = t.value;
+  save();
+});
+
+// ── Files and export ──
+function dl(name, text, type){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); URL.revokeObjectURL(a.href); }
+function dlFiles(){ if(!who){ changeName(); return; } const f = who.replace(/\s+/g,"-"); dl(f+"-app.py", S.b.py, "text/plain"); setTimeout(() => dl(f+"-index.html", S.b.html, "text/html"), 400); }
+function exportDoc(){
+  if(!who){ changeName(); return; }
+  const n = S.n, st = k => S.stretch[k] ? "<p><b>Stretch:</b> "+esc(LABS[k].s)+"</p><p>"+esc(S.stretch[k])+"</p>" : "", pre = t => "<pre style='white-space:pre-wrap;font-family:Consolas,monospace;font-size:10pt'>"+esc(t)+"</pre>"; let b = "";
+  if(S.a.ans.some(x => x.trim()) || S.stretch.a) b += "<h2>"+esc(LABS.a.t)+"</h2>"+QA.map((q,i) => "<p><b>"+(i+1)+". "+esc(q)+"</b></p><p>"+esc(S.a.ans[i] || "")+"</p>").join("")+st("a");
+  if(S.b.py !== PY0 || S.b.html !== HTML0 || n.b1 || n.b2 || S.stretch.b) b += "<h2>"+esc(LABS.b.t)+"</h2><p><b>My app.py</b></p>"+pre(S.b.py)+"<p><b>My index.html</b></p>"+pre(S.b.html)+"<p><b>Times I ran my app successfully:</b> "+S.b.ok+"</p><p><b>Breaking it on purpose:</b> "+esc(n.b1 || "")+"</p><p><b>Python and HTML changes:</b> "+esc(n.b2 || "")+"</p>"+st("b");
+  if(!b){ alert("Add some work first, so there is something to export."); return; }
+  dl(who.replace(/\s+/g,"-")+"-W6L1.doc", "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>"+esc(who)+" W6L1</title></head><body style='font-family:Calibri,sans-serif'><h1>"+esc(who)+": W6L1 work</h1><p><b>THIS IS FOR FUN. AIs CAN MAKE MISTAKES, SO DO NOT RELY ON ANY ANSWER FOR ANYTHING REAL.</b></p>"+b+"</body></html>", "application/msword");
+}
+
+$("labsel").innerHTML = Object.keys(LABS).map(k => '<option value="'+k+'">'+esc(LABS[k].t)+'</option>').join("");
+showWho(); if(who) $("modal").classList.add("hidden");
+initPy(); render();
+</script>
+</body>
+</html>
