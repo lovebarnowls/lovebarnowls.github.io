@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W6L2: Make the server smarter</title>
+</head>
+<body>
+<script src="labkit.js"></script>
+<script>
+// CHANGE THIS LINE FOR EACH CLASS: each class has its own Worker (and its own key)
+const ENDPOINT = "https://hfproxy.xu-yangen.workers.dev";
+
+const SP = `You are a helper app.
+Who you are helping: someone trying to survive a zombie apocalypse
+What they want: to know if an everyday item is worth carrying
+Why it matters: carrying the wrong thing could get them caught
+The user types: one everyday item.
+Reply with exactly one of: USEFUL, USELESS or RISKY. Then give a reason of ten words or fewer.
+Rules:
+- Tools, food, water and anything that helps you escape are USEFUL.
+- Anything loud, bright or smelly is RISKY because zombies notice it.
+- Anything that needs electricity or a phone signal is USELESS.`;
+
+const PY_FULL = `# app.py: a smarter server. It does three jobs that have nothing to do with the AI.
+
+CATEGORIES = ["USEFUL", "USELESS", "RISKY"]
+
+SYSTEM_PROMPT = """${SP}
+"""
+
+KNOWN = {"water": ("USEFUL", "USEFUL. You cannot survive without it.")}   # JOB 3: answers we already know
+history = []                                                              # JOB 2: Python remembers this
+
+def clean(text):
+    return text.strip()[:40]
+
+def tidy(reply):
+    # JOB 1: do not trust the AI. Check its reply before it goes to the page.
+    category = "UNSURE"
+    for c in CATEGORIES:
+        if reply.upper().startswith(c):
+            category = c
+    words = reply.split()
+    if len(words) > 12:
+        reply = " ".join(words[:12]) + "..."
+    return category, reply
+
+async def check(item):
+    item = clean(item)
+    if item == "":
+        return {"category": "NONE", "reason": "Type an item first."}
+
+    key = item.lower()
+    if key in KNOWN:
+        category, reason = KNOWN[key]          # no AI needed: instant and free
+        source = "the cache"
+    else:
+        reply = await ask_ai(SYSTEM_PROMPT, item)
+        category, reason = tidy(reply)
+        source = "the AI"
+        if category != "UNSURE":
+            KNOWN[key] = (category, reason)    # remember it for next time
+
+    history.append(item + ": " + category)
+    return {"category": category, "reason": reason, "source": source, "history": history[-5:]}
+`;
+const PY_BASE = `# app.py: the zombie app from last lesson. Your job is to make the server smarter.
+# There are three jobs, marked TODO.
+
+CATEGORIES = ["USEFUL", "USELESS", "RISKY"]
+
+SYSTEM_PROMPT = """${SP}
+"""
+
+def clean(text):
+    return text.strip()[:40]
+
+async def check(item):
+    item = clean(item)
+    if item == "":
+        return {"category": "NONE", "reason": "Type an item first."}
+
+    # TODO 3 (cache): make a dictionary of known answers. Look in it first, so the AI is not needed.
+    # Save each new answer in it for next time.
+
+    reply = await ask_ai(SYSTEM_PROMPT, item)
+
+    # TODO 1 (check the reply): cut the reason to 12 words, and use UNSURE
+    # if the reply does not start with one of the CATEGORIES.
+    category = "UNSURE"
+    for c in CATEGORIES:
+        if reply.upper().startswith(c):
+            category = c
+
+    # TODO 2 (history): remember every item in a list, and send the last five to the page.
+    return {"category": category, "reason": reply}
+`;
+const HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Zombie Check</title>
+<style>
+  body { font-family: Segoe UI, sans-serif; background: #1e1e1e; color: #e0e0e0;
+         max-width: 420px; margin: 30px auto; padding: 0 16px; }
+  h1 { color: #4EC9B0; }
+  input { width: 100%; padding: 8px; font-size: 16px; box-sizing: border-box; }
+  button { background: #4EC9B0; border: 0; padding: 8px 16px; font-size: 16px;
+           margin-top: 8px; cursor: pointer; }
+  #answer { font-size: 22px; font-weight: bold; margin-top: 14px; }
+  #source { color: #9a9a9a; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>Is this useful in a zombie apocalypse?</h1>
+  <p>Type one everyday item.</p>
+  <input id="item" placeholder="for example: torch">
+  <button id="go">Check</button>
+  <div id="answer"></div>
+  <div id="reason"></div>
+  <div id="source"></div>
+  <h3>Last five items</h3>
+  <ul id="history"></ul>
+  <p><small><b>For fun only. AIs can make mistakes, so do not rely on this answer for anything real.</b></small></p>
+
+  <script>
+    const COLOURS = { USEFUL: "#4EC9B0", USELESS: "#9a9a9a", RISKY: "#ce3c3c" };
+
+    document.getElementById("go").onclick = async () => {
+      const item = document.getElementById("item").value;
+      document.getElementById("answer").textContent = "Thinking...";
+      const r = await fetch("/check", { method: "POST", body: JSON.stringify({ item: item }) });
+      const data = await r.json();
+
+      const a = document.getElementById("answer");
+      a.textContent = data.category;
+      a.style.color = COLOURS[data.category] || "#f0a500";
+      document.getElementById("reason").textContent = data.reason;
+      document.getElementById("source").textContent = data.source ? "Answered by " + data.source : "";
+
+      const list = document.getElementById("history");
+      list.innerHTML = "";
+      for (const h of (data.history || [])) {
+        const li = document.createElement("li");
+        li.textContent = h;
+        list.appendChild(li);
+      }
+    };
+  <\/script>
+</body>
+</html>
+`;
+
+Lab({
+  id:"W6L2", title:"W6L2: Make the server smarter", endpoint:ENDPOINT, arg:"item",
+  onResult:(d, s) => { if(d.source === "the cache") s.hit = true; if((d.history || []).length >= 2) s.hist = true; },
+  labs:{
+    a:{t:"W6L2a: Read a smarter server (locked)", locked:true, py:PY_FULL, html:HTML,
+       s:"Choose an item the AI gets wrong. If you added the right answer to KNOWN by hand, what would that do to the cost and accuracy of a real app?",
+       brief:"<p>Last lesson the Python only passed the question along. A real server does more. This version does three jobs that have nothing to do with the AI: it <b>checks the AI's reply</b> instead of trusting it, it <b>remembers a history</b>, and it keeps a <b>cache</b> of answers it already knows, so it does not pay for the AI twice.</p><p><b>Your mission:</b> try the app on the right. Type <b>torch</b>, then type <b>torch</b> again, and watch the log both times. Then read app.py and answer the questions at the bottom.</p>",
+       qs:["Which function checks the AI's reply, and what two things does it do?",
+           "What is KNOWN? Type the same item twice. Which steps in the log are missing the second time, and why?",
+           "Python remembers history between requests. Which line stores each item, and which line sends only the last five to the page?",
+           "Why might a cache matter for a real product? Think about cost, speed and the 45 second lock.",
+           "The AI sometimes replies in the wrong format. What does tidy() do about that?"]},
+    b:{t:"W6L2b: Make my server smarter", py:PY_BASE, html:HTML,
+       load:{key:"aib-W6L1", label:"Load my app from W6L1", get:s => s.b && s.b.py && s.b.html ? {py:s.b.py, html:s.b.html} : null},
+       s:"Make the history show the last ten items. Which line did you change, and where else might you need to change something?",
+       brief:"<p>Now it is your turn. The code on the left is the zombie app with three jobs marked <b>TODO</b>. Do the jobs in app.py, press <b>Update the app</b>, and test it on the right.</p><p><b>Your mission:</b> 1. Check the AI's reply (cut long reasons, use UNSURE for a bad format). 2. Keep a history list and send the last five items to the page. 3. Add a cache so a repeated item skips the AI. Then break your app on purpose once and fix it.</p><p class='hint'>You can start from your own app from W6L1 instead. If you do, copy the history and source lines from the locked lab into your index.html so you can see your results.</p>",
+       checks:x => [["My app has run at least three times ("+x.s.ok+" so far)", x.s.ok >= 3],["The cache answered at least one request (the page says the cache)", !!x.s.hit],["The history shows at least two items", !!x.s.hist],["I broke it on purpose, read the red message, then fixed it", x.s.err && x.s.fixed]],
+       ticks:["My Python checks the AI's reply before it goes to the page"],
+       notes:["Which of the three jobs was hardest, and why?","Type the same item twice. What does the log show the second time, and why does that matter for a real product?"]}
+  }
+});
+</script>
+</body>
+</html>
